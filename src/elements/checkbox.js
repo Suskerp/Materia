@@ -86,8 +86,11 @@ class MateriaCheckbox extends ActionMixin(LitElement) {
       align-items: center;
       cursor: pointer;
       font-family: inherit;
-      border-radius: 18px;
+      border-radius: 0;
       overflow: hidden;
+      background: none;
+      box-shadow: none;
+      border: none;
       -webkit-tap-highlight-color: transparent;
     }
 

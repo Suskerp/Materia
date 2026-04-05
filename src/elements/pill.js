@@ -204,12 +204,19 @@ class MateriaPill extends ActionMixin(LitElement) {
       ? `${this._capitalize(stateObj.state)} ${unit}`
       : this._capitalize(stateObj.state);
 
-    // Colors: use config overrides, else default
-    const containerBg =
-      this.config.color ||
-      "var(--ha-card-background, var(--card-background-color))";
-    const textColor =
-      this.config.color_on || "var(--primary-text-color)";
+    // Determine if entity is "active"
+    const s = stateObj.state?.toLowerCase();
+    const isActive = s === "on" || s === "true" || s === "home" || s === "open"
+      || s === "cleaning" || s === "playing"
+      || (!isNaN(Number(s)) && Number(s) > 0);
+
+    // Apply custom colors only when active, else default
+    const containerBg = isActive && this.config.color
+      ? this.config.color
+      : "var(--ha-card-background, var(--card-background-color))";
+    const textColor = isActive && this.config.color_on
+      ? this.config.color_on
+      : "var(--primary-text-color)";
 
     return html`
       <ha-card>

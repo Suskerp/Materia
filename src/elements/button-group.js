@@ -449,7 +449,6 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
 
             const bg = isActive ? colors.active : undefined;
             const fg = isActive ? colors.onActive : undefined;
-
             return html`
               <button
                 class="${isActive ? "active" : "inactive"} ${variant}"
