@@ -4,7 +4,7 @@ import { ActionMixin } from "../utils/action-handler.js";
 
 /* ── Editor ─────────────────────────────────────────────────────── */
 
-class MateriaLightDimmerEditor extends LitElement {
+class MateriaLightEditor extends LitElement {
   static properties = {
     hass: { attribute: false },
     _config: { state: true },
@@ -47,18 +47,18 @@ class MateriaLightDimmerEditor extends LitElement {
     );
   }
 }
-customElements.define("materia-light-dimmer-editor", MateriaLightDimmerEditor);
+customElements.define("materia-light-editor", MateriaLightEditor);
 
 /* ── Card ───────────────────────────────────────────────────────── */
 
-class MateriaLightDimmer extends ActionMixin(LitElement) {
+class MateriaLight extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     _config: { state: true },
   };
 
   static getConfigElement() {
-    return document.createElement("materia-light-dimmer-editor");
+    return document.createElement("materia-light-editor");
   }
 
   static getStubConfig() {
@@ -80,6 +80,17 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
     return this._entity?.state === "on";
   }
 
+  /** Auto-detect if this light supports brightness (dimmable). */
+  get _isDimmable() {
+    const attrs = this._entity?.attributes;
+    if (!attrs) return false;
+    // Check supported_color_modes for brightness support
+    const modes = attrs.supported_color_modes || [];
+    if (modes.some(m => m !== "onoff")) return true;
+    // Fallback: check if brightness attribute exists
+    return attrs.brightness !== undefined;
+  }
+
   get _brightness() {
     return this._entity?.attributes?.brightness ?? 0;
   }
@@ -98,7 +109,8 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
 
   get _stateDisplay() {
     if (!this._isOn) return this._capitalize("Off");
-    return `${this._brightnessPercent}%`;
+    if (this._isDimmable) return `${this._brightnessPercent}%`;
+    return this._capitalize("On");
   }
 
   /* ── Actions ── */
@@ -244,21 +256,27 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
     if (!this._config || !this.hass) return html``;
 
     const isOn = this._isOn;
-    const pct = this._brightnessPercent;
+    const dimmable = this._isDimmable;
+    const pct = dimmable ? this._brightnessPercent : 0;
 
-    const containerBg = isOn ? "var(--md-sys-cust-color-light-container)" : "var(--ha-card-background, var(--card-background-color))";
+    const containerBg = isOn
+      ? (dimmable ? "var(--md-sys-cust-color-light-container)" : "var(--md-sys-cust-color-light)")
+      : "var(--ha-card-background, var(--card-background-color))";
     const textColor = isOn ? "var(--md-sys-cust-color-on-light)" : "var(--primary-text-color)";
 
     return html`
       <ha-card>
         <div class="container"
           style="background-color: ${containerBg}; color: ${textColor};"
-          @pointerdown=${this._onPointerDown}
+          @pointerdown=${dimmable ? this._onPointerDown : undefined}
+          @click=${dimmable ? undefined : () => this._toggleLight()}
         >
-          <div
-            class="fill"
-            style="width: ${isOn ? pct : 0}%; background-color: var(--md-sys-cust-color-light); opacity: 1;"
-          ></div>
+          ${dimmable ? html`
+            <div
+              class="fill"
+              style="width: ${isOn ? pct : 0}%; background-color: var(--md-sys-cust-color-light); opacity: 1;"
+            ></div>
+          ` : ""}
           <div class="icon-container">
             <ha-icon .icon=${this._icon}></ha-icon>
           </div>
@@ -365,11 +383,11 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
   `;
 }
 
-customElements.define("materia-light-dimmer", MateriaLightDimmer);
+customElements.define("materia-light", MateriaLight);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "materia-light-dimmer",
+  type: "materia-light",
   name: "Materia Light Dimmer",
-  description: "A dimmable light slider card",
+  description: "Light card with automatic dimmer support. Tap to toggle, slide to dim.",
 });

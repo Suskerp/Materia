@@ -17,25 +17,6 @@ class MateriaButtonEditor extends LitElement {
 
   static styles = css`
     :host { display: block; }
-    .yaml-label {
-      font-size: 13px;
-      font-weight: 500;
-      margin: 8px 0 4px;
-      color: var(--secondary-text-color);
-    }
-    textarea {
-      width: 100%;
-      min-height: 80px;
-      box-sizing: border-box;
-      font-family: monospace;
-      font-size: 12px;
-      border: 1px solid var(--divider-color, #e0e0e0);
-      border-radius: 4px;
-      padding: 6px;
-      resize: vertical;
-      background: var(--card-background-color, #fff);
-      color: var(--primary-text-color, #000);
-    }
   `;
 
   setConfig(config) {
@@ -69,8 +50,8 @@ class MateriaButtonEditor extends LitElement {
       { name: "show_state", selector: { boolean: {} } },
       { name: "active_state", selector: { text: {} } },
       { name: "state_display", selector: { template: {} } },
-      { name: "color", selector: { text: {} } },
-      { name: "color_on", selector: { text: {} } },
+      { name: "color", selector: { template: {} } },
+      { name: "color_on", selector: { template: {} } },
     ];
   }
 
@@ -84,62 +65,14 @@ class MateriaButtonEditor extends LitElement {
         .computeLabel=${computeLabel}
         @value-changed=${this._valueChanged}
       ></ha-form>
-
-      <div class="yaml-label">Color map (JSON, state &rarr; color)</div>
-      <textarea
-        .value=${this._config.color_map ? JSON.stringify(this._config.color_map, null, 2) : ""}
-        @change=${this._colorMapChanged}
-      ></textarea>
-
-      <div class="yaml-label">Color on map (JSON, state &rarr; text color)</div>
-      <textarea
-        .value=${this._config.color_on_map ? JSON.stringify(this._config.color_on_map, null, 2) : ""}
-        @change=${this._colorOnMapChanged}
-      ></textarea>
     `;
   }
 
   _valueChanged(ev) {
-    const updated = {
-      ...this._config,
-      ...ev.detail.value,
-      color_map: this._config.color_map,
-      color_on_map: this._config.color_on_map,
-    };
-    this._fireConfig(updated);
-  }
-
-  _colorMapChanged(ev) {
-    const raw = ev.target.value.trim();
-    if (!raw) {
-      const { color_map: _, ...rest } = this._config;
-      this._fireConfig(rest);
-      return;
-    }
-    try {
-      const parsed = JSON.parse(raw);
-      this._fireConfig({ ...this._config, color_map: parsed });
-    } catch (_) { /* ignore parse errors */ }
-  }
-
-  _colorOnMapChanged(ev) {
-    const raw = ev.target.value.trim();
-    if (!raw) {
-      const { color_on_map: _, ...rest } = this._config;
-      this._fireConfig(rest);
-      return;
-    }
-    try {
-      const parsed = JSON.parse(raw);
-      this._fireConfig({ ...this._config, color_on_map: parsed });
-    } catch (_) { /* ignore parse errors */ }
-  }
-
-  _fireConfig(config) {
-    this._config = config;
+    this._config = { ...this._config, ...ev.detail.value };
     this.dispatchEvent(
       new CustomEvent("config-changed", {
-        detail: { config },
+        detail: { config: this._config },
         bubbles: true,
         composed: true,
       })
@@ -166,6 +99,8 @@ class MateriaButton extends ActionMixin(LitElement) {
     hass: { attribute: false },
     config: { state: true },
     _resolvedStateDisplay: { state: true },
+    _resolvedColor: { state: true },
+    _resolvedColorOn: { state: true },
   };
 
   static getConfigElement() {
@@ -245,7 +180,7 @@ class MateriaButton extends ActionMixin(LitElement) {
     .state {
       grid-area: s;
       justify-self: start;
-      margin: 0 0 4px 16px;
+      margin: 0 0 10px 16px;
       font-size: 12px;
       font-weight: normal;
       opacity: 0.7;
@@ -278,12 +213,19 @@ class MateriaButton extends ActionMixin(LitElement) {
 
   updated(changedProps) {
     super.updated?.(changedProps);
-    const sd = this.config?.state_display;
-    if (changedProps.has("hass") && sd && (sd.includes("{{") || sd.includes("{%"))) {
-      this._renderTemplate(this.config.state_display).then(result => {
-        if (result !== this._resolvedStateDisplay) {
-          this._resolvedStateDisplay = result;
-        }
+    if (!changedProps.has("hass") || !this.hass) return;
+
+    this._resolveField("state_display", "_resolvedStateDisplay");
+    this._resolveField("color", "_resolvedColor");
+    this._resolveField("color_on", "_resolvedColorOn");
+  }
+
+  _resolveField(configKey, propKey) {
+    const val = this.config?.[configKey];
+    if (val && typeof val === "string" && (val.includes("{{") || val.includes("{%"))) {
+      this._renderTemplate(val).then(result => {
+        const trimmed = typeof result === "string" ? result.trim() : result;
+        if (trimmed !== this[propKey]) this[propKey] = trimmed;
       });
     }
   }
@@ -316,47 +258,37 @@ class MateriaButton extends ActionMixin(LitElement) {
     const showState = this.config.show_state;
 
     /* Determine background & text color */
-    let bgColor, textColor;
 
-    /* color_map / color_on_map take highest priority */
-    const colorMap = this._parseMap(this.config.color_map);
-    const colorOnMap = this._parseMap(this.config.color_on_map);
-    if (colorMap && stateObj) {
-      const s = stateObj.state;
-      // Try string key first, then number key, then _default
-      const bg = colorMap[s] ?? colorMap[String(s)] ?? colorMap._default;
-      if (bg !== undefined) {
+    // 1. Template-resolved color takes priority
+    let bgColor = this._resolvedColor || this.config.color;
+    let textColor = this._resolvedColorOn || this.config.color_on;
+
+    // 2. If no color set and entity has a state, use variant logic
+    if (!bgColor) {
+      if (variant === "battery") {
+        const [bg, fg] = this._getBatteryColors(stateObj);
         bgColor = bg;
-        const fgExact = colorOnMap?.[s] ?? colorOnMap?.[String(s)];
-        textColor = fgExact ?? colorOnMap?._default ?? "var(--primary-text-color)";
-      }
-    }
-    if (bgColor === undefined && variant === "battery") {
-      const [bg, fg] = this._getBatteryColors(stateObj);
-      bgColor = bg;
-      textColor = fg;
-    } else if (bgColor === undefined && active && entity) {
-      /* Use overrides first, then variant map */
-      if (this.config.color_on) {
-        bgColor = this.config.color_on;
-        textColor = this.config.color ? this.config.color : "var(--primary-text-color)";
-      } else {
+        textColor = fg;
+      } else if (active && entity) {
         const colors = VARIANT_COLORS[variant] || VARIANT_COLORS.secondary;
         bgColor = colors[0];
-        textColor = colors[1];
+        textColor = textColor || colors[1];
+      } else {
+        bgColor = "var(--ha-card-background)";
+        textColor = textColor || "var(--primary-text-color)";
       }
-    } else if (bgColor === undefined) {
-      bgColor = "var(--ha-card-background)";
-      textColor = "var(--primary-text-color)";
     }
 
-    /* Static variants without state (always colored) */
+    // 3. Static variants (no entity, always colored)
     const staticVariants = ["primary", "tertiary", "error", "primary-container", "secondary-container", "error-container", "device-container"];
-    if (!showState && !entity && staticVariants.includes(variant)) {
+    if (!entity && !this.config.color && staticVariants.includes(variant)) {
       const colors = VARIANT_COLORS[variant] || VARIANT_COLORS.secondary;
       bgColor = colors[0];
       textColor = colors[1];
     }
+
+    // Ensure textColor has a fallback
+    textColor = textColor || "var(--primary-text-color)";
 
     const cardClass = showState ? "with-state" : "no-state";
     const activeClass = active ? "active" : "inactive";
@@ -393,12 +325,6 @@ class MateriaButton extends ActionMixin(LitElement) {
           : ""}
       </ha-card>
     `;
-  }
-
-  _parseMap(value) {
-    if (!value) return null;
-    if (typeof value === "object") return value;
-    try { return JSON.parse(value); } catch (_) { return null; }
   }
 
   _handleTap() {

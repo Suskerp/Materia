@@ -14,7 +14,7 @@ const t=globalThis,e=t.ShadowRoot&&(void 0===t.ShadyCSS||t.ShadyCSS.nativeShadow
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{createHTML:t=>t}):void 0,E="$lit$",A=`lit$${Math.random().toFixed(9).slice(2)}$`,S="?"+A,z=`<${S}>`,U=document,T=()=>U.createComment(""),M=t=>null===t||"object"!=typeof t&&"function"!=typeof t,O=Array.isArray,F="[ \t\n\f\r]",P=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,R=/-->/g,q=/>/g,N=RegExp(`>|${F}(?:([^\\s"'>=/]+)(${F}*=${F}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),D=/'/g,L=/"/g,j=/^(?:script|style|textarea|title)$/i,B=(t=>(e,...i)=>({_$litType$:t,strings:e,values:i}))(1),H=Symbol.for("lit-noChange"),I=Symbol.for("lit-nothing"),V=new WeakMap,J=U.createTreeWalker(U,129);function X(t,e){if(!O(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==k?k.createHTML(e):e}const W=(t,e)=>{const i=t.length-1,n=[];let o,s=2===e?"<svg>":3===e?"<math>":"",a=P;for(let e=0;e<i;e++){const i=t[e];let r,c,l=-1,h=0;for(;h<i.length&&(a.lastIndex=h,c=a.exec(i),null!==c);)h=a.lastIndex,a===P?"!--"===c[1]?a=R:void 0!==c[1]?a=q:void 0!==c[2]?(j.test(c[2])&&(o=RegExp("</"+c[2],"g")),a=N):void 0!==c[3]&&(a=N):a===N?">"===c[0]?(a=o??P,l=-1):void 0===c[1]?l=-2:(l=a.lastIndex-c[2].length,r=c[1],a=void 0===c[3]?N:'"'===c[3]?L:D):a===L||a===D?a=N:a===R||a===q?a=P:(a=N,o=void 0);const d=a===N&&t[e+1].startsWith("/>")?" ":"";s+=a===P?i+z:l>=0?(n.push(r),i.slice(0,l)+E+i.slice(l)+A+d):i+A+(-2===l?e:d)}return[X(t,s+(t[i]||"<?>")+(2===e?"</svg>":3===e?"</math>":"")),n]};class Y{constructor({strings:t,_$litType$:e},i){let n;this.parts=[];let o=0,s=0;const a=t.length-1,r=this.parts,[c,l]=W(t,e);if(this.el=Y.createElement(c,i),J.currentNode=this.el.content,2===e||3===e){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes)}for(;null!==(n=J.nextNode())&&r.length<a;){if(1===n.nodeType){if(n.hasAttributes())for(const t of n.getAttributeNames())if(t.endsWith(E)){const e=l[s++],i=n.getAttribute(t).split(A),a=/([.?@])?(.*)/.exec(e);r.push({type:1,index:o,name:a[2],strings:i,ctor:"."===a[1]?tt:"?"===a[1]?et:"@"===a[1]?it:Q}),n.removeAttribute(t)}else t.startsWith(A)&&(r.push({type:6,index:o}),n.removeAttribute(t));if(j.test(n.tagName)){const t=n.textContent.split(A),e=t.length-1;if(e>0){n.textContent=C?C.emptyScript:"";for(let i=0;i<e;i++)n.append(t[i],T()),J.nextNode(),r.push({type:2,index:++o});n.append(t[e],T())}}}else if(8===n.nodeType)if(n.data===S)r.push({type:2,index:o});else{let t=-1;for(;-1!==(t=n.data.indexOf(A,t+1));)r.push({type:7,index:o}),t+=A.length-1}o++}}static createElement(t,e){const i=U.createElement("template");return i.innerHTML=t,i}}function G(t,e,i=t,n){if(e===H)return e;let o=void 0!==n?i._$Co?.[n]:i._$Cl;const s=M(e)?void 0:e._$litDirective$;return o?.constructor!==s&&(o?._$AO?.(!1),void 0===s?o=void 0:(o=new s(t),o._$AT(t,i,n)),void 0!==n?(i._$Co??=[])[n]=o:i._$Cl=o),void 0!==o&&(e=G(t,o._$AS(t,e.values),o,n)),e}class K{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:e},parts:i}=this._$AD,n=(t?.creationScope??U).importNode(e,!0);J.currentNode=n;let o=J.nextNode(),s=0,a=0,r=i[0];for(;void 0!==r;){if(s===r.index){let e;2===r.type?e=new Z(o,o.nextSibling,this,t):1===r.type?e=new r.ctor(o,r.name,r.strings,this,t):6===r.type&&(e=new nt(o,this,t)),this._$AV.push(e),r=i[++a]}s!==r?.index&&(o=J.nextNode(),s++)}return J.currentNode=U,n}p(t){let e=0;for(const i of this._$AV)void 0!==i&&(void 0!==i.strings?(i._$AI(t,i,e),e+=i.strings.length-2):i._$AI(t[e])),e++}}class Z{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,i,n){this.type=2,this._$AH=I,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=i,this.options=n,this._$Cv=n?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return void 0!==e&&11===t?.nodeType&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=G(this,t,e),M(t)?t===I||null==t||""===t?(this._$AH!==I&&this._$AR(),this._$AH=I):t!==this._$AH&&t!==H&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):(t=>O(t)||"function"==typeof t?.[Symbol.iterator])(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==I&&M(this._$AH)?this._$AA.nextSibling.data=t:this.T(U.createTextNode(t)),this._$AH=t}$(t){const{values:e,_$litType$:i}=t,n="number"==typeof i?this._$AC(t):(void 0===i.el&&(i.el=Y.createElement(X(i.h,i.h[0]),this.options)),i);if(this._$AH?._$AD===n)this._$AH.p(e);else{const t=new K(n,this),i=t.u(this.options);t.p(e),this.T(i),this._$AH=t}}_$AC(t){let e=V.get(t.strings);return void 0===e&&V.set(t.strings,e=new Y(t)),e}k(t){O(this._$AH)||(this._$AH=[],this._$AR());const e=this._$AH;let i,n=0;for(const o of t)n===e.length?e.push(i=new Z(this.O(T()),this.O(T()),this,this.options)):i=e[n],i._$AI(o),n++;n<e.length&&(this._$AR(i&&i._$AB.nextSibling,n),e.length=n)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){const e=$(t).nextSibling;$(t).remove(),t=e}}setConnected(t){void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t))}}class Q{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,i,n,o){this.type=1,this._$AH=I,this._$AN=void 0,this.element=t,this.name=e,this._$AM=n,this.options=o,i.length>2||""!==i[0]||""!==i[1]?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=I}_$AI(t,e=this,i,n){const o=this.strings;let s=!1;if(void 0===o)t=G(this,t,e,0),s=!M(t)||t!==this._$AH&&t!==H,s&&(this._$AH=t);else{const n=t;let a,r;for(t=o[0],a=0;a<o.length-1;a++)r=G(this,n[i+a],e,a),r===H&&(r=this._$AH[a]),s||=!M(r)||r!==this._$AH[a],r===I?t=I:t!==I&&(t+=(r??"")+o[a+1]),this._$AH[a]=r}s&&!n&&this.j(t)}j(t){t===I?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}}class tt extends Q{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===I?void 0:t}}class et extends Q{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==I)}}class it extends Q{constructor(t,e,i,n,o){super(t,e,i,n,o),this.type=5}_$AI(t,e=this){if((t=G(this,t,e,0)??I)===H)return;const i=this._$AH,n=t===I&&i!==I||t.capture!==i.capture||t.once!==i.once||t.passive!==i.passive,o=t!==I&&(i===I||n);n&&this.element.removeEventListener(this.name,this,i),o&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}}class nt{constructor(t,e,i){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(t){G(this,t)}}const ot=w.litHtmlPolyfillSupport;ot?.(Y,Z),(w.litHtmlVersions??=[]).push("3.3.2");const st=globalThis;
+const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{createHTML:t=>t}):void 0,E="$lit$",A=`lit$${Math.random().toFixed(9).slice(2)}$`,z="?"+A,S=`<${z}>`,U=document,T=()=>U.createComment(""),M=t=>null===t||"object"!=typeof t&&"function"!=typeof t,F=Array.isArray,O="[ \t\n\f\r]",P=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,R=/-->/g,q=/>/g,D=RegExp(`>|${O}(?:([^\\s"'>=/]+)(${O}*=${O}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),N=/'/g,j=/"/g,L=/^(?:script|style|textarea|title)$/i,B=(t=>(e,...i)=>({_$litType$:t,strings:e,values:i}))(1),H=Symbol.for("lit-noChange"),I=Symbol.for("lit-nothing"),V=new WeakMap,X=U.createTreeWalker(U,129);function J(t,e){if(!F(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==k?k.createHTML(e):e}const W=(t,e)=>{const i=t.length-1,n=[];let o,s=2===e?"<svg>":3===e?"<math>":"",a=P;for(let e=0;e<i;e++){const i=t[e];let r,c,l=-1,h=0;for(;h<i.length&&(a.lastIndex=h,c=a.exec(i),null!==c);)h=a.lastIndex,a===P?"!--"===c[1]?a=R:void 0!==c[1]?a=q:void 0!==c[2]?(L.test(c[2])&&(o=RegExp("</"+c[2],"g")),a=D):void 0!==c[3]&&(a=D):a===D?">"===c[0]?(a=o??P,l=-1):void 0===c[1]?l=-2:(l=a.lastIndex-c[2].length,r=c[1],a=void 0===c[3]?D:'"'===c[3]?j:N):a===j||a===N?a=D:a===R||a===q?a=P:(a=D,o=void 0);const d=a===D&&t[e+1].startsWith("/>")?" ":"";s+=a===P?i+S:l>=0?(n.push(r),i.slice(0,l)+E+i.slice(l)+A+d):i+A+(-2===l?e:d)}return[J(t,s+(t[i]||"<?>")+(2===e?"</svg>":3===e?"</math>":"")),n]};class Y{constructor({strings:t,_$litType$:e},i){let n;this.parts=[];let o=0,s=0;const a=t.length-1,r=this.parts,[c,l]=W(t,e);if(this.el=Y.createElement(c,i),X.currentNode=this.el.content,2===e||3===e){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes)}for(;null!==(n=X.nextNode())&&r.length<a;){if(1===n.nodeType){if(n.hasAttributes())for(const t of n.getAttributeNames())if(t.endsWith(E)){const e=l[s++],i=n.getAttribute(t).split(A),a=/([.?@])?(.*)/.exec(e);r.push({type:1,index:o,name:a[2],strings:i,ctor:"."===a[1]?tt:"?"===a[1]?et:"@"===a[1]?it:Q}),n.removeAttribute(t)}else t.startsWith(A)&&(r.push({type:6,index:o}),n.removeAttribute(t));if(L.test(n.tagName)){const t=n.textContent.split(A),e=t.length-1;if(e>0){n.textContent=C?C.emptyScript:"";for(let i=0;i<e;i++)n.append(t[i],T()),X.nextNode(),r.push({type:2,index:++o});n.append(t[e],T())}}}else if(8===n.nodeType)if(n.data===z)r.push({type:2,index:o});else{let t=-1;for(;-1!==(t=n.data.indexOf(A,t+1));)r.push({type:7,index:o}),t+=A.length-1}o++}}static createElement(t,e){const i=U.createElement("template");return i.innerHTML=t,i}}function G(t,e,i=t,n){if(e===H)return e;let o=void 0!==n?i._$Co?.[n]:i._$Cl;const s=M(e)?void 0:e._$litDirective$;return o?.constructor!==s&&(o?._$AO?.(!1),void 0===s?o=void 0:(o=new s(t),o._$AT(t,i,n)),void 0!==n?(i._$Co??=[])[n]=o:i._$Cl=o),void 0!==o&&(e=G(t,o._$AS(t,e.values),o,n)),e}class K{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:e},parts:i}=this._$AD,n=(t?.creationScope??U).importNode(e,!0);X.currentNode=n;let o=X.nextNode(),s=0,a=0,r=i[0];for(;void 0!==r;){if(s===r.index){let e;2===r.type?e=new Z(o,o.nextSibling,this,t):1===r.type?e=new r.ctor(o,r.name,r.strings,this,t):6===r.type&&(e=new nt(o,this,t)),this._$AV.push(e),r=i[++a]}s!==r?.index&&(o=X.nextNode(),s++)}return X.currentNode=U,n}p(t){let e=0;for(const i of this._$AV)void 0!==i&&(void 0!==i.strings?(i._$AI(t,i,e),e+=i.strings.length-2):i._$AI(t[e])),e++}}class Z{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,i,n){this.type=2,this._$AH=I,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=i,this.options=n,this._$Cv=n?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return void 0!==e&&11===t?.nodeType&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=G(this,t,e),M(t)?t===I||null==t||""===t?(this._$AH!==I&&this._$AR(),this._$AH=I):t!==this._$AH&&t!==H&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):(t=>F(t)||"function"==typeof t?.[Symbol.iterator])(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==I&&M(this._$AH)?this._$AA.nextSibling.data=t:this.T(U.createTextNode(t)),this._$AH=t}$(t){const{values:e,_$litType$:i}=t,n="number"==typeof i?this._$AC(t):(void 0===i.el&&(i.el=Y.createElement(J(i.h,i.h[0]),this.options)),i);if(this._$AH?._$AD===n)this._$AH.p(e);else{const t=new K(n,this),i=t.u(this.options);t.p(e),this.T(i),this._$AH=t}}_$AC(t){let e=V.get(t.strings);return void 0===e&&V.set(t.strings,e=new Y(t)),e}k(t){F(this._$AH)||(this._$AH=[],this._$AR());const e=this._$AH;let i,n=0;for(const o of t)n===e.length?e.push(i=new Z(this.O(T()),this.O(T()),this,this.options)):i=e[n],i._$AI(o),n++;n<e.length&&(this._$AR(i&&i._$AB.nextSibling,n),e.length=n)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){const e=$(t).nextSibling;$(t).remove(),t=e}}setConnected(t){void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t))}}class Q{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,i,n,o){this.type=1,this._$AH=I,this._$AN=void 0,this.element=t,this.name=e,this._$AM=n,this.options=o,i.length>2||""!==i[0]||""!==i[1]?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=I}_$AI(t,e=this,i,n){const o=this.strings;let s=!1;if(void 0===o)t=G(this,t,e,0),s=!M(t)||t!==this._$AH&&t!==H,s&&(this._$AH=t);else{const n=t;let a,r;for(t=o[0],a=0;a<o.length-1;a++)r=G(this,n[i+a],e,a),r===H&&(r=this._$AH[a]),s||=!M(r)||r!==this._$AH[a],r===I?t=I:t!==I&&(t+=(r??"")+o[a+1]),this._$AH[a]=r}s&&!n&&this.j(t)}j(t){t===I?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}}class tt extends Q{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===I?void 0:t}}class et extends Q{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==I)}}class it extends Q{constructor(t,e,i,n,o){super(t,e,i,n,o),this.type=5}_$AI(t,e=this){if((t=G(this,t,e,0)??I)===H)return;const i=this._$AH,n=t===I&&i!==I||t.capture!==i.capture||t.once!==i.once||t.passive!==i.passive,o=t!==I&&(i===I||n);n&&this.element.removeEventListener(this.name,this,i),o&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}}class nt{constructor(t,e,i){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(t){G(this,t)}}const ot=w.litHtmlPolyfillSupport;ot?.(Y,Z),(w.litHtmlVersions??=[]).push("3.3.2");const st=globalThis;
 /**
  * @license
  * Copyright 2017 Google LLC
@@ -127,125 +127,27 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
           @change=${this._onChange}
         />
       </div>
-    `}_onInput(t){const e=parseFloat(t.target.value);this.liveUpdate&&(clearTimeout(this._debounceTimer),this._debounceTimer=setTimeout(()=>{this._fireValueChanged(e)},100))}_onChange(t){clearTimeout(this._debounceTimer);const e=parseFloat(t.target.value);this._fireValueChanged(e)}_fireValueChanged(t){this.dispatchEvent(new CustomEvent("value-changed",{detail:{value:t},bubbles:!0,composed:!0}))}}customElements.define("materia-slider",ht);const dt=t=>class extends t{_handleAction(t){if(t&&"none"!==t.action)switch(t.action){case"toggle":this.config?.entity&&this.hass.callService("homeassistant","toggle",{entity_id:this.config.entity});break;case"perform-action":case"call-service":{const e=t.perform_action||t.service||"",[i,n]=e.split(".",2);i&&n&&this.hass.callService(i,n,{...t.service_data,...t.data},t.target);break}case"navigate":history.pushState(null,"",t.navigation_path),this.dispatchEvent(new Event("location-changed",{bubbles:!0,composed:!0}));break;case"more-info":this.dispatchEvent(new CustomEvent("hass-more-info",{bubbles:!0,composed:!0,detail:{entityId:t.entity||this.config?.entity}}))}}_capitalize(t){return t&&"string"==typeof t?t.charAt(0).toUpperCase()+t.slice(1):t}async _renderTemplate(t){if(!t||"string"!=typeof t)return t;if(!t.includes("{{")&&!t.includes("{%"))return t;try{const e=await this.hass.callApi("POST","template",{template:t});return"string"==typeof e?e.trim():String(e).trim()}catch{return t}}get _hasNavigateAction(){return"navigate"===this.config?.tap_action?.action}_fireMoreInfo(t){this.dispatchEvent(new CustomEvent("hass-more-info",{bubbles:!0,composed:!0,detail:{entityId:t}}))}},pt=t=>t.name.replace(/_/g," ").replace(/^\w/,t=>t.toUpperCase());customElements.define("materia-light-switch-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"light"}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}}]}render(){return this.hass&&this._config?B`
+    `}_onInput(t){const e=parseFloat(t.target.value);this.liveUpdate&&(clearTimeout(this._debounceTimer),this._debounceTimer=setTimeout(()=>{this._fireValueChanged(e)},100))}_onChange(t){clearTimeout(this._debounceTimer);const e=parseFloat(t.target.value);this._fireValueChanged(e)}_fireValueChanged(t){this.dispatchEvent(new CustomEvent("value-changed",{detail:{value:t},bubbles:!0,composed:!0}))}}customElements.define("materia-slider",ht);const dt=t=>t.name.replace(/_/g," ").replace(/^\w/,t=>t.toUpperCase()),pt=t=>class extends t{_handleAction(t){if(t&&"none"!==t.action)switch(t.action){case"toggle":this.config?.entity&&this.hass.callService("homeassistant","toggle",{entity_id:this.config.entity});break;case"perform-action":case"call-service":{const e=t.perform_action||t.service||"",[i,n]=e.split(".",2);i&&n&&this.hass.callService(i,n,{...t.service_data,...t.data},t.target);break}case"navigate":history.pushState(null,"",t.navigation_path),this.dispatchEvent(new Event("location-changed",{bubbles:!0,composed:!0}));break;case"more-info":this.dispatchEvent(new CustomEvent("hass-more-info",{bubbles:!0,composed:!0,detail:{entityId:t.entity||this.config?.entity}}))}}_capitalize(t){return t&&"string"==typeof t?t.charAt(0).toUpperCase()+t.slice(1):t}async _renderTemplate(t){if(!t||"string"!=typeof t)return t;if(!t.includes("{{")&&!t.includes("{%"))return t;try{const e=await this.hass.callApi("POST","template",{template:t});return"string"==typeof e?e.trim():String(e).trim()}catch{return t}}get _hasNavigateAction(){return"navigate"===this.config?.tap_action?.action}_fireMoreInfo(t){this.dispatchEvent(new CustomEvent("hass-more-info",{bubbles:!0,composed:!0,detail:{entityId:t}}))}};customElements.define("materia-light-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"light"}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}}]}render(){return this.hass&&this._config?B`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class ut extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-light-switch-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:track-light"}}static styles=s`
-    :host {
-      display: block;
-      font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
-    }
-    ha-card {
-      background: none;
-      box-shadow: none;
-      border: none;
-      overflow: visible;
-    }
-    .container {
-      position: relative;
-      width: 100%;
-      min-height: 88px;
-      background-color: var(--ha-card-background, var(--card-background-color));
-      border-radius: 28px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      box-sizing: border-box;
-      transition: background-color 0.3s ease;
-      cursor: pointer;
-    }
-    .icon-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 42px;
-      min-height: 42px;
-      margin: 6px;
-      margin-left: 8px;
-      border-radius: 50%;
-      background-color: transparent;
-      flex-shrink: 0;
-      position: relative;
-      z-index: 1;
-    }
-    .icon-container ha-icon {
-      --mdc-icon-size: 24px;
-      display: flex;
-    }
-    .chevron {
-      --mdc-icon-size: 20px;
-      opacity: 0.5;
-      margin-right: 12px;
-      flex-shrink: 0;
-      position: relative;
-      z-index: 1;
-    }
-    .name-container {
-      display: flex;
-      line-height: 18px;
-      flex-direction: column;
-      justify-content: center;
-      flex-grow: 1;
-      margin: 0 16px 0 4px;
-      overflow: hidden;
-      position: relative;
-      z-index: 1;
-    }
-    .name {
-      font-size: 13px;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .state {
-      font-size: 12px;
-      font-weight: normal;
-      opacity: 0.7;
-      white-space: nowrap;
-    }
-  `;setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={icon:"mdi:track-light",...t}}render(){if(!this.hass||!this.config)return B``;const t=this.hass.states[this.config.entity];if(!t)return B`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;const e="on"===t.state,i=this.config.name||t.attributes.friendly_name||this.config.entity,n=e?this._capitalize("On"):this._capitalize("Off"),o=e?"var(--md-sys-cust-color-on-light)":"var(--primary-text-color)";return B`
-      <ha-card>
-        <div
-          class="container"
-          style="background-color: ${e?"var(--md-sys-cust-color-light)":"var(--ha-card-background, var(--card-background-color))"}; color: ${o};"
-          @click=${this._handleTap}
-        >
-          <div class="icon-container">
-            <ha-icon .icon=${this.config.icon} style="color: ${o};"></ha-icon>
-          </div>
-          <div class="name-container">
-            <div class="name">${i}</div>
-            <div class="state">${n}</div>
-          </div>
-          ${this._hasNavigateAction?B`
-            <ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>
-          `:""}
-        </div>
-      </ha-card>
-    `}_handleTap(){this.hass.callService("light","toggle",{entity_id:this.config.entity})}getGridOptions(){return{columns:12,rows:1.5}}getCardSize(){return 2}}customElements.define("materia-light-switch",ut),window.customCards=window.customCards||[],window.customCards.push({type:"materia-light-switch",name:"Materia Light Switch",description:"A native Lit light toggle switch card."});customElements.define("materia-light-dimmer-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"light"}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}}]}render(){return this.hass&&this._config?B`
-      <ha-form
-        .hass=${this.hass}
-        .data=${this._config}
-        .schema=${this._schema}
-        .computeLabel=${pt}
-        @value-changed=${this._valueChanged}
-      ></ha-form>
-    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class gt extends(dt(at)){static properties={hass:{attribute:!1},_config:{state:!0}};static getConfigElement(){return document.createElement("materia-light-dimmer-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:track-light"}}setConfig(t){if(!t.entity)throw new Error("entity is required");this._config={icon:"mdi:track-light",...t}}get _entity(){return this.hass?.states?.[this._config?.entity]}get _isOn(){return"on"===this._entity?.state}get _brightness(){return this._entity?.attributes?.brightness??0}get _brightnessPercent(){return Math.round(this._brightness/255*100)}get _name(){return this._config.name||this._entity?.attributes?.friendly_name||""}get _icon(){return this._config.icon||"mdi:track-light"}get _stateDisplay(){return this._isOn?`${this._brightnessPercent}%`:this._capitalize("Off")}_toggleLight(){this.hass.callService("light","toggle",{entity_id:this._config.entity})}_setBrightness(t){t<=3?this.hass.callService("light","turn_off",{entity_id:this._config.entity}):this.hass.callService("light","turn_on",{entity_id:this._config.entity,brightness:t})}_getContainer(){return this.shadowRoot?.querySelector(".container")}_pctFromEvent(t){const e=this._getContainer();if(!e)return 0;const i=e.getBoundingClientRect(),n=(t.touches?t.touches[0]:t).clientX;return Math.max(0,Math.min(100,(n-i.left)/i.width*100))}_updateFillVisual(t){const e=this.shadowRoot?.querySelector(".fill");e&&(e.style.width=`${t}%`)}_onPointerDown(t){if(!t.button||0===t.button){this._startX=t.clientX,this._startY=t.clientY,this._dragging=!1,this._scrollIntent=!1;try{t.currentTarget.setPointerCapture(t.pointerId)}catch(t){}this._onMoveRef=this._onPointerMove.bind(this),this._onUpRef=this._onPointerUp.bind(this),window.addEventListener("pointermove",this._onMoveRef),window.addEventListener("pointerup",this._onUpRef),window.addEventListener("pointercancel",this._onUpRef)}}_onPointerMove(t){if(null==this._startX||this._scrollIntent)return;const e=Math.abs(t.clientX-this._startX),i=Math.abs(t.clientY-this._startY);if(!this._dragging&&i>10&&e<4)return this._scrollIntent=!0,void this._cleanup(t);if(!this._dragging&&e>4&&e>=i&&(this._dragging=!0),this._dragging){t.preventDefault();const e=this._pctFromEvent(t);this._updateFillVisual(e),this._throttleTimer||(this._throttleTimer=setTimeout(()=>{this._throttleTimer=null;const t=Math.round(e/100*255);this._setBrightness(t)},200))}}_onPointerUp(t){if(null!=this._startX){if(this._dragging||this._scrollIntent){if(this._dragging){const e=this._pctFromEvent(t),i=Math.round(e/100*255);this._setBrightness(i)}}else this._toggleLight();this._cleanup(t)}}_cleanup(t){this._startX=null,this._dragging=!1,this._scrollIntent=!1,clearTimeout(this._throttleTimer),this._throttleTimer=null;try{const e=this._getContainer();e&&null!=t?.pointerId&&e.releasePointerCapture(t.pointerId)}catch(t){}this._onMoveRef&&(window.removeEventListener("pointermove",this._onMoveRef),window.removeEventListener("pointerup",this._onUpRef),window.removeEventListener("pointercancel",this._onUpRef),this._onMoveRef=null,this._onUpRef=null)}render(){if(!this._config||!this.hass)return B``;const t=this._isOn,e=this._brightnessPercent;return B`
+    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class ut extends(pt(at)){static properties={hass:{attribute:!1},_config:{state:!0}};static getConfigElement(){return document.createElement("materia-light-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:track-light"}}setConfig(t){if(!t.entity)throw new Error("entity is required");this._config={icon:"mdi:track-light",...t}}get _entity(){return this.hass?.states?.[this._config?.entity]}get _isOn(){return"on"===this._entity?.state}get _isDimmable(){const t=this._entity?.attributes;if(!t)return!1;return!!(t.supported_color_modes||[]).some(t=>"onoff"!==t)||void 0!==t.brightness}get _brightness(){return this._entity?.attributes?.brightness??0}get _brightnessPercent(){return Math.round(this._brightness/255*100)}get _name(){return this._config.name||this._entity?.attributes?.friendly_name||""}get _icon(){return this._config.icon||"mdi:track-light"}get _stateDisplay(){return this._isOn?this._isDimmable?`${this._brightnessPercent}%`:this._capitalize("On"):this._capitalize("Off")}_toggleLight(){this.hass.callService("light","toggle",{entity_id:this._config.entity})}_setBrightness(t){t<=3?this.hass.callService("light","turn_off",{entity_id:this._config.entity}):this.hass.callService("light","turn_on",{entity_id:this._config.entity,brightness:t})}_getContainer(){return this.shadowRoot?.querySelector(".container")}_pctFromEvent(t){const e=this._getContainer();if(!e)return 0;const i=e.getBoundingClientRect(),n=(t.touches?t.touches[0]:t).clientX;return Math.max(0,Math.min(100,(n-i.left)/i.width*100))}_updateFillVisual(t){const e=this.shadowRoot?.querySelector(".fill");e&&(e.style.width=`${t}%`)}_onPointerDown(t){if(!t.button||0===t.button){this._startX=t.clientX,this._startY=t.clientY,this._dragging=!1,this._scrollIntent=!1;try{t.currentTarget.setPointerCapture(t.pointerId)}catch(t){}this._onMoveRef=this._onPointerMove.bind(this),this._onUpRef=this._onPointerUp.bind(this),window.addEventListener("pointermove",this._onMoveRef),window.addEventListener("pointerup",this._onUpRef),window.addEventListener("pointercancel",this._onUpRef)}}_onPointerMove(t){if(null==this._startX||this._scrollIntent)return;const e=Math.abs(t.clientX-this._startX),i=Math.abs(t.clientY-this._startY);if(!this._dragging&&i>10&&e<4)return this._scrollIntent=!0,void this._cleanup(t);if(!this._dragging&&e>4&&e>=i&&(this._dragging=!0),this._dragging){t.preventDefault();const e=this._pctFromEvent(t);this._updateFillVisual(e),this._throttleTimer||(this._throttleTimer=setTimeout(()=>{this._throttleTimer=null;const t=Math.round(e/100*255);this._setBrightness(t)},200))}}_onPointerUp(t){if(null!=this._startX){if(this._dragging||this._scrollIntent){if(this._dragging){const e=this._pctFromEvent(t),i=Math.round(e/100*255);this._setBrightness(i)}}else this._toggleLight();this._cleanup(t)}}_cleanup(t){this._startX=null,this._dragging=!1,this._scrollIntent=!1,clearTimeout(this._throttleTimer),this._throttleTimer=null;try{const e=this._getContainer();e&&null!=t?.pointerId&&e.releasePointerCapture(t.pointerId)}catch(t){}this._onMoveRef&&(window.removeEventListener("pointermove",this._onMoveRef),window.removeEventListener("pointerup",this._onUpRef),window.removeEventListener("pointercancel",this._onUpRef),this._onMoveRef=null,this._onUpRef=null)}render(){if(!this._config||!this.hass)return B``;const t=this._isOn,e=this._isDimmable,i=e?this._brightnessPercent:0;return B`
       <ha-card>
         <div class="container"
-          style="background-color: ${t?"var(--md-sys-cust-color-light-container)":"var(--ha-card-background, var(--card-background-color))"}; color: ${t?"var(--md-sys-cust-color-on-light)":"var(--primary-text-color)"};"
-          @pointerdown=${this._onPointerDown}
+          style="background-color: ${t?e?"var(--md-sys-cust-color-light-container)":"var(--md-sys-cust-color-light)":"var(--ha-card-background, var(--card-background-color))"}; color: ${t?"var(--md-sys-cust-color-on-light)":"var(--primary-text-color)"};"
+          @pointerdown=${e?this._onPointerDown:void 0}
+          @click=${e?void 0:()=>this._toggleLight()}
         >
-          <div
-            class="fill"
-            style="width: ${t?e:0}%; background-color: var(--md-sys-cust-color-light); opacity: 1;"
-          ></div>
+          ${e?B`
+            <div
+              class="fill"
+              style="width: ${t?i:0}%; background-color: var(--md-sys-cust-color-light); opacity: 1;"
+            ></div>
+          `:""}
           <div class="icon-container">
             <ha-icon .icon=${this._icon}></ha-icon>
           </div>
@@ -342,15 +244,15 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       opacity: 0.7;
       white-space: nowrap;
     }
-  `}customElements.define("materia-light-dimmer",gt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-light-dimmer",name:"Materia Light Dimmer",description:"A dimmable light slider card"});customElements.define("materia-cover-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"cover"}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"show_stop",selector:{boolean:{}}}]}render(){return this.hass&&this._config?B`
+  `}customElements.define("materia-light",ut),window.customCards=window.customCards||[],window.customCards.push({type:"materia-light",name:"Materia Light Dimmer",description:"Light card with automatic dimmer support. Tap to toggle, slide to dim."});customElements.define("materia-cover-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"cover"}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"show_stop",selector:{boolean:{}}}]}render(){return this.hass&&this._config?B`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class mt extends(dt(at)){static properties={hass:{attribute:!1},_config:{state:!0}};static getConfigElement(){return document.createElement("materia-cover-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:window-shutter",show_stop:!0}}setConfig(t){if(!t.entity)throw new Error("entity is required");this._config={icon:"mdi:window-shutter",show_stop:!0,...t}}get _entity(){return this.hass?.states?.[this._config?.entity]}get _isOpen(){return"closed"!==this._entity?.state}get _position(){return this._entity?.attributes?.current_position??0}get _name(){return this._config.name||this._entity?.attributes?.friendly_name||""}get _icon(){return this._config.icon||"mdi:window-shutter"}get _stateDisplay(){const t=this._position;return 0===t?this._capitalize("Closed"):100===t?this._capitalize("Open"):`${t}% ${this._capitalize("open")}`}_onRangeInput(t){const e=parseInt(t.target.value,10);this.hass.callService("cover","set_cover_position",{entity_id:this._config.entity,position:e})}_openCover(t){t.stopPropagation(),this.hass.callService("cover","open_cover",{entity_id:this._config.entity})}_stopCover(t){t.stopPropagation(),this.hass.callService("cover","stop_cover",{entity_id:this._config.entity})}_closeCover(t){t.stopPropagation(),this.hass.callService("cover","close_cover",{entity_id:this._config.entity})}render(){if(!this._config||!this.hass)return B``;const t=this._isOpen,e=this._position;return B`
+    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class gt extends(pt(at)){static properties={hass:{attribute:!1},_config:{state:!0}};static getConfigElement(){return document.createElement("materia-cover-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:window-shutter",show_stop:!0}}setConfig(t){if(!t.entity)throw new Error("entity is required");this._config={icon:"mdi:window-shutter",show_stop:!0,...t}}get _entity(){return this.hass?.states?.[this._config?.entity]}get _isOpen(){return"closed"!==this._entity?.state}get _position(){return this._entity?.attributes?.current_position??0}get _name(){return this._config.name||this._entity?.attributes?.friendly_name||""}get _icon(){return this._config.icon||"mdi:window-shutter"}get _stateDisplay(){const t=this._position;return 0===t?this._capitalize("Closed"):100===t?this._capitalize("Open"):`${t}% ${this._capitalize("open")}`}_onRangeInput(t){const e=parseInt(t.target.value,10);this.hass.callService("cover","set_cover_position",{entity_id:this._config.entity,position:e})}_openCover(t){t.stopPropagation(),this.hass.callService("cover","open_cover",{entity_id:this._config.entity})}_stopCover(t){t.stopPropagation(),this.hass.callService("cover","stop_cover",{entity_id:this._config.entity})}_closeCover(t){t.stopPropagation(),this.hass.callService("cover","close_cover",{entity_id:this._config.entity})}render(){if(!this._config||!this.hass)return B``;const t=this._isOpen,e=this._position;return B`
       <ha-card>
         <div class="container">
           <div
@@ -513,15 +415,15 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       -webkit-appearance: none;
       appearance: none;
     }
-  `}customElements.define("materia-cover",mt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-cover",name:"Materia Cover",description:"A cover card with position slider and up/stop/down controls"});customElements.define("materia-device-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"button_type",selector:{select:{options:["switch","state"]}}},{name:"active_state",selector:{text:{}}},{name:"color_active",selector:{text:{}}},{name:"color_on_active",selector:{text:{}}},{name:"show_state",selector:{boolean:{}}}]}render(){return this.hass&&this._config?B`
+  `}customElements.define("materia-cover",gt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-cover",name:"Materia Cover",description:"A cover card with position slider and up/stop/down controls"});customElements.define("materia-device-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"button_type",selector:{select:{options:["switch","state"]}}},{name:"active_state",selector:{text:{}}},{name:"color_active",selector:{text:{}}},{name:"color_on_active",selector:{text:{}}},{name:"show_state",selector:{boolean:{}}}]}render(){return this.hass&&this._config?B`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});const ft={light:"on",switch:"on",fan:"on",vacuum:"cleaning",lock:"locked",cover:"open",binary_sensor:"on",climate:"heat",media_player:"playing",input_boolean:"on"};class vt extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-device-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:power-plug",button_type:"switch",active_state:"on",show_state:!0}}static styles=s`
+    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});const mt={light:"on",switch:"on",fan:"on",vacuum:"cleaning",lock:"locked",cover:"open",binary_sensor:"on",climate:"heat",media_player:"playing",input_boolean:"on"};class ft extends(pt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-device-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:power-plug",button_type:"switch",active_state:"on",show_state:!0}}static styles=s`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -595,7 +497,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       opacity: 0.7;
       white-space: nowrap;
     }
-  `;setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={icon:"mdi:power-plug",button_type:"switch",color_active:"var(--md-sys-cust-color-device)",color_on_active:"var(--md-sys-cust-color-on-device)",show_state:!0,...t}}_getActiveState(){if(this.config.active_state)return String(this.config.active_state);const t=(this.config.entity||"").split(".")[0];return ft[t]||"on"}_isActive(t){if(!t)return!1;const e=this._getActiveState();return t.state===e}render(){if(!this.hass||!this.config)return B``;const t=this.hass.states[this.config.entity];if(!t)return B`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;const e=this._isActive(t),i=this.config.name||t.attributes.friendly_name||this.config.entity,n=this.config.icon,o=this.config.color_active,s=this.config.color_on_active,a=e?s:"var(--primary-text-color)";return B`
+  `;setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={icon:"mdi:power-plug",button_type:"switch",color_active:"var(--md-sys-cust-color-device)",color_on_active:"var(--md-sys-cust-color-on-device)",show_state:!0,...t}}_getActiveState(){if(this.config.active_state)return String(this.config.active_state);const t=(this.config.entity||"").split(".")[0];return mt[t]||"on"}_isActive(t){if(!t)return!1;const e=this._getActiveState();return t.state===e}render(){if(!this.hass||!this.config)return B``;const t=this.hass.states[this.config.entity];if(!t)return B`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;const e=this._isActive(t),i=this.config.name||t.attributes.friendly_name||this.config.entity,n=this.config.icon,o=this.config.color_active,s=this.config.color_on_active,a=e?s:"var(--primary-text-color)";return B`
       <ha-card>
         <div
           class="container"
@@ -614,15 +516,15 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
           `:""}
         </div>
       </ha-card>
-    `}_handleTap(){this.config.tap_action?this._handleAction(this.config.tap_action):this.hass.callService("homeassistant","toggle",{entity_id:this.config.entity})}getGridOptions(){return{columns:12,rows:1.5}}getCardSize(){return 2}}customElements.define("materia-device",vt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-device",name:"Materia Device",description:"A native Lit generic device/switch card with active-state colors."});customElements.define("materia-lock-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"lock"}}},{name:"name",selector:{text:{}}}]}render(){return this.hass&&this._config?B`
+    `}_handleTap(){this.config.tap_action?this._handleAction(this.config.tap_action):this.hass.callService("homeassistant","toggle",{entity_id:this.config.entity})}getGridOptions(){return{columns:12,rows:1.5}}getCardSize(){return 2}}customElements.define("materia-device",ft),window.customCards=window.customCards||[],window.customCards.push({type:"materia-device",name:"Materia Device",description:"A native Lit generic device/switch card with active-state colors."});customElements.define("materia-lock-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"lock"}}},{name:"name",selector:{text:{}}}]}render(){return this.hass&&this._config?B`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class _t extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-lock-editor")}static getStubConfig(){return{entity:"",name:""}}static styles=s`
+    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class vt extends(pt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-lock-editor")}static getStubConfig(){return{entity:"",name:""}}static styles=s`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -713,15 +615,15 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
           `:""}
         </div>
       </ha-card>
-    `}getGridOptions(){return{columns:12,rows:1.5}}getCardSize(){return 2}}customElements.define("materia-lock",_t),window.customCards=window.customCards||[],window.customCards.push({type:"materia-lock",name:"Materia Lock",description:"A native Lit lock display card with conditional icons."});customElements.define("materia-room-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"entity_type",selector:{select:{options:["light","cover"]}}},{name:"columns",selector:{number:{min:1,max:6}}},{name:"color_on",selector:{text:{}}}]}render(){return this.hass&&this._config?B`
+    `}getGridOptions(){return{columns:12,rows:1.5}}getCardSize(){return 2}}customElements.define("materia-lock",vt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-lock",name:"Materia Lock",description:"A native Lit lock display card with conditional icons."});customElements.define("materia-room-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"entity_type",selector:{select:{options:["light","cover"]}}},{name:"columns",selector:{number:{min:1,max:6}}},{name:"color_on",selector:{text:{}}}]}render(){return this.hass&&this._config?B`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class yt extends at{static properties={_config:{state:!0},_expanded:{state:!0},_childCards:{state:!0}};constructor(){super(),this._expanded=!1,this._childCards=null,this._hass=null}static getConfigElement(){return document.createElement("materia-room-editor")}static getStubConfig(){return{entity:"",name:"",icon:"",entity_type:"light",columns:2}}setConfig(t){if(!t.entity)throw new Error("entity is required");const e=this._config?.cards;this._config={columns:2,...t};const i=this._config.cards;JSON.stringify(e)!==JSON.stringify(i)&&(this._childCards=null,this.isConnected&&this._createChildCards())}set hass(t){this._hass=t,this._childCards&&this._childCards.forEach(e=>e.hass=t),this.requestUpdate()}get hass(){return this._hass}firstUpdated(){this._createChildCards()}async _createChildCards(){const t=this._config?.cards;if(!t||0===t.length)return void(this._childCards=[]);const e=await async function(){return lt||(lt=await window.loadCardHelpers(),lt)}();this._childCards=await Promise.all(t.map(async t=>{const i=await e.createCardElement(t);return this._hass&&(i.hass=this._hass),i})),this.requestUpdate()}_toggleExpand(){this._expanded=!this._expanded}_toggleEntity(t){if(t.stopPropagation(),!this._hass||!this._config.entity)return;const e="cover"===(this._config.entity_type||"light")?"cover":"light";this._hass.callService(e,"toggle",{entity_id:this._config.entity})}get _isActive(){if(!this._hass||!this._config.entity)return!1;const t=this._hass.states[this._config.entity];if(!t)return!1;return"cover"===(this._config.entity_type||"light")?"open"===t.state:"on"===t.state}get _stateDisplay(){if(!this._hass||!this._config.entity)return"";const t=this._hass.states[this._config.entity];if(!t)return"unavailable";if(this._config.attribute){const e=t.attributes[this._config.attribute];return null==e?t.state:"brightness"===this._config.attribute?`${Math.round(e/255*100)}%`:String(e)}return this._hass.formatEntityState?this._hass.formatEntityState(t):t.state}render(){if(!this._config)return B``;const t=this._isActive,e=t&&this._config.color_on?this._config.color_on:t?"var(--md-sys-color-primary)":"var(--primary-text-color)",i=this._config.columns||2;return B`
+    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class _t extends at{static properties={_config:{state:!0},_expanded:{state:!0},_childCards:{state:!0}};constructor(){super(),this._expanded=!1,this._childCards=null,this._hass=null}static getConfigElement(){return document.createElement("materia-room-editor")}static getStubConfig(){return{entity:"",name:"",icon:"",entity_type:"light",columns:2}}setConfig(t){if(!t.entity)throw new Error("entity is required");const e=this._config?.cards;this._config={columns:2,...t};const i=this._config.cards;JSON.stringify(e)!==JSON.stringify(i)&&(this._childCards=null,this.isConnected&&this._createChildCards())}set hass(t){this._hass=t,this._childCards&&this._childCards.forEach(e=>e.hass=t),this.requestUpdate()}get hass(){return this._hass}firstUpdated(){this._createChildCards()}async _createChildCards(){const t=this._config?.cards;if(!t||0===t.length)return void(this._childCards=[]);const e=await async function(){return lt||(lt=await window.loadCardHelpers(),lt)}();this._childCards=await Promise.all(t.map(async t=>{const i=await e.createCardElement(t);return this._hass&&(i.hass=this._hass),i})),this.requestUpdate()}_toggleExpand(){this._expanded=!this._expanded}_toggleEntity(t){if(t.stopPropagation(),!this._hass||!this._config.entity)return;const e="cover"===(this._config.entity_type||"light")?"cover":"light";this._hass.callService(e,"toggle",{entity_id:this._config.entity})}get _isActive(){if(!this._hass||!this._config.entity)return!1;const t=this._hass.states[this._config.entity];if(!t)return!1;return"cover"===(this._config.entity_type||"light")?"open"===t.state:"on"===t.state}get _stateDisplay(){if(!this._hass||!this._config.entity)return"";const t=this._hass.states[this._config.entity];if(!t)return"unavailable";if(this._config.attribute){const e=t.attributes[this._config.attribute];return null==e?t.state:"brightness"===this._config.attribute?`${Math.round(e/255*100)}%`:String(e)}return this._hass.formatEntityState?this._hass.formatEntityState(t):t.state}render(){if(!this._config)return B``;const t=this._isActive,e=t&&this._config.color_on?this._config.color_on:t?"var(--md-sys-color-primary)":"var(--primary-text-color)",i=this._config.columns||2;return B`
       <ha-card>
         <div class="title-row" @click=${this._toggleExpand}>
           <div class="title-left">
@@ -883,7 +785,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     .grid-item {
       min-width: 0;
     }
-  `}customElements.define("materia-room",yt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-room",name:"Materia Room",description:"A native expandable room section with title and grid of child cards"});customElements.define("materia-climate-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"climate"}}},{name:"name",required:!0,selector:{text:{}}},{name:"humidity_entity",selector:{entity:{domain:"sensor"}}},{name:"outdoor_temp_entity",selector:{entity:{domain:"sensor"}}},{name:"step",selector:{number:{min:.5,max:5,step:.5,mode:"box"}}}]}render(){return this.hass&&this._config?B`
+  `}customElements.define("materia-room",_t),window.customCards=window.customCards||[],window.customCards.push({type:"materia-room",name:"Materia Room",description:"A native expandable room section with title and grid of child cards"});customElements.define("materia-climate-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"climate"}}},{name:"name",required:!0,selector:{text:{}}},{name:"humidity_entity",selector:{entity:{domain:"sensor"}}},{name:"outdoor_temp_entity",selector:{entity:{domain:"sensor"}}},{name:"step",selector:{number:{min:.5,max:5,step:.5,mode:"box"}}}]}render(){return this.hass&&this._config?B`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
@@ -1068,10 +970,10 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class bt extends(dt(at)){static get properties(){return{hass:{attribute:!1},_config:{state:!0}}}static getConfigElement(){return document.createElement("materia-sensor-row-editor")}static getStubConfig(){return{entity:"",name:"",padding:"0px 20px"}}get config(){return this._config}setConfig(t){if(!t.entity)throw new Error("entity is required");if(!t.name)throw new Error("name is required");this._config={padding:"0px 20px",...t}}connectedCallback(){super.connectedCallback(),ct()}_handleTap(){this.hass&&this._config.tap_action&&this._handleAction(this._config.tap_action)}render(){if(!this.hass||!this._config)return B``;const t=this._config,e=this.hass.states[t.entity];if(!e)return B`<ha-card>Entity not found: ${t.entity}</ha-card>`;const i=e.state,n=e.attributes.unit_of_measurement||"",o=n?`${this._capitalize(i)} ${n}`:this._capitalize(i),s=!!t.tap_action;return B`
+    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class yt extends(pt(at)){static get properties(){return{hass:{attribute:!1},_config:{state:!0}}}static getConfigElement(){return document.createElement("materia-sensor-row-editor")}static getStubConfig(){return{entity:"",name:"",padding:"0px 20px"}}get config(){return this._config}setConfig(t){if(!t.entity)throw new Error("entity is required");if(!t.name)throw new Error("name is required");this._config={padding:"0px 20px",...t}}connectedCallback(){super.connectedCallback(),ct()}_handleTap(){this.hass&&this._config.tap_action&&this._handleAction(this._config.tap_action)}render(){if(!this.hass||!this._config)return B``;const t=this._config,e=this.hass.states[t.entity];if(!e)return B`<ha-card>Entity not found: ${t.entity}</ha-card>`;const i=e.state,n=e.attributes.unit_of_measurement||"",o=n?`${this._capitalize(i)} ${n}`:this._capitalize(i),s=!!t.tap_action;return B`
       <ha-card
         class="${s?"clickable":""}"
         @click=${s?this._handleTap:void 0}
@@ -1133,15 +1035,15 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         position: relative;
         z-index: 1;
       }
-    `}}customElements.define("materia-sensor-row",bt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-sensor-row",name:"Materia Sensor Row",description:"A simple name/value row for displaying sensor data"});const xt={sunny:"m3o:sunny",clear:"m3o:sunny","clear-night":"mdi:weather-night",partlycloudy:"m3o:partly-cloudy-day",partly_cloudy:"m3o:partly-cloudy-day",cloudy:"m3o:cloud",rainy:"m3o:rainy",pouring:"m3o:rainy",snowy:"mdi:weather-snowy",fog:"m3o:foggy",windy:"mdi:weather-windy",lightning:"mdi:weather-lightning","lightning-rainy":"mdi:weather-lightning-rainy",hail:"mdi:weather-hail",exceptional:"mdi:alert-circle-outline"};customElements.define("materia-weather-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"weather"}}},{name:"name",selector:{text:{}}},{name:"humidity_entity",selector:{entity:{domain:"sensor"}}}]}render(){return this.hass&&this._config?B`
+    `}}customElements.define("materia-sensor-row",yt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-sensor-row",name:"Materia Sensor Row",description:"A simple name/value row for displaying sensor data"});const bt={sunny:"m3o:sunny",clear:"m3o:sunny","clear-night":"mdi:weather-night",partlycloudy:"m3o:partly-cloudy-day",partly_cloudy:"m3o:partly-cloudy-day",cloudy:"m3o:cloud",rainy:"m3o:rainy",pouring:"m3o:rainy",snowy:"mdi:weather-snowy",fog:"m3o:foggy",windy:"mdi:weather-windy",lightning:"mdi:weather-lightning","lightning-rainy":"mdi:weather-lightning-rainy",hail:"mdi:weather-hail",exceptional:"mdi:alert-circle-outline"};customElements.define("materia-weather-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"weather"}}},{name:"name",selector:{text:{}}},{name:"humidity_entity",selector:{entity:{domain:"sensor"}}}]}render(){return this.hass&&this._config?B`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class wt extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-weather-editor")}static getStubConfig(){return{entity:""}}static styles=s`
+    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class xt extends(pt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-weather-editor")}static getStubConfig(){return{entity:""}}static styles=s`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -1149,150 +1051,157 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     ha-card {
       background: none;
       box-shadow: none;
-      padding: 8px 0;
-      font-family: inherit;
+      border: none;
+      overflow: visible;
     }
-    .row {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    ha-icon {
-      --mdc-icon-size: 32px;
-      flex-shrink: 0;
-    }
-    .info {
-      flex: 1;
-      min-width: 0;
-    }
-    .temp {
-      font-size: 24px;
-      font-weight: 500;
-    }
-    .condition {
-      font-size: 13px;
-      opacity: 0.7;
-      text-transform: capitalize;
-    }
-    .details {
-      font-size: 13px;
-      opacity: 0.7;
-      margin-left: auto;
-      text-align: right;
-      flex-shrink: 0;
-    }
-  `;constructor(){super(),ct()}setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={...t}}render(){if(!this.hass||!this.config)return B``;const t=this.hass.states[this.config.entity];if(!t)return B`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;const e=t.state,i=t.attributes.temperature,n=t.attributes.temperature_unit||"°",o=xt[e]||"mdi:weather-partly-cloudy";let s=null;if(this.config.humidity_entity){const t=this.hass.states[this.config.humidity_entity];t&&(s=t.state)}null==s&&null!=t.attributes.humidity&&(s=t.attributes.humidity);const a=e.replace(/-|_/g," ");return B`
-      <ha-card @click=${this._handleTap}>
-        <div class="row">
-          <ha-icon .icon=${o}></ha-icon>
-          <div class="info">
-            <div class="temp">${null!=i?`${i}${n}`:"—"}</div>
-            <div class="condition">${a}</div>
-          </div>
-          ${null!=s?B`<div class="details">${s}%<br />humidity</div>`:""}
-        </div>
-      </ha-card>
-    `}_handleTap(){this.config.tap_action?this._handleAction(this.config.tap_action):this._fireMoreInfo(this.config.entity)}getCardSize(){return 1}}customElements.define("materia-weather",wt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-weather",name:"Materia Weather",description:"Weather display card with condition icons and humidity."});customElements.define("materia-sensor-display-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"sensor"}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"unit",selector:{text:{}}}]}render(){return this.hass&&this._config?B`
-      <ha-form
-        .hass=${this.hass}
-        .data=${this._config}
-        .schema=${this._schema}
-        .computeLabel=${pt}
-        @value-changed=${this._valueChanged}
-      ></ha-form>
-    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class $t extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-sensor-display-editor")}static getStubConfig(){return{entity:"",name:"",icon:""}}static styles=s`
-    :host {
-      display: block;
-      font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
-    }
-    ha-card {
-      background: none;
-      box-shadow: none;
-      padding: 8px 0;
-      font-family: inherit;
-    }
-    .row {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    ha-icon {
-      --mdc-icon-size: 24px;
-      color: var(--md-sys-color-on-surface-variant);
-      flex-shrink: 0;
-    }
-    .info {
-      flex: 1;
-      min-width: 0;
-    }
-    .value {
-      font-size: 20px;
-      font-weight: 500;
-    }
-    .unit {
-      font-size: 14px;
-      font-weight: 400;
-      opacity: 0.7;
-      margin-left: 4px;
-    }
-    .classification {
-      font-size: 13px;
-      font-weight: 500;
-    }
-  `;constructor(){super(),ct()}setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={...t}}_classify(t){const e=this.config.ranges||[],i=parseFloat(t);for(const t of e)if(null==t.max||i<=t.max)return{label:t.label,color:t.color};return{label:"",color:""}}render(){if(!this.hass||!this.config)return B``;const t=this.hass.states[this.config.entity];if(!t)return B`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;const e=t.state,i=this.config.name||t.attributes.friendly_name||this.config.entity,n=this.config.icon||t.attributes.icon||"",o=this.config.unit||t.attributes.unit_of_measurement||"",s=this._classify(e);return B`
-      <ha-card @click=${this._handleTap}>
-        <div class="row">
-          ${n?B`<ha-icon .icon=${n}></ha-icon>`:""}
-          <div class="info">
-            <div class="value">
-              ${e}${o?B`<span class="unit">${o}</span>`:""}
-            </div>
-            ${s.label?B`<div class="classification" style="color: ${s.color||"inherit"}">${s.label}</div>`:B`<div class="classification">${i}</div>`}
-          </div>
-        </div>
-      </ha-card>
-    `}_handleTap(){this.config.tap_action?this._handleAction(this.config.tap_action):this._fireMoreInfo(this.config.entity)}getCardSize(){return 1}}customElements.define("materia-sensor-display",$t),window.customCards=window.customCards||[],window.customCards.push({type:"materia-sensor-display",name:"Materia Sensor Display",description:"Sensor display with range-to-label classification (AQI, etc.)."});class Ct extends at{static properties={hass:{attribute:!1},_config:{state:!0}};static styles=s`
-    :host { display: block; }
-    .yaml-label {
-      font-size: 13px;
-      font-weight: 500;
-      margin: 8px 0 4px;
-      color: var(--secondary-text-color);
-    }
-    textarea {
+    .container {
+      position: relative;
       width: 100%;
-      min-height: 80px;
+      min-height: 50px;
+      background: transparent;
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
       box-sizing: border-box;
-      font-family: monospace;
-      font-size: 12px;
-      border: 1px solid var(--divider-color, #e0e0e0);
-      border-radius: 4px;
-      padding: 6px;
-      resize: vertical;
-      background: var(--card-background-color, #fff);
-      color: var(--primary-text-color, #000);
     }
-  `;setConfig(t){this._config=t}get _schema(){return[{name:"entity",selector:{entity:{}}},{name:"name",required:!0,selector:{text:{}}},{name:"icon",required:!0,selector:{icon:{}}},{name:"variant",selector:{select:{options:[{value:"primary",label:"Primary"},{value:"secondary",label:"Secondary"},{value:"tertiary",label:"Tertiary"},{value:"error",label:"Error"},{value:"device",label:"Device"},{value:"primary-container",label:"Primary Container"},{value:"secondary-container",label:"Secondary Container"},{value:"error-container",label:"Error Container"},{value:"device-container",label:"Device Container"},{value:"battery",label:"Battery"}]}}},{name:"show_state",selector:{boolean:{}}},{name:"active_state",selector:{text:{}}},{name:"state_display",selector:{template:{}}},{name:"color",selector:{text:{}}},{name:"color_on",selector:{text:{}}}]}render(){return this.hass&&this._config?B`
+    .icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      min-height: 42px;
+      margin: 6px;
+      margin-left: 8px;
+      border-radius: 50%;
+      background-color: var(--ha-card-background, var(--card-background-color));
+      flex-shrink: 0;
+    }
+    .icon-container ha-icon {
+      --mdc-icon-size: 24px;
+      display: flex;
+    }
+    .name-container {
+      display: flex;
+      line-height: 18px;
+      flex-direction: column;
+      justify-content: center;
+      flex-grow: 1;
+      margin: 0 16px 0 4px;
+      overflow: hidden;
+    }
+    .name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .state {
+      font-size: 12px;
+      font-weight: normal;
+      opacity: 0.7;
+      white-space: nowrap;
+    }
+  `;constructor(){super(),ct()}setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={...t}}render(){if(!this.hass||!this.config)return B``;const t=this.hass.states[this.config.entity];if(!t)return B`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;const e=t.state,i=t.attributes.temperature,n=t.attributes.temperature_unit||"°",o=bt[e]||"mdi:weather-partly-cloudy";let s=null;if(this.config.humidity_entity){const t=this.hass.states[this.config.humidity_entity];t&&(s=t.state)}null==s&&null!=t.attributes.humidity&&(s=t.attributes.humidity);const a=e.replace(/-|_/g," "),r=null!=i?`${i}${n}`:"—",c=null!=s?`${this._capitalize(a)} · ${s}% humidity`:this._capitalize(a);return B`
+      <ha-card @click=${this._handleTap}>
+        <div class="container">
+          <div class="icon-container">
+            <ha-icon .icon=${o}></ha-icon>
+          </div>
+          <div class="name-container">
+            <div class="name">${r}</div>
+            <div class="state">${c}</div>
+          </div>
+        </div>
+      </ha-card>
+    `}_handleTap(){this.config.tap_action?this._handleAction(this.config.tap_action):this._fireMoreInfo(this.config.entity)}getCardSize(){return 1}}customElements.define("materia-weather",xt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-weather",name:"Materia Weather",description:"Weather display card with condition icons and humidity."});customElements.define("materia-sensor-display-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"sensor"}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"unit",selector:{text:{}}}]}render(){return this.hass&&this._config?B`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
-
-      <div class="yaml-label">Color map (JSON, state &rarr; color)</div>
-      <textarea
-        .value=${this._config.color_map?JSON.stringify(this._config.color_map,null,2):""}
-        @change=${this._colorMapChanged}
-      ></textarea>
-
-      <div class="yaml-label">Color on map (JSON, state &rarr; text color)</div>
-      <textarea
-        .value=${this._config.color_on_map?JSON.stringify(this._config.color_on_map,null,2):""}
-        @change=${this._colorOnMapChanged}
-      ></textarea>
-    `:B``}_valueChanged(t){const e={...this._config,...t.detail.value,color_map:this._config.color_map,color_on_map:this._config.color_on_map};this._fireConfig(e)}_colorMapChanged(t){const e=t.target.value.trim();if(!e){const{color_map:t,...e}=this._config;return void this._fireConfig(e)}try{const t=JSON.parse(e);this._fireConfig({...this._config,color_map:t})}catch(t){}}_colorOnMapChanged(t){const e=t.target.value.trim();if(!e){const{color_on_map:t,...e}=this._config;return void this._fireConfig(e)}try{const t=JSON.parse(e);this._fireConfig({...this._config,color_on_map:t})}catch(t){}}_fireConfig(t){this._config=t,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-button-editor",Ct);const kt={primary:["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],secondary:["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],tertiary:["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],error:["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],device:["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-container":["var(--md-sys-color-primary-container)","var(--md-sys-color-on-primary-container)"],"secondary-container":["var(--md-sys-color-secondary-container)","var(--md-sys-color-secondary)"],"error-container":["var(--md-sys-color-error-container)","var(--md-sys-color-error)"],"device-container":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"]};class Et extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedStateDisplay:{state:!0}};static getConfigElement(){return document.createElement("materia-button-editor")}static getStubConfig(){return{name:"",icon:"mdi:power-plug",variant:"primary",show_state:!1,active_state:"on"}}static styles=s`
+    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class wt extends(pt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-sensor-display-editor")}static getStubConfig(){return{entity:"",name:"",icon:""}}static styles=s`
+    :host {
+      display: block;
+      font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
+    }
+    ha-card {
+      background: none;
+      box-shadow: none;
+      border: none;
+      overflow: visible;
+    }
+    .container {
+      position: relative;
+      width: 100%;
+      min-height: 50px;
+      background: transparent;
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
+      box-sizing: border-box;
+    }
+    .icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      min-height: 42px;
+      margin: 6px;
+      margin-left: 8px;
+      border-radius: 50%;
+      background-color: var(--ha-card-background, var(--card-background-color));
+      flex-shrink: 0;
+    }
+    .icon-container ha-icon {
+      --mdc-icon-size: 24px;
+      display: flex;
+    }
+    .name-container {
+      display: flex;
+      line-height: 18px;
+      flex-direction: column;
+      justify-content: center;
+      flex-grow: 1;
+      margin: 0 16px 0 4px;
+      overflow: hidden;
+    }
+    .name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .state {
+      font-size: 12px;
+      font-weight: normal;
+      opacity: 0.7;
+      white-space: nowrap;
+    }
+  `;constructor(){super(),ct()}setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={...t}}_classify(t){const e=this.config.ranges||[],i=parseFloat(t);for(const t of e)if(null==t.max||i<=t.max)return{label:t.label,color:t.color};return{label:"",color:""}}render(){if(!this.hass||!this.config)return B``;const t=this.hass.states[this.config.entity];if(!t)return B`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;const e=t.state,i=this.config.name||t.attributes.friendly_name||this.config.entity,n=this.config.icon||t.attributes.icon||"",o=this.config.unit||t.attributes.unit_of_measurement||"",s=this._classify(e),a=o?`${e} · ${s.label||i}`:`${e}`,r=o||(s.label||i);return B`
+      <ha-card @click=${this._handleTap}>
+        <div class="container">
+          ${n?B`
+            <div class="icon-container">
+              <ha-icon .icon=${n}></ha-icon>
+            </div>
+          `:""}
+          <div class="name-container">
+            <div class="name">${a}</div>
+            <div class="state">${r}</div>
+          </div>
+        </div>
+      </ha-card>
+    `}_handleTap(){this.config.tap_action?this._handleAction(this.config.tap_action):this._fireMoreInfo(this.config.entity)}getCardSize(){return 1}}customElements.define("materia-sensor-display",wt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-sensor-display",name:"Materia Sensor Display",description:"Sensor display with range-to-label classification (AQI, etc.)."});class $t extends at{static properties={hass:{attribute:!1},_config:{state:!0}};static styles=s`
+    :host { display: block; }
+  `;setConfig(t){this._config=t}get _schema(){return[{name:"entity",selector:{entity:{}}},{name:"name",required:!0,selector:{text:{}}},{name:"icon",required:!0,selector:{icon:{}}},{name:"variant",selector:{select:{options:[{value:"primary",label:"Primary"},{value:"secondary",label:"Secondary"},{value:"tertiary",label:"Tertiary"},{value:"error",label:"Error"},{value:"device",label:"Device"},{value:"primary-container",label:"Primary Container"},{value:"secondary-container",label:"Secondary Container"},{value:"error-container",label:"Error Container"},{value:"device-container",label:"Device Container"},{value:"battery",label:"Battery"}]}}},{name:"show_state",selector:{boolean:{}}},{name:"active_state",selector:{text:{}}},{name:"state_display",selector:{template:{}}},{name:"color",selector:{template:{}}},{name:"color_on",selector:{template:{}}}]}render(){return this.hass&&this._config?B`
+      <ha-form
+        .hass=${this.hass}
+        .data=${this._config}
+        .schema=${this._schema}
+        .computeLabel=${dt}
+        @value-changed=${this._valueChanged}
+      ></ha-form>
+    `:B``}_valueChanged(t){this._config={...this._config,...t.detail.value},this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:this._config},bubbles:!0,composed:!0}))}}customElements.define("materia-button-editor",$t);const Ct={primary:["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],secondary:["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],tertiary:["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],error:["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],device:["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-container":["var(--md-sys-color-primary-container)","var(--md-sys-color-on-primary-container)"],"secondary-container":["var(--md-sys-color-secondary-container)","var(--md-sys-color-secondary)"],"error-container":["var(--md-sys-color-error-container)","var(--md-sys-color-error)"],"device-container":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"]};class kt extends(pt(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedStateDisplay:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0}};static getConfigElement(){return document.createElement("materia-button-editor")}static getStubConfig(){return{name:"",icon:"mdi:power-plug",variant:"primary",show_state:!1,active_state:"on"}}static styles=s`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -1361,7 +1270,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     .state {
       grid-area: s;
       justify-self: start;
-      margin: 0 0 4px 16px;
+      margin: 0 0 10px 16px;
       font-size: 12px;
       font-weight: normal;
       opacity: 0.7;
@@ -1373,9 +1282,9 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       background-color: var(--ha-card-background);
       color: var(--primary-text-color);
     }
-  `;constructor(){super(),ct()}setConfig(t){if(!t.icon)throw new Error("icon is required");if(!t.name)throw new Error("name is required");this.config={show_state:!1,active_state:"on",variant:"secondary",tap_action:{action:"toggle"},...t}}updated(t){super.updated?.(t);const e=this.config?.state_display;t.has("hass")&&e&&(e.includes("{{")||e.includes("{%"))&&this._renderTemplate(this.config.state_display).then(t=>{t!==this._resolvedStateDisplay&&(this._resolvedStateDisplay=t)})}_isActive(t){if(!t)return!1;const e=t.state,i=this.config.active_state||"on";return e===String(i)||"open"===e}_getBatteryColors(t){const e=parseFloat(t?.state)||0;return e<10?["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"]:e<20?["var(--md-sys-cust-color-warning-container)","var(--md-sys-cust-color-on-warning-container)"]:["var(--ha-card-background)","var(--primary-text-color)"]}render(){if(!this.hass||!this.config)return B``;const t=this.config.entity,e=t?this.hass.states[t]:void 0,i=this._isActive(e),n=this.config.variant||"secondary",o=this.config.show_state;let s,a;const r=this._parseMap(this.config.color_map),c=this._parseMap(this.config.color_on_map);if(r&&e){const t=e.state,i=r[t]??r[String(t)]??r._default;if(void 0!==i){s=i;a=c?.[t]??c?.[String(t)]??c?._default??"var(--primary-text-color)"}}if(void 0===s&&"battery"===n){const[t,i]=this._getBatteryColors(e);s=t,a=i}else if(void 0===s&&i&&t)if(this.config.color_on)s=this.config.color_on,a=this.config.color?this.config.color:"var(--primary-text-color)";else{const t=kt[n]||kt.secondary;s=t[0],a=t[1]}else void 0===s&&(s="var(--ha-card-background)",a="var(--primary-text-color)");if(!o&&!t&&["primary","tertiary","error","primary-container","secondary-container","error-container","device-container"].includes(n)){const t=kt[n]||kt.secondary;s=t[0],a=t[1]}const l=o?"with-state":"no-state",h=i?"active":"inactive";let d="";if(o&&e){const t=this.config.state_display&&(this.config.state_display.includes("{{")||this.config.state_display.includes("{%"));d=this._resolvedStateDisplay&&t?this._resolvedStateDisplay:this.config.state_display&&!t?this.config.state_display:e.state,d=this._capitalize(d)}return B`
+  `;constructor(){super(),ct()}setConfig(t){if(!t.icon)throw new Error("icon is required");if(!t.name)throw new Error("name is required");this.config={show_state:!1,active_state:"on",variant:"secondary",tap_action:{action:"toggle"},...t}}updated(t){super.updated?.(t),t.has("hass")&&this.hass&&(this._resolveField("state_display","_resolvedStateDisplay"),this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"))}_resolveField(t,e){const i=this.config?.[t];i&&"string"==typeof i&&(i.includes("{{")||i.includes("{%"))&&this._renderTemplate(i).then(t=>{const i="string"==typeof t?t.trim():t;i!==this[e]&&(this[e]=i)})}_isActive(t){if(!t)return!1;const e=t.state,i=this.config.active_state||"on";return e===String(i)||"open"===e}_getBatteryColors(t){const e=parseFloat(t?.state)||0;return e<10?["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"]:e<20?["var(--md-sys-cust-color-warning-container)","var(--md-sys-cust-color-on-warning-container)"]:["var(--ha-card-background)","var(--primary-text-color)"]}render(){if(!this.hass||!this.config)return B``;const t=this.config.entity,e=t?this.hass.states[t]:void 0,i=this._isActive(e),n=this.config.variant||"secondary",o=this.config.show_state;let s=this._resolvedColor||this.config.color,a=this._resolvedColorOn||this.config.color_on;if(!s)if("battery"===n){const[t,i]=this._getBatteryColors(e);s=t,a=i}else if(i&&t){const t=Ct[n]||Ct.secondary;s=t[0],a=a||t[1]}else s="var(--ha-card-background)",a=a||"var(--primary-text-color)";if(!t&&!this.config.color&&["primary","tertiary","error","primary-container","secondary-container","error-container","device-container"].includes(n)){const t=Ct[n]||Ct.secondary;s=t[0],a=t[1]}a=a||"var(--primary-text-color)";const r=o?"with-state":"no-state",c=i?"active":"inactive";let l="";if(o&&e){const t=this.config.state_display&&(this.config.state_display.includes("{{")||this.config.state_display.includes("{%"));l=this._resolvedStateDisplay&&t?this._resolvedStateDisplay:this.config.state_display&&!t?this.config.state_display:e.state,l=this._capitalize(l)}return B`
       <ha-card
-        class="${l} ${h}"
+        class="${r} ${c}"
         style="background-color: ${s}; color: ${a};"
         @click=${this._handleTap}
       >
@@ -1383,9 +1292,9 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
           <ha-icon .icon=${this.config.icon} style="color: ${a};"></ha-icon>
         </div>
         <div class="name">${this.config.name}</div>
-        ${o?B`<div class="state">${d}</div>`:""}
+        ${o?B`<div class="state">${l}</div>`:""}
       </ha-card>
-    `}_parseMap(t){if(!t)return null;if("object"==typeof t)return t;try{return JSON.parse(t)}catch(t){return null}}_handleTap(){const t=this.config.tap_action||{action:"toggle"};this._handleAction(t)}getCardSize(){return 2}}customElements.define("materia-button",Et),window.customCards=window.customCards||[],window.customCards.push({type:"materia-button",name:"Materia Button",description:"Material You small button with variants, state display, and battery mode."});const At={primary:{active:"var(--md-sys-color-primary)",onActive:"var(--md-sys-color-on-primary)"},secondary:{active:"var(--md-sys-color-secondary)",onActive:"var(--md-sys-color-on-secondary)"},"climate-heat":{active:"var(--md-sys-cust-color-climate-heat)",onActive:"var(--md-sys-cust-color-on-climate-heat)"},"climate-cool":{active:"var(--md-sys-cust-color-climate-cool)",onActive:"var(--md-sys-cust-color-on-climate-cool)"},"climate-auto":{active:"var(--md-sys-cust-color-climate-auto)",onActive:"var(--md-sys-cust-color-on-climate-auto)"},light:{active:"var(--md-sys-cust-color-light)",onActive:"var(--md-sys-cust-color-on-light)"},device:{active:"var(--md-sys-cust-color-device)",onActive:"var(--md-sys-cust-color-on-device)"}},St={xs:{height:32,innerCorner:4},s:{height:40,innerCorner:8},m:{height:48,innerCorner:8},l:{height:56,innerCorner:16},xl:{height:64,innerCorner:20}};class zt extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config={...t}}get _schema(){return[{name:"entity",selector:{entity:{}}},{name:"attribute",selector:{text:{}}},{name:"preset",selector:{select:{options:[{value:"",label:"None"},...Object.keys(At).map(t=>({value:t,label:t}))],mode:"dropdown"}}},{name:"size",selector:{select:{options:[{value:"xs",label:"XS (32dp)"},{value:"s",label:"S (40dp)"},{value:"m",label:"M (48dp)"},{value:"l",label:"L (56dp)"},{value:"xl",label:"XL (64dp)"}],mode:"dropdown"}}},{name:"variant",selector:{select:{options:[{value:"filled",label:"Filled"},{value:"tonal",label:"Tonal"},{value:"outlined",label:"Outlined"},{value:"elevated",label:"Elevated"}],mode:"dropdown"}}},{name:"color_active",selector:{text:{}}},{name:"color_on_active",selector:{text:{}}}]}static styles=s`
+    `}_handleTap(){const t=this.config.tap_action||{action:"toggle"};this._handleAction(t)}getCardSize(){return 2}}customElements.define("materia-button",kt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-button",name:"Materia Button",description:"Material You small button with variants, state display, and battery mode."});const Et={primary:{active:"var(--md-sys-color-primary)",onActive:"var(--md-sys-color-on-primary)"},secondary:{active:"var(--md-sys-color-secondary)",onActive:"var(--md-sys-color-on-secondary)"},"climate-heat":{active:"var(--md-sys-cust-color-climate-heat-container)",onActive:"var(--md-sys-cust-color-on-climate-heat)"},"climate-cool":{active:"var(--md-sys-cust-color-climate-cool-container)",onActive:"var(--md-sys-cust-color-on-climate-cool)"},"climate-auto":{active:"var(--md-sys-cust-color-climate-auto-container)",onActive:"var(--md-sys-cust-color-on-climate-auto)"},light:{active:"var(--md-sys-cust-color-light-container)",onActive:"var(--md-sys-cust-color-on-light)"},device:{active:"var(--md-sys-cust-color-device-container)",onActive:"var(--md-sys-cust-color-on-device)"}},At={xs:{height:32,innerCorner:4},s:{height:40,innerCorner:8},m:{height:48,innerCorner:8},l:{height:56,innerCorner:16},xl:{height:64,innerCorner:20}};class zt extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config={...t}}get _schema(){return[{name:"entity",selector:{entity:{}}},{name:"attribute",selector:{text:{}}},{name:"preset",selector:{select:{options:[{value:"",label:"None"},...Object.keys(Et).map(t=>({value:t,label:t}))],mode:"dropdown"}}},{name:"size",selector:{select:{options:[{value:"xs",label:"XS (32dp)"},{value:"s",label:"S (40dp)"},{value:"m",label:"M (48dp)"},{value:"l",label:"L (56dp)"},{value:"xl",label:"XL (64dp)"}],mode:"dropdown"}}},{name:"variant",selector:{select:{options:[{value:"filled",label:"Filled"},{value:"tonal",label:"Tonal"},{value:"outlined",label:"Outlined"},{value:"elevated",label:"Elevated"}],mode:"dropdown"}}},{name:"color_active",selector:{text:{}}},{name:"color_on_active",selector:{text:{}}}]}static styles=s`
     .options-header {
       display: flex;
       align-items: center;
@@ -1430,7 +1339,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
 
@@ -1464,14 +1373,14 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
                       .hass=${this.hass}
                       .data=${t}
                       .schema=${this._optionSchema}
-                      .computeLabel=${pt}
+                      .computeLabel=${dt}
                       @value-changed=${t=>this._updateOptionForm(e,t.detail.value)}
                     ></ha-form>
                   </div>
                 `:""}
           </div>
         `)}
-    `:B``}_expanded=null;get _optionSchema(){return[{name:"label",selector:{text:{}}},{name:"value",required:!0,selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"tap_action",label:"Action",selector:{ui_action:{default_action:"call-service"}}}]}_updateOptionForm(t,e){const i=[...this._config.options||[]];i[t]={...i[t],...e};const n={...this._config,options:i};this._config=n,this._fireConfigChanged(n)}_toggleExpand(t){this._expanded=this._expanded===t?null:t,this.requestUpdate()}_valueChanged(t){const e={...this._config,...t.detail.value};this._config=e,this._fireConfigChanged(e)}_addOption(){const t=[...this._config.options||[],{label:"",value:"",icon:""}],e={...this._config,options:t};this._config=e,this._expanded=t.length-1,this._fireConfigChanged(e)}_removeOption(t){const e=[...this._config.options||[]];e.splice(t,1);const i={...this._config,options:e};this._config=i,this._expanded===t&&(this._expanded=null),this._fireConfigChanged(i)}_moveOption(t,e){const i=[...this._config.options||[]],n=t+e;if(n<0||n>=i.length)return;[i[t],i[n]]=[i[n],i[t]];const o={...this._config,options:i};this._config=o,this._expanded===t&&(this._expanded=n),this._fireConfigChanged(o)}_updateOption(t,e,i){const n=[...this._config.options||[]];n[t]={...n[t],[e]:i};const o={...this._config,options:n};this._config=o,this._fireConfigChanged(o)}_fireConfigChanged(t){this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-button-group-editor",zt);class Ut extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-button-group-editor")}static getStubConfig(){return{entity:"",size:"m",options:[{label:"Option A",value:"a"},{label:"Option B",value:"b"}]}}static styles=s`
+    `:B``}_expanded=null;get _optionSchema(){return[{name:"label",selector:{text:{}}},{name:"value",required:!0,selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"tap_action",label:"Action",selector:{ui_action:{default_action:"call-service"}}}]}_updateOptionForm(t,e){const i=[...this._config.options||[]];i[t]={...i[t],...e};const n={...this._config,options:i};this._config=n,this._fireConfigChanged(n)}_toggleExpand(t){this._expanded=this._expanded===t?null:t,this.requestUpdate()}_valueChanged(t){const e={...this._config,...t.detail.value};this._config=e,this._fireConfigChanged(e)}_addOption(){const t=[...this._config.options||[],{label:"",value:"",icon:""}],e={...this._config,options:t};this._config=e,this._expanded=t.length-1,this._fireConfigChanged(e)}_removeOption(t){const e=[...this._config.options||[]];e.splice(t,1);const i={...this._config,options:e};this._config=i,this._expanded===t&&(this._expanded=null),this._fireConfigChanged(i)}_moveOption(t,e){const i=[...this._config.options||[]],n=t+e;if(n<0||n>=i.length)return;[i[t],i[n]]=[i[n],i[t]];const o={...this._config,options:i};this._config=o,this._expanded===t&&(this._expanded=n),this._fireConfigChanged(o)}_updateOption(t,e,i){const n=[...this._config.options||[]];n[t]={...n[t],[e]:i};const o={...this._config,options:n};this._config=o,this._fireConfigChanged(o)}_fireConfigChanged(t){this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-button-group-editor",zt);class St extends(pt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-button-group-editor")}static getStubConfig(){return{entity:"",size:"m",options:[{label:"Option A",value:"a"},{label:"Option B",value:"b"}]}}static styles=s`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -1505,7 +1414,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       justify-content: center;
       gap: 8px;
       padding: 0 16px;
-      transition: border-radius 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+      transition: background-color 0.2s ease, color 0.2s ease;
       font-family: inherit;
       white-space: nowrap;
       position: relative;
@@ -1561,7 +1470,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       --mdc-icon-size: 18px;
       flex-shrink: 0;
     }
-  `;constructor(){super(),ct()}setConfig(t){if(!t.options||!Array.isArray(t.options)||0===t.options.length)throw new Error("At least one option is required");this.config={size:"m",...t}}get _activeValue(){const t=this.hass?.states[this.config.entity];return this.config.attribute?String(t?.attributes?.[this.config.attribute]??""):t?.state??""}_getActiveColors(){return this.config.color_active&&this.config.color_on_active?{active:this.config.color_active,onActive:this.config.color_on_active}:this.config.preset&&At[this.config.preset]?At[this.config.preset]:At.primary}render(){if(!this.hass||!this.config)return B``;const t=this.config.size||"m",{height:e,innerCorner:i}=St[t]||St.m,n=e/2,o=this._activeValue,s=this._getActiveColors(),a=this.config.options,r=this.config.variant||"filled";return B`
+  `;constructor(){super(),ct()}setConfig(t){if(!t.options||!Array.isArray(t.options)||0===t.options.length)throw new Error("At least one option is required");this.config={size:"m",...t}}get _activeValue(){const t=this.hass?.states[this.config.entity];return this.config.attribute?String(t?.attributes?.[this.config.attribute]??""):t?.state??""}_getActiveColors(){return this.config.color_active&&this.config.color_on_active?{active:this.config.color_active,onActive:this.config.color_on_active}:this.config.preset&&Et[this.config.preset]?Et[this.config.preset]:Et.primary}render(){if(!this.hass||!this.config)return B``;const t=this.config.size||"m",{height:e,innerCorner:i}=At[t]||At.m,n=e/2,o=this._activeValue,s=this._getActiveColors(),a=this.config.options,r=this.config.variant||"filled";return B`
       <ha-card>
         <div class="group" style="height: ${e}px;">
           ${a.map((t,e)=>{const c=String(t.value)===o,l=0===e,h=e===a.length-1,d=c?`${n}px`:`${i}px`,p=`${n}px`;let u;u=1===a.length?p:l?`${p} ${d} ${d} ${p}`:h?`${d} ${p} ${p} ${d}`:d;const g=c?s.active:void 0,m=c?s.onActive:void 0;return B`
@@ -1576,7 +1485,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
             `})}
         </div>
       </ha-card>
-    `}_handleOptionTap(t){t.tap_action?this._handleAction(t.tap_action):this.config.entity&&this._fireMoreInfo(this.config.entity)}getCardSize(){return 1}}customElements.define("materia-button-group",Ut),window.customCards=window.customCards||[],window.customCards.push({type:"materia-button-group",name:"Materia Button Group",description:"M3 connected button group with presets and sizes."});class Tt extends at{static properties={hass:{attribute:!1},_config:{state:!0}};static styles=s`
+    `}_handleOptionTap(t){t.tap_action?this._handleAction(t.tap_action):this.config.entity&&this._fireMoreInfo(this.config.entity)}getCardSize(){return 1}}customElements.define("materia-button-group",St),window.customCards=window.customCards||[],window.customCards.push({type:"materia-button-group",name:"Materia Button Group",description:"M3 connected button group with presets and sizes."});class Ut extends at{static properties={hass:{attribute:!1},_config:{state:!0}};static styles=s`
     :host { display: block; }
     .yaml-label {
       font-size: 13px;
@@ -1602,7 +1511,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
 
@@ -1617,7 +1526,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         .value=${this._config.tap_action?JSON.stringify(this._config.tap_action,null,2):""}
         @change=${this._tapActionChanged}
       ></textarea>
-    `:B``}_valueChanged(t){const e={...this._config,...t.detail.value,icon_map:this._config.icon_map,tap_action:this._config.tap_action};this._fireConfig(e)}_iconMapChanged(t){const e=t.target.value.trim();if(!e){const{icon_map:t,...e}=this._config;return void this._fireConfig(e)}try{const t=JSON.parse(e);this._fireConfig({...this._config,icon_map:t})}catch(t){}}_tapActionChanged(t){const e=t.target.value.trim();if(!e){const{tap_action:t,...e}=this._config;return void this._fireConfig(e)}try{const t=JSON.parse(e);this._fireConfig({...this._config,tap_action:t})}catch(t){}}_fireConfig(t){this._config=t,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-icon-button-editor",Tt);class Mt extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-icon-button-editor")}static getStubConfig(){return{icon:"mdi:play",variant:"filled",size:"default"}}static styles=s`
+    `:B``}_valueChanged(t){const e={...this._config,...t.detail.value,icon_map:this._config.icon_map,tap_action:this._config.tap_action};this._fireConfig(e)}_iconMapChanged(t){const e=t.target.value.trim();if(!e){const{icon_map:t,...e}=this._config;return void this._fireConfig(e)}try{const t=JSON.parse(e);this._fireConfig({...this._config,icon_map:t})}catch(t){}}_tapActionChanged(t){const e=t.target.value.trim();if(!e){const{tap_action:t,...e}=this._config;return void this._fireConfig(e)}try{const t=JSON.parse(e);this._fireConfig({...this._config,tap_action:t})}catch(t){}}_fireConfig(t){this._config=t,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-icon-button-editor",Ut);class Tt extends(pt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-icon-button-editor")}static getStubConfig(){return{icon:"mdi:play",variant:"filled",size:"default"}}static styles=s`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -1694,15 +1603,15 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       >
         <ha-icon .icon=${i}></ha-icon>
       </ha-card>
-    `}_resolveTapAction(){if(this.config.tap_action_map&&this.config.entity){const t=this.hass?.states[this.config.entity]?.state,e=this.config.tap_action_map[t]??this.config.tap_action_map.default;if(e)return e}return this.config.tap_action||this._defaultTapAction()}_handleTap(){this._handleAction(this._resolveTapAction())}getCardSize(){return 1}}customElements.define("materia-icon-button",Mt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-icon-button",name:"Materia Icon Button",description:"M3 icon button with variants"});customElements.define("materia-checkbox-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"checked_entity",selector:{entity:{}}},{name:"checked_value",selector:{text:{}}}]}render(){return this.hass&&this._config?B`
+    `}_resolveTapAction(){if(this.config.tap_action_map&&this.config.entity){const t=this.hass?.states[this.config.entity]?.state,e=this.config.tap_action_map[t]??this.config.tap_action_map.default;if(e)return e}return this.config.tap_action||this._defaultTapAction()}_handleTap(){this._handleAction(this._resolveTapAction())}getCardSize(){return 1}}customElements.define("materia-icon-button",Tt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-icon-button",name:"Materia Icon Button",description:"M3 icon button with variants"});customElements.define("materia-checkbox-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"checked_entity",selector:{entity:{}}},{name:"checked_value",selector:{text:{}}}]}render(){return this.hass&&this._config?B`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Ot extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-checkbox-editor")}static getStubConfig(){return{entity:"",name:""}}static styles=s`
+    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Mt extends(pt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-checkbox-editor")}static getStubConfig(){return{entity:"",name:""}}static styles=s`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -1755,15 +1664,15 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
           <ha-icon .icon=${n}></ha-icon>
         </div>
       </ha-card>
-    `}_handleTap(){const t=this.hass?.states[this.config.entity],e=this._isChecked(t);let i;i=e&&this.config.tap_action_checked?this.config.tap_action_checked:!e&&this.config.tap_action_unchecked?this.config.tap_action_unchecked:this.config.tap_action||{action:"toggle"},this._handleAction(i)}getCardSize(){return 1}}customElements.define("materia-checkbox",Ot),window.customCards=window.customCards||[],window.customCards.push({type:"materia-checkbox",name:"Materia Checkbox",description:"Material You checkbox row with name and toggle icon."});customElements.define("materia-circle-action-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"icon",required:!0,selector:{icon:{}}},{name:"size",selector:{select:{options:[{value:"normal",label:"Normal"},{value:"small",label:"Small"}]}}}]}render(){return this.hass&&this._config?B`
+    `}_handleTap(){const t=this.hass?.states[this.config.entity],e=this._isChecked(t);let i;i=e&&this.config.tap_action_checked?this.config.tap_action_checked:!e&&this.config.tap_action_unchecked?this.config.tap_action_unchecked:this.config.tap_action||{action:"toggle"},this._handleAction(i)}getCardSize(){return 1}}customElements.define("materia-checkbox",Mt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-checkbox",name:"Materia Checkbox",description:"Material You checkbox row with name and toggle icon."});customElements.define("materia-circle-action-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"icon",required:!0,selector:{icon:{}}},{name:"size",selector:{select:{options:[{value:"normal",label:"Normal"},{value:"small",label:"Small"}]}}}]}render(){return this.hass&&this._config?B`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Ft extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-circle-action-editor")}static getStubConfig(){return{icon:"mdi:play",size:"normal"}}static styles=s`
+    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Ft extends(pt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-circle-action-editor")}static getStubConfig(){return{icon:"mdi:play",size:"normal"}}static styles=s`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -1813,10 +1722,10 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Pt extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-tonal-button-editor")}static getStubConfig(){return{entity:"",name:"",icon:""}}static styles=s`
+    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Ot extends(pt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-tonal-button-editor")}static getStubConfig(){return{entity:"",name:"",icon:""}}static styles=s`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -1909,15 +1818,15 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
           <div class="name">${this.config.name}</div>
         </div>
       </ha-card>
-    `:B``}_handleTap(){const t=this.config.tap_action;t&&this._handleAction(t)}getCardSize(){return 1}}customElements.define("materia-tonal-button",Pt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-tonal-button",name:"Materia Tonal Button",description:"Material You tonal pill button with hover and active states."});customElements.define("materia-pill-badge-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",required:!0,selector:{text:{}}},{name:"icon",required:!0,selector:{icon:{}}},{name:"active_state",selector:{text:{}}}]}render(){return this.hass&&this._config?B`
+    `:B``}_handleTap(){const t=this.config.tap_action;t&&this._handleAction(t)}getCardSize(){return 1}}customElements.define("materia-tonal-button",Ot),window.customCards=window.customCards||[],window.customCards.push({type:"materia-tonal-button",name:"Materia Tonal Button",description:"Material You tonal pill button with hover and active states."});customElements.define("materia-pill-badge-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",required:!0,selector:{text:{}}},{name:"icon",required:!0,selector:{icon:{}}},{name:"active_state",selector:{text:{}}}]}render(){return this.hass&&this._config?B`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Rt extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-pill-badge-editor")}static getStubConfig(){return{entity:"",name:"",icon:"",active_state:"on"}}static styles=s`
+    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Pt extends(pt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-pill-badge-editor")}static getStubConfig(){return{entity:"",name:"",icon:"",active_state:"on"}}static styles=s`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -2005,17 +1914,17 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
           <div class="name">${this.config.name}</div>
         </div>
       </ha-card>
-    `}_handleTap(){const t=this.config.tap_action;t?this._handleAction(t):this.config.entity&&this._fireMoreInfo(this.config.entity)}getCardSize(){return 1}}customElements.define("materia-pill-badge",Rt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-pill-badge",name:"Materia Pill Badge",description:"Material You pill badge card with active state highlighting."});class qt extends at{static properties={hass:{attribute:!1},_config:{state:!0}};static styles=s`
+    `}_handleTap(){const t=this.config.tap_action;t?this._handleAction(t):this.config.entity&&this._fireMoreInfo(this.config.entity)}getCardSize(){return 1}}customElements.define("materia-pill-badge",Pt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-pill-badge",name:"Materia Pill Badge",description:"Material You pill badge card with active state highlighting."});class Rt extends at{static properties={hass:{attribute:!1},_config:{state:!0}};static styles=s`
     :host { display: block; }
   `;setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"color",selector:{template:{}}},{name:"color_on",selector:{template:{}}},{name:"tap_action",type:"expandable",schema:[{name:"action",selector:{select:{options:[{value:"none",label:"None"},{value:"more-info",label:"More info"},{value:"navigate",label:"Navigate"},{value:"toggle",label:"Toggle"},{value:"call-service",label:"Call service"}]}}},{name:"navigation_path",selector:{text:{}}}]}]}render(){return this.hass&&this._config?B`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:B``}_valueChanged(t){this._config=t.detail.value,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:this._config},bubbles:!0,composed:!0}))}}customElements.define("materia-pill-editor",qt);class Nt extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-pill-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:information-outline"}}static styles=s`
+    `:B``}_valueChanged(t){this._config=t.detail.value,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:this._config},bubbles:!0,composed:!0}))}}customElements.define("materia-pill-editor",Rt);class qt extends(pt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-pill-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:information-outline"}}static styles=s`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -2109,12 +2018,12 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
               ></ha-icon>`:""}
         </div>
       </ha-card>
-    `}_handleTap(){const t=this.config.tap_action||{action:"more-info"};this._handleAction(t)}getGridOptions(){return{columns:6,rows:"auto"}}getCardSize(){return 1}}customElements.define("materia-pill",Nt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-pill",name:"Materia Pill",description:"Compact info pill card with configurable icon, name, state, and colors."});customElements.define("materia-separator-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"label",selector:{text:{}}},{name:"color",selector:{text:{}}}]}render(){return this.hass&&this._config?B`
+    `}_handleTap(){const t=this.config.tap_action||{action:"more-info"};this._handleAction(t)}getGridOptions(){return{columns:6,rows:"auto"}}getCardSize(){return 1}}customElements.define("materia-pill",qt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-pill",name:"Materia Pill",description:"Compact info pill card with configurable icon, name, state, and colors."});customElements.define("materia-separator-editor",class extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"label",selector:{text:{}}},{name:"color",selector:{text:{}}}]}render(){return this.hass&&this._config?B`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
     `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Dt extends at{static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-separator-editor")}static getStubConfig(){return{label:""}}static styles=s`
@@ -2149,10 +2058,10 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${dt}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Lt extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-select-editor")}static getStubConfig(){return{entity:""}}static styles=s`
+    `:B``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Nt extends(pt(at)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-select-editor")}static getStubConfig(){return{entity:""}}static styles=s`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -2212,4 +2121,4 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
           </select>
         </div>
       </ha-card>
-    `}_onSelect(t){const e=t.target.value,i=this.config.entity,n=i.split(".")[0];this.hass.callService(n,"select_option",{entity_id:i,option:e})}getCardSize(){return 1}}customElements.define("materia-select",Lt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-select",name:"Materia Select",description:"Dropdown select for input_select / select entities."}),ct();console.info("%c MATERIA %c v0.3.0 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");
+    `}_onSelect(t){const e=t.target.value,i=this.config.entity,n=i.split(".")[0];this.hass.callService(n,"select_option",{entity_id:i,option:e})}getCardSize(){return 1}}customElements.define("materia-select",Nt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-select",name:"Materia Select",description:"Dropdown select for input_select / select entities."}),ct();console.info("%c MATERIA %c v0.3.0 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");

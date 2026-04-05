@@ -80,36 +80,54 @@ class MateriaSensorDisplay extends ActionMixin(LitElement) {
     ha-card {
       background: none;
       box-shadow: none;
-      padding: 8px 0;
-      font-family: inherit;
+      border: none;
+      overflow: visible;
     }
-    .row {
+    .container {
+      position: relative;
+      width: 100%;
+      min-height: 50px;
+      background: transparent;
+      border-radius: 28px;
       display: flex;
       align-items: center;
-      gap: 16px;
+      box-sizing: border-box;
     }
-    ha-icon {
-      --mdc-icon-size: 24px;
-      color: var(--md-sys-color-on-surface-variant);
+    .icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      min-height: 42px;
+      margin: 6px;
+      margin-left: 8px;
+      border-radius: 50%;
+      background-color: var(--ha-card-background, var(--card-background-color));
       flex-shrink: 0;
     }
-    .info {
-      flex: 1;
-      min-width: 0;
+    .icon-container ha-icon {
+      --mdc-icon-size: 24px;
+      display: flex;
     }
-    .value {
-      font-size: 20px;
-      font-weight: 500;
+    .name-container {
+      display: flex;
+      line-height: 18px;
+      flex-direction: column;
+      justify-content: center;
+      flex-grow: 1;
+      margin: 0 16px 0 4px;
+      overflow: hidden;
     }
-    .unit {
-      font-size: 14px;
-      font-weight: 400;
-      opacity: 0.7;
-      margin-left: 4px;
-    }
-    .classification {
+    .name {
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .state {
+      font-size: 12px;
+      font-weight: normal;
+      opacity: 0.7;
+      white-space: nowrap;
     }
   `;
 
@@ -147,17 +165,20 @@ class MateriaSensorDisplay extends ActionMixin(LitElement) {
 
     const classification = this._classify(stateVal);
 
+    const primary = unit ? `${stateVal} · ${classification.label || name}` : `${stateVal}`;
+    const secondary = unit ? unit : (classification.label || name);
+
     return html`
       <ha-card @click=${this._handleTap}>
-        <div class="row">
-          ${icon ? html`<ha-icon .icon=${icon}></ha-icon>` : ""}
-          <div class="info">
-            <div class="value">
-              ${stateVal}${unit ? html`<span class="unit">${unit}</span>` : ""}
+        <div class="container">
+          ${icon ? html`
+            <div class="icon-container">
+              <ha-icon .icon=${icon}></ha-icon>
             </div>
-            ${classification.label
-              ? html`<div class="classification" style="color: ${classification.color || "inherit"}">${classification.label}</div>`
-              : html`<div class="classification">${name}</div>`}
+          ` : ""}
+          <div class="name-container">
+            <div class="name">${primary}</div>
+            <div class="state">${secondary}</div>
           </div>
         </div>
       </ha-card>

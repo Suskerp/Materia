@@ -101,37 +101,54 @@ class MateriaWeather extends ActionMixin(LitElement) {
     ha-card {
       background: none;
       box-shadow: none;
-      padding: 8px 0;
-      font-family: inherit;
+      border: none;
+      overflow: visible;
     }
-    .row {
+    .container {
+      position: relative;
+      width: 100%;
+      min-height: 50px;
+      background: transparent;
+      border-radius: 28px;
       display: flex;
       align-items: center;
-      gap: 16px;
+      box-sizing: border-box;
     }
-    ha-icon {
-      --mdc-icon-size: 32px;
+    .icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      min-height: 42px;
+      margin: 6px;
+      margin-left: 8px;
+      border-radius: 50%;
+      background-color: var(--ha-card-background, var(--card-background-color));
       flex-shrink: 0;
     }
-    .info {
-      flex: 1;
-      min-width: 0;
+    .icon-container ha-icon {
+      --mdc-icon-size: 24px;
+      display: flex;
     }
-    .temp {
-      font-size: 24px;
-      font-weight: 500;
+    .name-container {
+      display: flex;
+      line-height: 18px;
+      flex-direction: column;
+      justify-content: center;
+      flex-grow: 1;
+      margin: 0 16px 0 4px;
+      overflow: hidden;
     }
-    .condition {
+    .name {
       font-size: 13px;
-      opacity: 0.7;
-      text-transform: capitalize;
+      font-weight: 600;
+      white-space: nowrap;
     }
-    .details {
-      font-size: 13px;
+    .state {
+      font-size: 12px;
+      font-weight: normal;
       opacity: 0.7;
-      margin-left: auto;
-      text-align: right;
-      flex-shrink: 0;
+      white-space: nowrap;
     }
   `;
 
@@ -168,17 +185,21 @@ class MateriaWeather extends ActionMixin(LitElement) {
 
     const conditionDisplay = condition.replace(/-|_/g, " ");
 
+    const primary = temp != null ? `${temp}${tempUnit}` : "—";
+    const secondary = humidity != null
+      ? `${this._capitalize(conditionDisplay)} · ${humidity}% humidity`
+      : this._capitalize(conditionDisplay);
+
     return html`
       <ha-card @click=${this._handleTap}>
-        <div class="row">
-          <ha-icon .icon=${icon}></ha-icon>
-          <div class="info">
-            <div class="temp">${temp != null ? `${temp}${tempUnit}` : "—"}</div>
-            <div class="condition">${conditionDisplay}</div>
+        <div class="container">
+          <div class="icon-container">
+            <ha-icon .icon=${icon}></ha-icon>
           </div>
-          ${humidity != null
-            ? html`<div class="details">${humidity}%<br />humidity</div>`
-            : ""}
+          <div class="name-container">
+            <div class="name">${primary}</div>
+            <div class="state">${secondary}</div>
+          </div>
         </div>
       </ha-card>
     `;

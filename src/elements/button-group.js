@@ -12,11 +12,11 @@ import { injectFonts } from "../styles/shared.js";
 const PRESETS = {
   primary:      { active: "var(--md-sys-color-primary)",              onActive: "var(--md-sys-color-on-primary)" },
   secondary:    { active: "var(--md-sys-color-secondary)",            onActive: "var(--md-sys-color-on-secondary)" },
-  "climate-heat": { active: "var(--md-sys-cust-color-climate-heat)",  onActive: "var(--md-sys-cust-color-on-climate-heat)" },
-  "climate-cool": { active: "var(--md-sys-cust-color-climate-cool)",  onActive: "var(--md-sys-cust-color-on-climate-cool)" },
-  "climate-auto": { active: "var(--md-sys-cust-color-climate-auto)",  onActive: "var(--md-sys-cust-color-on-climate-auto)" },
-  light:        { active: "var(--md-sys-cust-color-light)",           onActive: "var(--md-sys-cust-color-on-light)" },
-  device:       { active: "var(--md-sys-cust-color-device)",          onActive: "var(--md-sys-cust-color-on-device)" },
+  "climate-heat": { active: "var(--md-sys-cust-color-climate-heat-container)",  onActive: "var(--md-sys-cust-color-on-climate-heat)" },
+  "climate-cool": { active: "var(--md-sys-cust-color-climate-cool-container)",  onActive: "var(--md-sys-cust-color-on-climate-cool)" },
+  "climate-auto": { active: "var(--md-sys-cust-color-climate-auto-container)",  onActive: "var(--md-sys-cust-color-on-climate-auto)" },
+  light:        { active: "var(--md-sys-cust-color-light-container)", onActive: "var(--md-sys-cust-color-on-light)" },
+  device:       { active: "var(--md-sys-cust-color-device-container)", onActive: "var(--md-sys-cust-color-on-device)" },
 };
 
 const SIZES = {
@@ -322,7 +322,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
       justify-content: center;
       gap: 8px;
       padding: 0 16px;
-      transition: border-radius 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+      transition: background-color 0.2s ease, color 0.2s ease;
       font-family: inherit;
       white-space: nowrap;
       position: relative;

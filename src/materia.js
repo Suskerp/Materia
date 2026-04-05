@@ -12,8 +12,7 @@ import { injectFonts } from "./styles/shared.js";
 import "./primitives/slider.js";
 
 // Cards (native Lit)
-import "./cards/light-switch.js";
-import "./cards/light-dimmer.js";
+import "./cards/light.js";
 import "./cards/cover.js";
 import "./cards/device.js";
 import "./cards/lock.js";
