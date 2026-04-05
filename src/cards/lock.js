@@ -1,6 +1,13 @@
 import { LitElement, html, css } from "lit";
-import { createCard } from "../styles/shared.js";
+import { ActionMixin } from "../utils/action-handler.js";
+import { computeLabel } from "../utils/editor-helpers.js";
 
+/* ───────────────────────────────────────────────────────
+ *  materia-lock
+ *  Native Lit lock display card (no bubble-card).
+ * ─────────────────────────────────────────────────────── */
+
+/* ── Visual Config Editor ── */
 class MateriaLockEditor extends LitElement {
   static properties = {
     hass: { attribute: false },
@@ -25,7 +32,7 @@ class MateriaLockEditor extends LitElement {
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${(s) => s.name.replace(/_/g, " ").replace(/^\w/, c => c.toUpperCase())}
+        .computeLabel=${computeLabel}
         @value-changed=${this._valueChanged}
       ></ha-form>
     `;
@@ -43,13 +50,11 @@ class MateriaLockEditor extends LitElement {
 }
 customElements.define("materia-lock-editor", MateriaLockEditor);
 
-class MateriaLock extends LitElement {
-  static get properties() {
-    return {
-      hass: { attribute: false },
-      _config: { state: true },
-    };
-  }
+class MateriaLock extends ActionMixin(LitElement) {
+  static properties = {
+    hass: { attribute: false },
+    config: { state: true },
+  };
 
   static getConfigElement() {
     return document.createElement("materia-lock-editor");
@@ -59,66 +64,65 @@ class MateriaLock extends LitElement {
     return { entity: "", name: "" };
   }
 
+  static styles = css`
+    :host { display: block; }
+    ha-card {
+      border-radius: var(--ha-card-border-radius, 18px);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 48px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    ha-icon { --mdc-icon-size: 24px; flex-shrink: 0; }
+    .info { flex: 1; min-width: 0; }
+    .name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .state { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+  `;
+
   setConfig(config) {
     if (!config.entity) throw new Error("entity is required");
-    this._config = { ...config };
-    this._card = null;
-  }
-
-  set hass(hass) {
-    this._hass = hass;
-    if (this._card) this._card.hass = hass;
-  }
-
-  async _createCard() {
-    if (this._card) return;
-    const c = this._config;
-    this._card = await createCard(
-      {
-        type: "custom:bubble-card",
-        card_type: "button",
-        button_type: "switch",
-        entity: c.entity,
-        name: c.name,
-        icon: "m3o:lock",
-        modules: ["device", "default", "conditional_icon"],
-        conditional_icon: {
-          icon_true: "m3o:lock",
-          icon_false: "m3o:lock-open-right",
-          conditions: [
-            {
-              condition: "state",
-              entity_id: c.entity,
-              state: "on",
-            },
-          ],
-        },
-        sub_button: { main: [], bottom: [] },
-        tap_action: { action: "none" },
-      },
-      this._hass
-    );
-    this.requestUpdate();
-  }
-
-  firstUpdated() {
-    this._createCard();
+    this.config = { ...config };
   }
 
   render() {
-    return html`<div id="card">${this._card}</div>`;
+    if (!this.hass || !this.config) return html``;
+
+    const stateObj = this.hass.states[this.config.entity];
+    if (!stateObj) return html`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;
+
+    const isLocked = stateObj.state === "locked";
+    const name = this.config.name || stateObj.attributes.friendly_name || this.config.entity;
+    const icon = isLocked ? "m3o:lock" : "m3o:lock-open-right";
+
+    /* Capitalize first letter of state for display */
+    const stateText = stateObj.state.charAt(0).toUpperCase() + stateObj.state.slice(1);
+
+    const bgColor = isLocked
+      ? "var(--md-sys-cust-color-device-container)"
+      : "var(--ha-card-background)";
+    const textColor = isLocked
+      ? "var(--md-sys-cust-color-on-device)"
+      : "var(--primary-text-color)";
+
+    return html`
+      <ha-card style="background-color: ${bgColor}; color: ${textColor};">
+        <ha-icon .icon=${icon} style="color: ${textColor};"></ha-icon>
+        <div class="info">
+          <div class="name">${name}</div>
+          <div class="state">${stateText}</div>
+        </div>
+      </ha-card>
+    `;
+  }
+
+  getGridOptions() {
+    return { columns: 12, rows: 1.5 };
   }
 
   getCardSize() {
     return 2;
-  }
-
-  static get styles() {
-    return css`
-      :host {
-        display: block;
-      }
-    `;
   }
 }
 
@@ -128,5 +132,5 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-lock",
   name: "Materia Lock",
-  description: "A lock card with conditional icons (bubble-card wrapper)",
+  description: "A native Lit lock display card with conditional icons.",
 });

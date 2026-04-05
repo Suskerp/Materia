@@ -1,4 +1,6 @@
 import { LitElement, html, css } from "lit";
+import { ActionMixin } from "../utils/action-handler.js";
+import { computeLabel } from "../utils/editor-helpers.js";
 import { injectFonts } from "../styles/shared.js";
 
 /* ───────────────────────────────────────────────────────
@@ -41,7 +43,7 @@ class MateriaCircleActionEditor extends LitElement {
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${(s) => s.name.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())}
+        .computeLabel=${computeLabel}
         @value-changed=${this._valueChanged}
       ></ha-form>
     `;
@@ -61,7 +63,7 @@ class MateriaCircleActionEditor extends LitElement {
 }
 customElements.define("materia-circle-action-editor", MateriaCircleActionEditor);
 
-class MateriaCircleAction extends LitElement {
+class MateriaCircleAction extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -147,51 +149,6 @@ class MateriaCircleAction extends LitElement {
     const actionConfig = this.config.tap_action;
     if (!actionConfig) return;
     this._handleAction(actionConfig);
-  }
-
-  _handleAction(actionConfig) {
-    if (!actionConfig || actionConfig.action === "none") return;
-
-    switch (actionConfig.action) {
-      case "toggle":
-        if (this.config.entity) {
-          this.hass.callService("homeassistant", "toggle", {
-            entity_id: this.config.entity,
-          });
-        }
-        break;
-
-      case "call-service": {
-        const [domain, service] = (actionConfig.service || "").split(".", 2);
-        if (domain && service) {
-          this.hass.callService(domain, service, {
-            ...actionConfig.service_data,
-            ...actionConfig.data,
-          }, actionConfig.target);
-        }
-        break;
-      }
-
-      case "navigate":
-        history.pushState(null, "", actionConfig.navigation_path);
-        this.dispatchEvent(
-          new Event("location-changed", { bubbles: true, composed: true })
-        );
-        break;
-
-      case "more-info":
-        this.dispatchEvent(
-          new CustomEvent("hass-more-info", {
-            bubbles: true,
-            composed: true,
-            detail: { entityId: actionConfig.entity || this.config.entity },
-          })
-        );
-        break;
-
-      default:
-        break;
-    }
   }
 
   getCardSize() {

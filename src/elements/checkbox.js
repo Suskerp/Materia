@@ -1,4 +1,6 @@
 import { LitElement, html, css } from "lit";
+import { ActionMixin } from "../utils/action-handler.js";
+import { computeLabel } from "../utils/editor-helpers.js";
 import { injectFonts } from "../styles/shared.js";
 
 /* ───────────────────────────────────────────────────────
@@ -21,6 +23,8 @@ class MateriaCheckboxEditor extends LitElement {
     return [
       { name: "entity", required: true, selector: { entity: {} } },
       { name: "name", selector: { text: {} } },
+      { name: "checked_entity", selector: { entity: {} } },
+      { name: "checked_value", selector: { text: {} } },
     ];
   }
 
@@ -31,7 +35,7 @@ class MateriaCheckboxEditor extends LitElement {
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${(s) => s.name.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())}
+        .computeLabel=${computeLabel}
         @value-changed=${this._valueChanged}
       ></ha-form>
     `;
@@ -51,7 +55,7 @@ class MateriaCheckboxEditor extends LitElement {
 }
 customElements.define("materia-checkbox-editor", MateriaCheckboxEditor);
 
-class MateriaCheckbox extends LitElement {
+class MateriaCheckbox extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -127,6 +131,18 @@ class MateriaCheckbox extends LitElement {
   }
 
   _isChecked(stateObj) {
+    /* Custom checked_entity + checked_value logic (e.g. vacuum room queue) */
+    if (this.config.checked_entity && this.config.checked_value) {
+      const checkedObj = this.hass?.states[this.config.checked_entity];
+      if (checkedObj) {
+        const values = String(checkedObj.state ?? "")
+          .split(",")
+          .map((v) => v.trim());
+        return values.includes(this.config.checked_value);
+      }
+      return false;
+    }
+
     if (!stateObj) return false;
     const s = String(stateObj.state ?? "").toLowerCase();
     const n = Number(s);
@@ -157,51 +173,6 @@ class MateriaCheckbox extends LitElement {
   _handleTap() {
     const actionConfig = this.config.tap_action || { action: "toggle" };
     this._handleAction(actionConfig);
-  }
-
-  _handleAction(actionConfig) {
-    if (!actionConfig || actionConfig.action === "none") return;
-
-    switch (actionConfig.action) {
-      case "toggle":
-        if (this.config.entity) {
-          this.hass.callService("homeassistant", "toggle", {
-            entity_id: this.config.entity,
-          });
-        }
-        break;
-
-      case "call-service": {
-        const [domain, service] = (actionConfig.service || "").split(".", 2);
-        if (domain && service) {
-          this.hass.callService(domain, service, {
-            ...actionConfig.service_data,
-            ...actionConfig.data,
-          }, actionConfig.target);
-        }
-        break;
-      }
-
-      case "navigate":
-        history.pushState(null, "", actionConfig.navigation_path);
-        this.dispatchEvent(
-          new Event("location-changed", { bubbles: true, composed: true })
-        );
-        break;
-
-      case "more-info":
-        this.dispatchEvent(
-          new CustomEvent("hass-more-info", {
-            bubbles: true,
-            composed: true,
-            detail: { entityId: actionConfig.entity || this.config.entity },
-          })
-        );
-        break;
-
-      default:
-        break;
-    }
   }
 
   getCardSize() {

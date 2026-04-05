@@ -1,4 +1,6 @@
 import { LitElement, html, css } from "lit";
+import { ActionMixin } from "../utils/action-handler.js";
+import { computeLabel } from "../utils/editor-helpers.js";
 import { injectFonts } from "../styles/shared.js";
 
 /* ───────────────────────────────────────────────────────
@@ -46,6 +48,8 @@ class MateriaButtonEditor extends LitElement {
       { name: "state_display", selector: { text: {} } },
       { name: "color", selector: { text: {} } },
       { name: "color_on", selector: { text: {} } },
+      { name: "color_map", selector: { text: {} } },
+      { name: "color_on_map", selector: { text: {} } },
     ];
   }
 
@@ -56,7 +60,7 @@ class MateriaButtonEditor extends LitElement {
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${(s) => s.name.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())}
+        .computeLabel=${computeLabel}
         @value-changed=${this._valueChanged}
       ></ha-form>
     `;
@@ -89,7 +93,7 @@ const VARIANT_COLORS = {
   "device-container":    ["var(--md-sys-cust-color-device-container)",  "var(--md-sys-cust-color-on-device)"],
 };
 
-class MateriaButton extends LitElement {
+class MateriaButton extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -234,7 +238,13 @@ class MateriaButton extends LitElement {
     /* Determine background & text color */
     let bgColor, textColor;
 
-    if (variant === "battery") {
+    /* color_map / color_on_map take highest priority */
+    const colorMap = this._parseMap(this.config.color_map);
+    const colorOnMap = this._parseMap(this.config.color_on_map);
+    if (colorMap && stateObj && colorMap[stateObj.state] !== undefined) {
+      bgColor = colorMap[stateObj.state];
+      textColor = (colorOnMap && colorOnMap[stateObj.state]) || "var(--primary-text-color)";
+    } else if (variant === "battery") {
       const [bg, fg] = this._getBatteryColors(stateObj);
       bgColor = bg;
       textColor = fg;
@@ -296,54 +306,15 @@ class MateriaButton extends LitElement {
     `;
   }
 
+  _parseMap(value) {
+    if (!value) return null;
+    if (typeof value === "object") return value;
+    try { return JSON.parse(value); } catch (_) { return null; }
+  }
+
   _handleTap() {
     const actionConfig = this.config.tap_action || { action: "toggle" };
     this._handleAction(actionConfig);
-  }
-
-  _handleAction(actionConfig) {
-    if (!actionConfig || actionConfig.action === "none") return;
-
-    switch (actionConfig.action) {
-      case "toggle":
-        if (this.config.entity) {
-          this.hass.callService("homeassistant", "toggle", {
-            entity_id: this.config.entity,
-          });
-        }
-        break;
-
-      case "call-service": {
-        const [domain, service] = (actionConfig.service || "").split(".", 2);
-        if (domain && service) {
-          this.hass.callService(domain, service, {
-            ...actionConfig.service_data,
-            ...actionConfig.data,
-          }, actionConfig.target);
-        }
-        break;
-      }
-
-      case "navigate":
-        history.pushState(null, "", actionConfig.navigation_path);
-        this.dispatchEvent(
-          new Event("location-changed", { bubbles: true, composed: true })
-        );
-        break;
-
-      case "more-info":
-        this.dispatchEvent(
-          new CustomEvent("hass-more-info", {
-            bubbles: true,
-            composed: true,
-            detail: { entityId: actionConfig.entity || this.config.entity },
-          })
-        );
-        break;
-
-      default:
-        break;
-    }
   }
 
   getCardSize() {

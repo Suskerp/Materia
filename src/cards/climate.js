@@ -399,9 +399,9 @@ class MateriaClimate extends LitElement {
       /* ── center row ── */
       .center {
         flex: 1;
-        display: flex;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
         align-items: center;
-        justify-content: space-between;
         padding: 0 4px;
       }
 
@@ -410,7 +410,7 @@ class MateriaClimate extends LitElement {
         font-weight: 450;
         line-height: 1;
         text-align: center;
-        flex: 1;
+        justify-self: center;
         user-select: none;
       }
 

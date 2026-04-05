@@ -1,6 +1,6 @@
 {
   "name": "materia",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Material You card collection for Home Assistant",
   "main": "dist/materia.js",
   "scripts": {

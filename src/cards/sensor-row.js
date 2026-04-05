@@ -1,4 +1,6 @@
 import { LitElement, html, css } from "lit";
+import { ActionMixin } from "../utils/action-handler.js";
+import { computeLabel } from "../utils/editor-helpers.js";
 import { injectFonts, materiaCardStyles } from "../styles/shared.js";
 
 /* ───────────────────────────────────────────────
@@ -31,7 +33,7 @@ class MateriaSensorRowEditor extends LitElement {
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${(s) => s.name.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())}
+        .computeLabel=${computeLabel}
         @value-changed=${this._valueChanged}
       ></ha-form>
     `;
@@ -51,7 +53,7 @@ class MateriaSensorRowEditor extends LitElement {
 }
 customElements.define("materia-sensor-row-editor", MateriaSensorRowEditor);
 
-class MateriaSensorRow extends LitElement {
+class MateriaSensorRow extends ActionMixin(LitElement) {
   static get properties() {
     return {
       hass: { attribute: false },
@@ -65,6 +67,11 @@ class MateriaSensorRow extends LitElement {
 
   static getStubConfig() {
     return { entity: "", name: "", padding: "0px 20px" };
+  }
+
+  /* Expose config for ActionMixin compatibility */
+  get config() {
+    return this._config;
   }
 
   setConfig(config) {
@@ -83,35 +90,7 @@ class MateriaSensorRow extends LitElement {
 
   _handleTap() {
     if (!this.hass || !this._config.tap_action) return;
-    const action = this._config.tap_action;
-
-    switch (action.action) {
-      case "call-service": {
-        const [domain, service] = action.service.split(".");
-        this.hass.callService(domain, service, action.service_data || {});
-        break;
-      }
-      case "more-info": {
-        const event = new CustomEvent("hass-more-info", {
-          bubbles: true,
-          composed: true,
-          detail: { entityId: action.entity || this._config.entity },
-        });
-        this.dispatchEvent(event);
-        break;
-      }
-      case "navigate": {
-        history.pushState(null, "", action.navigation_path);
-        const navEvent = new CustomEvent("location-changed", {
-          bubbles: true,
-          composed: true,
-        });
-        window.dispatchEvent(navEvent);
-        break;
-      }
-      default:
-        break;
-    }
+    this._handleAction(this._config.tap_action);
   }
 
   render() {
