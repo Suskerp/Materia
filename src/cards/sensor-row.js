@@ -1,12 +1,70 @@
 import { LitElement, html, css } from "lit";
 import { injectFonts, materiaCardStyles } from "../styles/shared.js";
 
+/* ───────────────────────────────────────────────
+ *  materia-sensor-row-editor
+ *  Visual config editor for materia-sensor-row.
+ * ─────────────────────────────────────────────── */
+
+class MateriaSensorRowEditor extends LitElement {
+  static properties = {
+    hass: { attribute: false },
+    _config: { state: true },
+  };
+
+  setConfig(config) {
+    this._config = config;
+  }
+
+  get _schema() {
+    return [
+      { name: "entity", required: true, selector: { entity: { domain: "sensor" } } },
+      { name: "name", required: true, selector: { text: {} } },
+      { name: "padding", selector: { text: {} } },
+    ];
+  }
+
+  render() {
+    if (!this.hass || !this._config) return html``;
+    return html`
+      <ha-form
+        .hass=${this.hass}
+        .data=${this._config}
+        .schema=${this._schema}
+        .computeLabel=${(s) => s.name.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())}
+        @value-changed=${this._valueChanged}
+      ></ha-form>
+    `;
+  }
+
+  _valueChanged(ev) {
+    const config = ev.detail.value;
+    this._config = config;
+    this.dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: { config },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+}
+customElements.define("materia-sensor-row-editor", MateriaSensorRowEditor);
+
 class MateriaSensorRow extends LitElement {
   static get properties() {
     return {
       hass: { attribute: false },
       _config: { state: true },
     };
+  }
+
+  static getConfigElement() {
+    return document.createElement("materia-sensor-row-editor");
+  }
+
+  static getStubConfig() {
+    return { entity: "", name: "", padding: "0px 20px" };
   }
 
   setConfig(config) {

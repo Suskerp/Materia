@@ -1,12 +1,66 @@
 import { LitElement, html, css } from "lit";
 import { createCard } from "../styles/shared.js";
 
+class MateriaRoomEditor extends LitElement {
+  static properties = {
+    hass: { attribute: false },
+    _config: { state: true },
+  };
+
+  setConfig(config) {
+    this._config = config;
+  }
+
+  get _schema() {
+    return [
+      { name: "entity", required: true, selector: { entity: {} } },
+      { name: "name", selector: { text: {} } },
+      { name: "icon", selector: { icon: {} } },
+      { name: "entity_type", selector: { select: { options: ["light", "cover"] } } },
+      { name: "columns", selector: { number: { min: 1, max: 6 } } },
+      { name: "color_on", selector: { text: {} } },
+    ];
+  }
+
+  render() {
+    if (!this.hass || !this._config) return html``;
+    return html`
+      <ha-form
+        .hass=${this.hass}
+        .data=${this._config}
+        .schema=${this._schema}
+        .computeLabel=${(s) => s.name.replace(/_/g, " ").replace(/^\w/, c => c.toUpperCase())}
+        @value-changed=${this._valueChanged}
+      ></ha-form>
+    `;
+  }
+
+  _valueChanged(ev) {
+    const config = ev.detail.value;
+    this._config = config;
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      detail: { config },
+      bubbles: true,
+      composed: true,
+    }));
+  }
+}
+customElements.define("materia-room-editor", MateriaRoomEditor);
+
 class MateriaRoom extends LitElement {
   static get properties() {
     return {
       hass: { attribute: false },
       _config: { state: true },
     };
+  }
+
+  static getConfigElement() {
+    return document.createElement("materia-room-editor");
+  }
+
+  static getStubConfig() {
+    return { entity: "", name: "", icon: "", entity_type: "light", columns: 2 };
   }
 
   setConfig(config) {

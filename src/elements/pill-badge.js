@@ -6,11 +6,66 @@ import { injectFonts } from "../styles/shared.js";
  *  Replaces the pill_card button-card template.
  * ─────────────────────────────────────────────────────── */
 
+/* ── Visual Config Editor ── */
+class MateriaPillBadgeEditor extends LitElement {
+  static properties = {
+    hass: { attribute: false },
+    _config: { state: true },
+  };
+
+  setConfig(config) {
+    this._config = config;
+  }
+
+  get _schema() {
+    return [
+      { name: "entity", required: true, selector: { entity: {} } },
+      { name: "name", required: true, selector: { text: {} } },
+      { name: "icon", required: true, selector: { icon: {} } },
+      { name: "active_state", selector: { text: {} } },
+    ];
+  }
+
+  render() {
+    if (!this.hass || !this._config) return html``;
+    return html`
+      <ha-form
+        .hass=${this.hass}
+        .data=${this._config}
+        .schema=${this._schema}
+        .computeLabel=${(s) => s.name.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())}
+        @value-changed=${this._valueChanged}
+      ></ha-form>
+    `;
+  }
+
+  _valueChanged(ev) {
+    const config = ev.detail.value;
+    this._config = config;
+    this.dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: { config },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+}
+customElements.define("materia-pill-badge-editor", MateriaPillBadgeEditor);
+
 class MateriaPillBadge extends LitElement {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
   };
+
+  static getConfigElement() {
+    return document.createElement("materia-pill-badge-editor");
+  }
+
+  static getStubConfig() {
+    return { entity: "", name: "", icon: "", active_state: "on" };
+  }
 
   static styles = css`
     :host {

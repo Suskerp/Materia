@@ -6,11 +6,74 @@ import { injectFonts } from "../styles/shared.js";
  *  Replaces circle_action and circle_action_small templates.
  * ─────────────────────────────────────────────────────── */
 
+/* ── Visual Config Editor ── */
+class MateriaCircleActionEditor extends LitElement {
+  static properties = {
+    hass: { attribute: false },
+    _config: { state: true },
+  };
+
+  setConfig(config) {
+    this._config = config;
+  }
+
+  get _schema() {
+    return [
+      { name: "icon", required: true, selector: { icon: {} } },
+      {
+        name: "size",
+        selector: {
+          select: {
+            options: [
+              { value: "normal", label: "Normal" },
+              { value: "small", label: "Small" },
+            ],
+          },
+        },
+      },
+    ];
+  }
+
+  render() {
+    if (!this.hass || !this._config) return html``;
+    return html`
+      <ha-form
+        .hass=${this.hass}
+        .data=${this._config}
+        .schema=${this._schema}
+        .computeLabel=${(s) => s.name.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())}
+        @value-changed=${this._valueChanged}
+      ></ha-form>
+    `;
+  }
+
+  _valueChanged(ev) {
+    const config = ev.detail.value;
+    this._config = config;
+    this.dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: { config },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+}
+customElements.define("materia-circle-action-editor", MateriaCircleActionEditor);
+
 class MateriaCircleAction extends LitElement {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
   };
+
+  static getConfigElement() {
+    return document.createElement("materia-circle-action-editor");
+  }
+
+  static getStubConfig() {
+    return { icon: "mdi:play", size: "normal" };
+  }
 
   static styles = css`
     :host {

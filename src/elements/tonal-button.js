@@ -6,11 +6,65 @@ import { injectFonts } from "../styles/shared.js";
  *  Replaces the tonal_button button-card template.
  * ─────────────────────────────────────────────────────── */
 
+/* ── Visual Config Editor ── */
+class MateriaTonalButtonEditor extends LitElement {
+  static properties = {
+    hass: { attribute: false },
+    _config: { state: true },
+  };
+
+  setConfig(config) {
+    this._config = config;
+  }
+
+  get _schema() {
+    return [
+      { name: "entity", selector: { entity: {} } },
+      { name: "name", required: true, selector: { text: {} } },
+      { name: "icon", required: true, selector: { icon: {} } },
+    ];
+  }
+
+  render() {
+    if (!this.hass || !this._config) return html``;
+    return html`
+      <ha-form
+        .hass=${this.hass}
+        .data=${this._config}
+        .schema=${this._schema}
+        .computeLabel=${(s) => s.name.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())}
+        @value-changed=${this._valueChanged}
+      ></ha-form>
+    `;
+  }
+
+  _valueChanged(ev) {
+    const config = ev.detail.value;
+    this._config = config;
+    this.dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: { config },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+}
+customElements.define("materia-tonal-button-editor", MateriaTonalButtonEditor);
+
 class MateriaTonalButton extends LitElement {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
   };
+
+  static getConfigElement() {
+    return document.createElement("materia-tonal-button-editor");
+  }
+
+  static getStubConfig() {
+    return { entity: "", name: "", icon: "" };
+  }
 
   static styles = css`
     :host {

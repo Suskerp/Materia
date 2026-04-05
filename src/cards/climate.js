@@ -2,6 +2,58 @@ import { LitElement, html, css } from "lit";
 import { injectFonts } from "../styles/shared.js";
 
 /* ───────────────────────────────────────────────
+ *  materia-climate-editor
+ *  Visual config editor for materia-climate.
+ * ─────────────────────────────────────────────── */
+
+class MateriaClimateEditor extends LitElement {
+  static properties = {
+    hass: { attribute: false },
+    _config: { state: true },
+  };
+
+  setConfig(config) {
+    this._config = config;
+  }
+
+  get _schema() {
+    return [
+      { name: "entity", required: true, selector: { entity: { domain: "climate" } } },
+      { name: "name", required: true, selector: { text: {} } },
+      { name: "humidity_entity", selector: { entity: { domain: "sensor" } } },
+      { name: "outdoor_temp_entity", selector: { entity: { domain: "sensor" } } },
+      { name: "step", selector: { number: { min: 0.5, max: 5, step: 0.5, mode: "box" } } },
+    ];
+  }
+
+  render() {
+    if (!this.hass || !this._config) return html``;
+    return html`
+      <ha-form
+        .hass=${this.hass}
+        .data=${this._config}
+        .schema=${this._schema}
+        .computeLabel=${(s) => s.name.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())}
+        @value-changed=${this._valueChanged}
+      ></ha-form>
+    `;
+  }
+
+  _valueChanged(ev) {
+    const config = ev.detail.value;
+    this._config = config;
+    this.dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: { config },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+}
+customElements.define("materia-climate-editor", MateriaClimateEditor);
+
+/* ───────────────────────────────────────────────
  *  materia-climate
  *  Native LitElement climate card for Materia.
  *  Supports heat / cool / auto / off modes.
@@ -16,6 +68,14 @@ class MateriaClimate extends LitElement {
   }
 
   /* ── config ───────────────────────────────── */
+
+  static getConfigElement() {
+    return document.createElement("materia-climate-editor");
+  }
+
+  static getStubConfig() {
+    return { entity: "", name: "", step: 0.5 };
+  }
 
   setConfig(config) {
     if (!config.entity) throw new Error("entity is required");

@@ -1,12 +1,66 @@
 import { LitElement, html, css } from "lit";
 import { createCard } from "../styles/shared.js";
 
+class MateriaDeviceEditor extends LitElement {
+  static properties = {
+    hass: { attribute: false },
+    _config: { state: true },
+  };
+
+  setConfig(config) {
+    this._config = config;
+  }
+
+  get _schema() {
+    return [
+      { name: "entity", required: true, selector: { entity: {} } },
+      { name: "name", selector: { text: {} } },
+      { name: "icon", selector: { icon: {} } },
+      { name: "button_type", selector: { select: { options: ["switch", "state", "name"] } } },
+      { name: "active_state", selector: { text: {} } },
+      { name: "show_state", selector: { boolean: {} } },
+    ];
+  }
+
+  render() {
+    if (!this.hass || !this._config) return html``;
+    return html`
+      <ha-form
+        .hass=${this.hass}
+        .data=${this._config}
+        .schema=${this._schema}
+        .computeLabel=${(s) => s.name.replace(/_/g, " ").replace(/^\w/, c => c.toUpperCase())}
+        @value-changed=${this._valueChanged}
+      ></ha-form>
+    `;
+  }
+
+  _valueChanged(ev) {
+    const config = ev.detail.value;
+    this._config = config;
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      detail: { config },
+      bubbles: true,
+      composed: true,
+    }));
+  }
+}
+customElements.define("materia-device-editor", MateriaDeviceEditor);
+
 class MateriaDevice extends LitElement {
   static get properties() {
     return {
       hass: { attribute: false },
       _config: { state: true },
     };
+  }
+
+  static getConfigElement() {
+    return document.createElement("materia-device-editor");
+  }
+
+  static getStubConfig() {
+    return { entity: "", name: "", icon: "mdi:power-plug", button_type: "switch", active_state: "on", show_state: true };
   }
 
   setConfig(config) {

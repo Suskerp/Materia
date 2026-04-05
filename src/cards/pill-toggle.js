@@ -1,11 +1,85 @@
 import { LitElement, html, css } from "lit";
 import { injectFonts, materiaCardStyles } from "../styles/shared.js";
 
+/* ───────────────────────────────────────────────
+ *  materia-pill-toggle-editor
+ *  Visual config editor for materia-pill-toggle.
+ * ─────────────────────────────────────────────── */
+
+class MateriaPillToggleEditor extends LitElement {
+  static properties = {
+    hass: { attribute: false },
+    _config: { state: true },
+  };
+
+  setConfig(config) {
+    this._config = config;
+  }
+
+  get _schema() {
+    return [
+      { name: "entity", required: true, selector: { entity: {} } },
+      { name: "left_name", selector: { text: {} } },
+      { name: "right_name", selector: { text: {} } },
+      { name: "left_state", selector: { text: {} } },
+      { name: "right_state", selector: { text: {} } },
+      { name: "left_service", required: true, selector: { text: {} } },
+      { name: "right_service", required: true, selector: { text: {} } },
+      { name: "height", selector: { text: {} } },
+      { name: "color_active", selector: { text: {} } },
+      { name: "color_on_active", selector: { text: {} } },
+    ];
+  }
+
+  render() {
+    if (!this.hass || !this._config) return html``;
+    return html`
+      <ha-form
+        .hass=${this.hass}
+        .data=${this._config}
+        .schema=${this._schema}
+        .computeLabel=${(s) => s.name.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())}
+        @value-changed=${this._valueChanged}
+      ></ha-form>
+    `;
+  }
+
+  _valueChanged(ev) {
+    const config = ev.detail.value;
+    this._config = config;
+    this.dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: { config },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+}
+customElements.define("materia-pill-toggle-editor", MateriaPillToggleEditor);
+
 class MateriaPillToggle extends LitElement {
   static get properties() {
     return {
       hass: { attribute: false },
       _config: { state: true },
+    };
+  }
+
+  static getConfigElement() {
+    return document.createElement("materia-pill-toggle-editor");
+  }
+
+  static getStubConfig() {
+    return {
+      entity: "",
+      left_name: "On",
+      right_name: "Off",
+      left_state: "on",
+      right_state: "off",
+      left_service: "",
+      right_service: "",
+      height: "88px",
     };
   }
 

@@ -6,6 +6,76 @@ import { injectFonts } from "../styles/shared.js";
  *  Replaces the entire small_button_* template family.
  * ─────────────────────────────────────────────────────── */
 
+/* ── Visual Config Editor ── */
+class MateriaButtonEditor extends LitElement {
+  static properties = {
+    hass: { attribute: false },
+    _config: { state: true },
+  };
+
+  setConfig(config) {
+    this._config = config;
+  }
+
+  get _schema() {
+    return [
+      { name: "entity", selector: { entity: {} } },
+      { name: "name", required: true, selector: { text: {} } },
+      { name: "icon", required: true, selector: { icon: {} } },
+      {
+        name: "variant",
+        selector: {
+          select: {
+            options: [
+              { value: "primary", label: "Primary" },
+              { value: "secondary", label: "Secondary" },
+              { value: "tertiary", label: "Tertiary" },
+              { value: "error", label: "Error" },
+              { value: "device", label: "Device" },
+              { value: "primary-container", label: "Primary Container" },
+              { value: "secondary-container", label: "Secondary Container" },
+              { value: "error-container", label: "Error Container" },
+              { value: "device-container", label: "Device Container" },
+              { value: "battery", label: "Battery" },
+            ],
+          },
+        },
+      },
+      { name: "show_state", selector: { boolean: {} } },
+      { name: "active_state", selector: { text: {} } },
+      { name: "state_display", selector: { text: {} } },
+      { name: "color", selector: { text: {} } },
+      { name: "color_on", selector: { text: {} } },
+    ];
+  }
+
+  render() {
+    if (!this.hass || !this._config) return html``;
+    return html`
+      <ha-form
+        .hass=${this.hass}
+        .data=${this._config}
+        .schema=${this._schema}
+        .computeLabel=${(s) => s.name.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())}
+        @value-changed=${this._valueChanged}
+      ></ha-form>
+    `;
+  }
+
+  _valueChanged(ev) {
+    const config = ev.detail.value;
+    this._config = config;
+    this.dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: { config },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+}
+customElements.define("materia-button-editor", MateriaButtonEditor);
+
 const VARIANT_COLORS = {
   /* variant → [bg-active, text-active] */
   primary:               ["var(--md-sys-color-primary)",                "var(--md-sys-color-on-primary)"],
@@ -25,6 +95,14 @@ class MateriaButton extends LitElement {
     config: { state: true },
   };
 
+  static getConfigElement() {
+    return document.createElement("materia-button-editor");
+  }
+
+  static getStubConfig() {
+    return { name: "", icon: "mdi:power-plug", variant: "primary", show_state: false, active_state: "on" };
+  }
+
   static styles = css`
     :host {
       display: block;
@@ -35,7 +113,7 @@ class MateriaButton extends LitElement {
       box-sizing: border-box;
       height: 107px;
       width: 110px;
-      border-radius: 18px;
+      border-radius: var(--ha-card-border-radius, 18px);
       overflow: hidden;
       cursor: pointer;
       display: grid;
