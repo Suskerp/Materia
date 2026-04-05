@@ -3,12 +3,12 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const t=globalThis,e=t.ShadowRoot&&(void 0===t.ShadyCSS||t.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,i=Symbol(),s=new WeakMap;let a=class{constructor(t,e,s){if(this._$cssResult$=!0,s!==i)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o;const i=this.t;if(e&&void 0===t){const e=void 0!==i&&1===i.length;e&&(t=s.get(i)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),e&&s.set(i,t))}return t}toString(){return this.cssText}};const o=(t,...e)=>{const s=1===t.length?t[0]:e.reduce((e,i,s)=>e+(t=>{if(!0===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(i)+t[s+1],t[0]);return new a(s,t,i)},n=e?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const i of t.cssRules)e+=i.cssText;return(t=>new a("string"==typeof t?t:t+"",void 0,i))(e)})(t):t,{is:r,defineProperty:c,getOwnPropertyDescriptor:l,getOwnPropertyNames:h,getOwnPropertySymbols:d,getPrototypeOf:u}=Object,p=globalThis,m=p.trustedTypes,g=m?m.emptyScript:"",f=p.reactiveElementPolyfillSupport,v=(t,e)=>t,_={toAttribute(t,e){switch(e){case Boolean:t=t?g:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t)}return t},fromAttribute(t,e){let i=t;switch(e){case Boolean:i=null!==t;break;case Number:i=null===t?null:Number(t);break;case Object:case Array:try{i=JSON.parse(t)}catch(t){i=null}}return i}},y=(t,e)=>!r(t,e),b={attribute:!0,type:String,converter:_,reflect:!1,useDefault:!1,hasChanged:y};
+const t=globalThis,e=t.ShadowRoot&&(void 0===t.ShadyCSS||t.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,i=Symbol(),s=new WeakMap;let a=class{constructor(t,e,s){if(this._$cssResult$=!0,s!==i)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o;const i=this.t;if(e&&void 0===t){const e=void 0!==i&&1===i.length;e&&(t=s.get(i)),void 0===t&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),e&&s.set(i,t))}return t}toString(){return this.cssText}};const o=(t,...e)=>{const s=1===t.length?t[0]:e.reduce((e,i,s)=>e+(t=>{if(!0===t._$cssResult$)return t.cssText;if("number"==typeof t)return t;throw Error("Value passed to 'css' function must be a 'css' function result: "+t+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(i)+t[s+1],t[0]);return new a(s,t,i)},n=e?t=>t:t=>t instanceof CSSStyleSheet?(t=>{let e="";for(const i of t.cssRules)e+=i.cssText;return(t=>new a("string"==typeof t?t:t+"",void 0,i))(e)})(t):t,{is:r,defineProperty:c,getOwnPropertyDescriptor:l,getOwnPropertyNames:h,getOwnPropertySymbols:d,getPrototypeOf:p}=Object,u=globalThis,m=u.trustedTypes,g=m?m.emptyScript:"",f=u.reactiveElementPolyfillSupport,_=(t,e)=>t,v={toAttribute(t,e){switch(e){case Boolean:t=t?g:null;break;case Object:case Array:t=null==t?t:JSON.stringify(t)}return t},fromAttribute(t,e){let i=t;switch(e){case Boolean:i=null!==t;break;case Number:i=null===t?null:Number(t);break;case Object:case Array:try{i=JSON.parse(t)}catch(t){i=null}}return i}},y=(t,e)=>!r(t,e),b={attribute:!0,type:String,converter:v,reflect:!1,useDefault:!1,hasChanged:y};
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */Symbol.metadata??=Symbol("metadata"),p.litPropertyMetadata??=new WeakMap;let x=class extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??=[]).push(t)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,e=b){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(t)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(t,e),!e.noAccessor){const i=Symbol(),s=this.getPropertyDescriptor(t,i,e);void 0!==s&&c(this.prototype,t,s)}}static getPropertyDescriptor(t,e,i){const{get:s,set:a}=l(this.prototype,t)??{get(){return this[e]},set(t){this[e]=t}};return{get:s,set(e){const o=s?.call(this);a?.call(this,e),this.requestUpdate(t,o,i)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)??b}static _$Ei(){if(this.hasOwnProperty(v("elementProperties")))return;const t=u(this);t.finalize(),void 0!==t.l&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties)}static finalize(){if(this.hasOwnProperty(v("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(v("properties"))){const t=this.properties,e=[...h(t),...d(t)];for(const i of e)this.createProperty(i,t[i])}const t=this[Symbol.metadata];if(null!==t){const e=litPropertyMetadata.get(t);if(void 0!==e)for(const[t,i]of e)this.elementProperties.set(t,i)}this._$Eh=new Map;for(const[t,e]of this.elementProperties){const i=this._$Eu(t,e);void 0!==i&&this._$Eh.set(i,t)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(t){const e=[];if(Array.isArray(t)){const i=new Set(t.flat(1/0).reverse());for(const t of i)e.unshift(n(t))}else void 0!==t&&e.push(n(t));return e}static _$Eu(t,e){const i=e.attribute;return!1===i?void 0:"string"==typeof i?i:"string"==typeof t?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise(t=>this.enableUpdating=t),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach(t=>t(this))}addController(t){(this._$EO??=new Set).add(t),void 0!==this.renderRoot&&this.isConnected&&t.hostConnected?.()}removeController(t){this._$EO?.delete(t)}_$E_(){const t=new Map,e=this.constructor.elementProperties;for(const i of e.keys())this.hasOwnProperty(i)&&(t.set(i,this[i]),delete this[i]);t.size>0&&(this._$Ep=t)}createRenderRoot(){const i=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return((i,s)=>{if(e)i.adoptedStyleSheets=s.map(t=>t instanceof CSSStyleSheet?t:t.styleSheet);else for(const e of s){const s=document.createElement("style"),a=t.litNonce;void 0!==a&&s.setAttribute("nonce",a),s.textContent=e.cssText,i.appendChild(s)}})(i,this.constructor.elementStyles),i}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach(t=>t.hostConnected?.())}enableUpdating(t){}disconnectedCallback(){this._$EO?.forEach(t=>t.hostDisconnected?.())}attributeChangedCallback(t,e,i){this._$AK(t,i)}_$ET(t,e){const i=this.constructor.elementProperties.get(t),s=this.constructor._$Eu(t,i);if(void 0!==s&&!0===i.reflect){const a=(void 0!==i.converter?.toAttribute?i.converter:_).toAttribute(e,i.type);this._$Em=t,null==a?this.removeAttribute(s):this.setAttribute(s,a),this._$Em=null}}_$AK(t,e){const i=this.constructor,s=i._$Eh.get(t);if(void 0!==s&&this._$Em!==s){const t=i.getPropertyOptions(s),a="function"==typeof t.converter?{fromAttribute:t.converter}:void 0!==t.converter?.fromAttribute?t.converter:_;this._$Em=s;const o=a.fromAttribute(e,t.type);this[s]=o??this._$Ej?.get(s)??o,this._$Em=null}}requestUpdate(t,e,i,s=!1,a){if(void 0!==t){const o=this.constructor;if(!1===s&&(a=this[t]),i??=o.getPropertyOptions(t),!((i.hasChanged??y)(a,e)||i.useDefault&&i.reflect&&a===this._$Ej?.get(t)&&!this.hasAttribute(o._$Eu(t,i))))return;this.C(t,e,i)}!1===this.isUpdatePending&&(this._$ES=this._$EP())}C(t,e,{useDefault:i,reflect:s,wrapped:a},o){i&&!(this._$Ej??=new Map).has(t)&&(this._$Ej.set(t,o??e??this[t]),!0!==a||void 0!==o)||(this._$AL.has(t)||(this.hasUpdated||i||(e=void 0),this._$AL.set(t,e)),!0===s&&this._$Em!==t&&(this._$Eq??=new Set).add(t))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(t){Promise.reject(t)}const t=this.scheduleUpdate();return null!=t&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(const[t,e]of this._$Ep)this[t]=e;this._$Ep=void 0}const t=this.constructor.elementProperties;if(t.size>0)for(const[e,i]of t){const{wrapped:t}=i,s=this[e];!0!==t||this._$AL.has(e)||void 0===s||this.C(e,void 0,i,s)}}let t=!1;const e=this._$AL;try{t=this.shouldUpdate(e),t?(this.willUpdate(e),this._$EO?.forEach(t=>t.hostUpdate?.()),this.update(e)):this._$EM()}catch(e){throw t=!1,this._$EM(),e}t&&this._$AE(e)}willUpdate(t){}_$AE(t){this._$EO?.forEach(t=>t.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return!0}update(t){this._$Eq&&=this._$Eq.forEach(t=>this._$ET(t,this[t])),this._$EM()}updated(t){}firstUpdated(t){}};x.elementStyles=[],x.shadowRootOptions={mode:"open"},x[v("elementProperties")]=new Map,x[v("finalized")]=new Map,f?.({ReactiveElement:x}),(p.reactiveElementVersions??=[]).push("2.1.2");
+ */Symbol.metadata??=Symbol("metadata"),u.litPropertyMetadata??=new WeakMap;let x=class extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??=[]).push(t)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,e=b){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(t)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(t,e),!e.noAccessor){const i=Symbol(),s=this.getPropertyDescriptor(t,i,e);void 0!==s&&c(this.prototype,t,s)}}static getPropertyDescriptor(t,e,i){const{get:s,set:a}=l(this.prototype,t)??{get(){return this[e]},set(t){this[e]=t}};return{get:s,set(e){const o=s?.call(this);a?.call(this,e),this.requestUpdate(t,o,i)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)??b}static _$Ei(){if(this.hasOwnProperty(_("elementProperties")))return;const t=p(this);t.finalize(),void 0!==t.l&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties)}static finalize(){if(this.hasOwnProperty(_("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(_("properties"))){const t=this.properties,e=[...h(t),...d(t)];for(const i of e)this.createProperty(i,t[i])}const t=this[Symbol.metadata];if(null!==t){const e=litPropertyMetadata.get(t);if(void 0!==e)for(const[t,i]of e)this.elementProperties.set(t,i)}this._$Eh=new Map;for(const[t,e]of this.elementProperties){const i=this._$Eu(t,e);void 0!==i&&this._$Eh.set(i,t)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(t){const e=[];if(Array.isArray(t)){const i=new Set(t.flat(1/0).reverse());for(const t of i)e.unshift(n(t))}else void 0!==t&&e.push(n(t));return e}static _$Eu(t,e){const i=e.attribute;return!1===i?void 0:"string"==typeof i?i:"string"==typeof t?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise(t=>this.enableUpdating=t),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach(t=>t(this))}addController(t){(this._$EO??=new Set).add(t),void 0!==this.renderRoot&&this.isConnected&&t.hostConnected?.()}removeController(t){this._$EO?.delete(t)}_$E_(){const t=new Map,e=this.constructor.elementProperties;for(const i of e.keys())this.hasOwnProperty(i)&&(t.set(i,this[i]),delete this[i]);t.size>0&&(this._$Ep=t)}createRenderRoot(){const i=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return((i,s)=>{if(e)i.adoptedStyleSheets=s.map(t=>t instanceof CSSStyleSheet?t:t.styleSheet);else for(const e of s){const s=document.createElement("style"),a=t.litNonce;void 0!==a&&s.setAttribute("nonce",a),s.textContent=e.cssText,i.appendChild(s)}})(i,this.constructor.elementStyles),i}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach(t=>t.hostConnected?.())}enableUpdating(t){}disconnectedCallback(){this._$EO?.forEach(t=>t.hostDisconnected?.())}attributeChangedCallback(t,e,i){this._$AK(t,i)}_$ET(t,e){const i=this.constructor.elementProperties.get(t),s=this.constructor._$Eu(t,i);if(void 0!==s&&!0===i.reflect){const a=(void 0!==i.converter?.toAttribute?i.converter:v).toAttribute(e,i.type);this._$Em=t,null==a?this.removeAttribute(s):this.setAttribute(s,a),this._$Em=null}}_$AK(t,e){const i=this.constructor,s=i._$Eh.get(t);if(void 0!==s&&this._$Em!==s){const t=i.getPropertyOptions(s),a="function"==typeof t.converter?{fromAttribute:t.converter}:void 0!==t.converter?.fromAttribute?t.converter:v;this._$Em=s;const o=a.fromAttribute(e,t.type);this[s]=o??this._$Ej?.get(s)??o,this._$Em=null}}requestUpdate(t,e,i,s=!1,a){if(void 0!==t){const o=this.constructor;if(!1===s&&(a=this[t]),i??=o.getPropertyOptions(t),!((i.hasChanged??y)(a,e)||i.useDefault&&i.reflect&&a===this._$Ej?.get(t)&&!this.hasAttribute(o._$Eu(t,i))))return;this.C(t,e,i)}!1===this.isUpdatePending&&(this._$ES=this._$EP())}C(t,e,{useDefault:i,reflect:s,wrapped:a},o){i&&!(this._$Ej??=new Map).has(t)&&(this._$Ej.set(t,o??e??this[t]),!0!==a||void 0!==o)||(this._$AL.has(t)||(this.hasUpdated||i||(e=void 0),this._$AL.set(t,e)),!0===s&&this._$Em!==t&&(this._$Eq??=new Set).add(t))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(t){Promise.reject(t)}const t=this.scheduleUpdate();return null!=t&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(const[t,e]of this._$Ep)this[t]=e;this._$Ep=void 0}const t=this.constructor.elementProperties;if(t.size>0)for(const[e,i]of t){const{wrapped:t}=i,s=this[e];!0!==t||this._$AL.has(e)||void 0===s||this.C(e,void 0,i,s)}}let t=!1;const e=this._$AL;try{t=this.shouldUpdate(e),t?(this.willUpdate(e),this._$EO?.forEach(t=>t.hostUpdate?.()),this.update(e)):this._$EM()}catch(e){throw t=!1,this._$EM(),e}t&&this._$AE(e)}willUpdate(t){}_$AE(t){this._$EO?.forEach(t=>t.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return!0}update(t){this._$Eq&&=this._$Eq.forEach(t=>this._$ET(t,this[t])),this._$EM()}updated(t){}firstUpdated(t){}};x.elementStyles=[],x.shadowRootOptions={mode:"open"},x[_("elementProperties")]=new Map,x[_("finalized")]=new Map,f?.({ReactiveElement:x}),(u.reactiveElementVersions??=[]).push("2.1.2");
 /**
  * @license
  * Copyright 2017 Google LLC
@@ -127,15 +127,15 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
           @change=${this._onChange}
         />
       </div>
-    `}_onInput(t){const e=parseFloat(t.target.value);this.liveUpdate&&(clearTimeout(this._debounceTimer),this._debounceTimer=setTimeout(()=>{this._fireValueChanged(e)},100))}_onChange(t){clearTimeout(this._debounceTimer);const e=parseFloat(t.target.value);this._fireValueChanged(e)}_fireValueChanged(t){this.dispatchEvent(new CustomEvent("value-changed",{detail:{value:t},bubbles:!0,composed:!0}))}}customElements.define("materia-slider",dt);const ut=t=>class extends t{_handleAction(t){if(t&&"none"!==t.action)switch(t.action){case"toggle":this.config?.entity&&this.hass.callService("homeassistant","toggle",{entity_id:this.config.entity});break;case"call-service":{const[e,i]=(t.service||"").split(".",2);e&&i&&this.hass.callService(e,i,{...t.service_data,...t.data},t.target);break}case"navigate":history.pushState(null,"",t.navigation_path),this.dispatchEvent(new Event("location-changed",{bubbles:!0,composed:!0}));break;case"more-info":this.dispatchEvent(new CustomEvent("hass-more-info",{bubbles:!0,composed:!0,detail:{entityId:t.entity||this.config?.entity}}))}}_fireMoreInfo(t){this.dispatchEvent(new CustomEvent("hass-more-info",{bubbles:!0,composed:!0,detail:{entityId:t}}))}},pt=t=>t.name.replace(/_/g," ").replace(/^\w/,t=>t.toUpperCase());customElements.define("materia-light-switch-editor",class extends nt{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"light"}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}}]}render(){return this.hass&&this._config?j`
+    `}_onInput(t){const e=parseFloat(t.target.value);this.liveUpdate&&(clearTimeout(this._debounceTimer),this._debounceTimer=setTimeout(()=>{this._fireValueChanged(e)},100))}_onChange(t){clearTimeout(this._debounceTimer);const e=parseFloat(t.target.value);this._fireValueChanged(e)}_fireValueChanged(t){this.dispatchEvent(new CustomEvent("value-changed",{detail:{value:t},bubbles:!0,composed:!0}))}}customElements.define("materia-slider",dt);const pt=t=>class extends t{_handleAction(t){if(t&&"none"!==t.action)switch(t.action){case"toggle":this.config?.entity&&this.hass.callService("homeassistant","toggle",{entity_id:this.config.entity});break;case"call-service":{const[e,i]=(t.service||"").split(".",2);e&&i&&this.hass.callService(e,i,{...t.service_data,...t.data},t.target);break}case"navigate":history.pushState(null,"",t.navigation_path),this.dispatchEvent(new Event("location-changed",{bubbles:!0,composed:!0}));break;case"more-info":this.dispatchEvent(new CustomEvent("hass-more-info",{bubbles:!0,composed:!0,detail:{entityId:t.entity||this.config?.entity}}))}}_fireMoreInfo(t){this.dispatchEvent(new CustomEvent("hass-more-info",{bubbles:!0,composed:!0,detail:{entityId:t}}))}},ut=t=>t.name.replace(/_/g," ").replace(/^\w/,t=>t.toUpperCase());customElements.define("materia-light-switch-editor",class extends nt{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"light"}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}}]}render(){return this.hass&&this._config?j`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class mt extends(ut(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-light-switch-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:track-light"}}static styles=o`
+    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class mt extends(pt(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-light-switch-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:track-light"}}static styles=o`
     :host { display: block; }
     ha-card {
       border-radius: var(--ha-card-border-radius, 18px);
@@ -167,10 +167,10 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class gt extends(ut(nt)){static properties={hass:{attribute:!1},_config:{state:!0}};static getConfigElement(){return document.createElement("materia-light-dimmer-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:track-light"}}setConfig(t){if(!t.entity)throw new Error("entity is required");this._config={icon:"mdi:track-light",...t}}get _entity(){return this.hass?.states?.[this._config?.entity]}get _isOn(){return"on"===this._entity?.state}get _brightness(){return this._entity?.attributes?.brightness??0}get _brightnessPercent(){return Math.round(this._brightness/255*100)}get _tintColor(){const t=this._entity?.attributes?.rgb_color;return t?`rgb(${t[0]}, ${t[1]}, ${t[2]})`:"var(--md-sys-cust-color-light)"}get _name(){return this._config.name||this._entity?.attributes?.friendly_name||""}get _icon(){return this._config.icon||"mdi:track-light"}get _stateDisplay(){return this._isOn?`${this._brightnessPercent}%`:"Off"}_toggleLight(){this.hass.callService("light","toggle",{entity_id:this._config.entity})}_onSliderChanged(t){const e=t.detail.value;0===e?this.hass.callService("light","turn_off",{entity_id:this._config.entity}):this.hass.callService("light","turn_on",{entity_id:this._config.entity,brightness:e})}render(){if(!this._config||!this.hass)return j``;const t=this._isOn;return j`
+    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class gt extends(pt(nt)){static properties={hass:{attribute:!1},_config:{state:!0}};static getConfigElement(){return document.createElement("materia-light-dimmer-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:track-light"}}setConfig(t){if(!t.entity)throw new Error("entity is required");this._config={icon:"mdi:track-light",...t}}get _entity(){return this.hass?.states?.[this._config?.entity]}get _isOn(){return"on"===this._entity?.state}get _brightness(){return this._entity?.attributes?.brightness??0}get _brightnessPercent(){return Math.round(this._brightness/255*100)}get _tintColor(){const t=this._entity?.attributes?.rgb_color;return t?`rgb(${t[0]}, ${t[1]}, ${t[2]})`:"var(--md-sys-cust-color-light)"}get _name(){return this._config.name||this._entity?.attributes?.friendly_name||""}get _icon(){return this._config.icon||"mdi:track-light"}get _stateDisplay(){return this._isOn?`${this._brightnessPercent}%`:"Off"}_toggleLight(){this.hass.callService("light","toggle",{entity_id:this._config.entity})}_onSliderChanged(t){const e=t.detail.value;0===e?this.hass.callService("light","turn_off",{entity_id:this._config.entity}):this.hass.callService("light","turn_on",{entity_id:this._config.entity,brightness:e})}render(){if(!this._config||!this.hass)return j``;const t=this._isOn;return j`
       <ha-card
         style=${t?"background-color: var(--md-sys-cust-color-light-container); color: var(--md-sys-cust-color-on-light);":""}
       >
@@ -232,10 +232,10 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class ft extends(ut(nt)){static properties={hass:{attribute:!1},_config:{state:!0}};static getConfigElement(){return document.createElement("materia-cover-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:window-shutter",show_stop:!0}}setConfig(t){if(!t.entity)throw new Error("entity is required");this._config={icon:"mdi:window-shutter",show_stop:!0,...t}}get _entity(){return this.hass?.states?.[this._config?.entity]}get _isOpen(){return"closed"!==this._entity?.state}get _position(){return this._entity?.attributes?.current_position??0}get _name(){return this._config.name||this._entity?.attributes?.friendly_name||""}get _icon(){return this._config.icon||"mdi:window-shutter"}get _stateDisplay(){const t=this._position;return 0===t?"Closed":100===t?"Open":`${t}% open`}_onSliderChanged(t){this.hass.callService("cover","set_cover_position",{entity_id:this._config.entity,position:t.detail.value})}_openCover(){this.hass.callService("cover","open_cover",{entity_id:this._config.entity})}_stopCover(){this.hass.callService("cover","stop_cover",{entity_id:this._config.entity})}_closeCover(){this.hass.callService("cover","close_cover",{entity_id:this._config.entity})}render(){if(!this._config||!this.hass)return j``;const t=this._isOpen;return j`
+    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class ft extends(pt(nt)){static properties={hass:{attribute:!1},_config:{state:!0}};static getConfigElement(){return document.createElement("materia-cover-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:window-shutter",show_stop:!0}}setConfig(t){if(!t.entity)throw new Error("entity is required");this._config={icon:"mdi:window-shutter",show_stop:!0,...t}}get _entity(){return this.hass?.states?.[this._config?.entity]}get _isOpen(){return"closed"!==this._entity?.state}get _position(){return this._entity?.attributes?.current_position??0}get _name(){return this._config.name||this._entity?.attributes?.friendly_name||""}get _icon(){return this._config.icon||"mdi:window-shutter"}get _stateDisplay(){const t=this._position;return 0===t?"Closed":100===t?"Open":`${t}% open`}_onSliderChanged(t){this.hass.callService("cover","set_cover_position",{entity_id:this._config.entity,position:t.detail.value})}_openCover(){this.hass.callService("cover","open_cover",{entity_id:this._config.entity})}_stopCover(){this.hass.callService("cover","stop_cover",{entity_id:this._config.entity})}_closeCover(){this.hass.callService("cover","close_cover",{entity_id:this._config.entity})}render(){if(!this._config||!this.hass)return j``;const t=this._isOpen;return j`
       <ha-card
         style=${t?"background-color: var(--md-sys-cust-color-light-container); color: var(--md-sys-cust-color-on-light);":""}
       >
@@ -340,10 +340,10 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class vt extends(ut(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-device-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:power-plug",button_type:"switch",active_state:"on",show_state:!0}}static styles=o`
+    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class _t extends(pt(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-device-editor")}static getStubConfig(){return{entity:"",name:"",icon:"mdi:power-plug",button_type:"switch",active_state:"on",show_state:!0}}static styles=o`
     :host { display: block; }
     ha-card {
       border-radius: var(--ha-card-border-radius, 18px);
@@ -370,15 +370,15 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
           ${this.config.show_state?j`<div class="state">${t.state}</div>`:""}
         </div>
       </ha-card>
-    `}_handleTap(){this.config.tap_action?this._handleAction(this.config.tap_action):this.hass.callService("homeassistant","toggle",{entity_id:this.config.entity})}getGridOptions(){return{columns:12,rows:1.5}}getCardSize(){return 2}}customElements.define("materia-device",vt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-device",name:"Materia Device",description:"A native Lit generic device/switch card with active-state colors."});customElements.define("materia-lock-editor",class extends nt{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"lock"}}},{name:"name",selector:{text:{}}}]}render(){return this.hass&&this._config?j`
+    `}_handleTap(){this.config.tap_action?this._handleAction(this.config.tap_action):this.hass.callService("homeassistant","toggle",{entity_id:this.config.entity})}getGridOptions(){return{columns:12,rows:1.5}}getCardSize(){return 2}}customElements.define("materia-device",_t),window.customCards=window.customCards||[],window.customCards.push({type:"materia-device",name:"Materia Device",description:"A native Lit generic device/switch card with active-state colors."});customElements.define("materia-lock-editor",class extends nt{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"lock"}}},{name:"name",selector:{text:{}}}]}render(){return this.hass&&this._config?j`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class _t extends(ut(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-lock-editor")}static getStubConfig(){return{entity:"",name:""}}static styles=o`
+    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class vt extends(pt(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-lock-editor")}static getStubConfig(){return{entity:"",name:""}}static styles=o`
     :host { display: block; }
     ha-card {
       border-radius: var(--ha-card-border-radius, 18px);
@@ -401,15 +401,15 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
           <div class="state">${a}</div>
         </div>
       </ha-card>
-    `}getGridOptions(){return{columns:12,rows:1.5}}getCardSize(){return 2}}customElements.define("materia-lock",_t),window.customCards=window.customCards||[],window.customCards.push({type:"materia-lock",name:"Materia Lock",description:"A native Lit lock display card with conditional icons."});customElements.define("materia-battery-low-editor",class extends nt{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"sensor"}}},{name:"name",selector:{text:{}}}]}render(){return this.hass&&this._config?j`
+    `}getGridOptions(){return{columns:12,rows:1.5}}getCardSize(){return 2}}customElements.define("materia-lock",vt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-lock",name:"Materia Lock",description:"A native Lit lock display card with conditional icons."});customElements.define("materia-battery-low-editor",class extends nt{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"sensor"}}},{name:"name",selector:{text:{}}}]}render(){return this.hass&&this._config?j`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class yt extends(ut(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-battery-low-editor")}static getStubConfig(){return{entity:"",name:""}}static styles=o`
+    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class yt extends(pt(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-battery-low-editor")}static getStubConfig(){return{entity:"",name:""}}static styles=o`
     :host { display: block; }
     ha-card {
       border-radius: var(--ha-card-border-radius, 18px);
@@ -437,7 +437,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
     `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class bt extends nt{static properties={_config:{state:!0},_expanded:{state:!0},_childCards:{state:!0}};constructor(){super(),this._expanded=!1,this._childCards=null,this._hass=null}static getConfigElement(){return document.createElement("materia-room-editor")}static getStubConfig(){return{entity:"",name:"",icon:"",entity_type:"light",columns:2}}setConfig(t){if(!t.entity)throw new Error("entity is required");const e=this._config?.cards;this._config={columns:2,...t};const i=this._config.cards;JSON.stringify(e)!==JSON.stringify(i)&&(this._childCards=null,this.isConnected&&this._createChildCards())}set hass(t){this._hass=t,this._childCards&&this._childCards.forEach(e=>e.hass=t),this.requestUpdate()}get hass(){return this._hass}firstUpdated(){this._createChildCards()}async _createChildCards(){const t=this._config?.cards;if(!t||0===t.length)return void(this._childCards=[]);const e=await async function(){return ht||(ht=await window.loadCardHelpers(),ht)}();this._childCards=await Promise.all(t.map(async t=>{const i=await e.createCardElement(t);return this._hass&&(i.hass=this._hass),i})),this.requestUpdate()}_toggleExpand(){this._expanded=!this._expanded}_toggleEntity(t){if(t.stopPropagation(),!this._hass||!this._config.entity)return;const e="cover"===(this._config.entity_type||"light")?"cover":"light";this._hass.callService(e,"toggle",{entity_id:this._config.entity})}get _isActive(){if(!this._hass||!this._config.entity)return!1;const t=this._hass.states[this._config.entity];if(!t)return!1;return"cover"===(this._config.entity_type||"light")?"open"===t.state:"on"===t.state}get _stateDisplay(){if(!this._hass||!this._config.entity)return"";const t=this._hass.states[this._config.entity];if(!t)return"unavailable";if(this._config.attribute){const e=t.attributes[this._config.attribute];return null==e?t.state:"brightness"===this._config.attribute?`${Math.round(e/255*100)}%`:String(e)}return this._hass.formatEntityState?this._hass.formatEntityState(t):t.state}render(){if(!this._config)return j``;const t=this._isActive,e=t&&this._config.color_on?this._config.color_on:t?"var(--md-sys-color-primary)":"var(--primary-text-color)",i=this._config.columns||2;return j`
@@ -857,10 +857,10 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class xt extends(ut(nt)){static get properties(){return{hass:{attribute:!1},_config:{state:!0}}}static getConfigElement(){return document.createElement("materia-sensor-row-editor")}static getStubConfig(){return{entity:"",name:"",padding:"0px 20px"}}get config(){return this._config}setConfig(t){if(!t.entity)throw new Error("entity is required");if(!t.name)throw new Error("name is required");this._config={padding:"0px 20px",...t}}connectedCallback(){super.connectedCallback(),ct()}_handleTap(){this.hass&&this._config.tap_action&&this._handleAction(this._config.tap_action)}render(){if(!this.hass||!this._config)return j``;const t=this._config,e=this.hass.states[t.entity];if(!e)return j`<ha-card>Entity not found: ${t.entity}</ha-card>`;const i=e.state,s=e.attributes.unit_of_measurement||"",a=s?`${i} ${s}`:i,o=!!t.tap_action;return j`
+    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class xt extends(pt(nt)){static get properties(){return{hass:{attribute:!1},_config:{state:!0}}}static getConfigElement(){return document.createElement("materia-sensor-row-editor")}static getStubConfig(){return{entity:"",name:"",padding:"0px 20px"}}get config(){return this._config}setConfig(t){if(!t.entity)throw new Error("entity is required");if(!t.name)throw new Error("name is required");this._config={padding:"0px 20px",...t}}connectedCallback(){super.connectedCallback(),ct()}_handleTap(){this.hass&&this._config.tap_action&&this._handleAction(this._config.tap_action)}render(){if(!this.hass||!this._config)return j``;const t=this._config,e=this.hass.states[t.entity];if(!e)return j`<ha-card>Entity not found: ${t.entity}</ha-card>`;const i=e.state,s=e.attributes.unit_of_measurement||"",a=s?`${i} ${s}`:i,o=!!t.tap_action;return j`
       <ha-card
         class="${o?"clickable":""}"
         style="--row-padding: ${t.padding}"
@@ -905,10 +905,10 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class $t extends(ut(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-weather-editor")}static getStubConfig(){return{entity:""}}static styles=o`
+    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class $t extends(pt(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-weather-editor")}static getStubConfig(){return{entity:""}}static styles=o`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -964,10 +964,10 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Ct extends(ut(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-sensor-display-editor")}static getStubConfig(){return{entity:"",name:"",icon:""}}static styles=o`
+    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Ct extends(pt(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-sensor-display-editor")}static getStubConfig(){return{entity:"",name:"",icon:""}}static styles=o`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -1023,10 +1023,10 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});const Et={primary:["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],secondary:["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],tertiary:["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],error:["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],device:["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-container":["var(--md-sys-color-primary-container)","var(--md-sys-color-on-primary-container)"],"secondary-container":["var(--md-sys-color-secondary-container)","var(--md-sys-color-secondary)"],"error-container":["var(--md-sys-color-error-container)","var(--md-sys-color-error)"],"device-container":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"]};class kt extends(ut(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-button-editor")}static getStubConfig(){return{name:"",icon:"mdi:power-plug",variant:"primary",show_state:!1,active_state:"on"}}static styles=o`
+    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});const Et={primary:["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],secondary:["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],tertiary:["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],error:["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],device:["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-container":["var(--md-sys-color-primary-container)","var(--md-sys-color-on-primary-container)"],"secondary-container":["var(--md-sys-color-secondary-container)","var(--md-sys-color-secondary)"],"error-container":["var(--md-sys-color-error-container)","var(--md-sys-color-error)"],"device-container":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"]};class kt extends(pt(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-button-editor")}static getStubConfig(){return{name:"",icon:"mdi:power-plug",variant:"primary",show_state:!1,active_state:"on"}}static styles=o`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -1179,7 +1179,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._topSchema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._topChanged}
       ></ha-form>
 
@@ -1197,7 +1197,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
               .hass=${this.hass}
               .data=${t}
               .schema=${this._optionSchema()}
-              .computeLabel=${pt}
+              .computeLabel=${ut}
               @value-changed=${t=>this._optionChanged(t,e)}
             ></ha-form>
             <div class="service-data-label">Service data (YAML/JSON)</div>
@@ -1301,7 +1301,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
 
@@ -1316,7 +1316,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         .value=${this._config.tap_action?JSON.stringify(this._config.tap_action,null,2):""}
         @change=${this._tapActionChanged}
       ></textarea>
-    `:j``}_valueChanged(t){const e={...this._config,...t.detail.value,icon_map:this._config.icon_map,tap_action:this._config.tap_action};this._fireConfig(e)}_iconMapChanged(t){const e=t.target.value.trim();if(!e){const{icon_map:t,...e}=this._config;return void this._fireConfig(e)}try{const t=JSON.parse(e);this._fireConfig({...this._config,icon_map:t})}catch(t){}}_tapActionChanged(t){const e=t.target.value.trim();if(!e){const{tap_action:t,...e}=this._config;return void this._fireConfig(e)}try{const t=JSON.parse(e);this._fireConfig({...this._config,tap_action:t})}catch(t){}}_fireConfig(t){this._config=t,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-icon-button-editor",Tt);class Mt extends(ut(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-icon-button-editor")}static getStubConfig(){return{icon:"mdi:play",variant:"filled",size:"default"}}static styles=o`
+    `:j``}_valueChanged(t){const e={...this._config,...t.detail.value,icon_map:this._config.icon_map,tap_action:this._config.tap_action};this._fireConfig(e)}_iconMapChanged(t){const e=t.target.value.trim();if(!e){const{icon_map:t,...e}=this._config;return void this._fireConfig(e)}try{const t=JSON.parse(e);this._fireConfig({...this._config,icon_map:t})}catch(t){}}_tapActionChanged(t){const e=t.target.value.trim();if(!e){const{tap_action:t,...e}=this._config;return void this._fireConfig(e)}try{const t=JSON.parse(e);this._fireConfig({...this._config,tap_action:t})}catch(t){}}_fireConfig(t){this._config=t,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-icon-button-editor",Tt);class Mt extends(pt(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-icon-button-editor")}static getStubConfig(){return{icon:"mdi:play",variant:"filled",size:"default"}}static styles=o`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -1393,7 +1393,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
       >
         <ha-icon .icon=${i}></ha-icon>
       </ha-card>
-    `}_handleTap(){const t=this.config.tap_action||this._defaultTapAction();this._handleAction(t)}getCardSize(){return 1}}customElements.define("materia-icon-button",Mt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-icon-button",name:"Materia Icon Button",description:"M3 icon button with variants"});customElements.define("materia-select-chip-editor",class extends nt{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"option",required:!0,selector:{text:{}}},{name:"label",required:!0,selector:{text:{}}},{name:"position",selector:{select:{options:[{value:"left",label:"Left"},{value:"middle",label:"Middle"},{value:"right",label:"Right"}]}}}]}render(){return this.hass&&this._config?j`
+    `}_resolveTapAction(){if(this.config.tap_action_map&&this.config.entity){const t=this.hass?.states[this.config.entity]?.state,e=this.config.tap_action_map[t]??this.config.tap_action_map.default;if(e)return e}return this.config.tap_action||this._defaultTapAction()}_handleTap(){this._handleAction(this._resolveTapAction())}getCardSize(){return 1}}customElements.define("materia-icon-button",Mt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-icon-button",name:"Materia Icon Button",description:"M3 icon button with variants"});customElements.define("materia-select-chip-editor",class extends nt{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"option",required:!0,selector:{text:{}}},{name:"label",required:!0,selector:{text:{}}},{name:"position",selector:{select:{options:[{value:"left",label:"Left"},{value:"middle",label:"Middle"},{value:"right",label:"Right"}]}}}]}render(){return this.hass&&this._config?j`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
@@ -1464,10 +1464,10 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Ot extends(ut(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-checkbox-editor")}static getStubConfig(){return{entity:"",name:""}}static styles=o`
+    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Ot extends(pt(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-checkbox-editor")}static getStubConfig(){return{entity:"",name:""}}static styles=o`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -1513,22 +1513,22 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
       height: 34px;
       color: var(--md-sys-color-primary);
     }
-  `;constructor(){super(),ct()}setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={tap_action:{action:"toggle"},...t}}_isChecked(t){if(this.config.checked_entity&&this.config.checked_value){const t=this.hass?.states[this.config.checked_entity];if(t){const e=String(t.state??"").split(",").map(t=>t.trim());return e.includes(this.config.checked_value)}return!1}if(!t)return!1;const e=String(t.state??"").toLowerCase(),i=Number(e);return"on"===e||"true"===e||"home"===e||!Number.isNaN(i)&&i>0}render(){if(!this.hass||!this.config)return j``;const t=this.hass.states[this.config.entity],e=this._isChecked(t),i=this.config.name??t?.attributes?.friendly_name??this.config.entity,s=e?"mdi:checkbox-marked":"mdi:checkbox-blank-outline";return j`
+  `;constructor(){super(),ct()}setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={tap_action:{action:"toggle"},...t}}_isChecked(t){if(this.config.checked_entity){const t=this.hass?.states[this.config.checked_entity];if(!t)return!1;const e=String(t.state??"").split(",").map(t=>t.trim()).filter(Boolean);return this.config.checked_values?this.config.checked_values.every(t=>e.includes(t)):!!this.config.checked_value&&e.includes(this.config.checked_value)}if(!t)return!1;const e=String(t.state??"").toLowerCase(),i=Number(e);return"on"===e||"true"===e||"home"===e||!Number.isNaN(i)&&i>0}render(){if(!this.hass||!this.config)return j``;const t=this.hass.states[this.config.entity],e=this._isChecked(t),i=this.config.name??t?.attributes?.friendly_name??this.config.entity,s=e?"mdi:checkbox-marked":"mdi:checkbox-blank-outline";return j`
       <ha-card @click=${this._handleTap}>
         <div class="name">${i}</div>
         <div class="icon-cell">
           <ha-icon .icon=${s}></ha-icon>
         </div>
       </ha-card>
-    `}_handleTap(){const t=this.config.tap_action||{action:"toggle"};this._handleAction(t)}getCardSize(){return 1}}customElements.define("materia-checkbox",Ot),window.customCards=window.customCards||[],window.customCards.push({type:"materia-checkbox",name:"Materia Checkbox",description:"Material You checkbox row with name and toggle icon."});customElements.define("materia-circle-action-editor",class extends nt{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"icon",required:!0,selector:{icon:{}}},{name:"size",selector:{select:{options:[{value:"normal",label:"Normal"},{value:"small",label:"Small"}]}}}]}render(){return this.hass&&this._config?j`
+    `}_handleTap(){const t=this.hass?.states[this.config.entity],e=this._isChecked(t);let i;i=e&&this.config.tap_action_checked?this.config.tap_action_checked:!e&&this.config.tap_action_unchecked?this.config.tap_action_unchecked:this.config.tap_action||{action:"toggle"},this._handleAction(i)}getCardSize(){return 1}}customElements.define("materia-checkbox",Ot),window.customCards=window.customCards||[],window.customCards.push({type:"materia-checkbox",name:"Materia Checkbox",description:"Material You checkbox row with name and toggle icon."});customElements.define("materia-circle-action-editor",class extends nt{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[{name:"icon",required:!0,selector:{icon:{}}},{name:"size",selector:{select:{options:[{value:"normal",label:"Normal"},{value:"small",label:"Small"}]}}}]}render(){return this.hass&&this._config?j`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Ft extends(ut(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-circle-action-editor")}static getStubConfig(){return{icon:"mdi:play",size:"normal"}}static styles=o`
+    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Ft extends(pt(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-circle-action-editor")}static getStubConfig(){return{icon:"mdi:play",size:"normal"}}static styles=o`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -1578,10 +1578,10 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Dt extends(ut(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-tonal-button-editor")}static getStubConfig(){return{entity:"",name:"",icon:""}}static styles=o`
+    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Dt extends(pt(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-tonal-button-editor")}static getStubConfig(){return{entity:"",name:"",icon:""}}static styles=o`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -1679,10 +1679,10 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Pt extends(ut(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-pill-badge-editor")}static getStubConfig(){return{entity:"",name:"",icon:"",active_state:"on"}}static styles=o`
+    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Pt extends(pt(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-pill-badge-editor")}static getStubConfig(){return{entity:"",name:"",icon:"",active_state:"on"}}static styles=o`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -1775,7 +1775,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
     `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Nt extends nt{static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-separator-editor")}static getStubConfig(){return{label:""}}static styles=o`
@@ -1810,10 +1810,10 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         .hass=${this.hass}
         .data=${this._config}
         .schema=${this._schema}
-        .computeLabel=${pt}
+        .computeLabel=${ut}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Lt extends(ut(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-select-editor")}static getStubConfig(){return{entity:""}}static styles=o`
+    `:j``}_valueChanged(t){const e=t.detail.value;this._config=e,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:e},bubbles:!0,composed:!0}))}});class Lt extends(pt(nt)){static properties={hass:{attribute:!1},config:{state:!0}};static getConfigElement(){return document.createElement("materia-select-editor")}static getStubConfig(){return{entity:""}}static styles=o`
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;

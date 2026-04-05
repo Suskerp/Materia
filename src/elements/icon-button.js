@@ -283,9 +283,18 @@ class MateriaIconButton extends ActionMixin(LitElement) {
     `;
   }
 
+  _resolveTapAction() {
+    // Support state-based tap_action_map: { paused: {action: ...}, cleaning: {action: ...} }
+    if (this.config.tap_action_map && this.config.entity) {
+      const state = this.hass?.states[this.config.entity]?.state;
+      const mapped = this.config.tap_action_map[state] ?? this.config.tap_action_map.default;
+      if (mapped) return mapped;
+    }
+    return this.config.tap_action || this._defaultTapAction();
+  }
+
   _handleTap() {
-    const action = this.config.tap_action || this._defaultTapAction();
-    this._handleAction(action);
+    this._handleAction(this._resolveTapAction());
   }
 
   getCardSize() {

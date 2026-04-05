@@ -131,13 +131,21 @@ class MateriaCheckbox extends ActionMixin(LitElement) {
   }
 
   _isChecked(stateObj) {
-    /* Custom checked_entity + checked_value logic (e.g. vacuum room queue) */
-    if (this.config.checked_entity && this.config.checked_value) {
+    /* Custom checked_entity logic (e.g. vacuum room queue) */
+    if (this.config.checked_entity) {
       const checkedObj = this.hass?.states[this.config.checked_entity];
-      if (checkedObj) {
-        const values = String(checkedObj.state ?? "")
-          .split(",")
-          .map((v) => v.trim());
+      if (!checkedObj) return false;
+      const values = String(checkedObj.state ?? "")
+        .split(",")
+        .map((v) => v.trim())
+        .filter(Boolean);
+
+      // checked_values (array) — ALL must be present
+      if (this.config.checked_values) {
+        return this.config.checked_values.every((v) => values.includes(v));
+      }
+      // checked_value (single) — must be in list
+      if (this.config.checked_value) {
         return values.includes(this.config.checked_value);
       }
       return false;
@@ -171,7 +179,18 @@ class MateriaCheckbox extends ActionMixin(LitElement) {
   }
 
   _handleTap() {
-    const actionConfig = this.config.tap_action || { action: "toggle" };
+    const stateObj = this.hass?.states[this.config.entity];
+    const checked = this._isChecked(stateObj);
+
+    // Support separate actions for checked/unchecked states
+    let actionConfig;
+    if (checked && this.config.tap_action_checked) {
+      actionConfig = this.config.tap_action_checked;
+    } else if (!checked && this.config.tap_action_unchecked) {
+      actionConfig = this.config.tap_action_unchecked;
+    } else {
+      actionConfig = this.config.tap_action || { action: "toggle" };
+    }
     this._handleAction(actionConfig);
   }
 
