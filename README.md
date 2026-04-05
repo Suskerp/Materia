@@ -55,7 +55,7 @@ Materia ships a default `custom_colors.json` in the `dist/` folder. After HACS i
 /local/community/materia/custom_colors.json
 ```
 
-Configure your [material-you-utilities](https://github.com/Nerwyn/material-you-utilities) (or [custom harmonization fork](https://github.com/Suskerp/material-you-utilities-custom-harmonization)) to reference this path for custom color harmonization. No manual file copying required.
+Configure your [material-you-utilities-custom-harmonization](https://github.com/Suskerp/material-you-utilities-custom-harmonization) to reference this path for custom color harmonization. No manual file copying required.
 
 To use your own colors, either edit the file directly at `config/www/community/materia/custom_colors.json`, or place a custom JSON elsewhere and point your material-you-utilities config to that path instead.
 
