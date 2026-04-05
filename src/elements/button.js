@@ -180,6 +180,7 @@ class MateriaButton extends ActionMixin(LitElement) {
     :host {
       display: block;
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
+      margin-bottom: 10px;
     }
 
     ha-card {
@@ -322,10 +323,12 @@ class MateriaButton extends ActionMixin(LitElement) {
     const colorOnMap = this._parseMap(this.config.color_on_map);
     if (colorMap && stateObj) {
       const s = stateObj.state;
-      const bg = colorMap[s] ?? colorMap._default;
+      // Try string key first, then number key, then _default
+      const bg = colorMap[s] ?? colorMap[String(s)] ?? colorMap._default;
       if (bg !== undefined) {
         bgColor = bg;
-        textColor = (colorOnMap && (colorOnMap[s] ?? colorOnMap._default)) || "var(--primary-text-color)";
+        const fgExact = colorOnMap?.[s] ?? colorOnMap?.[String(s)];
+        textColor = fgExact ?? colorOnMap?._default ?? "var(--primary-text-color)";
       }
     }
     if (bgColor === undefined && variant === "battery") {

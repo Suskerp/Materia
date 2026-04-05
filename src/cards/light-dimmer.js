@@ -122,43 +122,120 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
     }
   }
 
-  /* ── Pointer event handlers ── */
+  /* ── Pointer event handlers (bubble-card pattern) ── */
+
+  _getContainer() {
+    return this.shadowRoot?.querySelector(".container");
+  }
+
+  _pctFromEvent(ev) {
+    const container = this._getContainer();
+    if (!container) return 0;
+    const rect = container.getBoundingClientRect();
+    const x = (ev.touches ? ev.touches[0] : ev).clientX;
+    return Math.max(0, Math.min(100, ((x - rect.left) / rect.width) * 100));
+  }
+
+  _updateFillVisual(pct) {
+    const fill = this.shadowRoot?.querySelector(".fill");
+    if (fill) fill.style.width = `${pct}%`;
+  }
 
   _onPointerDown(ev) {
+    // Only respond to primary button / single touch
+    if (ev.button && ev.button !== 0) return;
+
     this._startX = ev.clientX;
     this._startY = ev.clientY;
     this._dragging = false;
+    this._scrollIntent = false;
+
+    // Capture pointer for smooth tracking even outside element
+    try {
+      ev.currentTarget.setPointerCapture(ev.pointerId);
+    } catch (_) {}
+
+    // Attach window-level listeners for reliable tracking
+    this._onMoveRef = this._onPointerMove.bind(this);
+    this._onUpRef = this._onPointerUp.bind(this);
+    window.addEventListener("pointermove", this._onMoveRef);
+    window.addEventListener("pointerup", this._onUpRef);
+    window.addEventListener("pointercancel", this._onUpRef);
   }
 
   _onPointerMove(ev) {
-    if (this._startX == null) return;
+    if (this._startX == null || this._scrollIntent) return;
+
     const dx = Math.abs(ev.clientX - this._startX);
     const dy = Math.abs(ev.clientY - this._startY);
-    if (dx > 5 && dx > dy) {
+
+    // Detect scroll intent: vertical movement dominates
+    if (!this._dragging && dy > 10 && dx < 4) {
+      this._scrollIntent = true;
+      this._cleanup(ev);
+      return;
+    }
+
+    // Start drag: horizontal movement dominates
+    if (!this._dragging && dx > 4 && dx >= dy) {
       this._dragging = true;
+    }
+
+    if (this._dragging) {
       ev.preventDefault();
-      const rect = ev.currentTarget.getBoundingClientRect();
-      const pct = Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100));
-      // Update visual fill immediately without service call
-      const fill = this.shadowRoot.querySelector('.fill');
-      if (fill) fill.style.width = pct + '%';
+      const pct = this._pctFromEvent(ev);
+      this._updateFillVisual(pct);
+
+      // Throttled service call during drag (200ms)
+      if (!this._throttleTimer) {
+        this._throttleTimer = setTimeout(() => {
+          this._throttleTimer = null;
+          const brightness = Math.round((pct / 100) * 255);
+          this._setBrightness(brightness);
+        }, 200);
+      }
     }
   }
 
   _onPointerUp(ev) {
     if (this._startX == null) return;
-    if (!this._dragging) {
+
+    if (!this._dragging && !this._scrollIntent) {
       // TAP — toggle
       this._toggleLight();
-    } else {
-      // SLIDE — set brightness
-      const rect = ev.currentTarget.getBoundingClientRect();
-      const pct = Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100));
+    } else if (this._dragging) {
+      // Final brightness from release position
+      const pct = this._pctFromEvent(ev);
       const brightness = Math.round((pct / 100) * 255);
       this._setBrightness(brightness);
     }
+
+    this._cleanup(ev);
+  }
+
+  _cleanup(ev) {
     this._startX = null;
     this._dragging = false;
+    this._scrollIntent = false;
+    clearTimeout(this._throttleTimer);
+    this._throttleTimer = null;
+
+    // Release pointer capture
+    try {
+      const container = this._getContainer();
+      if (container && ev?.pointerId != null) {
+        container.releasePointerCapture(ev.pointerId);
+      }
+    } catch (_) {}
+
+    // Remove window listeners
+    if (this._onMoveRef) {
+      window.removeEventListener("pointermove", this._onMoveRef);
+      window.removeEventListener("pointerup", this._onUpRef);
+      window.removeEventListener("pointercancel", this._onUpRef);
+      this._onMoveRef = null;
+      this._onUpRef = null;
+    }
   }
 
   /* ── Render ── */
@@ -177,8 +254,6 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
         <div class="container"
           style="background-color: ${containerBg}; color: ${textColor};"
           @pointerdown=${this._onPointerDown}
-          @pointermove=${this._onPointerMove}
-          @pointerup=${this._onPointerUp}
         >
           <div
             class="fill"

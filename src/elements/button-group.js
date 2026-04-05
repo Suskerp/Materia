@@ -70,6 +70,20 @@ class MateriaButtonGroupEditor extends LitElement {
           },
         },
       },
+      {
+        name: "variant",
+        selector: {
+          select: {
+            options: [
+              { value: "filled", label: "Filled" },
+              { value: "tonal", label: "Tonal" },
+              { value: "outlined", label: "Outlined" },
+              { value: "elevated", label: "Elevated" },
+            ],
+            mode: "dropdown",
+          },
+        },
+      },
       { name: "color_active", selector: { text: {} } },
       { name: "color_on_active", selector: { text: {} } },
     ];
@@ -334,9 +348,30 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
       opacity: 0.12;
     }
 
-    button.inactive {
+    /* ── Variant: filled (default) ── */
+    button.inactive.filled {
+      background: var(--ha-card-background, var(--card-background-color));
+      color: var(--primary-text-color);
+    }
+
+    /* ── Variant: tonal ── */
+    button.inactive.tonal {
       background: var(--md-sys-color-secondary-container, var(--ha-card-background));
       color: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
+    }
+
+    /* ── Variant: outlined ── */
+    button.inactive.outlined {
+      background: transparent;
+      color: var(--primary-text-color);
+      border: 1px solid var(--md-sys-color-outline, rgba(0,0,0,0.12));
+    }
+
+    /* ── Variant: elevated ── */
+    button.inactive.elevated {
+      background: var(--md-sys-color-surface, var(--ha-card-background));
+      color: var(--primary-text-color);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
     }
 
     button ha-icon {
@@ -388,6 +423,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     const activeValue = this._activeValue;
     const colors = this._getActiveColors();
     const options = this.config.options;
+    const variant = this.config.variant || "filled";
 
     return html`
       <ha-card>
@@ -416,7 +452,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
 
             return html`
               <button
-                class=${isActive ? "active" : "inactive"}
+                class="${isActive ? "active" : "inactive"} ${variant}"
                 style="border-radius: ${radius};${isActive ? ` background: ${bg}; color: ${fg};` : ""}"
                 @click=${() => this._handleOptionTap(opt)}
               >
