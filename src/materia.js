@@ -17,7 +17,6 @@ import "./cards/light-dimmer.js";
 import "./cards/cover.js";
 import "./cards/device.js";
 import "./cards/lock.js";
-import "./cards/battery-low.js";
 import "./cards/room.js";
 import "./cards/climate.js";
 import "./cards/sensor-row.js";

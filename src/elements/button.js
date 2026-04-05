@@ -165,6 +165,7 @@ class MateriaButton extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
+    _resolvedStateDisplay: { state: true },
   };
 
   static getConfigElement() {
@@ -274,6 +275,17 @@ class MateriaButton extends ActionMixin(LitElement) {
     };
   }
 
+  updated(changedProps) {
+    super.updated?.(changedProps);
+    if (changedProps.has("hass") && this.config?.state_display?.includes("{{")) {
+      this._renderTemplate(this.config.state_display).then(result => {
+        if (result !== this._resolvedStateDisplay) {
+          this._resolvedStateDisplay = result;
+        }
+      });
+    }
+  }
+
   _isActive(stateObj) {
     if (!stateObj) return false;
     const s = stateObj.state;
@@ -343,9 +355,14 @@ class MateriaButton extends ActionMixin(LitElement) {
     /* State display */
     let stateDisplay = "";
     if (showState && stateObj) {
-      if (this.config.state_display && !this.config.state_display.includes("{{")) {
+      if (this._resolvedStateDisplay && this.config.state_display?.includes("{{")) {
+        // Jinja2 template was resolved
+        stateDisplay = this._resolvedStateDisplay;
+      } else if (this.config.state_display && !this.config.state_display.includes("{{")) {
+        // Static string
         stateDisplay = this.config.state_display;
       } else {
+        // Default: entity state
         stateDisplay = stateObj.state;
       }
       stateDisplay = this._capitalize(stateDisplay);

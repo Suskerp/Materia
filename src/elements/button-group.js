@@ -111,8 +111,7 @@ class MateriaButtonGroupEditor extends LitElement {
       flex-direction: column;
       gap: 8px;
     }
-    .option-body ha-textfield,
-    .option-body ha-textarea {
+    .option-body ha-form {
       display: block;
       width: 100%;
     }
@@ -157,31 +156,13 @@ class MateriaButtonGroupEditor extends LitElement {
             ${this._expanded === i
               ? html`
                   <div class="option-body">
-                    <ha-textfield
-                      label="Label"
-                      .value=${opt.label || ""}
-                      @change=${(e) => this._updateOption(i, "label", e.target.value)}
-                    ></ha-textfield>
-                    <ha-textfield
-                      label="Value"
-                      .value=${opt.value || ""}
-                      @change=${(e) => this._updateOption(i, "value", e.target.value)}
-                    ></ha-textfield>
-                    <ha-textfield
-                      label="Icon"
-                      .value=${opt.icon || ""}
-                      @change=${(e) => this._updateOption(i, "icon", e.target.value)}
-                    ></ha-textfield>
-                    <ha-textfield
-                      label="Service (e.g. climate.set_hvac_mode)"
-                      .value=${opt.service || ""}
-                      @change=${(e) => this._updateOption(i, "service", e.target.value)}
-                    ></ha-textfield>
-                    <ha-textarea
-                      label="Service data (JSON)"
-                      .value=${opt.service_data ? JSON.stringify(opt.service_data, null, 2) : ""}
-                      @change=${(e) => this._updateServiceData(i, e.target.value)}
-                    ></ha-textarea>
+                    <ha-form
+                      .hass=${this.hass}
+                      .data=${opt}
+                      .schema=${this._optionSchema}
+                      .computeLabel=${computeLabel}
+                      @value-changed=${(e) => this._updateOptionForm(i, e.detail.value)}
+                    ></ha-form>
                   </div>
                 `
               : ""}
@@ -192,6 +173,23 @@ class MateriaButtonGroupEditor extends LitElement {
   }
 
   _expanded = null;
+
+  get _optionSchema() {
+    return [
+      { name: "label", selector: { text: {} } },
+      { name: "value", required: true, selector: { text: {} } },
+      { name: "icon", selector: { icon: {} } },
+      { name: "tap_action", label: "Action", selector: { ui_action: { default_action: "call-service" } } },
+    ];
+  }
+
+  _updateOptionForm(index, value) {
+    const options = [...(this._config.options || [])];
+    options[index] = { ...options[index], ...value };
+    const updated = { ...this._config, options };
+    this._config = updated;
+    this._fireConfigChanged(updated);
+  }
 
   _toggleExpand(i) {
     this._expanded = this._expanded === i ? null : i;
@@ -238,15 +236,6 @@ class MateriaButtonGroupEditor extends LitElement {
     const updated = { ...this._config, options };
     this._config = updated;
     this._fireConfigChanged(updated);
-  }
-
-  _updateServiceData(index, raw) {
-    try {
-      const parsed = JSON.parse(raw);
-      this._updateOption(index, "service_data", parsed);
-    } catch (_) {
-      /* ignore invalid JSON while typing */
-    }
   }
 
   _fireConfigChanged(config) {
@@ -303,7 +292,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
       width: 100%;
       border-radius: 999px;
       overflow: hidden;
-      background: var(--md-sys-color-surface-variant, rgba(0, 0, 0, 0.05));
+      background: transparent;
       box-sizing: border-box;
     }
 
@@ -442,12 +431,8 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
   }
 
   _handleOptionTap(opt) {
-    if (opt.service) {
-      this._handleAction({
-        action: "call-service",
-        service: opt.service,
-        service_data: opt.service_data || {},
-      });
+    if (opt.tap_action) {
+      this._handleAction(opt.tap_action);
     } else if (this.config.entity) {
       this._fireMoreInfo(this.config.entity);
     }

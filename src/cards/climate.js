@@ -460,6 +460,8 @@ class MateriaClimate extends LitElement {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        text-align: center;
+        width: 100%;
       }
     `;
   }

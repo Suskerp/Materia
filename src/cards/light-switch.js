@@ -79,7 +79,7 @@ class MateriaLightSwitch extends ActionMixin(LitElement) {
     .container {
       position: relative;
       width: 100%;
-      min-height: 50px;
+      min-height: 88px;
       background-color: var(--ha-card-background, var(--card-background-color));
       border-radius: 28px;
       overflow: hidden;
