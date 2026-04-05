@@ -99,9 +99,9 @@ class MateriaCover extends ActionMixin(LitElement) {
 
   get _stateDisplay() {
     const pos = this._position;
-    if (pos === 0) return "Closed";
-    if (pos === 100) return "Open";
-    return `${pos}% open`;
+    if (pos === 0) return this._capitalize("Closed");
+    if (pos === 100) return this._capitalize("Open");
+    return `${pos}% ${this._capitalize("open")}`;
   }
 
   /* ── Actions ── */
@@ -158,6 +158,9 @@ class MateriaCover extends ActionMixin(LitElement) {
             <div class="name">${this._name}</div>
             <div class="state">${this._stateDisplay}</div>
           </div>
+          ${this._hasNavigateAction ? html`
+            <ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>
+          ` : ''}
           <div class="sub-buttons">
             <button class="sub-btn" @click=${this._openCover}>
               <ha-icon icon="mdi:arrow-up"></ha-icon>
@@ -221,7 +224,7 @@ class MateriaCover extends ActionMixin(LitElement) {
       left: 0;
       transition: width 0.3s ease;
       z-index: 0;
-      border-radius: inherit;
+      border-radius: 28px 0 0 28px;
     }
     .icon-container {
       display: flex;
@@ -232,7 +235,7 @@ class MateriaCover extends ActionMixin(LitElement) {
       margin: 6px;
       margin-left: 8px;
       border-radius: 50%;
-      background-color: var(--ha-card-background, var(--card-background-color));
+      background-color: transparent;
       flex-shrink: 0;
       position: relative;
       z-index: 1;
@@ -240,6 +243,14 @@ class MateriaCover extends ActionMixin(LitElement) {
     .icon-container ha-icon {
       --mdc-icon-size: 24px;
       display: flex;
+    }
+    .chevron {
+      --mdc-icon-size: 20px;
+      opacity: 0.5;
+      margin-right: 12px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
     }
     .name-container {
       display: flex;

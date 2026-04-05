@@ -1,18 +1,25 @@
 import { LitElement, html, css } from "lit";
 import { ActionMixin } from "../utils/action-handler.js";
 import { computeLabel } from "../utils/editor-helpers.js";
+import { injectFonts } from "../styles/shared.js";
 
 /* ───────────────────────────────────────────────────────
- *  materia-light-switch
- *  Native Lit light toggle card (no bubble-card).
+ *  materia-pill
+ *  Generic compact info pill card. Shows icon + name + state
+ *  in a rounded pill. Colors are fully configurable.
  * ─────────────────────────────────────────────────────── */
 
-/* ── Visual Config Editor ── */
-class MateriaLightSwitchEditor extends LitElement {
+/* ── Editor ── */
+
+class MateriaPillEditor extends LitElement {
   static properties = {
     hass: { attribute: false },
     _config: { state: true },
   };
+
+  static styles = css`
+    :host { display: block; }
+  `;
 
   setConfig(config) {
     this._config = config;
@@ -20,9 +27,32 @@ class MateriaLightSwitchEditor extends LitElement {
 
   get _schema() {
     return [
-      { name: "entity", required: true, selector: { entity: { domain: "light" } } },
+      { name: "entity", required: true, selector: { entity: {} } },
       { name: "name", selector: { text: {} } },
       { name: "icon", selector: { icon: {} } },
+      { name: "color", selector: { template: {} } },
+      { name: "color_on", selector: { template: {} } },
+      {
+        name: "tap_action",
+        type: "expandable",
+        schema: [
+          {
+            name: "action",
+            selector: {
+              select: {
+                options: [
+                  { value: "none", label: "None" },
+                  { value: "more-info", label: "More info" },
+                  { value: "navigate", label: "Navigate" },
+                  { value: "toggle", label: "Toggle" },
+                  { value: "call-service", label: "Call service" },
+                ],
+              },
+            },
+          },
+          { name: "navigation_path", selector: { text: {} } },
+        ],
+      },
     ];
   }
 
@@ -40,29 +70,32 @@ class MateriaLightSwitchEditor extends LitElement {
   }
 
   _valueChanged(ev) {
-    const config = ev.detail.value;
-    this._config = config;
-    this.dispatchEvent(new CustomEvent("config-changed", {
-      detail: { config },
-      bubbles: true,
-      composed: true,
-    }));
+    this._config = ev.detail.value;
+    this.dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: { config: this._config },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 }
-customElements.define("materia-light-switch-editor", MateriaLightSwitchEditor);
+customElements.define("materia-pill-editor", MateriaPillEditor);
 
-class MateriaLightSwitch extends ActionMixin(LitElement) {
+/* ── Card ── */
+
+class MateriaPill extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
   };
 
   static getConfigElement() {
-    return document.createElement("materia-light-switch-editor");
+    return document.createElement("materia-pill-editor");
   }
 
   static getStubConfig() {
-    return { entity: "", name: "", icon: "mdi:track-light" };
+    return { entity: "", name: "", icon: "mdi:information-outline" };
   }
 
   static styles = css`
@@ -86,7 +119,7 @@ class MateriaLightSwitch extends ActionMixin(LitElement) {
       display: flex;
       align-items: center;
       box-sizing: border-box;
-      transition: background-color 0.3s ease;
+      transition: background-color 0.3s ease, color 0.3s ease;
       cursor: pointer;
     }
     .icon-container {
@@ -106,14 +139,6 @@ class MateriaLightSwitch extends ActionMixin(LitElement) {
     .icon-container ha-icon {
       --mdc-icon-size: 24px;
       display: flex;
-    }
-    .chevron {
-      --mdc-icon-size: 20px;
-      opacity: 0.5;
-      margin-right: 12px;
-      flex-shrink: 0;
-      position: relative;
-      z-index: 1;
     }
     .name-container {
       display: flex;
@@ -139,12 +164,25 @@ class MateriaLightSwitch extends ActionMixin(LitElement) {
       opacity: 0.7;
       white-space: nowrap;
     }
+    .chevron {
+      --mdc-icon-size: 20px;
+      opacity: 0.5;
+      margin-right: 12px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
   `;
+
+  constructor() {
+    super();
+    injectFonts();
+  }
 
   setConfig(config) {
     if (!config.entity) throw new Error("entity is required");
     this.config = {
-      icon: "mdi:track-light",
+      icon: "mdi:information-outline",
       ...config,
     };
   }
@@ -153,18 +191,25 @@ class MateriaLightSwitch extends ActionMixin(LitElement) {
     if (!this.hass || !this.config) return html``;
 
     const stateObj = this.hass.states[this.config.entity];
-    if (!stateObj) return html`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;
+    if (!stateObj)
+      return html`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;
 
-    const isOn = stateObj.state === "on";
-    const name = this.config.name || stateObj.attributes.friendly_name || this.config.entity;
-    const stateText = isOn ? this._capitalize("On") : this._capitalize("Off");
+    const name =
+      this.config.name ||
+      stateObj.attributes.friendly_name ||
+      this.config.entity;
+    const icon = this.config.icon;
+    const unit = stateObj.attributes.unit_of_measurement || "";
+    const stateText = unit
+      ? `${this._capitalize(stateObj.state)} ${unit}`
+      : this._capitalize(stateObj.state);
 
-    const containerBg = isOn
-      ? "var(--md-sys-cust-color-light)"
-      : "var(--ha-card-background, var(--card-background-color))";
-    const textColor = isOn
-      ? "var(--md-sys-cust-color-on-light)"
-      : "var(--primary-text-color)";
+    // Colors: use config overrides, else default
+    const containerBg =
+      this.config.color ||
+      "var(--ha-card-background, var(--card-background-color))";
+    const textColor =
+      this.config.color_on || "var(--primary-text-color)";
 
     return html`
       <ha-card>
@@ -174,40 +219,43 @@ class MateriaLightSwitch extends ActionMixin(LitElement) {
           @click=${this._handleTap}
         >
           <div class="icon-container">
-            <ha-icon .icon=${this.config.icon} style="color: ${textColor};"></ha-icon>
+            <ha-icon .icon=${icon} style="color: ${textColor};"></ha-icon>
           </div>
           <div class="name-container">
             <div class="name">${name}</div>
             <div class="state">${stateText}</div>
           </div>
-          ${this._hasNavigateAction ? html`
-            <ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>
-          ` : ''}
+          ${this._hasNavigateAction
+            ? html` <ha-icon
+                class="chevron"
+                icon="mdi:chevron-right"
+              ></ha-icon>`
+            : ""}
         </div>
       </ha-card>
     `;
   }
 
   _handleTap() {
-    this.hass.callService("light", "toggle", {
-      entity_id: this.config.entity,
-    });
+    const action = this.config.tap_action || { action: "more-info" };
+    this._handleAction(action);
   }
 
   getGridOptions() {
-    return { columns: 12, rows: 1.5 };
+    return { columns: 6, rows: "auto" };
   }
 
   getCardSize() {
-    return 2;
+    return 1;
   }
 }
 
-customElements.define("materia-light-switch", MateriaLightSwitch);
+customElements.define("materia-pill", MateriaPill);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "materia-light-switch",
-  name: "Materia Light Switch",
-  description: "A native Lit light toggle switch card.",
+  type: "materia-pill",
+  name: "Materia Pill",
+  description:
+    "Compact info pill card with configurable icon, name, state, and colors.",
 });

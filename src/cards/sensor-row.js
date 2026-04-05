@@ -101,7 +101,7 @@ class MateriaSensorRow extends ActionMixin(LitElement) {
 
     const stateStr = stateObj.state;
     const unit = stateObj.attributes.unit_of_measurement || "";
-    const displayState = unit ? `${stateStr} ${unit}` : stateStr;
+    const displayState = unit ? `${this._capitalize(stateStr)} ${unit}` : this._capitalize(stateStr);
     const hasTap = !!c.tap_action;
 
     return html`
@@ -112,6 +112,9 @@ class MateriaSensorRow extends ActionMixin(LitElement) {
         <div class="container" style="--row-padding: ${c.padding}">
           <span class="name">${c.name}</span>
           <span class="value">${displayState}</span>
+          ${this._hasNavigateAction ? html`
+            <ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>
+          ` : ''}
         </div>
       </ha-card>
     `;
@@ -162,6 +165,14 @@ class MateriaSensorRow extends ActionMixin(LitElement) {
         white-space: nowrap;
         flex-shrink: 0;
         margin-left: 16px;
+      }
+      .chevron {
+        --mdc-icon-size: 20px;
+        opacity: 0.5;
+        margin-right: 12px;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
       }
     `;
   }

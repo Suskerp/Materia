@@ -96,7 +96,7 @@ class MateriaLock extends ActionMixin(LitElement) {
       margin: 6px;
       margin-left: 8px;
       border-radius: 50%;
-      background-color: var(--ha-card-background, var(--card-background-color));
+      background-color: transparent;
       flex-shrink: 0;
       position: relative;
       z-index: 1;
@@ -104,6 +104,14 @@ class MateriaLock extends ActionMixin(LitElement) {
     .icon-container ha-icon {
       --mdc-icon-size: 24px;
       display: flex;
+    }
+    .chevron {
+      --mdc-icon-size: 20px;
+      opacity: 0.5;
+      margin-right: 12px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
     }
     .name-container {
       display: flex;
@@ -146,8 +154,7 @@ class MateriaLock extends ActionMixin(LitElement) {
     const name = this.config.name || stateObj.attributes.friendly_name || this.config.entity;
     const icon = isLocked ? "m3o:lock" : "m3o:lock-open-right";
 
-    /* Capitalize first letter of state for display */
-    const stateText = stateObj.state.charAt(0).toUpperCase() + stateObj.state.slice(1);
+    const stateText = this._capitalize(stateObj.state);
 
     const containerBg = isLocked
       ? "var(--md-sys-cust-color-device-container)"
@@ -169,6 +176,9 @@ class MateriaLock extends ActionMixin(LitElement) {
             <div class="name">${name}</div>
             <div class="state">${stateText}</div>
           </div>
+          ${this._hasNavigateAction ? html`
+            <ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>
+          ` : ''}
         </div>
       </ha-card>
     `;

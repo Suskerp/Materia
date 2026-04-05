@@ -116,7 +116,7 @@ class MateriaDevice extends ActionMixin(LitElement) {
       margin: 6px;
       margin-left: 8px;
       border-radius: 50%;
-      background-color: var(--ha-card-background, var(--card-background-color));
+      background-color: transparent;
       flex-shrink: 0;
       position: relative;
       z-index: 1;
@@ -124,6 +124,14 @@ class MateriaDevice extends ActionMixin(LitElement) {
     .icon-container ha-icon {
       --mdc-icon-size: 24px;
       display: flex;
+    }
+    .chevron {
+      --mdc-icon-size: 20px;
+      opacity: 0.5;
+      margin-right: 12px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
     }
     .name-container {
       display: flex;
@@ -183,10 +191,10 @@ class MateriaDevice extends ActionMixin(LitElement) {
     if (!stateObj) return html`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;
 
     const active = this._isActive(stateObj);
-    const name = this._evalTemplate(this.config.name) || stateObj.attributes.friendly_name || this.config.entity;
-    const icon = this._evalTemplate(this.config.icon);
-    const colorActive = this._evalTemplate(this.config.color_active);
-    const colorOnActive = this._evalTemplate(this.config.color_on_active);
+    const name = this.config.name || stateObj.attributes.friendly_name || this.config.entity;
+    const icon = this.config.icon;
+    const colorActive = this.config.color_active;
+    const colorOnActive = this.config.color_on_active;
 
     const containerBg = active
       ? colorActive
@@ -208,9 +216,12 @@ class MateriaDevice extends ActionMixin(LitElement) {
           <div class="name-container">
             <div class="name">${name}</div>
             ${this.config.show_state
-              ? html`<div class="state">${stateObj.state}</div>`
+              ? html`<div class="state">${this._capitalize(stateObj.state)}</div>`
               : ""}
           </div>
+          ${this._hasNavigateAction ? html`
+            <ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>
+          ` : ''}
         </div>
       </ha-card>
     `;

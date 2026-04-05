@@ -15,6 +15,29 @@ class MateriaButtonEditor extends LitElement {
     _config: { state: true },
   };
 
+  static styles = css`
+    :host { display: block; }
+    .yaml-label {
+      font-size: 13px;
+      font-weight: 500;
+      margin: 8px 0 4px;
+      color: var(--secondary-text-color);
+    }
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      box-sizing: border-box;
+      font-family: monospace;
+      font-size: 12px;
+      border: 1px solid var(--divider-color, #e0e0e0);
+      border-radius: 4px;
+      padding: 6px;
+      resize: vertical;
+      background: var(--card-background-color, #fff);
+      color: var(--primary-text-color, #000);
+    }
+  `;
+
   setConfig(config) {
     this._config = config;
   }
@@ -45,11 +68,9 @@ class MateriaButtonEditor extends LitElement {
       },
       { name: "show_state", selector: { boolean: {} } },
       { name: "active_state", selector: { text: {} } },
-      { name: "state_display", selector: { text: {} } },
+      { name: "state_display", selector: { template: {} } },
       { name: "color", selector: { text: {} } },
       { name: "color_on", selector: { text: {} } },
-      { name: "color_map", selector: { text: {} } },
-      { name: "color_on_map", selector: { text: {} } },
     ];
   }
 
@@ -63,11 +84,58 @@ class MateriaButtonEditor extends LitElement {
         .computeLabel=${computeLabel}
         @value-changed=${this._valueChanged}
       ></ha-form>
+
+      <div class="yaml-label">Color map (JSON, state &rarr; color)</div>
+      <textarea
+        .value=${this._config.color_map ? JSON.stringify(this._config.color_map, null, 2) : ""}
+        @change=${this._colorMapChanged}
+      ></textarea>
+
+      <div class="yaml-label">Color on map (JSON, state &rarr; text color)</div>
+      <textarea
+        .value=${this._config.color_on_map ? JSON.stringify(this._config.color_on_map, null, 2) : ""}
+        @change=${this._colorOnMapChanged}
+      ></textarea>
     `;
   }
 
   _valueChanged(ev) {
-    const config = ev.detail.value;
+    const updated = {
+      ...this._config,
+      ...ev.detail.value,
+      color_map: this._config.color_map,
+      color_on_map: this._config.color_on_map,
+    };
+    this._fireConfig(updated);
+  }
+
+  _colorMapChanged(ev) {
+    const raw = ev.target.value.trim();
+    if (!raw) {
+      const { color_map: _, ...rest } = this._config;
+      this._fireConfig(rest);
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      this._fireConfig({ ...this._config, color_map: parsed });
+    } catch (_) { /* ignore parse errors */ }
+  }
+
+  _colorOnMapChanged(ev) {
+    const raw = ev.target.value.trim();
+    if (!raw) {
+      const { color_on_map: _, ...rest } = this._config;
+      this._fireConfig(rest);
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      this._fireConfig({ ...this._config, color_on_map: parsed });
+    } catch (_) { /* ignore parse errors */ }
+  }
+
+  _fireConfig(config) {
     this._config = config;
     this.dispatchEvent(
       new CustomEvent("config-changed", {
@@ -275,16 +343,12 @@ class MateriaButton extends ActionMixin(LitElement) {
     /* State display */
     let stateDisplay = "";
     if (showState && stateObj) {
-      if (this.config.state_display) {
-        try {
-          const fn = new Function("state", "hass", "entity", `return ${this.config.state_display}`);
-          stateDisplay = fn(stateObj.state, this.hass, stateObj);
-        } catch (_) {
-          stateDisplay = stateObj.state;
-        }
+      if (this.config.state_display && !this.config.state_display.includes("{{")) {
+        stateDisplay = this.config.state_display;
       } else {
         stateDisplay = stateObj.state;
       }
+      stateDisplay = this._capitalize(stateDisplay);
     }
 
     return html`

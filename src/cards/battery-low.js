@@ -96,7 +96,7 @@ class MateriaBatteryLow extends ActionMixin(LitElement) {
       margin: 6px;
       margin-left: 8px;
       border-radius: 50%;
-      background-color: var(--ha-card-background, var(--card-background-color));
+      background-color: transparent;
       flex-shrink: 0;
       position: relative;
       z-index: 1;
@@ -104,6 +104,14 @@ class MateriaBatteryLow extends ActionMixin(LitElement) {
     .icon-container ha-icon {
       --mdc-icon-size: 24px;
       display: flex;
+    }
+    .chevron {
+      --mdc-icon-size: 20px;
+      opacity: 0.5;
+      margin-right: 12px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
     }
     .name-container {
       display: flex;
@@ -164,7 +172,7 @@ class MateriaBatteryLow extends ActionMixin(LitElement) {
     const pct = parseFloat(stateObj.state) || 0;
     const name = this.config.name || stateObj.attributes.friendly_name || this.config.entity;
     const unit = stateObj.attributes.unit_of_measurement || "%";
-    const stateText = `${stateObj.state}${unit}`;
+    const stateText = `${this._capitalize(stateObj.state)}${unit}`;
 
     const [containerBg, textColor] = this._getBatteryColors(pct);
 
@@ -181,6 +189,9 @@ class MateriaBatteryLow extends ActionMixin(LitElement) {
             <div class="name">${name}</div>
             <div class="state">${stateText}</div>
           </div>
+          ${this._hasNavigateAction ? html`
+            <ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>
+          ` : ''}
         </div>
       </ha-card>
     `;

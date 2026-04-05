@@ -62,20 +62,33 @@ export const ActionMixin = (superClass) =>
       }
     }
 
+    /** Capitalize first letter of a string. */
+    _capitalize(str) {
+      if (!str || typeof str !== "string") return str;
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
     /**
-     * Evaluate a template string. If value is wrapped in [[ ]], evaluate as JS
-     * with access to hass, states, and entity. Otherwise return as-is.
+     * Render a Jinja2 template via HA's WebSocket API.
+     * Returns the raw value if it doesn't contain {{ }}.
      */
-    _evalTemplate(value) {
-      if (typeof value !== "string") return value;
-      if (!value.startsWith("[[") || !value.endsWith("]]")) return value;
-      const expr = value.slice(2, -2).trim();
+    async _renderTemplate(template) {
+      if (!template || typeof template !== "string" || !template.includes("{{")) return template;
       try {
-        const fn = new Function("hass", "states", "entity", `return ${expr};`);
-        return fn(this.hass, this.hass?.states, this.hass?.states?.[this.config?.entity]);
+        const result = await this.hass.callWS({
+          type: "render_template",
+          template,
+          entity_ids: this.config?.entity ? [this.config.entity] : [],
+        });
+        return result;
       } catch {
-        return value;
+        return template;
       }
+    }
+
+    /** Check if tap_action is navigate (for chevron rendering). */
+    get _hasNavigateAction() {
+      return this.config?.tap_action?.action === "navigate";
     }
 
     /** Convenience: fire more-info for a specific entity. */

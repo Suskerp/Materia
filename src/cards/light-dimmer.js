@@ -97,7 +97,7 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
   }
 
   get _stateDisplay() {
-    if (!this._isOn) return "Off";
+    if (!this._isOn) return this._capitalize("Off");
     return `${this._brightnessPercent}%`;
   }
 
@@ -171,7 +171,6 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
 
     const containerBg = isOn ? "var(--md-sys-cust-color-light-container)" : "var(--ha-card-background, var(--card-background-color))";
     const textColor = isOn ? "var(--md-sys-cust-color-on-light)" : "var(--primary-text-color)";
-    const iconBg = isOn ? "transparent" : "var(--ha-card-background, var(--card-background-color))";
 
     return html`
       <ha-card>
@@ -185,13 +184,16 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
             class="fill"
             style="width: ${isOn ? pct : 0}%; background-color: var(--md-sys-cust-color-light); opacity: 1;"
           ></div>
-          <div class="icon-container" style="background-color: ${iconBg};">
+          <div class="icon-container">
             <ha-icon .icon=${this._icon}></ha-icon>
           </div>
           <div class="name-container">
             <div class="name">${this._name}</div>
             <div class="state">${this._stateDisplay}</div>
           </div>
+          ${this._hasNavigateAction ? html`
+            <ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>
+          ` : ''}
         </div>
       </ha-card>
     `;
@@ -233,7 +235,7 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
       left: 0;
       transition: width 0.3s ease;
       z-index: 0;
-      border-radius: inherit;
+      border-radius: 28px 0 0 28px;
     }
     .icon-container {
       display: flex;
@@ -244,7 +246,7 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
       margin: 6px;
       margin-left: 8px;
       border-radius: 50%;
-      background-color: var(--ha-card-background, var(--card-background-color));
+      background-color: transparent;
       flex-shrink: 0;
       position: relative;
       z-index: 1;
@@ -252,6 +254,14 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
     .icon-container ha-icon {
       --mdc-icon-size: 24px;
       display: flex;
+    }
+    .chevron {
+      --mdc-icon-size: 20px;
+      opacity: 0.5;
+      margin-right: 12px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
     }
     .name-container {
       display: flex;
