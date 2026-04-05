@@ -1,7 +1,7 @@
 import { LitElement, html, css } from "lit";
 import { ActionMixin } from "../utils/action-handler.js";
 import { computeLabel } from "../utils/editor-helpers.js";
-import { injectFonts, materiaCardStyles } from "../styles/shared.js";
+import { injectFonts } from "../styles/shared.js";
 
 /* ───────────────────────────────────────────────
  *  materia-sensor-row-editor
@@ -107,12 +107,11 @@ class MateriaSensorRow extends ActionMixin(LitElement) {
     return html`
       <ha-card
         class="${hasTap ? "clickable" : ""}"
-        style="--row-padding: ${c.padding}"
         @click=${hasTap ? this._handleTap : undefined}
       >
-        <div class="row">
+        <div class="container" style="--row-padding: ${c.padding}">
           <span class="name">${c.name}</span>
-          <span class="state">${displayState}</span>
+          <span class="value">${displayState}</span>
         </div>
       </ha-card>
     `;
@@ -123,39 +122,48 @@ class MateriaSensorRow extends ActionMixin(LitElement) {
   }
 
   static get styles() {
-    return [
-      materiaCardStyles,
-      css`
-        ha-card {
-          box-shadow: none;
-          border-radius: 18px;
-        }
-
-        ha-card.clickable {
-          cursor: pointer;
-        }
-
-        .row {
-          display: grid;
-          grid-template-areas: "n s";
-          grid-template-columns: 1fr auto;
-          align-items: center;
-          padding: var(--row-padding, 0px 20px);
-          font-size: 14px;
-          font-weight: 400;
-        }
-
-        .name {
-          grid-area: n;
-          justify-self: start;
-        }
-
-        .state {
-          grid-area: s;
-          justify-self: end;
-        }
-      `,
-    ];
+    return css`
+      :host {
+        display: block;
+        font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
+      }
+      ha-card {
+        background: none;
+        box-shadow: none;
+        border: none;
+        overflow: visible;
+      }
+      ha-card.clickable {
+        cursor: pointer;
+      }
+      .container {
+        position: relative;
+        width: 100%;
+        min-height: 50px;
+        background-color: var(--secondary-background-color);
+        border-radius: 28px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-sizing: border-box;
+        padding: var(--row-padding, 0px 20px);
+      }
+      .name {
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .value {
+        font-size: 13px;
+        font-weight: 400;
+        white-space: nowrap;
+        flex-shrink: 0;
+        margin-left: 16px;
+      }
+    `;
   }
 }
 

@@ -250,9 +250,22 @@ class MateriaSegmentedButton extends LitElement {
       font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
     }
 
-    .container {
+    ha-card {
+      background: none;
+      box-shadow: none;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      margin: 0;
+      overflow: visible;
+    }
+
+    .segments {
       display: flex;
       width: 100%;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
     }
 
     button {
@@ -262,17 +275,21 @@ class MateriaSegmentedButton extends LitElement {
       justify-content: center;
       gap: 6px;
       border: none;
+      border-right: 1px solid var(--divider-color, rgba(0,0,0,0.12));
       cursor: pointer;
       font-family: inherit;
       font-size: 14px;
       font-weight: 700;
       padding: 0 16px;
       box-sizing: border-box;
-      transition: background-color 0.25s ease, color 0.25s ease,
-                  border-color 0.25s ease;
+      transition: background-color 0.25s ease, color 0.25s ease;
       -webkit-tap-highlight-color: transparent;
       position: relative;
       overflow: hidden;
+    }
+
+    button:last-child {
+      border-right: none;
     }
 
     /* M3 state layer */
@@ -328,44 +345,27 @@ class MateriaSegmentedButton extends LitElement {
     const activeVal = this._activeValue;
     const h = HEIGHTS[this.config.height] || HEIGHTS.default;
     const { active: colorActive, onActive: colorOnActive } = this._colors();
-    const len = options.length;
 
     return html`
-      <div class="container">
-        ${options.map((opt, i) => {
-          const isActive = String(opt.value) === activeVal;
-          const radius =
-            len === 1
-              ? "999px"
-              : i === 0
-                ? "999px 0 0 999px"
-                : i === len - 1
-                  ? "0 999px 999px 0"
-                  : "0";
+      <ha-card>
+        <div class="segments">
+          ${options.map((opt) => {
+            const isActive = String(opt.value) === activeVal;
+            const bg = isActive ? colorActive : "var(--ha-card-background, var(--card-background-color))";
+            const fg = isActive ? colorOnActive : "var(--primary-text-color)";
 
-          const bg = isActive ? colorActive : "var(--card-background-color)";
-          const fg = isActive ? colorOnActive : "var(--primary-text-color)";
-          const border = isActive
-            ? `2px solid ${colorOnActive}`
-            : "1px solid transparent";
-
-          return html`
-            <button
-              style="
-                height: ${h};
-                border-radius: ${radius};
-                background: ${bg};
-                color: ${fg};
-                border: ${border};
-              "
-              @click=${() => this._segmentTap(opt)}
-            >
-              ${opt.icon ? html`<ha-icon .icon=${opt.icon}></ha-icon>` : nothing}
-              ${opt.label}
-            </button>
-          `;
-        })}
-      </div>
+            return html`
+              <button
+                style="height:${h}; background:${bg}; color:${fg};"
+                @click=${() => this._segmentTap(opt)}
+              >
+                ${opt.icon ? html`<ha-icon .icon=${opt.icon}></ha-icon>` : nothing}
+                ${opt.label}
+              </button>
+            `;
+          })}
+        </div>
+      </ha-card>
     `;
   }
 

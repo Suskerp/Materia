@@ -1,5 +1,4 @@
 import { LitElement, html, css } from "lit";
-import "../primitives/slider.js";
 import { computeLabel } from "../utils/editor-helpers.js";
 import { ActionMixin } from "../utils/action-handler.js";
 
@@ -116,16 +115,17 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
     });
   }
 
-  _onSliderChanged(ev) {
-    const value = ev.detail.value;
-    if (value === 0) {
+  _onRangeInput(ev) {
+    const value = parseInt(ev.target.value, 10);
+    const brightness = Math.round((value / 100) * 255);
+    if (brightness === 0) {
       this.hass.callService("light", "turn_off", {
         entity_id: this._config.entity,
       });
     } else {
       this.hass.callService("light", "turn_on", {
         entity_id: this._config.entity,
-        brightness: value,
+        brightness,
       });
     }
   }
@@ -136,29 +136,32 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
     if (!this._config || !this.hass) return html``;
 
     const isOn = this._isOn;
+    const pct = this._brightnessPercent;
+    const fillColor = isOn ? this._tintColor : "transparent";
 
     return html`
-      <ha-card
-        style=${isOn
-          ? "background-color: var(--md-sys-cust-color-light-container); color: var(--md-sys-cust-color-on-light);"
-          : ""}
-      >
-        <div class="header-row" @click=${this._toggleLight}>
-          <ha-icon .icon=${this._icon}></ha-icon>
-          <div class="info">
+      <ha-card>
+        <div class="container">
+          <div
+            class="fill"
+            style="width: ${isOn ? pct : 0}%; background-color: ${fillColor}; opacity: 0.5;"
+          ></div>
+          <div class="icon-container">
+            <ha-icon .icon=${this._icon}></ha-icon>
+          </div>
+          <div class="name-container">
             <div class="name">${this._name}</div>
             <div class="state">${this._stateDisplay}</div>
           </div>
+          <input
+            type="range"
+            class="range-input"
+            min="0"
+            max="100"
+            .value=${String(isOn ? pct : 0)}
+            @change=${this._onRangeInput}
+          />
         </div>
-        <materia-slider
-          min="0"
-          max="255"
-          .value=${this._brightness}
-          live-update
-          .color=${isOn ? this._tintColor : ""}
-          ?disabled=${!isOn}
-          @value-changed=${this._onSliderChanged}
-        ></materia-slider>
       </ha-card>
     `;
   }
@@ -170,38 +173,90 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
   static styles = css`
     :host {
       display: block;
+      font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
     }
     ha-card {
-      border-radius: var(--ha-card-border-radius, 18px);
-      padding: 12px 16px;
-      transition: background-color 0.3s ease, color 0.3s ease;
-      overflow: hidden;
+      background: none;
+      box-shadow: none;
+      border: none;
+      overflow: visible;
     }
-    .header-row {
+    .container {
+      position: relative;
+      width: 100%;
+      min-height: 88px;
+      background-color: var(--secondary-background-color);
+      border-radius: 28px;
+      overflow: hidden;
       display: flex;
       align-items: center;
-      gap: 12px;
+      box-sizing: border-box;
+      transition: background-color 0.3s ease;
       cursor: pointer;
     }
-    ha-icon {
-      --mdc-icon-size: 24px;
-      flex-shrink: 0;
+    .fill {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      transition: width 0.3s ease;
+      z-index: 0;
+      border-radius: inherit;
     }
-    .info {
-      flex: 1;
-      min-width: 0;
+    .icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      min-height: 42px;
+      margin: 6px;
+      margin-left: 8px;
+      border-radius: 50%;
+      background-color: var(--ha-card-background, var(--card-background-color));
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .icon-container ha-icon {
+      --mdc-icon-size: 24px;
+      display: flex;
+    }
+    .name-container {
+      display: flex;
+      line-height: 18px;
+      flex-direction: column;
+      justify-content: center;
+      flex-grow: 1;
+      margin: 0 16px 0 4px;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
     }
     .name {
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .state {
       font-size: 12px;
+      font-weight: normal;
       opacity: 0.7;
-      margin-top: 2px;
+      white-space: nowrap;
     }
-    materia-slider {
-      margin-top: 8px;
+    .range-input {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: ew-resize;
+      z-index: 2;
+      margin: 0;
+      -webkit-appearance: none;
+      appearance: none;
     }
   `;
 }

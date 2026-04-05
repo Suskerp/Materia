@@ -65,20 +65,70 @@ class MateriaLock extends ActionMixin(LitElement) {
   }
 
   static styles = css`
-    :host { display: block; }
+    :host {
+      display: block;
+      font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
+    }
     ha-card {
-      border-radius: var(--ha-card-border-radius, 18px);
-      padding: 12px 16px;
+      background: none;
+      box-shadow: none;
+      border: none;
+      overflow: visible;
+    }
+    .container {
+      position: relative;
+      width: 100%;
+      min-height: 50px;
+      background-color: var(--secondary-background-color);
+      border-radius: 28px;
+      overflow: hidden;
       display: flex;
       align-items: center;
-      gap: 12px;
-      min-height: 48px;
-      transition: background-color 0.3s ease, color 0.3s ease;
+      box-sizing: border-box;
+      transition: background-color 0.3s ease;
     }
-    ha-icon { --mdc-icon-size: 24px; flex-shrink: 0; }
-    .info { flex: 1; min-width: 0; }
-    .name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .state { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+    .icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      min-height: 42px;
+      margin: 6px;
+      margin-left: 8px;
+      border-radius: 50%;
+      background-color: var(--ha-card-background, var(--card-background-color));
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .icon-container ha-icon {
+      --mdc-icon-size: 24px;
+      display: flex;
+    }
+    .name-container {
+      display: flex;
+      line-height: 18px;
+      flex-direction: column;
+      justify-content: center;
+      flex-grow: 1;
+      margin: 0 16px 0 4px;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+    .name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .state {
+      font-size: 12px;
+      font-weight: normal;
+      opacity: 0.7;
+      white-space: nowrap;
+    }
   `;
 
   setConfig(config) {
@@ -99,19 +149,26 @@ class MateriaLock extends ActionMixin(LitElement) {
     /* Capitalize first letter of state for display */
     const stateText = stateObj.state.charAt(0).toUpperCase() + stateObj.state.slice(1);
 
-    const bgColor = isLocked
+    const containerBg = isLocked
       ? "var(--md-sys-cust-color-device-container)"
-      : "var(--ha-card-background)";
+      : "var(--secondary-background-color)";
     const textColor = isLocked
       ? "var(--md-sys-cust-color-on-device)"
       : "var(--primary-text-color)";
 
     return html`
-      <ha-card style="background-color: ${bgColor}; color: ${textColor};">
-        <ha-icon .icon=${icon} style="color: ${textColor};"></ha-icon>
-        <div class="info">
-          <div class="name">${name}</div>
-          <div class="state">${stateText}</div>
+      <ha-card>
+        <div
+          class="container"
+          style="background-color: ${containerBg}; color: ${textColor};"
+        >
+          <div class="icon-container">
+            <ha-icon .icon=${icon} style="color: ${textColor};"></ha-icon>
+          </div>
+          <div class="name-container">
+            <div class="name">${name}</div>
+            <div class="state">${stateText}</div>
+          </div>
         </div>
       </ha-card>
     `;

@@ -1,5 +1,4 @@
 import { LitElement, html, css, nothing } from "lit";
-import "../primitives/slider.js";
 import { computeLabel } from "../utils/editor-helpers.js";
 import { ActionMixin } from "../utils/action-handler.js";
 
@@ -107,26 +106,30 @@ class MateriaCover extends ActionMixin(LitElement) {
 
   /* ── Actions ── */
 
-  _onSliderChanged(ev) {
+  _onRangeInput(ev) {
+    const value = parseInt(ev.target.value, 10);
     this.hass.callService("cover", "set_cover_position", {
       entity_id: this._config.entity,
-      position: ev.detail.value,
+      position: value,
     });
   }
 
-  _openCover() {
+  _openCover(ev) {
+    ev.stopPropagation();
     this.hass.callService("cover", "open_cover", {
       entity_id: this._config.entity,
     });
   }
 
-  _stopCover() {
+  _stopCover(ev) {
+    ev.stopPropagation();
     this.hass.callService("cover", "stop_cover", {
       entity_id: this._config.entity,
     });
   }
 
-  _closeCover() {
+  _closeCover(ev) {
+    ev.stopPropagation();
     this.hass.callService("cover", "close_cover", {
       entity_id: this._config.entity,
     });
@@ -138,43 +141,46 @@ class MateriaCover extends ActionMixin(LitElement) {
     if (!this._config || !this.hass) return html``;
 
     const isOpen = this._isOpen;
+    const pos = this._position;
+    const fillColor = isOpen ? "var(--md-sys-cust-color-light)" : "transparent";
 
     return html`
-      <ha-card
-        style=${isOpen
-          ? "background-color: var(--md-sys-cust-color-light-container); color: var(--md-sys-cust-color-on-light);"
-          : ""}
-      >
-        <div class="header-row">
-          <ha-icon .icon=${this._icon}></ha-icon>
-          <div class="info">
+      <ha-card>
+        <div class="container">
+          <div
+            class="fill"
+            style="width: ${pos}%; background-color: ${fillColor}; opacity: 0.5;"
+          ></div>
+          <div class="icon-container">
+            <ha-icon .icon=${this._icon}></ha-icon>
+          </div>
+          <div class="name-container">
             <div class="name">${this._name}</div>
             <div class="state">${this._stateDisplay}</div>
           </div>
-        </div>
-        <div class="controls">
-          <materia-slider
-            min="0"
-            max="100"
-            .value=${this._position}
-            .color=${isOpen ? "var(--md-sys-cust-color-light)" : ""}
-            @value-changed=${this._onSliderChanged}
-          ></materia-slider>
-          <div class="buttons">
-            <button class="cover-btn" @click=${this._openCover}>
+          <div class="sub-buttons">
+            <button class="sub-btn" @click=${this._openCover}>
               <ha-icon icon="mdi:arrow-up"></ha-icon>
             </button>
             ${this._config.show_stop
               ? html`
-                  <button class="cover-btn" @click=${this._stopCover}>
+                  <button class="sub-btn" @click=${this._stopCover}>
                     <ha-icon icon="mdi:stop"></ha-icon>
                   </button>
                 `
               : nothing}
-            <button class="cover-btn" @click=${this._closeCover}>
+            <button class="sub-btn" @click=${this._closeCover}>
               <ha-icon icon="mdi:arrow-down"></ha-icon>
             </button>
           </div>
+          <input
+            type="range"
+            class="range-input"
+            min="0"
+            max="100"
+            .value=${String(pos)}
+            @change=${this._onRangeInput}
+          />
         </div>
       </ha-card>
     `;
@@ -187,68 +193,117 @@ class MateriaCover extends ActionMixin(LitElement) {
   static styles = css`
     :host {
       display: block;
+      font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
     }
     ha-card {
-      border-radius: var(--ha-card-border-radius, 18px);
-      padding: 12px 16px;
-      transition: background-color 0.3s ease, color 0.3s ease;
-      overflow: hidden;
+      background: none;
+      box-shadow: none;
+      border: none;
+      overflow: visible;
     }
-    .header-row {
+    .container {
+      position: relative;
+      width: 100%;
+      min-height: 88px;
+      background-color: var(--secondary-background-color);
+      border-radius: 28px;
+      overflow: hidden;
       display: flex;
       align-items: center;
-      gap: 12px;
+      box-sizing: border-box;
+      transition: background-color 0.3s ease;
       cursor: pointer;
     }
-    ha-icon {
-      --mdc-icon-size: 24px;
-      flex-shrink: 0;
+    .fill {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      transition: width 0.3s ease;
+      z-index: 0;
+      border-radius: inherit;
     }
-    .info {
-      flex: 1;
-      min-width: 0;
+    .icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      min-height: 42px;
+      margin: 6px;
+      margin-left: 8px;
+      border-radius: 50%;
+      background-color: var(--ha-card-background, var(--card-background-color));
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .icon-container ha-icon {
+      --mdc-icon-size: 24px;
+      display: flex;
+    }
+    .name-container {
+      display: flex;
+      line-height: 18px;
+      flex-direction: column;
+      justify-content: center;
+      flex-grow: 1;
+      margin: 0 16px 0 4px;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
     }
     .name {
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .state {
       font-size: 12px;
+      font-weight: normal;
       opacity: 0.7;
-      margin-top: 2px;
+      white-space: nowrap;
     }
-    .controls {
-      margin-top: 8px;
+    .sub-buttons {
       display: flex;
       align-items: center;
-      gap: 8px;
-    }
-    .controls materia-slider {
-      flex: 1;
-    }
-    .buttons {
-      display: flex;
       gap: 4px;
-      flex-shrink: 0;
+      margin-right: 8px;
+      position: relative;
+      z-index: 3;
     }
-    .cover-btn {
+    .sub-btn {
       width: 36px;
       height: 36px;
       border-radius: 50%;
       border: none;
-      background: var(--md-sys-color-surface-variant);
-      color: var(--md-sys-color-on-surface-variant);
+      background: var(--ha-card-background, var(--card-background-color));
+      color: var(--primary-text-color);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 0;
     }
-    .cover-btn:active {
+    .sub-btn ha-icon {
+      --mdc-icon-size: 18px;
+    }
+    .sub-btn:active {
       opacity: 0.7;
     }
-    .cover-btn ha-icon {
-      --mdc-icon-size: 18px;
+    .range-input {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: ew-resize;
+      z-index: 2;
+      margin: 0;
+      -webkit-appearance: none;
+      appearance: none;
     }
   `;
 }
