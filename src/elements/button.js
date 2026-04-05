@@ -277,7 +277,8 @@ class MateriaButton extends ActionMixin(LitElement) {
 
   updated(changedProps) {
     super.updated?.(changedProps);
-    if (changedProps.has("hass") && this.config?.state_display?.includes("{{")) {
+    const sd = this.config?.state_display;
+    if (changedProps.has("hass") && sd && (sd.includes("{{") || sd.includes("{%"))) {
       this._renderTemplate(this.config.state_display).then(result => {
         if (result !== this._resolvedStateDisplay) {
           this._resolvedStateDisplay = result;
@@ -319,14 +320,19 @@ class MateriaButton extends ActionMixin(LitElement) {
     /* color_map / color_on_map take highest priority */
     const colorMap = this._parseMap(this.config.color_map);
     const colorOnMap = this._parseMap(this.config.color_on_map);
-    if (colorMap && stateObj && colorMap[stateObj.state] !== undefined) {
-      bgColor = colorMap[stateObj.state];
-      textColor = (colorOnMap && colorOnMap[stateObj.state]) || "var(--primary-text-color)";
-    } else if (variant === "battery") {
+    if (colorMap && stateObj) {
+      const s = stateObj.state;
+      const bg = colorMap[s] ?? colorMap._default;
+      if (bg !== undefined) {
+        bgColor = bg;
+        textColor = (colorOnMap && (colorOnMap[s] ?? colorOnMap._default)) || "var(--primary-text-color)";
+      }
+    }
+    if (bgColor === undefined && variant === "battery") {
       const [bg, fg] = this._getBatteryColors(stateObj);
       bgColor = bg;
       textColor = fg;
-    } else if (active && entity) {
+    } else if (bgColor === undefined && active && entity) {
       /* Use overrides first, then variant map */
       if (this.config.color_on) {
         bgColor = this.config.color_on;
@@ -336,7 +342,7 @@ class MateriaButton extends ActionMixin(LitElement) {
         bgColor = colors[0];
         textColor = colors[1];
       }
-    } else {
+    } else if (bgColor === undefined) {
       bgColor = "var(--ha-card-background)";
       textColor = "var(--primary-text-color)";
     }
@@ -355,10 +361,11 @@ class MateriaButton extends ActionMixin(LitElement) {
     /* State display */
     let stateDisplay = "";
     if (showState && stateObj) {
-      if (this._resolvedStateDisplay && this.config.state_display?.includes("{{")) {
+      const hasTpl = this.config.state_display && (this.config.state_display.includes("{{") || this.config.state_display.includes("{%"));
+      if (this._resolvedStateDisplay && hasTpl) {
         // Jinja2 template was resolved
         stateDisplay = this._resolvedStateDisplay;
-      } else if (this.config.state_display && !this.config.state_display.includes("{{")) {
+      } else if (this.config.state_display && !hasTpl) {
         // Static string
         stateDisplay = this.config.state_display;
       } else {

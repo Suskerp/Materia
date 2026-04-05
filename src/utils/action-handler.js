@@ -25,8 +25,10 @@ export const ActionMixin = (superClass) =>
           }
           break;
 
+        case "perform-action":
         case "call-service": {
-          const [domain, service] = (actionConfig.service || "").split(".", 2);
+          const svc = actionConfig.perform_action || actionConfig.service || "";
+          const [domain, service] = svc.split(".", 2);
           if (domain && service) {
             this.hass.callService(
               domain,
@@ -69,18 +71,15 @@ export const ActionMixin = (superClass) =>
     }
 
     /**
-     * Render a Jinja2 template via HA's WebSocket API.
+     * Render a Jinja2 template via HA's REST API.
      * Returns the raw value if it doesn't contain {{ }}.
      */
     async _renderTemplate(template) {
-      if (!template || typeof template !== "string" || !template.includes("{{")) return template;
+      if (!template || typeof template !== "string") return template;
+      if (!template.includes("{{") && !template.includes("{%")) return template;
       try {
-        const result = await this.hass.callWS({
-          type: "render_template",
-          template,
-          entity_ids: this.config?.entity ? [this.config.entity] : [],
-        });
-        return result;
+        const result = await this.hass.callApi("POST", "template", { template });
+        return typeof result === "string" ? result.trim() : String(result).trim();
       } catch {
         return template;
       }
