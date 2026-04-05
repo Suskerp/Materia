@@ -21,7 +21,7 @@ Key capabilities:
 ## Prerequisites
 
 - Home Assistant 2024.1 or later
-- [material-you-utilities](https://github.com/Nerwyn/material-you-utilities) for theming, or the [custom harmonization fork](https://github.com/Suskerp/material-you-utilities-custom-harmonization) which provides the semantic color tokens Materia depends on
+- [material-you-utilities-custom-harmonization](https://github.com/Suskerp/material-you-utilities-custom-harmonization) -- required for theming. This fork of material-you-utilities provides the semantic color tokens Materia depends on.
 
 ## Installation
 

@@ -31,7 +31,6 @@ import "./elements/circle-action.js";
 import "./elements/tonal-button.js";
 import "./elements/pill-badge.js";
 import "./elements/pill.js";
-import "./elements/separator.js";
 import "./elements/select.js";
 
 // Inject Figtree font globally
