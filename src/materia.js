@@ -12,26 +12,23 @@ import { injectFonts } from "./styles/shared.js";
 import "./primitives/slider.js";
 
 // Cards (native Lit)
-import "./cards/light.js";
-import "./cards/cover.js";
-import "./cards/device.js";
-import "./cards/lock.js";
-import "./cards/room.js";
-import "./cards/climate.js";
-import "./cards/sensor-row.js";
-import "./cards/weather.js";
-import "./cards/sensor-display.js";
+import "./cards/light/index.js";
+import "./cards/cover/index.js";
+import "./cards/device/index.js";
+import "./cards/lock/index.js";
+import "./cards/room/index.js";
+import "./cards/climate/index.js";
+import "./cards/sensor-row/index.js";
+import "./cards/weather/index.js";
+import "./cards/sensor-display/index.js";
 
 // Elements (native Lit)
-import "./elements/button.js";
-import "./elements/button-group.js";
-import "./elements/icon-button.js";
-import "./elements/checkbox.js";
-import "./elements/circle-action.js";
-import "./elements/tonal-button.js";
-import "./elements/pill-badge.js";
-import "./elements/pill.js";
-import "./elements/select.js";
+import "./elements/button/index.js";
+import "./elements/button-group/index.js";
+import "./elements/icon-button/index.js";
+import "./elements/checkbox/index.js";
+import "./elements/pill/index.js";
+import "./elements/select/index.js";
 
 // Inject Figtree font globally
 injectFonts();
