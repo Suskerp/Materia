@@ -62,6 +62,22 @@ export const ActionMixin = (superClass) =>
       }
     }
 
+    /**
+     * Evaluate a template string. If value is wrapped in [[ ]], evaluate as JS
+     * with access to hass, states, and entity. Otherwise return as-is.
+     */
+    _evalTemplate(value) {
+      if (typeof value !== "string") return value;
+      if (!value.startsWith("[[") || !value.endsWith("]]")) return value;
+      const expr = value.slice(2, -2).trim();
+      try {
+        const fn = new Function("hass", "states", "entity", `return ${expr};`);
+        return fn(this.hass, this.hass?.states, this.hass?.states?.[this.config?.entity]);
+      } catch {
+        return value;
+      }
+    }
+
     /** Convenience: fire more-info for a specific entity. */
     _fireMoreInfo(entityId) {
       this.dispatchEvent(

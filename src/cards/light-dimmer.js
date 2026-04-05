@@ -88,12 +88,6 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
     return Math.round((this._brightness / 255) * 100);
   }
 
-  get _tintColor() {
-    const rgb = this._entity?.attributes?.rgb_color;
-    if (rgb) return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-    return "var(--md-sys-cust-color-light)";
-  }
-
   get _name() {
     return this._config.name || this._entity?.attributes?.friendly_name || "";
   }
@@ -115,10 +109,8 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
     });
   }
 
-  _onRangeInput(ev) {
-    const value = parseInt(ev.target.value, 10);
-    const brightness = Math.round((value / 100) * 255);
-    if (brightness === 0) {
+  _setBrightness(brightness) {
+    if (brightness <= 3) {
       this.hass.callService("light", "turn_off", {
         entity_id: this._config.entity,
       });
@@ -130,6 +122,45 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
     }
   }
 
+  /* ── Pointer event handlers ── */
+
+  _onPointerDown(ev) {
+    this._startX = ev.clientX;
+    this._startY = ev.clientY;
+    this._dragging = false;
+  }
+
+  _onPointerMove(ev) {
+    if (this._startX == null) return;
+    const dx = Math.abs(ev.clientX - this._startX);
+    const dy = Math.abs(ev.clientY - this._startY);
+    if (dx > 5 && dx > dy) {
+      this._dragging = true;
+      ev.preventDefault();
+      const rect = ev.currentTarget.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100));
+      // Update visual fill immediately without service call
+      const fill = this.shadowRoot.querySelector('.fill');
+      if (fill) fill.style.width = pct + '%';
+    }
+  }
+
+  _onPointerUp(ev) {
+    if (this._startX == null) return;
+    if (!this._dragging) {
+      // TAP — toggle
+      this._toggleLight();
+    } else {
+      // SLIDE — set brightness
+      const rect = ev.currentTarget.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100));
+      const brightness = Math.round((pct / 100) * 255);
+      this._setBrightness(brightness);
+    }
+    this._startX = null;
+    this._dragging = false;
+  }
+
   /* ── Render ── */
 
   render() {
@@ -137,30 +168,30 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
 
     const isOn = this._isOn;
     const pct = this._brightnessPercent;
-    const fillColor = isOn ? this._tintColor : "transparent";
+
+    const containerBg = isOn ? "var(--md-sys-cust-color-light-container)" : "var(--ha-card-background, var(--card-background-color))";
+    const textColor = isOn ? "var(--md-sys-cust-color-on-light)" : "var(--primary-text-color)";
+    const iconBg = isOn ? "transparent" : "var(--ha-card-background, var(--card-background-color))";
 
     return html`
       <ha-card>
-        <div class="container">
+        <div class="container"
+          style="background-color: ${containerBg}; color: ${textColor};"
+          @pointerdown=${this._onPointerDown}
+          @pointermove=${this._onPointerMove}
+          @pointerup=${this._onPointerUp}
+        >
           <div
             class="fill"
-            style="width: ${isOn ? pct : 0}%; background-color: ${fillColor}; opacity: 0.5;"
+            style="width: ${isOn ? pct : 0}%; background-color: var(--md-sys-cust-color-light); opacity: 1;"
           ></div>
-          <div class="icon-container">
+          <div class="icon-container" style="background-color: ${iconBg};">
             <ha-icon .icon=${this._icon}></ha-icon>
           </div>
           <div class="name-container">
             <div class="name">${this._name}</div>
             <div class="state">${this._stateDisplay}</div>
           </div>
-          <input
-            type="range"
-            class="range-input"
-            min="0"
-            max="100"
-            .value=${String(isOn ? pct : 0)}
-            @change=${this._onRangeInput}
-          />
         </div>
       </ha-card>
     `;
@@ -193,6 +224,7 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
       box-sizing: border-box;
       transition: background-color 0.3s ease;
       cursor: pointer;
+      touch-action: none;
     }
     .fill {
       position: absolute;
@@ -244,19 +276,6 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
       font-weight: normal;
       opacity: 0.7;
       white-space: nowrap;
-    }
-    .range-input {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      cursor: ew-resize;
-      z-index: 2;
-      margin: 0;
-      -webkit-appearance: none;
-      appearance: none;
     }
   `;
 }

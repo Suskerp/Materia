@@ -56,6 +56,12 @@ class MateriaDeviceEditor extends LitElement {
 }
 customElements.define("materia-device-editor", MateriaDeviceEditor);
 
+const DOMAIN_ACTIVE_STATES = {
+  light: "on", switch: "on", fan: "on", vacuum: "cleaning",
+  lock: "locked", cover: "open", binary_sensor: "on",
+  climate: "heat", media_player: "playing", input_boolean: "on",
+};
+
 class MateriaDevice extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
@@ -150,19 +156,24 @@ class MateriaDevice extends ActionMixin(LitElement) {
     this.config = {
       icon: "mdi:power-plug",
       button_type: "switch",
-      active_state: "on",
-      color_active: "var(--md-sys-cust-color-device-container)",
+      color_active: "var(--md-sys-cust-color-device)",
       color_on_active: "var(--md-sys-cust-color-on-device)",
       show_state: true,
       ...config,
     };
   }
 
+  _getActiveState() {
+    if (this.config.active_state) return String(this.config.active_state);
+    const entity = this.config.entity || "";
+    const domain = entity.split(".")[0];
+    return DOMAIN_ACTIVE_STATES[domain] || "on";
+  }
+
   _isActive(stateObj) {
     if (!stateObj) return false;
-    const s = stateObj.state;
-    const target = this.config.active_state || "on";
-    return s === String(target) || s === "open";
+    const target = this._getActiveState();
+    return stateObj.state === target;
   }
 
   render() {
@@ -172,13 +183,16 @@ class MateriaDevice extends ActionMixin(LitElement) {
     if (!stateObj) return html`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;
 
     const active = this._isActive(stateObj);
-    const name = this.config.name || stateObj.attributes.friendly_name || this.config.entity;
+    const name = this._evalTemplate(this.config.name) || stateObj.attributes.friendly_name || this.config.entity;
+    const icon = this._evalTemplate(this.config.icon);
+    const colorActive = this._evalTemplate(this.config.color_active);
+    const colorOnActive = this._evalTemplate(this.config.color_on_active);
 
     const containerBg = active
-      ? this.config.color_active
+      ? colorActive
       : "var(--ha-card-background, var(--card-background-color))";
     const textColor = active
-      ? this.config.color_on_active
+      ? colorOnActive
       : "var(--primary-text-color)";
 
     return html`
@@ -189,7 +203,7 @@ class MateriaDevice extends ActionMixin(LitElement) {
           @click=${this._handleTap}
         >
           <div class="icon-container">
-            <ha-icon .icon=${this.config.icon} style="color: ${textColor};"></ha-icon>
+            <ha-icon .icon=${icon} style="color: ${textColor};"></ha-icon>
           </div>
           <div class="name-container">
             <div class="name">${name}</div>

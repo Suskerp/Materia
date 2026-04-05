@@ -263,9 +263,9 @@ class MateriaSegmentedButton extends LitElement {
     .segments {
       display: flex;
       width: 100%;
-      border-radius: 999px;
+      border-radius: 12px;
       overflow: hidden;
-      border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+      border: 1px solid var(--md-sys-color-outline, var(--divider-color, rgba(0,0,0,0.12)));
     }
 
     button {
@@ -275,11 +275,12 @@ class MateriaSegmentedButton extends LitElement {
       justify-content: center;
       gap: 6px;
       border: none;
-      border-right: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+      border-right: none;
       cursor: pointer;
       font-family: inherit;
       font-size: 14px;
-      font-weight: 700;
+      font-weight: 500;
+      line-height: 20px;
       padding: 0 16px;
       box-sizing: border-box;
       transition: background-color 0.25s ease, color 0.25s ease;
@@ -288,8 +289,8 @@ class MateriaSegmentedButton extends LitElement {
       overflow: hidden;
     }
 
-    button:last-child {
-      border-right: none;
+    button.divider {
+      border-right: 1px solid var(--md-sys-color-outline-variant, var(--divider-color, rgba(0,0,0,0.12)));
     }
 
     /* M3 state layer */
@@ -333,8 +334,8 @@ class MateriaSegmentedButton extends LitElement {
 
   _colors() {
     const preset = this.config.preset && PRESETS[this.config.preset];
-    const active = this.config.color_active || preset?.active || "var(--md-sys-color-primary)";
-    const onActive = this.config.color_on_active || preset?.onActive || "var(--md-sys-color-on-primary)";
+    const active = this.config.color_active || preset?.active || "var(--md-sys-color-secondary-container)";
+    const onActive = this.config.color_on_active || preset?.onActive || "var(--md-sys-color-on-secondary-container)";
     return { active, onActive };
   }
 
@@ -349,13 +350,16 @@ class MateriaSegmentedButton extends LitElement {
     return html`
       <ha-card>
         <div class="segments">
-          ${options.map((opt) => {
+          ${options.map((opt, idx) => {
             const isActive = String(opt.value) === activeVal;
-            const bg = isActive ? colorActive : "var(--ha-card-background, var(--card-background-color))";
-            const fg = isActive ? colorOnActive : "var(--primary-text-color)";
+            const nextActive = idx < options.length - 1 && String(options[idx + 1].value) === activeVal;
+            const showDivider = !isActive && !nextActive && idx < options.length - 1;
+            const bg = isActive ? colorActive : "var(--md-sys-color-surface, var(--ha-card-background, var(--card-background-color)))";
+            const fg = isActive ? colorOnActive : "var(--md-sys-color-on-surface, var(--primary-text-color))";
 
             return html`
               <button
+                class="${showDivider ? "divider" : ""}"
                 style="height:${h}; background:${bg}; color:${fg};"
                 @click=${() => this._segmentTap(opt)}
               >

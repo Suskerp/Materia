@@ -152,7 +152,7 @@ class MateriaLightSwitch extends ActionMixin(LitElement) {
     const stateText = isOn ? "On" : "Off";
 
     const containerBg = isOn
-      ? "var(--md-sys-cust-color-light-container)"
+      ? "var(--md-sys-cust-color-light)"
       : "var(--ha-card-background, var(--card-background-color))";
     const textColor = isOn
       ? "var(--md-sys-cust-color-on-light)"
