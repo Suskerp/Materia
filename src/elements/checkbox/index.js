@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { unavailableStyles } from "../../styles/card-styles.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -17,7 +18,7 @@ class MateriaCheckbox extends ActionMixin(LitElement) {
     return { entity: "", name: "" };
   }
 
-  static styles = styles;
+  static styles = [unavailableStyles, styles];
 
   setConfig(config) {
     if (!config.entity) throw new Error("entity is required");
@@ -55,7 +56,8 @@ class MateriaCheckbox extends ActionMixin(LitElement) {
     if (!this.hass || !this.config) return html``;
 
     const stateObj = this.hass.states[this.config.entity];
-    const checked = this._isChecked(stateObj);
+    const unavailable = this._isUnavailable(stateObj);
+    const checked = !unavailable && this._isChecked(stateObj);
     const name =
       this.config.name ??
       stateObj?.attributes?.friendly_name ??
@@ -63,7 +65,7 @@ class MateriaCheckbox extends ActionMixin(LitElement) {
     const icon = checked ? "mdi:checkbox-marked" : "mdi:checkbox-blank-outline";
 
     return html`
-      <ha-card @click=${this._handleTap}>
+      <ha-card class="${unavailable ? 'unavailable' : ''}" @click=${this._handleTap}>
         <div class="name">${name}</div>
         <div class="icon-cell">
           <ha-icon .icon=${icon}></ha-icon>

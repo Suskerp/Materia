@@ -1,6 +1,6 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { hostStyles, haCardReset } from "../../styles/card-styles.js";
+import { hostStyles, haCardReset, unavailableStyles } from "../../styles/card-styles.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -12,7 +12,7 @@ class MateriaSensorRow extends ActionMixin(LitElement) {
     };
   }
 
-  static styles = [hostStyles, haCardReset, styles];
+  static styles = [hostStyles, haCardReset, unavailableStyles, styles];
 
   static getConfigElement() {
     return document.createElement("materia-sensor-row-editor");
@@ -37,11 +37,11 @@ class MateriaSensorRow extends ActionMixin(LitElement) {
     if (!this.hass || !this.config) return html``;
     const c = this.config;
     const stateObj = this.hass.states[c.entity];
-    if (!stateObj) return html`<ha-card>Entity not found: ${c.entity}</ha-card>`;
+    const unavailable = this._isUnavailable(stateObj);
 
-    const stateStr = stateObj.state;
-    const unit = stateObj.attributes.unit_of_measurement || "";
-    const displayState = unit ? `${this._capitalize(stateStr)} ${unit}` : this._capitalize(stateStr);
+    const stateStr = stateObj?.state ?? "";
+    const unit = stateObj?.attributes?.unit_of_measurement || "";
+    const displayState = unavailable ? 'Unavailable' : (unit ? `${this._capitalize(stateStr)} ${unit}` : this._capitalize(stateStr));
     const hasTap = !!c.tap_action;
 
     return html`
@@ -49,7 +49,7 @@ class MateriaSensorRow extends ActionMixin(LitElement) {
         class="${hasTap ? "clickable" : ""}"
         @click=${hasTap ? this._handleTap : undefined}
       >
-        <div class="container" style="--row-padding: ${c.padding}">
+        <div class="container ${unavailable ? 'unavailable' : ''}" style="--row-padding: ${c.padding}">
           <span class="name">${c.name}</span>
           <span class="value">${displayState}</span>
           ${this._hasNavigateAction ? html`

@@ -1,17 +1,18 @@
 import { LitElement, html } from "lit";
+import { ActionMixin } from "../../utils/action-handler.js";
 import { loadCardHelpers } from "../../styles/shared.js";
-import { hostStyles } from "../../styles/card-styles.js";
+import { hostStyles, unavailableStyles } from "../../styles/card-styles.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
-class MateriaRoom extends LitElement {
+class MateriaRoom extends ActionMixin(LitElement) {
   static properties = {
     config: { state: true },
     _expanded: { state: true },
     _childCards: { state: true },
   };
 
-  static styles = [hostStyles, styles];
+  static styles = [hostStyles, unavailableStyles, styles];
 
   constructor() {
     super();
@@ -123,6 +124,9 @@ class MateriaRoom extends LitElement {
   render() {
     if (!this.config) return html``;
 
+    const stateObj = this._hass?.states?.[this.config.entity];
+    const unavailable = this._isUnavailable(stateObj);
+
     const active = this._isActive;
     const iconColor = active && this.config.color_on
       ? this.config.color_on
@@ -133,7 +137,7 @@ class MateriaRoom extends LitElement {
 
     return html`
       <ha-card>
-        <div class="title-row" @click=${this._toggleExpand}>
+        <div class="title-row ${unavailable ? 'unavailable' : ''}" @click=${this._toggleExpand}>
           <div class="title-left">
             <ha-icon
               class="entity-icon"

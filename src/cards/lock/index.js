@@ -1,6 +1,6 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { hostStyles, haCardReset, rowCardStyles } from "../../styles/card-styles.js";
+import { hostStyles, haCardReset, rowCardStyles, unavailableStyles } from "../../styles/card-styles.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -27,13 +27,13 @@ class MateriaLock extends ActionMixin(LitElement) {
     if (!this.hass || !this.config) return html``;
 
     const stateObj = this.hass.states[this.config.entity];
-    if (!stateObj) return html`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;
+    const unavailable = this._isUnavailable(stateObj);
 
-    const isLocked = stateObj.state === "locked";
-    const name = this.config.name || stateObj.attributes.friendly_name || this.config.entity;
+    const isLocked = stateObj?.state === "locked";
+    const name = this.config.name || stateObj?.attributes?.friendly_name || this.config.entity;
     const icon = isLocked ? "m3o:lock" : "m3o:lock-open-right";
 
-    const stateText = this._capitalize(stateObj.state);
+    const stateText = unavailable ? 'Unavailable' : this._capitalize(stateObj.state);
 
     const containerBg = isLocked
       ? "var(--md-sys-cust-color-device-container)"
@@ -45,7 +45,7 @@ class MateriaLock extends ActionMixin(LitElement) {
     return html`
       <ha-card>
         <div
-          class="container"
+          class="container ${unavailable ? 'unavailable' : ''}"
           style="background-color: ${containerBg}; color: ${textColor};"
         >
           <div class="icon-container">
@@ -71,7 +71,7 @@ class MateriaLock extends ActionMixin(LitElement) {
     return 2;
   }
 
-  static styles = [hostStyles, haCardReset, rowCardStyles, styles];
+  static styles = [hostStyles, haCardReset, rowCardStyles, unavailableStyles, styles];
 }
 
 customElements.define("materia-lock", MateriaLock);

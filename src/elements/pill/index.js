@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { unavailableStyles } from "../../styles/card-styles.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -17,7 +18,7 @@ class MateriaPill extends ActionMixin(LitElement) {
     return { entity: "", name: "", icon: "mdi:information-outline" };
   }
 
-  static styles = styles;
+  static styles = [unavailableStyles, styles];
 
   setConfig(config) {
     if (!config.entity) throw new Error("entity is required");
@@ -31,20 +32,21 @@ class MateriaPill extends ActionMixin(LitElement) {
     if (!this.hass || !this.config) return html``;
 
     const stateObj = this.hass.states[this.config.entity];
-    if (!stateObj)
-      return html`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;
+    const unavailable = this._isUnavailable(stateObj);
 
     const name =
       this.config.name ||
-      stateObj.attributes.friendly_name ||
+      stateObj?.attributes?.friendly_name ||
       this.config.entity;
     const icon = this.config.icon;
-    const unit = stateObj.attributes.unit_of_measurement || "";
-    const stateText = unit
-      ? `${this._capitalize(stateObj.state)} ${unit}`
-      : this._capitalize(stateObj.state);
+    const unit = stateObj?.attributes?.unit_of_measurement || "";
+    const stateText = unavailable
+      ? 'Unavailable'
+      : (unit
+        ? `${this._capitalize(stateObj.state)} ${unit}`
+        : this._capitalize(stateObj.state));
 
-    const s = stateObj.state?.toLowerCase();
+    const s = stateObj?.state?.toLowerCase() ?? "";
     const isActive = s === "on" || s === "true" || s === "home" || s === "open"
       || s === "cleaning" || s === "playing"
       || (!isNaN(Number(s)) && Number(s) > 0);
@@ -59,7 +61,7 @@ class MateriaPill extends ActionMixin(LitElement) {
     return html`
       <ha-card>
         <div
-          class="container"
+          class="container ${unavailable ? 'unavailable' : ''}"
           style="background-color: ${containerBg}; color: ${textColor};"
           @click=${this._handleTap}
         >

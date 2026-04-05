@@ -1,6 +1,6 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { hostStyles, haCardReset, rowCardStyles, fillBarStyles } from "../../styles/card-styles.js";
+import { hostStyles, haCardReset, rowCardStyles, fillBarStyles, unavailableStyles } from "../../styles/card-styles.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -187,6 +187,9 @@ class MateriaLight extends ActionMixin(LitElement) {
   render() {
     if (!this.config || !this.hass) return html``;
 
+    const stateObj = this._entity;
+    const unavailable = this._isUnavailable(stateObj);
+
     const isOn = this._isOn;
     const dimmable = this._isDimmable;
     const pct = dimmable ? this._brightnessPercent : 0;
@@ -198,7 +201,7 @@ class MateriaLight extends ActionMixin(LitElement) {
 
     return html`
       <ha-card>
-        <div class="container"
+        <div class="container ${unavailable ? 'unavailable' : ''}"
           style="background-color: ${containerBg}; color: ${textColor};"
           @pointerdown=${dimmable ? this._onPointerDown : undefined}
           @click=${dimmable ? undefined : () => this._toggleLight()}
@@ -214,7 +217,7 @@ class MateriaLight extends ActionMixin(LitElement) {
           </div>
           <div class="name-container">
             <div class="name">${this._name}</div>
-            <div class="state">${this._stateDisplay}</div>
+            <div class="state">${unavailable ? 'Unavailable' : this._stateDisplay}</div>
           </div>
           ${this._hasNavigateAction ? html`
             <ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>
@@ -228,7 +231,7 @@ class MateriaLight extends ActionMixin(LitElement) {
     return 2;
   }
 
-  static styles = [hostStyles, haCardReset, rowCardStyles, fillBarStyles, styles];
+  static styles = [hostStyles, haCardReset, rowCardStyles, fillBarStyles, unavailableStyles, styles];
 }
 
 customElements.define("materia-light", MateriaLight);

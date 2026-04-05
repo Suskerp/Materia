@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { unavailableStyles } from "../../styles/card-styles.js";
 import { styles, PRESETS, SIZES } from "./styles.js";
 import "./editor.js";
 
@@ -24,7 +25,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     };
   }
 
-  static styles = styles;
+  static styles = [unavailableStyles, styles];
 
   setConfig(config) {
     if (!config.options || !Array.isArray(config.options) || config.options.length === 0) {
@@ -55,6 +56,9 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
   render() {
     if (!this.hass || !this.config) return html``;
 
+    const stateObj = this.config.entity ? this.hass.states[this.config.entity] : undefined;
+    const unavailable = this.config.entity ? this._isUnavailable(stateObj) : false;
+
     const sizeKey = this.config.size || "m";
     const { height, innerCorner } = SIZES[sizeKey] || SIZES.m;
     const outerR = height / 2;
@@ -65,7 +69,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
 
     return html`
       <ha-card>
-        <div class="group" style="height: ${height}px;">
+        <div class="group ${unavailable ? 'unavailable' : ''}" style="height: ${height}px;">
           ${options.map((opt, i) => {
             const isActive = String(opt.value) === activeValue;
             const isFirst = i === 0;

@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { unavailableStyles } from "../../styles/card-styles.js";
 import { styles, VARIANT_COLORS } from "./styles.js";
 import "./editor.js";
 
@@ -20,7 +21,7 @@ class MateriaButton extends ActionMixin(LitElement) {
     return { name: "", icon: "mdi:power-plug", variant: "primary", show_state: false, active_state: "on" };
   }
 
-  static styles = styles;
+  static styles = [unavailableStyles, styles];
 
   setConfig(config) {
     if (!config.icon) throw new Error("icon is required");
@@ -75,7 +76,8 @@ class MateriaButton extends ActionMixin(LitElement) {
 
     const entity = this.config.entity;
     const stateObj = entity ? this.hass.states[entity] : undefined;
-    const active = this._isActive(stateObj);
+    const unavailable = entity ? this._isUnavailable(stateObj) : false;
+    const active = !unavailable && this._isActive(stateObj);
     const variant = this.config.variant || "secondary";
     const showState = this.config.show_state;
 
@@ -110,7 +112,9 @@ class MateriaButton extends ActionMixin(LitElement) {
     const activeClass = active ? "active" : "inactive";
 
     let stateDisplay = "";
-    if (showState && stateObj) {
+    if (showState && unavailable) {
+      stateDisplay = "Unavailable";
+    } else if (showState && stateObj) {
       const hasTpl = this.config.state_display && (this.config.state_display.includes("{{") || this.config.state_display.includes("{%"));
       if (this._resolvedStateDisplay && hasTpl) {
         stateDisplay = this._resolvedStateDisplay;
@@ -124,7 +128,7 @@ class MateriaButton extends ActionMixin(LitElement) {
 
     return html`
       <ha-card
-        class="${cardClass} ${activeClass}"
+        class="${cardClass} ${activeClass} ${unavailable ? 'unavailable' : ''}"
         style="background-color: ${bgColor}; color: ${textColor};"
         @click=${this._handleTap}
       >

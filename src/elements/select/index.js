@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { unavailableStyles } from "../../styles/card-styles.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -17,7 +18,7 @@ class MateriaSelect extends ActionMixin(LitElement) {
     return { entity: "" };
   }
 
-  static styles = styles;
+  static styles = [unavailableStyles, styles];
 
   setConfig(config) {
     if (!config.entity) throw new Error("entity is required");
@@ -28,14 +29,14 @@ class MateriaSelect extends ActionMixin(LitElement) {
     if (!this.hass || !this.config) return html``;
 
     const stateObj = this.hass.states[this.config.entity];
-    if (!stateObj) return html`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;
+    const unavailable = this._isUnavailable(stateObj);
 
-    const name = this.config.name || stateObj.attributes.friendly_name || this.config.entity;
-    const options = stateObj.attributes.options || [];
-    const current = stateObj.state;
+    const name = this.config.name || stateObj?.attributes?.friendly_name || this.config.entity;
+    const options = stateObj?.attributes?.options || [];
+    const current = unavailable ? 'Unavailable' : stateObj.state;
 
     return html`
-      <ha-card>
+      <ha-card class="${unavailable ? 'unavailable' : ''}">
         <div class="row">
           ${this.config.icon
             ? html`<ha-icon .icon=${this.config.icon}></ha-icon>`

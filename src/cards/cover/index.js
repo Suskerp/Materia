@@ -1,6 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { hostStyles, haCardReset, rowCardStyles, fillBarStyles } from "../../styles/card-styles.js";
+import { hostStyles, haCardReset, rowCardStyles, fillBarStyles, unavailableStyles } from "../../styles/card-styles.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -86,13 +86,16 @@ class MateriaCover extends ActionMixin(LitElement) {
   render() {
     if (!this.config || !this.hass) return html``;
 
+    const stateObj = this._entity;
+    const unavailable = this._isUnavailable(stateObj);
+
     const isOpen = this._isOpen;
     const pos = this._position;
     const fillColor = isOpen ? "var(--md-sys-cust-color-light)" : "transparent";
 
     return html`
       <ha-card>
-        <div class="container">
+        <div class="container ${unavailable ? 'unavailable' : ''}"
           <div
             class="fill"
             style="width: ${pos}%; background-color: ${fillColor}; opacity: 0.5;"
@@ -102,7 +105,7 @@ class MateriaCover extends ActionMixin(LitElement) {
           </div>
           <div class="name-container">
             <div class="name">${this._name}</div>
-            <div class="state">${this._stateDisplay}</div>
+            <div class="state">${unavailable ? 'Unavailable' : this._stateDisplay}</div>
           </div>
           ${this._hasNavigateAction ? html`
             <ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>
@@ -139,7 +142,7 @@ class MateriaCover extends ActionMixin(LitElement) {
     return 2;
   }
 
-  static styles = [hostStyles, haCardReset, rowCardStyles, fillBarStyles, styles];
+  static styles = [hostStyles, haCardReset, rowCardStyles, fillBarStyles, unavailableStyles, styles];
 }
 
 customElements.define("materia-cover", MateriaCover);

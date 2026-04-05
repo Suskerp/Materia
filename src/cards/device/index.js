@@ -1,6 +1,6 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { hostStyles, haCardReset, rowCardStyles } from "../../styles/card-styles.js";
+import { hostStyles, haCardReset, rowCardStyles, unavailableStyles } from "../../styles/card-styles.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -60,10 +60,10 @@ class MateriaDevice extends ActionMixin(LitElement) {
     if (!this.hass || !this.config) return html``;
 
     const stateObj = this.hass.states[this.config.entity];
-    if (!stateObj) return html`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;
+    const unavailable = this._isUnavailable(stateObj);
 
-    const active = this._isActive(stateObj);
-    const name = this.config.name || stateObj.attributes.friendly_name || this.config.entity;
+    const active = !unavailable && this._isActive(stateObj);
+    const name = this.config.name || stateObj?.attributes?.friendly_name || this.config.entity;
     const icon = this.config.icon;
     const colorActive = this.config.color_active;
     const colorOnActive = this.config.color_on_active;
@@ -78,7 +78,7 @@ class MateriaDevice extends ActionMixin(LitElement) {
     return html`
       <ha-card>
         <div
-          class="container"
+          class="container ${unavailable ? 'unavailable' : ''}"
           style="background-color: ${containerBg}; color: ${textColor};"
           @click=${this._handleTap}
         >
@@ -88,7 +88,7 @@ class MateriaDevice extends ActionMixin(LitElement) {
           <div class="name-container">
             <div class="name">${name}</div>
             ${this.config.show_state
-              ? html`<div class="state">${this._capitalize(stateObj.state)}</div>`
+              ? html`<div class="state">${unavailable ? 'Unavailable' : this._capitalize(stateObj.state)}</div>`
               : ""}
           </div>
           ${this._hasNavigateAction ? html`
@@ -117,7 +117,7 @@ class MateriaDevice extends ActionMixin(LitElement) {
     return 2;
   }
 
-  static styles = [hostStyles, haCardReset, rowCardStyles, styles];
+  static styles = [hostStyles, haCardReset, rowCardStyles, unavailableStyles, styles];
 }
 
 customElements.define("materia-device", MateriaDevice);

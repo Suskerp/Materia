@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { unavailableStyles } from "../../styles/card-styles.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -17,7 +18,7 @@ class MateriaIconButton extends ActionMixin(LitElement) {
     return { icon: "mdi:play", variant: "filled", size: "default" };
   }
 
-  static styles = styles;
+  static styles = [unavailableStyles, styles];
 
   setConfig(config) {
     if (!config.icon) throw new Error("icon is required");
@@ -42,13 +43,16 @@ class MateriaIconButton extends ActionMixin(LitElement) {
   render() {
     if (!this.config) return html``;
 
+    const stateObj = this.config.entity ? this.hass?.states?.[this.config.entity] : undefined;
+    const unavailable = this.config.entity ? this._isUnavailable(stateObj) : false;
+
     const variant = this.config.variant || "filled";
     const size = this.config.size === "large" ? "large" : "default";
     const icon = this._resolveIcon();
 
     return html`
       <ha-card
-        class="${variant} size-${size}"
+        class="${variant} size-${size} ${unavailable ? 'unavailable' : ''}"
         @click=${this._handleTap}
       >
         <ha-icon .icon=${icon}></ha-icon>

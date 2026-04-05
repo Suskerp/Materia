@@ -9,6 +9,17 @@ export const haCardReset = css`
   }
 `;
 
+export const unavailableStyles = css`
+  .container.unavailable,
+  ha-card.unavailable,
+  .title-row.unavailable,
+  .group.unavailable {
+    opacity: 0.4;
+    pointer-events: none;
+    filter: grayscale(80%);
+  }
+`;
+
 export const hostStyles = css`
   :host {
     display: block;

@@ -1,9 +1,10 @@
 import { LitElement, html, nothing } from "lit";
-import { hostStyles, haCardReset } from "../../styles/card-styles.js";
+import { ActionMixin } from "../../utils/action-handler.js";
+import { hostStyles, haCardReset, unavailableStyles } from "../../styles/card-styles.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
-class MateriaClimate extends LitElement {
+class MateriaClimate extends ActionMixin(LitElement) {
   static get properties() {
     return {
       hass: { attribute: false },
@@ -11,7 +12,7 @@ class MateriaClimate extends LitElement {
     };
   }
 
-  static styles = [hostStyles, styles];
+  static styles = [hostStyles, unavailableStyles, styles];
 
   static getConfigElement() {
     return document.createElement("materia-climate-editor");
@@ -165,22 +166,21 @@ class MateriaClimate extends LitElement {
     if (!this.hass || !this.config) return html``;
 
     const entity = this._entity;
-    if (!entity) {
-      return html`<ha-card>
-        <div class="card-content">Entity not found: ${this.config.entity}</div>
-      </ha-card>`;
-    }
+    const unavailable = this._isUnavailable(entity);
 
     const mode = this._mode;
-    const isOff = mode === "off";
-    const tempDisplay = isOff
-      ? "Off"
-      : this._targetTemp != null
-        ? Math.round(this._targetTemp)
-        : "\u2014";
+    const isOff = mode === "off" || unavailable;
+    const tempDisplay = unavailable
+      ? "Unavailable"
+      : isOff
+        ? "Off"
+        : this._targetTemp != null
+          ? Math.round(this._targetTemp)
+          : "\u2014";
 
     return html`
       <ha-card
+        class="${unavailable ? 'unavailable' : ''}"
         @click=${this._handleTap}
         style="
           background-color: ${this._modeBg()};

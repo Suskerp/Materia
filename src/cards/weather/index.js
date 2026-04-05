@@ -1,6 +1,6 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { hostStyles, haCardReset, pillContainerStyles } from "../../styles/card-styles.js";
+import { hostStyles, haCardReset, pillContainerStyles, unavailableStyles } from "../../styles/card-styles.js";
 import "./editor.js";
 
 const CONDITION_ICONS = {
@@ -27,7 +27,7 @@ class MateriaWeather extends ActionMixin(LitElement) {
     config: { state: true },
   };
 
-  static styles = [hostStyles, haCardReset, pillContainerStyles];
+  static styles = [hostStyles, haCardReset, pillContainerStyles, unavailableStyles];
 
   static getConfigElement() {
     return document.createElement("materia-weather-editor");
@@ -46,11 +46,11 @@ class MateriaWeather extends ActionMixin(LitElement) {
     if (!this.hass || !this.config) return html``;
 
     const stateObj = this.hass.states[this.config.entity];
-    if (!stateObj) return html`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;
+    const unavailable = this._isUnavailable(stateObj);
 
-    const condition = stateObj.state;
-    const temp = stateObj.attributes.temperature;
-    const tempUnit = stateObj.attributes.temperature_unit || "\u00B0";
+    const condition = stateObj?.state ?? "";
+    const temp = stateObj?.attributes?.temperature;
+    const tempUnit = stateObj?.attributes?.temperature_unit || "\u00B0";
     const icon = CONDITION_ICONS[condition] || "mdi:weather-partly-cloudy";
 
     let humidity = null;
@@ -58,19 +58,19 @@ class MateriaWeather extends ActionMixin(LitElement) {
       const humObj = this.hass.states[this.config.humidity_entity];
       if (humObj) humidity = humObj.state;
     }
-    if (humidity == null && stateObj.attributes.humidity != null) {
+    if (humidity == null && stateObj?.attributes?.humidity != null) {
       humidity = stateObj.attributes.humidity;
     }
 
     const conditionDisplay = condition.replace(/-|_/g, " ");
-    const primary = temp != null ? `${temp}${tempUnit}` : "\u2014";
-    const secondary = humidity != null
+    const primary = unavailable ? 'Unavailable' : (temp != null ? `${temp}${tempUnit}` : "\u2014");
+    const secondary = unavailable ? '' : (humidity != null
       ? `${this._capitalize(conditionDisplay)} \u00B7 ${humidity}% humidity`
-      : this._capitalize(conditionDisplay);
+      : this._capitalize(conditionDisplay));
 
     return html`
       <ha-card @click=${this._handleTap}>
-        <div class="container">
+        <div class="container ${unavailable ? 'unavailable' : ''}">
           <div class="icon-container">
             <ha-icon .icon=${icon}></ha-icon>
           </div>

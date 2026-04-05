@@ -90,6 +90,12 @@ export const ActionMixin = (superClass) =>
       return this.config?.tap_action?.action === "navigate";
     }
 
+    /** Check if entity is unavailable or unknown. */
+    _isUnavailable(stateObj) {
+      if (!stateObj) return true;
+      return stateObj.state === "unavailable" || stateObj.state === "unknown";
+    }
+
     /** Convenience: fire more-info for a specific entity. */
     _fireMoreInfo(entityId) {
       this.dispatchEvent(
