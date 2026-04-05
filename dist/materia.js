@@ -150,7 +150,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
       position: relative;
       width: 100%;
       min-height: 50px;
-      background-color: var(--secondary-background-color);
+      background-color: var(--ha-card-background, var(--card-background-color));
       border-radius: 28px;
       overflow: hidden;
       display: flex;
@@ -205,7 +205,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
       <ha-card>
         <div
           class="container"
-          style="background-color: ${e?"var(--md-sys-cust-color-light-container)":"var(--secondary-background-color)"}; color: ${n};"
+          style="background-color: ${e?"var(--md-sys-cust-color-light-container)":"var(--ha-card-background, var(--card-background-color))"}; color: ${n};"
           @click=${this._handleTap}
         >
           <div class="icon-container">
@@ -264,7 +264,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
       position: relative;
       width: 100%;
       min-height: 88px;
-      background-color: var(--secondary-background-color);
+      background-color: var(--ha-card-background, var(--card-background-color));
       border-radius: 28px;
       overflow: hidden;
       display: flex;
@@ -397,7 +397,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
       position: relative;
       width: 100%;
       min-height: 88px;
-      background-color: var(--secondary-background-color);
+      background-color: var(--ha-card-background, var(--card-background-color));
       border-radius: 28px;
       overflow: hidden;
       display: flex;
@@ -520,7 +520,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
       position: relative;
       width: 100%;
       min-height: 50px;
-      background-color: var(--secondary-background-color);
+      background-color: var(--ha-card-background, var(--card-background-color));
       border-radius: 28px;
       overflow: hidden;
       display: flex;
@@ -571,7 +571,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
       opacity: 0.7;
       white-space: nowrap;
     }
-  `;setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={icon:"mdi:power-plug",button_type:"switch",active_state:"on",color_active:"var(--md-sys-cust-color-device-container)",color_on_active:"var(--md-sys-cust-color-on-device)",show_state:!0,...t}}_isActive(t){if(!t)return!1;const e=t.state,i=this.config.active_state||"on";return e===String(i)||"open"===e}render(){if(!this.hass||!this.config)return B``;const t=this.hass.states[this.config.entity];if(!t)return B`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;const e=this._isActive(t),i=this.config.name||t.attributes.friendly_name||this.config.entity,s=e?this.config.color_active:"var(--secondary-background-color)",n=e?this.config.color_on_active:"var(--primary-text-color)";return B`
+  `;setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={icon:"mdi:power-plug",button_type:"switch",active_state:"on",color_active:"var(--md-sys-cust-color-device-container)",color_on_active:"var(--md-sys-cust-color-on-device)",show_state:!0,...t}}_isActive(t){if(!t)return!1;const e=t.state,i=this.config.active_state||"on";return e===String(i)||"open"===e}render(){if(!this.hass||!this.config)return B``;const t=this.hass.states[this.config.entity];if(!t)return B`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;const e=this._isActive(t),i=this.config.name||t.attributes.friendly_name||this.config.entity,s=e?this.config.color_active:"var(--ha-card-background, var(--card-background-color))",n=e?this.config.color_on_active:"var(--primary-text-color)";return B`
       <ha-card>
         <div
           class="container"
@@ -610,7 +610,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
       position: relative;
       width: 100%;
       min-height: 50px;
-      background-color: var(--secondary-background-color);
+      background-color: var(--ha-card-background, var(--card-background-color));
       border-radius: 28px;
       overflow: hidden;
       display: flex;
@@ -664,7 +664,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
       <ha-card>
         <div
           class="container"
-          style="background-color: ${e?"var(--md-sys-cust-color-device-container)":"var(--secondary-background-color)"}; color: ${o};"
+          style="background-color: ${e?"var(--md-sys-cust-color-device-container)":"var(--ha-card-background, var(--card-background-color))"}; color: ${o};"
         >
           <div class="icon-container">
             <ha-icon .icon=${s} style="color: ${o};"></ha-icon>
@@ -698,7 +698,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
       position: relative;
       width: 100%;
       min-height: 50px;
-      background-color: var(--secondary-background-color);
+      background-color: var(--ha-card-background, var(--card-background-color));
       border-radius: 28px;
       overflow: hidden;
       display: flex;
@@ -748,7 +748,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
       opacity: 0.7;
       white-space: nowrap;
     }
-  `;setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={...t}}_getBatteryColors(t){return t<10?["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"]:t<20?["var(--md-sys-cust-color-warning-container)","var(--md-sys-cust-color-on-warning-container)"]:["var(--secondary-background-color)","var(--primary-text-color)"]}render(){if(!this.hass||!this.config)return B``;const t=this.hass.states[this.config.entity];if(!t)return B`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;const e=parseFloat(t.state)||0,i=this.config.name||t.attributes.friendly_name||this.config.entity,s=t.attributes.unit_of_measurement||"%",n=`${t.state}${s}`,[o,a]=this._getBatteryColors(e);return B`
+  `;setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={...t}}_getBatteryColors(t){return t<10?["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"]:t<20?["var(--md-sys-cust-color-warning-container)","var(--md-sys-cust-color-on-warning-container)"]:["var(--ha-card-background, var(--card-background-color))","var(--primary-text-color)"]}render(){if(!this.hass||!this.config)return B``;const t=this.hass.states[this.config.entity];if(!t)return B`<ha-card>Entity not found: ${this.config.entity}</ha-card>`;const e=parseFloat(t.state)||0,i=this.config.name||t.attributes.friendly_name||this.config.entity,s=t.attributes.unit_of_measurement||"%",n=`${t.state}${s}`,[o,a]=this._getBatteryColors(e);return B`
       <ha-card>
         <div
           class="container"
@@ -964,35 +964,31 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
 
         <!-- Center: temp +/- -->
         <div class="center">
-          ${t?B`<div class="btn-placeholder"></div>`:B`
-                <button
-                  class="btn"
-                  style="
-                    background-color: ${this._buttonBg()};
-                    color: ${this._buttonColor()};
-                  "
-                  @click=${t=>{t.stopPropagation(),this._adjustTemp(-this._config.step)}}
-                >
-                  <ha-icon icon="mdi:minus" style="--mdc-icon-size: 20px;"></ha-icon>
-                </button>
-              `}
+          <div class="center-side">
+            ${t?I:B`
+                  <button
+                    class="btn"
+                    style="background-color: ${this._buttonBg()}; color: ${this._buttonColor()};"
+                    @click=${t=>{t.stopPropagation(),this._adjustTemp(-this._config.step)}}
+                  >
+                    <ha-icon icon="mdi:minus" style="--mdc-icon-size: 20px;"></ha-icon>
+                  </button>
+                `}
+          </div>
 
-          <span class="temp ${t?"off":""}">
-            ${e}
-          </span>
+          <span class="temp ${t?"off":""}">${e}</span>
 
-          ${t?B`<div class="btn-placeholder"></div>`:B`
-                <button
-                  class="btn"
-                  style="
-                    background-color: ${this._buttonBg()};
-                    color: ${this._buttonColor()};
-                  "
-                  @click=${t=>{t.stopPropagation(),this._adjustTemp(this._config.step)}}
-                >
-                  <ha-icon icon="mdi:plus" style="--mdc-icon-size: 20px;"></ha-icon>
-                </button>
-              `}
+          <div class="center-side">
+            ${t?I:B`
+                  <button
+                    class="btn"
+                    style="background-color: ${this._buttonBg()}; color: ${this._buttonColor()};"
+                    @click=${t=>{t.stopPropagation(),this._adjustTemp(this._config.step)}}
+                  >
+                    <ha-icon icon="mdi:plus" style="--mdc-icon-size: 20px;"></ha-icon>
+                  </button>
+                `}
+          </div>
         </div>
 
         <!-- Status -->
@@ -1043,18 +1039,25 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
       /* ── center row ── */
       .center {
         flex: 1;
-        display: grid;
-        grid-template-columns: auto 1fr auto;
+        display: flex;
         align-items: center;
         padding: 0 4px;
       }
 
+      .center-side {
+        width: 80px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
       .temp {
+        flex: 1;
         font-size: 72px;
         font-weight: 450;
         line-height: 1;
         text-align: center;
-        justify-self: center;
         user-select: none;
       }
 
@@ -1098,12 +1101,6 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
 
       .btn ha-icon {
         display: flex;
-      }
-
-      .btn-placeholder {
-        width: 80px;
-        height: 55px;
-        flex-shrink: 0;
       }
 
       /* ── status ── */
@@ -1219,7 +1216,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
         position: relative;
         width: 100%;
         min-height: 50px;
-        background-color: var(--secondary-background-color);
+        background-color: var(--ha-card-background, var(--card-background-color));
         border-radius: 28px;
         overflow: hidden;
         display: flex;
@@ -1403,19 +1400,17 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
     .icon-cell {
       grid-area: i;
       align-self: start;
-      text-align: start;
       display: flex;
       justify-content: start;
       align-items: start;
       height: 24px;
-      margin: 10px;
+      padding: 14px 0 0 16px;
     }
 
     .icon-cell ha-icon {
       --mdc-icon-size: 24px;
       width: 24px;
       height: 24px;
-      margin: 0 15px;
     }
 
     .name {

@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html, css, nothing } from "lit";
 import { injectFonts } from "../styles/shared.js";
 
 /* ───────────────────────────────────────────────
@@ -304,45 +304,35 @@ class MateriaClimate extends LitElement {
 
         <!-- Center: temp +/- -->
         <div class="center">
-          ${isOff
-            ? html`<div class="btn-placeholder"></div>`
-            : html`
-                <button
-                  class="btn"
-                  style="
-                    background-color: ${this._buttonBg()};
-                    color: ${this._buttonColor()};
-                  "
-                  @click=${(e) => {
-                    e.stopPropagation();
-                    this._adjustTemp(-this._config.step);
-                  }}
-                >
-                  <ha-icon icon="mdi:minus" style="--mdc-icon-size: 20px;"></ha-icon>
-                </button>
-              `}
+          <div class="center-side">
+            ${isOff
+              ? nothing
+              : html`
+                  <button
+                    class="btn"
+                    style="background-color: ${this._buttonBg()}; color: ${this._buttonColor()};"
+                    @click=${(e) => { e.stopPropagation(); this._adjustTemp(-this._config.step); }}
+                  >
+                    <ha-icon icon="mdi:minus" style="--mdc-icon-size: 20px;"></ha-icon>
+                  </button>
+                `}
+          </div>
 
-          <span class="temp ${isOff ? "off" : ""}">
-            ${tempDisplay}
-          </span>
+          <span class="temp ${isOff ? "off" : ""}">${tempDisplay}</span>
 
-          ${isOff
-            ? html`<div class="btn-placeholder"></div>`
-            : html`
-                <button
-                  class="btn"
-                  style="
-                    background-color: ${this._buttonBg()};
-                    color: ${this._buttonColor()};
-                  "
-                  @click=${(e) => {
-                    e.stopPropagation();
-                    this._adjustTemp(this._config.step);
-                  }}
-                >
-                  <ha-icon icon="mdi:plus" style="--mdc-icon-size: 20px;"></ha-icon>
-                </button>
-              `}
+          <div class="center-side">
+            ${isOff
+              ? nothing
+              : html`
+                  <button
+                    class="btn"
+                    style="background-color: ${this._buttonBg()}; color: ${this._buttonColor()};"
+                    @click=${(e) => { e.stopPropagation(); this._adjustTemp(this._config.step); }}
+                  >
+                    <ha-icon icon="mdi:plus" style="--mdc-icon-size: 20px;"></ha-icon>
+                  </button>
+                `}
+          </div>
         </div>
 
         <!-- Status -->
@@ -399,18 +389,25 @@ class MateriaClimate extends LitElement {
       /* ── center row ── */
       .center {
         flex: 1;
-        display: grid;
-        grid-template-columns: auto 1fr auto;
+        display: flex;
         align-items: center;
         padding: 0 4px;
       }
 
+      .center-side {
+        width: 80px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
       .temp {
+        flex: 1;
         font-size: 72px;
         font-weight: 450;
         line-height: 1;
         text-align: center;
-        justify-self: center;
         user-select: none;
       }
 
@@ -454,12 +451,6 @@ class MateriaClimate extends LitElement {
 
       .btn ha-icon {
         display: flex;
-      }
-
-      .btn-placeholder {
-        width: 80px;
-        height: 55px;
-        flex-shrink: 0;
       }
 
       /* ── status ── */

@@ -79,7 +79,7 @@ class MateriaBatteryLow extends ActionMixin(LitElement) {
       position: relative;
       width: 100%;
       min-height: 50px;
-      background-color: var(--secondary-background-color);
+      background-color: var(--ha-card-background, var(--card-background-color));
       border-radius: 28px;
       overflow: hidden;
       display: flex;
@@ -150,7 +150,7 @@ class MateriaBatteryLow extends ActionMixin(LitElement) {
       ];
     }
     return [
-      "var(--secondary-background-color)",
+      "var(--ha-card-background, var(--card-background-color))",
       "var(--primary-text-color)",
     ];
   }

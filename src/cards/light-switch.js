@@ -80,7 +80,7 @@ class MateriaLightSwitch extends ActionMixin(LitElement) {
       position: relative;
       width: 100%;
       min-height: 50px;
-      background-color: var(--secondary-background-color);
+      background-color: var(--ha-card-background, var(--card-background-color));
       border-radius: 28px;
       overflow: hidden;
       display: flex;
@@ -153,7 +153,7 @@ class MateriaLightSwitch extends ActionMixin(LitElement) {
 
     const containerBg = isOn
       ? "var(--md-sys-cust-color-light-container)"
-      : "var(--secondary-background-color)";
+      : "var(--ha-card-background, var(--card-background-color))";
     const textColor = isOn
       ? "var(--md-sys-cust-color-on-light)"
       : "var(--primary-text-color)";

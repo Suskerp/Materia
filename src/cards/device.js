@@ -92,7 +92,7 @@ class MateriaDevice extends ActionMixin(LitElement) {
       position: relative;
       width: 100%;
       min-height: 50px;
-      background-color: var(--secondary-background-color);
+      background-color: var(--ha-card-background, var(--card-background-color));
       border-radius: 28px;
       overflow: hidden;
       display: flex;
@@ -176,7 +176,7 @@ class MateriaDevice extends ActionMixin(LitElement) {
 
     const containerBg = active
       ? this.config.color_active
-      : "var(--secondary-background-color)";
+      : "var(--ha-card-background, var(--card-background-color))";
     const textColor = active
       ? this.config.color_on_active
       : "var(--primary-text-color)";

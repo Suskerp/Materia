@@ -142,19 +142,17 @@ class MateriaButton extends ActionMixin(LitElement) {
     .icon-cell {
       grid-area: i;
       align-self: start;
-      text-align: start;
       display: flex;
       justify-content: start;
       align-items: start;
       height: 24px;
-      margin: 10px;
+      padding: 14px 0 0 16px;
     }
 
     .icon-cell ha-icon {
       --mdc-icon-size: 24px;
       width: 24px;
       height: 24px;
-      margin: 0 15px;
     }
 
     .name {

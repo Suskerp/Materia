@@ -185,7 +185,7 @@ class MateriaLightDimmer extends ActionMixin(LitElement) {
       position: relative;
       width: 100%;
       min-height: 88px;
-      background-color: var(--secondary-background-color);
+      background-color: var(--ha-card-background, var(--card-background-color));
       border-radius: 28px;
       overflow: hidden;
       display: flex;
