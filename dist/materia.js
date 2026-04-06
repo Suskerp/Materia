@@ -1252,7 +1252,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     width: 100%;
     min-height: 56px;
     background-color: var(--ha-card-background, var(--card-background-color));
-    border-radius: 28px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     box-sizing: border-box;
@@ -1262,11 +1262,11 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
   }
 
   .trigger.open-below {
-    border-radius: 28px 28px 12px 12px;
+    border-radius: 16px 16px 8px 8px;
   }
 
   .trigger.open-above {
-    border-radius: 12px 12px 28px 28px;
+    border-radius: 8px 8px 16px 16px;
   }
 
   .icon-container {
