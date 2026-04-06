@@ -73,13 +73,22 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     white-space: nowrap;
   }
 
+  .chevron-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-right: 4px;
+    flex-shrink: 0;
+    cursor: pointer;
+    border-radius: 50%;
+  }
+
   .chevron {
     --mdc-icon-size: 20px;
-    margin-right: 16px;
-    flex-shrink: 0;
     transition: transform 0.2s ease;
-    cursor: pointer;
-    pointer-events: auto;
+    pointer-events: none;
   }
 
   .chevron.open {
@@ -111,7 +120,8 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
   }
 
   .dropdown {
-    background: var(--ha-card-background, var(--card-background-color));
+    background: var(--md-sys-color-tertiary-container, var(--ha-card-background));
+    color: var(--md-sys-color-on-tertiary-container, var(--primary-text-color));
     padding: 8px;
     margin: 2px 0;
     box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
@@ -135,7 +145,7 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     cursor: pointer;
     font-size: 14px;
     font-weight: 400;
-    color: var(--md-sys-color-on-surface-variant, var(--primary-text-color));
+    color: var(--md-sys-color-on-tertiary-container, var(--primary-text-color));
     position: relative;
     overflow: hidden;
     border-radius: 16px;
@@ -161,8 +171,8 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
   }
 
   .menu-item.selected {
-    background: var(--md-sys-color-tertiary-container, var(--md-sys-color-secondary-container));
-    color: var(--md-sys-color-on-tertiary-container, var(--md-sys-color-on-secondary-container));
+    background: var(--md-sys-color-tertiary, var(--md-sys-color-secondary));
+    color: var(--md-sys-color-on-tertiary, var(--md-sys-color-on-secondary));
     font-weight: 500;
     border-radius: 12px;
   }
