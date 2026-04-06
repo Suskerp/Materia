@@ -1238,6 +1238,15 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         </div>
       </ha-card>
     `}_handleTap(){this._handleAction(this.config.tap_action||{action:"more-info"})}getGridOptions(){return{columns:6,rows:"auto"}}getCardSize(){return 1}}customElements.define("materia-pill",qt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-pill",name:"Materia Pill",description:"Compact info pill for sensors, weather, and status indicators.",preview:!0});const Lt=[ut,dt,pt,s`
+  :host {
+    position: relative;
+    z-index: 1;
+  }
+
+  ha-card {
+    overflow: visible !important;
+  }
+
   .trigger {
     position: relative;
     width: 100%;
@@ -1248,6 +1257,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     align-items: center;
     box-sizing: border-box;
     cursor: pointer;
+    z-index: 1;
   }
 
   .icon-container {
@@ -1302,20 +1312,34 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
   }
 
   .dropdown-wrapper {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 10;
     overflow: hidden;
     max-height: 0;
     transition: max-height 0.25s ease;
+    pointer-events: none;
+  }
+
+  .dropdown-wrapper.below {
+    top: 100%;
+  }
+
+  .dropdown-wrapper.above {
+    bottom: 100%;
   }
 
   .dropdown-wrapper.open {
     max-height: 600px;
+    pointer-events: auto;
   }
 
   .dropdown {
     background: var(--md-sys-color-surface-container-low, var(--ha-card-background));
     border-radius: 12px;
     padding: 8px 0;
-    margin-top: 4px;
+    margin: 4px 0;
     box-shadow: 0px 1px 2px 0px rgba(0,0,0,0.3), 0px 2px 6px 2px rgba(0,0,0,0.15);
   }
 
@@ -1371,7 +1395,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     background: var(--md-sys-color-outline-variant, var(--divider-color, rgba(0,0,0,0.08)));
     margin: 8px 0;
   }
-`];class It extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config={...t}}get _schema(){return[{name:"entity",selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}}]}get _optionSchema(){return[{name:"label",selector:{text:{}}},{name:"value",required:!0,selector:{text:{}}},{name:"icon",selector:{icon:{}}}]}static styles=s`
+`];class It extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config={...t}}get _schema(){return[{name:"entity",selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"position",selector:{select:{options:[{value:"below",label:"Below"},{value:"above",label:"Above"}],mode:"dropdown"}}}]}get _optionSchema(){return[{name:"label",selector:{text:{}}},{name:"value",required:!0,selector:{text:{}}},{name:"icon",selector:{icon:{}}}]}static styles=s`
     .options-header {
       display: flex;
       align-items: center;
@@ -1471,7 +1495,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
           </div>
           <ha-icon class="chevron ${this._open?"open":""}" icon="mdi:chevron-down"></ha-icon>
         </div>
-        <div class="dropdown-wrapper ${this._open?"open":""}">
+        <div class="dropdown-wrapper ${this._open?"open":""} ${"above"===this.config.position?"above":"below"}">
           <div class="dropdown">
             ${i.map(t=>q`
               <div

@@ -16,6 +16,10 @@ class MateriaMenuEditor extends LitElement {
       { name: "entity", selector: { entity: {} } },
       { name: "name", selector: { text: {} } },
       { name: "icon", selector: { icon: {} } },
+      { name: "position", selector: { select: { options: [
+        { value: "below", label: "Below" },
+        { value: "above", label: "Above" },
+      ], mode: "dropdown" } } },
     ];
   }
 

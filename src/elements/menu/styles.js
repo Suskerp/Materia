@@ -2,6 +2,15 @@ import { css } from "lit";
 import { hostStyles, haCardReset, unavailableStyles } from "../../styles/card-styles.js";
 
 export const styles = [hostStyles, haCardReset, unavailableStyles, css`
+  :host {
+    position: relative;
+    z-index: 1;
+  }
+
+  ha-card {
+    overflow: visible !important;
+  }
+
   .trigger {
     position: relative;
     width: 100%;
@@ -12,6 +21,7 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     align-items: center;
     box-sizing: border-box;
     cursor: pointer;
+    z-index: 1;
   }
 
   .icon-container {
@@ -66,20 +76,34 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
   }
 
   .dropdown-wrapper {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 10;
     overflow: hidden;
     max-height: 0;
     transition: max-height 0.25s ease;
+    pointer-events: none;
+  }
+
+  .dropdown-wrapper.below {
+    top: 100%;
+  }
+
+  .dropdown-wrapper.above {
+    bottom: 100%;
   }
 
   .dropdown-wrapper.open {
     max-height: 600px;
+    pointer-events: auto;
   }
 
   .dropdown {
     background: var(--md-sys-color-surface-container-low, var(--ha-card-background));
     border-radius: 12px;
     padding: 8px 0;
-    margin-top: 4px;
+    margin: 4px 0;
     box-shadow: 0px 1px 2px 0px rgba(0,0,0,0.3), 0px 2px 6px 2px rgba(0,0,0,0.15);
   }
 
