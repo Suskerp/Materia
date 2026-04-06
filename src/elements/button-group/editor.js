@@ -27,10 +27,10 @@ class MateriaButtonGroupEditor extends LitElement {
       { name: "preset", label: "Color preset", selector: { select: { options: presetOptions, mode: "dropdown" } } },
       { name: "size", selector: { select: { options: [
         { value: "xs", label: "XS (32dp)" },
-        { value: "s",  label: "S (40dp)" },
-        { value: "m",  label: "M (48dp)" },
-        { value: "l",  label: "L (56dp)" },
-        { value: "xl", label: "XL (64dp)" },
+        { value: "s",  label: "S (36dp)" },
+        { value: "m",  label: "M (40dp)" },
+        { value: "l",  label: "L (48dp)" },
+        { value: "xl", label: "XL (56dp)" },
       ], mode: "dropdown" } } },
       { name: "variant", label: "Style", selector: { select: { options: [
         { value: "filled", label: "Filled" },

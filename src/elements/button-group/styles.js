@@ -14,10 +14,10 @@ export const PRESETS = {
 
 export const SIZES = {
   xs: { height: 32, innerCorner: 4 },
-  s:  { height: 40, innerCorner: 8 },
-  m:  { height: 48, innerCorner: 8 },
-  l:  { height: 56, innerCorner: 16 },
-  xl: { height: 64, innerCorner: 20 },
+  s:  { height: 36, innerCorner: 8 },
+  m:  { height: 40, innerCorner: 8 },
+  l:  { height: 48, innerCorner: 16 },
+  xl: { height: 56, innerCorner: 20 },
 };
 
 export const styles = [

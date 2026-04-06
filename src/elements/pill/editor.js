@@ -8,8 +8,6 @@ class MateriaPillEditor extends BaseEditor {
       { name: "icon", selector: { icon: {} } },
       { name: "color", selector: { template: {} } },
       { name: "color_on", selector: { template: {} } },
-      { name: "humidity_entity", selector: { entity: { domain: "sensor" } } },
-      { name: "unit", selector: { text: {} } },
       { name: "background", selector: { boolean: {} } },
       {
         name: "tap_action",

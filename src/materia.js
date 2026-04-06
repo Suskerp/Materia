@@ -15,6 +15,7 @@ import "./primitives/slider.js";
 import "./cards/card/index.js";
 import "./cards/room/index.js";
 import "./cards/climate/index.js";
+import "./cards/weather/index.js";
 
 // Elements (native Lit)
 import "./elements/badge/index.js";

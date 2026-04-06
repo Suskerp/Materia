@@ -4,24 +4,6 @@ import { unavailableStyles } from "../../styles/card-styles.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
-const CONDITION_ICONS = {
-  sunny: "m3o:sunny",
-  clear: "m3o:sunny",
-  "clear-night": "mdi:weather-night",
-  partlycloudy: "m3o:partly-cloudy-day",
-  partly_cloudy: "m3o:partly-cloudy-day",
-  cloudy: "m3o:cloud",
-  rainy: "m3o:rainy",
-  pouring: "m3o:rainy",
-  snowy: "mdi:weather-snowy",
-  fog: "m3o:foggy",
-  windy: "mdi:weather-windy",
-  lightning: "mdi:weather-lightning",
-  "lightning-rainy": "mdi:weather-lightning-rainy",
-  hail: "mdi:weather-hail",
-  exceptional: "mdi:alert-circle-outline",
-};
-
 class MateriaPill extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
@@ -61,72 +43,17 @@ class MateriaPill extends ActionMixin(LitElement) {
     return { label: "", color: "" };
   }
 
-  /** Check if entity is a weather domain */
-  get _isWeather() {
-    return this.config.entity.startsWith("weather.");
-  }
-
   render() {
     if (!this.hass || !this.config) return html``;
 
     const stateObj = this.hass.states[this.config.entity];
     const unavailable = this._isUnavailable(stateObj);
-
-    if (this._isWeather) {
-      return this._renderWeather(stateObj, unavailable);
-    }
-
-    return this._renderDefault(stateObj, unavailable);
-  }
-
-  _renderWeather(stateObj, unavailable) {
-    const condition = stateObj?.state ?? "";
-    const temp = stateObj?.attributes?.temperature;
-    const tempUnit = stateObj?.attributes?.temperature_unit || "\u00B0";
-    const icon = CONDITION_ICONS[condition] || "mdi:weather-partly-cloudy";
-
-    let humidity = null;
-    if (this.config.humidity_entity) {
-      const humObj = this.hass.states[this.config.humidity_entity];
-      if (humObj) humidity = humObj.state;
-    }
-    if (humidity == null && stateObj?.attributes?.humidity != null) {
-      humidity = stateObj.attributes.humidity;
-    }
-
-    const conditionDisplay = condition.replace(/-|_/g, " ");
-    const primary = unavailable ? "Unavailable" : (temp != null ? `${temp}${tempUnit}` : "\u2014");
-    const secondary = unavailable ? "" : (humidity != null
-      ? `${this._capitalize(conditionDisplay)} \u00B7 ${humidity}% humidity`
-      : this._capitalize(conditionDisplay));
-
-    const noBg = this.config.background === false || this.config.background === "none";
-
-    return html`
-      <ha-card>
-        <div
-          class="container ${unavailable ? "unavailable" : ""} ${noBg ? "no-bg" : ""}"
-          @click=${this._handleTap}
-        >
-          <div class="icon-container">
-            <ha-icon .icon=${icon}></ha-icon>
-          </div>
-          <div class="name-container">
-            <div class="name">${primary}</div>
-            <div class="state">${secondary}</div>
-          </div>
-        </div>
-      </ha-card>
-    `;
-  }
-
-  _renderDefault(stateObj, unavailable) {
     const name =
       this.config.name ||
       stateObj?.attributes?.friendly_name ||
       this.config.entity;
     const icon = this.config.icon || stateObj?.attributes?.icon || "";
-    const unit = this.config.unit || stateObj?.attributes?.unit_of_measurement || "";
+    const unit = stateObj?.attributes?.unit_of_measurement || "";
     const stateVal = stateObj?.state ?? "";
 
     const ranges = this.config.ranges || [];
