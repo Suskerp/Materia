@@ -25,11 +25,12 @@ class MateriaRoom extends ActionMixin(LitElement) {
     return document.createElement("materia-room-editor");
   }
 
-  static getStubConfig() {
+  static getStubConfig(hass) {
+    const entity = Object.keys(hass?.states || {}).find(e => e.startsWith("light.")) || "light.example";
     return {
-      entity: "",
-      name: "",
-      icon: "",
+      entity,
+      name: "Room",
+      icon: "mdi:home",
       entity_type: "light",
       columns: 2,
     };
@@ -209,6 +210,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-room",
   name: "Materia Room",
-  description:
-    "A native expandable room section with title and grid of child cards",
+  description: "Expandable room section with child card grid.",
+  preview: true,
 });

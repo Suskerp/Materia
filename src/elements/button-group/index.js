@@ -14,13 +14,14 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     return document.createElement("materia-button-group-editor");
   }
 
-  static getStubConfig() {
+  static getStubConfig(hass) {
+    const entity = Object.keys(hass?.states || {}).find(e => e.startsWith("input_select.") || e.startsWith("select.")) || "";
     return {
-      entity: "",
+      entity,
       size: "m",
       options: [
-        { label: "Option A", value: "a" },
-        { label: "Option B", value: "b" },
+        { label: "Option 1", value: "1" },
+        { label: "Option 2", value: "2" },
       ],
     };
   }
@@ -127,4 +128,5 @@ window.customCards.push({
   type: "materia-button-group",
   name: "Materia Button Group",
   description: "M3 connected button group with presets and sizes.",
+  preview: true,
 });

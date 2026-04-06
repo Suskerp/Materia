@@ -592,5 +592,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-card",
   name: "Materia Card",
-  description: "Universal entity card with domain-aware behavior.",
+  description: "Universal entity card. Auto-detects lights, covers, devices, locks, and scenes.",
+  preview: true,
 });

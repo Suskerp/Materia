@@ -100,10 +100,12 @@ class MateriaPill extends ActionMixin(LitElement) {
       ? `${this._capitalize(conditionDisplay)} \u00B7 ${humidity}% humidity`
       : this._capitalize(conditionDisplay));
 
+    const noBg = this.config.background === false || this.config.background === "none";
+
     return html`
       <ha-card>
         <div
-          class="container ${unavailable ? "unavailable" : ""}"
+          class="container ${unavailable ? "unavailable" : ""} ${noBg ? "no-bg" : ""}"
           @click=${this._handleTap}
         >
           <div class="icon-container">
@@ -161,11 +163,13 @@ class MateriaPill extends ActionMixin(LitElement) {
       ? this.config.color_on
       : "var(--primary-text-color)";
 
+    const noBg = this.config.background === false || this.config.background === "none";
+
     return html`
       <ha-card>
         <div
-          class="container ${unavailable ? "unavailable" : ""}"
-          style="background-color: ${containerBg}; color: ${textColor};"
+          class="container ${unavailable ? "unavailable" : ""} ${noBg ? "no-bg" : ""}"
+          style="background-color: ${noBg ? "transparent" : containerBg}; color: ${textColor};"
           @click=${this._handleTap}
         >
           ${icon ? html`
@@ -204,5 +208,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-pill",
   name: "Materia Pill",
-  description: "Compact info pill card with configurable icon, name, state, colors, weather, and sensor ranges.",
+  description: "Compact info pill for sensors, weather, and status indicators.",
+  preview: true,
 });

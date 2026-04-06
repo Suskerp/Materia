@@ -19,6 +19,14 @@ export const styles = [
       cursor: pointer;
     }
 
+    .container.no-bg {
+      background: transparent !important;
+    }
+
+    .container.no-bg .icon-container {
+      background-color: var(--ha-card-background, var(--card-background-color));
+    }
+
     .icon-container {
       display: flex;
       align-items: center;

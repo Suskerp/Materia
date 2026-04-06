@@ -84,5 +84,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-icon-button",
   name: "Materia Icon Button",
-  description: "M3 icon button with variants",
+  description: "M3 icon button with variants and state-based icons.",
+  preview: true,
 });

@@ -73,8 +73,18 @@ class MateriaBadge extends ActionMixin(LitElement) {
     return ["var(--ha-card-background)", "var(--primary-text-color)"];
   }
 
+  get _hasTemplates() {
+    const c = this.config;
+    return ["color", "color_on", "state_display"].some(
+      (k) => c?.[k] && typeof c[k] === "string" && (c[k].includes("{{") || c[k].includes("{%"))
+    );
+  }
+
   render() {
     if (!this.hass || !this.config) return html``;
+    if (this._hasTemplates && !this._resolvedColor && !this._resolvedColorOn && !this._resolvedStateDisplay) {
+      return html``;
+    }
 
     const entity = this.config.entity;
     const stateObj = entity ? this.hass.states[entity] : undefined;
@@ -158,5 +168,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-badge",
   name: "Materia Badge",
-  description: "Material You small badge with variants, state display, and battery mode.",
+  description: "Square badge for dashboard headers.",
+  preview: true,
 });

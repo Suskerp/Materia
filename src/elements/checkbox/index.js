@@ -14,8 +14,9 @@ class MateriaCheckbox extends ActionMixin(LitElement) {
     return document.createElement("materia-checkbox-editor");
   }
 
-  static getStubConfig() {
-    return { entity: "", name: "" };
+  static getStubConfig(hass) {
+    const entity = Object.keys(hass?.states || {}).find(e => e.startsWith("input_boolean.")) || "";
+    return { entity, name: "Checkbox" };
   }
 
   static styles = [unavailableStyles, styles];
@@ -100,5 +101,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-checkbox",
   name: "Materia Checkbox",
-  description: "Material You checkbox row with name and toggle icon.",
+  description: "Checkbox with custom checked state logic.",
+  preview: true,
 });

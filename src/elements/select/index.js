@@ -14,8 +14,9 @@ class MateriaSelect extends ActionMixin(LitElement) {
     return document.createElement("materia-select-editor");
   }
 
-  static getStubConfig() {
-    return { entity: "" };
+  static getStubConfig(hass) {
+    const entity = Object.keys(hass?.states || {}).find(e => e.startsWith("input_select.") || e.startsWith("select.")) || "";
+    return { entity };
   }
 
   static styles = [unavailableStyles, styles];
@@ -76,5 +77,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-select",
   name: "Materia Select",
-  description: "Dropdown select for input_select / select entities.",
+  description: "Dropdown select for input_select and select entities.",
+  preview: true,
 });

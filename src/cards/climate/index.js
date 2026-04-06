@@ -18,8 +18,9 @@ class MateriaClimate extends ActionMixin(LitElement) {
     return document.createElement("materia-climate-editor");
   }
 
-  static getStubConfig() {
-    return { entity: "", name: "", step: 0.5 };
+  static getStubConfig(hass) {
+    const entity = Object.keys(hass?.states || {}).find(e => e.startsWith("climate.")) || "climate.example";
+    return { entity, name: "Climate", step: 0.5 };
   }
 
   setConfig(config) {
@@ -243,5 +244,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-climate",
   name: "Materia Climate",
-  description: "A native climate thermostat card with mode-based theming",
+  description: "Climate thermostat with mode-based theming and temperature controls.",
+  preview: true,
 });
