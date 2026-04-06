@@ -101,30 +101,33 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
 
   .dropdown {
     background: var(--md-sys-color-surface-container-low, var(--ha-card-background));
-    border-radius: 12px;
-    padding: 8px 0;
+    border-radius: 20px;
+    padding: 8px;
     margin: 4px 0;
-    box-shadow: 0px 1px 2px 0px rgba(0,0,0,0.3), 0px 2px 6px 2px rgba(0,0,0,0.15);
+    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
+                0px 2px 6px 2px rgba(0, 0, 0, 0.15);
   }
 
   .menu-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    height: 48px;
+    min-height: 56px;
     padding: 0 16px;
     cursor: pointer;
     font-size: 14px;
     font-weight: 400;
-    color: var(--md-sys-color-on-surface, var(--primary-text-color));
+    color: var(--md-sys-color-on-surface-variant, var(--primary-text-color));
     position: relative;
     overflow: hidden;
+    border-radius: 16px;
   }
 
   .menu-item::before {
     content: "";
     position: absolute;
     inset: 0;
+    border-radius: inherit;
     background: currentColor;
     opacity: 0;
     pointer-events: none;
@@ -143,6 +146,7 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     background: var(--md-sys-color-tertiary-container, var(--md-sys-color-secondary-container));
     color: var(--md-sys-color-on-tertiary-container, var(--md-sys-color-on-secondary-container));
     font-weight: 500;
+    border-radius: 28px;
   }
 
   .menu-item ha-icon {
@@ -156,7 +160,7 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
 
   .divider {
     height: 1px;
-    background: var(--md-sys-color-outline-variant, var(--divider-color, rgba(0,0,0,0.08)));
-    margin: 8px 0;
+    background: var(--md-sys-color-outline-variant, var(--divider-color, rgba(0, 0, 0, 0.08)));
+    margin: 8px 16px;
   }
 `];

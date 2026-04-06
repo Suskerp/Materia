@@ -1337,30 +1337,33 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
 
   .dropdown {
     background: var(--md-sys-color-surface-container-low, var(--ha-card-background));
-    border-radius: 12px;
-    padding: 8px 0;
+    border-radius: 20px;
+    padding: 8px;
     margin: 4px 0;
-    box-shadow: 0px 1px 2px 0px rgba(0,0,0,0.3), 0px 2px 6px 2px rgba(0,0,0,0.15);
+    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
+                0px 2px 6px 2px rgba(0, 0, 0, 0.15);
   }
 
   .menu-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    height: 48px;
+    min-height: 56px;
     padding: 0 16px;
     cursor: pointer;
     font-size: 14px;
     font-weight: 400;
-    color: var(--md-sys-color-on-surface, var(--primary-text-color));
+    color: var(--md-sys-color-on-surface-variant, var(--primary-text-color));
     position: relative;
     overflow: hidden;
+    border-radius: 16px;
   }
 
   .menu-item::before {
     content: "";
     position: absolute;
     inset: 0;
+    border-radius: inherit;
     background: currentColor;
     opacity: 0;
     pointer-events: none;
@@ -1379,6 +1382,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     background: var(--md-sys-color-tertiary-container, var(--md-sys-color-secondary-container));
     color: var(--md-sys-color-on-tertiary-container, var(--md-sys-color-on-secondary-container));
     font-weight: 500;
+    border-radius: 28px;
   }
 
   .menu-item ha-icon {
@@ -1392,8 +1396,8 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
 
   .divider {
     height: 1px;
-    background: var(--md-sys-color-outline-variant, var(--divider-color, rgba(0,0,0,0.08)));
-    margin: 8px 0;
+    background: var(--md-sys-color-outline-variant, var(--divider-color, rgba(0, 0, 0, 0.08)));
+    margin: 8px 16px;
   }
 `];class It extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config={...t}}get _schema(){return[{name:"entity",selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"position",selector:{select:{options:[{value:"below",label:"Below"},{value:"above",label:"Above"}],mode:"dropdown"}}}]}get _optionSchema(){return[{name:"label",selector:{text:{}}},{name:"value",required:!0,selector:{text:{}}},{name:"icon",selector:{icon:{}}}]}static styles=s`
     .options-header {
