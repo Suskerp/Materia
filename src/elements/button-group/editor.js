@@ -13,53 +13,40 @@ class MateriaButtonGroupEditor extends LitElement {
   }
 
   get _schema() {
-    return [
+    const presetOptions = [
+      ...Object.keys(PRESETS).map((k) => ({
+        value: k,
+        label: k.charAt(0).toUpperCase() + k.slice(1).replace(/-/g, " "),
+      })),
+      { value: "custom", label: "Custom" },
+    ];
+
+    const base = [
       { name: "entity", selector: { entity: {} } },
       { name: "attribute", selector: { text: {} } },
-      {
-        name: "preset",
-        selector: {
-          select: {
-            options: [
-              { value: "", label: "None" },
-              ...Object.keys(PRESETS).map((k) => ({ value: k, label: k })),
-            ],
-            mode: "dropdown",
-          },
-        },
-      },
-      {
-        name: "size",
-        selector: {
-          select: {
-            options: [
-              { value: "xs", label: "XS (32dp)" },
-              { value: "s",  label: "S (40dp)" },
-              { value: "m",  label: "M (48dp)" },
-              { value: "l",  label: "L (56dp)" },
-              { value: "xl", label: "XL (64dp)" },
-            ],
-            mode: "dropdown",
-          },
-        },
-      },
-      {
-        name: "variant",
-        selector: {
-          select: {
-            options: [
-              { value: "filled", label: "Filled" },
-              { value: "tonal", label: "Tonal" },
-              { value: "outlined", label: "Outlined" },
-              { value: "elevated", label: "Elevated" },
-            ],
-            mode: "dropdown",
-          },
-        },
-      },
-      { name: "color_active", selector: { text: {} } },
-      { name: "color_on_active", selector: { text: {} } },
+      { name: "preset", label: "Color preset", selector: { select: { options: presetOptions, mode: "dropdown" } } },
+      { name: "size", selector: { select: { options: [
+        { value: "xs", label: "XS (32dp)" },
+        { value: "s",  label: "S (40dp)" },
+        { value: "m",  label: "M (48dp)" },
+        { value: "l",  label: "L (56dp)" },
+        { value: "xl", label: "XL (64dp)" },
+      ], mode: "dropdown" } } },
+      { name: "variant", label: "Style", selector: { select: { options: [
+        { value: "filled", label: "Filled" },
+        { value: "tonal", label: "Tonal" },
+      ], mode: "dropdown" } } },
     ];
+
+    if (this._config?.preset === "custom") {
+      base.push(
+        { name: "color_active", label: "Active color (CSS)", selector: { text: {} } },
+        { name: "color_on_active", label: "Active text color (CSS)", selector: { text: {} } },
+      );
+    }
+
+    base.push({ name: "optimistic", selector: { boolean: {} } });
+    return base;
   }
 
   static styles = css`

@@ -4,6 +4,7 @@ import { hostStyles, haCardReset } from "../../styles/card-styles.js";
 export const PRESETS = {
   primary:        { active: "var(--md-sys-color-primary)",                          onActive: "var(--md-sys-color-on-primary)" },
   secondary:      { active: "var(--md-sys-color-secondary)",                        onActive: "var(--md-sys-color-on-secondary)" },
+  tertiary:       { active: "var(--md-sys-color-tertiary)",                         onActive: "var(--md-sys-color-on-tertiary)" },
   "climate-heat": { active: "var(--md-sys-cust-color-climate-heat-container)",      onActive: "var(--md-sys-cust-color-on-climate-heat)" },
   "climate-cool": { active: "var(--md-sys-cust-color-climate-cool-container)",      onActive: "var(--md-sys-cust-color-on-climate-cool)" },
   "climate-auto": { active: "var(--md-sys-cust-color-climate-auto-container)",      onActive: "var(--md-sys-cust-color-on-climate-auto)" },
@@ -79,18 +80,6 @@ export const styles = [
     button.inactive.tonal {
       background: var(--md-sys-color-secondary-container, var(--ha-card-background));
       color: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
-    }
-
-    button.inactive.outlined {
-      background: transparent;
-      color: var(--primary-text-color);
-      border: 1px solid var(--md-sys-color-outline, rgba(0,0,0,0.12));
-    }
-
-    button.inactive.elevated {
-      background: var(--md-sys-color-surface, var(--ha-card-background));
-      color: var(--primary-text-color);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
     }
 
     button ha-icon {

@@ -9,6 +9,7 @@ class MateriaClimate extends ActionMixin(LitElement) {
     return {
       hass: { attribute: false },
       config: { state: true },
+      _optimisticTemp: { state: true },
     };
   }
 
@@ -42,6 +43,7 @@ class MateriaClimate extends ActionMixin(LitElement) {
   }
 
   get _targetTemp() {
+    if (this._optimisticTemp != null) return this._optimisticTemp;
     return this._entity?.attributes?.temperature;
   }
 
@@ -131,10 +133,26 @@ class MateriaClimate extends ActionMixin(LitElement) {
   _adjustTemp(delta) {
     const temp = this._targetTemp;
     if (temp == null) return;
+    const newTemp = temp + delta;
+    if (this.config.optimistic) this._optimisticTemp = newTemp;
     this.hass.callService("climate", "set_temperature", {
       entity_id: this.config.entity,
-      temperature: temp + delta,
+      temperature: newTemp,
     });
+    clearTimeout(this._optimisticTimer);
+    this._optimisticTimer = setTimeout(() => {
+      this._optimisticTemp = null;
+    }, 10000);
+  }
+
+  updated(changedProps) {
+    if (changedProps.has("hass") && this._optimisticTemp != null) {
+      const actual = this._entity?.attributes?.temperature;
+      if (actual === this._optimisticTemp) {
+        this._optimisticTemp = null;
+        clearTimeout(this._optimisticTimer);
+      }
+    }
   }
 
   _handleTap(e) {

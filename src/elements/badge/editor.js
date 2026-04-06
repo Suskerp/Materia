@@ -44,6 +44,8 @@ class MateriaBadgeEditor extends LitElement {
       { name: "state_display", selector: { template: {} } },
       { name: "color", selector: { template: {} } },
       { name: "color_on", selector: { template: {} } },
+      { name: "tap_action", selector: { ui_action: { default_action: "toggle" } } },
+      { name: "double_tap_action", selector: { ui_action: { default_action: "none" } } },
     ];
   }
 

@@ -8,6 +8,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
+    _optimisticValue: { state: true },
   };
 
   static getConfigElement() {
@@ -55,6 +56,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
   }
 
   get _activeValue() {
+    if (this._optimisticValue != null) return this._optimisticValue;
     const entity = this.hass?.states[this.config.entity];
     if (this.config.attribute) return String(entity?.attributes?.[this.config.attribute] ?? "");
     return entity?.state ?? "";
@@ -126,10 +128,29 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
   }
 
   _handleOptionTap(opt) {
+    if (this.config.optimistic) {
+      this._optimisticValue = String(opt.value);
+      clearTimeout(this._optimisticTimer);
+      this._optimisticTimer = setTimeout(() => { this._optimisticValue = null; }, 10000);
+    }
+
     if (opt.tap_action) {
       this._handleAction(opt.tap_action);
     } else if (this.config.entity) {
       this._fireMoreInfo(this.config.entity);
+    }
+  }
+
+  updated(changedProps) {
+    if (changedProps.has("hass") && this._optimisticValue != null) {
+      const entity = this.hass?.states[this.config.entity];
+      const actual = this.config.attribute
+        ? String(entity?.attributes?.[this.config.attribute] ?? "")
+        : entity?.state ?? "";
+      if (actual === this._optimisticValue) {
+        this._optimisticValue = null;
+        clearTimeout(this._optimisticTimer);
+      }
     }
   }
 

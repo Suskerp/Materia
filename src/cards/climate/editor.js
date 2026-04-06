@@ -8,6 +8,7 @@ class MateriaClimateEditor extends BaseEditor {
       { name: "humidity_entity", selector: { entity: { domain: "sensor" } } },
       { name: "outdoor_temp_entity", selector: { entity: { domain: "sensor" } } },
       { name: "step", selector: { number: { min: 0.5, max: 5, step: 0.5, mode: "box" } } },
+      { name: "optimistic", selector: { boolean: {} } },
     ];
   }
 }

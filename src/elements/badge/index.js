@@ -146,6 +146,7 @@ class MateriaBadge extends ActionMixin(LitElement) {
         class="${cardClass} ${activeClass} ${unavailable ? 'unavailable' : ''}"
         style="background-color: ${bgColor}; color: ${textColor};"
         @click=${this._handleTap}
+        @dblclick=${this._handleDoubleTap}
       >
         <div class="icon-cell">
           <ha-icon .icon=${this.config.icon} style="color: ${textColor};"></ha-icon>
@@ -157,7 +158,22 @@ class MateriaBadge extends ActionMixin(LitElement) {
   }
 
   _handleTap() {
-    this._handleAction(this.config.tap_action || { action: "toggle" });
+    if (this.config.double_tap_action?.action && this.config.double_tap_action.action !== "none") {
+      if (this._dblClickTimer) return;
+      this._dblClickTimer = setTimeout(() => {
+        this._dblClickTimer = null;
+        this._handleAction(this.config.tap_action || { action: "toggle" });
+      }, 250);
+    } else {
+      this._handleAction(this.config.tap_action || { action: "toggle" });
+    }
+  }
+
+  _handleDoubleTap() {
+    if (!this.config.double_tap_action?.action || this.config.double_tap_action.action === "none") return;
+    clearTimeout(this._dblClickTimer);
+    this._dblClickTimer = null;
+    this._handleAction(this.config.double_tap_action);
   }
 
   getCardSize() {
