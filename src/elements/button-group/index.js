@@ -85,7 +85,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     if (!this.hass || !this.config) return html``;
 
     const stateObj = this.config.entity ? this.hass.states[this.config.entity] : undefined;
-    const unavailable = this.config.entity ? this._isUnavailable(stateObj) : false;
+    const unavailable = stateObj ? (stateObj.state === "unavailable" || stateObj.state === "unknown") : false;
 
     const sizeKey = this.config.size || "m";
     const { height, innerCorner } = SIZES[sizeKey] || SIZES.m;
@@ -102,7 +102,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     return html`
       <ha-card>
         <div class="group ${unavailable ? 'unavailable' : ''} ${multiSelect ? 'multi' : ''}"
-          style="${!multiSelect ? `height: ${height}px;` : ''} ${columns ? `--btn-columns: ${columns};` : ''}">
+          style="${!multiSelect ? `height: ${height}px;` : `--btn-height: ${height}px;`} ${columns ? `--btn-columns: ${columns};` : ''}">
           ${options.map((opt, i) => {
             const isActive = this._isOptionActive(opt);
             const isFirst = i === 0;
@@ -110,7 +110,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
 
             let radius;
             if (multiSelect) {
-              radius = `${outerR}px`;
+              radius = isActive ? `${innerCorner}px` : `${outerR}px`;
             } else {
               const ir = isActive ? `${outerR}px` : `${innerCorner}px`;
               const or = `${outerR}px`;

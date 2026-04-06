@@ -91,7 +91,8 @@ export const styles = [
 
     .group.multi button {
       flex: 1 0 calc(100% / var(--btn-columns, 4) - 4px);
-      min-height: 40px;
+      height: var(--btn-height);
+      transition: border-radius 0.2s ease, background-color 0.2s ease, color 0.2s ease;
     }
 
     button ha-icon {
