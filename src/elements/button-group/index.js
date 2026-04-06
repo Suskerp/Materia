@@ -110,7 +110,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
 
             let radius;
             if (multiSelect) {
-              radius = isActive ? `${innerCorner}px` : `${outerR}px`;
+              radius = isActive ? `${outerR}px` : `${innerCorner}px`;
             } else {
               const ir = isActive ? `${outerR}px` : `${innerCorner}px`;
               const or = `${outerR}px`;

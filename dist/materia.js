@@ -1034,7 +1034,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       <ha-card>
         <div class="group ${e?"unavailable":""} ${l?"multi":""}"
           style="${l?`--btn-height: ${o}px;`:`height: ${o}px;`} ${h?`--btn-columns: ${h};`:""}">
-          ${r.map((t,e)=>{const i=this._isOptionActive(t),o=0===e,h=e===r.length-1;let d;if(l)d=i?`${n}px`:`${s}px`;else{const t=i?`${s}px`:`${n}px`,e=`${s}px`;d=1===r.length?e:o?`${e} ${t} ${t} ${e}`:h?`${t} ${e} ${e} ${t}`:t}const p=i?a.active:void 0,u=i?a.onActive:void 0;return H`
+          ${r.map((t,e)=>{const i=this._isOptionActive(t),o=0===e,h=e===r.length-1;let d;if(l)d=i?`${s}px`:`${n}px`;else{const t=i?`${s}px`:`${n}px`,e=`${s}px`;d=1===r.length?e:o?`${e} ${t} ${t} ${e}`:h?`${t} ${e} ${e} ${t}`:t}const p=i?a.active:void 0,u=i?a.onActive:void 0;return H`
               <button
                 class="${i?"active":"inactive"} ${c}"
                 style="border-radius: ${d};${i?` background: ${p}; color: ${u};`:""}"
