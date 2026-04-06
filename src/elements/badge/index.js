@@ -4,7 +4,7 @@ import { unavailableStyles } from "../../styles/card-styles.js";
 import { styles, VARIANT_COLORS } from "./styles.js";
 import "./editor.js";
 
-class MateriaButton extends ActionMixin(LitElement) {
+class MateriaBadge extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -14,11 +14,13 @@ class MateriaButton extends ActionMixin(LitElement) {
   };
 
   static getConfigElement() {
-    return document.createElement("materia-button-editor");
+    return document.createElement("materia-badge-editor");
   }
 
-  static getStubConfig() {
-    return { name: "", icon: "mdi:power-plug", variant: "primary", show_state: false, active_state: "on" };
+  static getStubConfig(hass) {
+    const entities = hass ? Object.keys(hass.states) : [];
+    const entity = entities.find((e) => e.startsWith("light.") || e.startsWith("switch.")) || "";
+    return { name: "", icon: "mdi:power-plug", variant: "primary", show_state: false, active_state: "on", entity };
   }
 
   static styles = [unavailableStyles, styles];
@@ -150,11 +152,11 @@ class MateriaButton extends ActionMixin(LitElement) {
   }
 }
 
-customElements.define("materia-button", MateriaButton);
+customElements.define("materia-badge", MateriaBadge);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "materia-button",
-  name: "Materia Button",
-  description: "Material You small button with variants, state display, and battery mode.",
+  type: "materia-badge",
+  name: "Materia Badge",
+  description: "Material You small badge with variants, state display, and battery mode.",
 });

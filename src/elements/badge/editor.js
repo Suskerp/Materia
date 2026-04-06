@@ -1,7 +1,7 @@
 import { LitElement, html, css } from "lit";
 import { computeLabel } from "../../utils/editor-helpers.js";
 
-class MateriaButtonEditor extends LitElement {
+class MateriaBadgeEditor extends LitElement {
   static properties = {
     hass: { attribute: false },
     _config: { state: true },
@@ -72,4 +72,4 @@ class MateriaButtonEditor extends LitElement {
   }
 }
 
-customElements.define("materia-button-editor", MateriaButtonEditor);
+customElements.define("materia-badge-editor", MateriaBadgeEditor);

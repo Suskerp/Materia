@@ -8,26 +8,11 @@ class MateriaPillEditor extends BaseEditor {
       { name: "icon", selector: { icon: {} } },
       { name: "color", selector: { template: {} } },
       { name: "color_on", selector: { template: {} } },
+      { name: "humidity_entity", selector: { entity: { domain: "sensor" } } },
+      { name: "unit", selector: { text: {} } },
       {
         name: "tap_action",
-        type: "expandable",
-        schema: [
-          {
-            name: "action",
-            selector: {
-              select: {
-                options: [
-                  { value: "none", label: "None" },
-                  { value: "more-info", label: "More info" },
-                  { value: "navigate", label: "Navigate" },
-                  { value: "toggle", label: "Toggle" },
-                  { value: "call-service", label: "Call service" },
-                ],
-              },
-            },
-          },
-          { name: "navigation_path", selector: { text: {} } },
-        ],
+        selector: { ui_action: {} },
       },
     ];
   }
