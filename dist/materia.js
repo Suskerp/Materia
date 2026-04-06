@@ -868,7 +868,6 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
       display: grid;
       grid-template-columns: 1fr;
       font-family: inherit;
-      transition: background-color 0.3s ease, color 0.3s ease;
       -webkit-tap-highlight-color: transparent;
     }
 

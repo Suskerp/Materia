@@ -31,7 +31,6 @@ export const styles = [
       display: grid;
       grid-template-columns: 1fr;
       font-family: inherit;
-      transition: background-color 0.3s ease, color 0.3s ease;
       -webkit-tap-highlight-color: transparent;
     }
 
