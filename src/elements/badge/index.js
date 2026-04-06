@@ -20,7 +20,7 @@ class MateriaBadge extends ActionMixin(LitElement) {
   static getStubConfig(hass) {
     const entities = hass ? Object.keys(hass.states) : [];
     const entity = entities.find((e) => e.startsWith("light.") || e.startsWith("switch.")) || "";
-    return { name: "", icon: "mdi:power-plug", variant: "primary", show_state: false, active_state: "on", entity };
+    return { name: "Badge", icon: "mdi:power-plug", variant: "primary", show_state: false, active_state: "on", entity };
   }
 
   static styles = [unavailableStyles, styles];
@@ -73,18 +73,21 @@ class MateriaBadge extends ActionMixin(LitElement) {
     return ["var(--ha-card-background)", "var(--primary-text-color)"];
   }
 
-  get _hasTemplates() {
+  _isTemplate(val) {
+    return val && typeof val === "string" && (val.includes("{{") || val.includes("{%"));
+  }
+
+  get _templatesReady() {
     const c = this.config;
-    return ["color", "color_on", "state_display"].some(
-      (k) => c?.[k] && typeof c[k] === "string" && (c[k].includes("{{") || c[k].includes("{%"))
-    );
+    if (this._isTemplate(c.color) && this._resolvedColor === undefined) return false;
+    if (this._isTemplate(c.color_on) && this._resolvedColorOn === undefined) return false;
+    if (this._isTemplate(c.state_display) && this._resolvedStateDisplay === undefined) return false;
+    return true;
   }
 
   render() {
     if (!this.hass || !this.config) return html``;
-    if (this._hasTemplates && !this._resolvedColor && !this._resolvedColorOn && !this._resolvedStateDisplay) {
-      return html``;
-    }
+    if (!this._templatesReady) return html``;
 
     const entity = this.config.entity;
     const stateObj = entity ? this.hass.states[entity] : undefined;

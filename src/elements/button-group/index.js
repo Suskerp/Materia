@@ -29,13 +29,29 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
   static styles = [unavailableStyles, styles];
 
   setConfig(config) {
-    if (!config.options || !Array.isArray(config.options) || config.options.length === 0) {
-      throw new Error("At least one option is required");
-    }
     this.config = {
       size: "m",
       ...config,
     };
+  }
+
+  get _resolvedOptions() {
+    if (this.config.options?.length) return this.config.options;
+    const stateObj = this.hass?.states[this.config.entity];
+    const domain = this.config.entity?.split(".")[0];
+    if ((domain === "input_select" || domain === "select") && stateObj?.attributes?.options) {
+      return stateObj.attributes.options.map(opt => ({
+        label: this._capitalize(opt),
+        value: opt,
+        tap_action: {
+          action: "perform-action",
+          perform_action: `${domain}.select_option`,
+          data: { option: opt },
+          target: { entity_id: this.config.entity },
+        },
+      }));
+    }
+    return [];
   }
 
   get _activeValue() {
@@ -65,8 +81,9 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     const outerR = height / 2;
     const activeValue = this._activeValue;
     const colors = this._getActiveColors();
-    const options = this.config.options;
+    const options = this._resolvedOptions;
     const variant = this.config.variant || "filled";
+    if (!options.length) return html``;
 
     return html`
       <ha-card>

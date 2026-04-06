@@ -113,22 +113,16 @@ class MateriaClimate extends ActionMixin(LitElement) {
     const parts = [];
 
     if (isOff) {
-      if (outdoor != null) parts.push(`Outdoor \u00B7 ${outdoor}\u00B0`);
-      if (humidity != null) parts.push(`Humidity \u00B7 ${humidity}%`);
+      if (outdoor != null) parts.push(`${outdoor}\u00B0`);
+      if (humidity != null) parts.push(`${humidity}%`);
       return parts.join(" \u00B7 ") || "";
     }
 
-    if (current != null && humidity != null) {
-      parts.push(`${current}\u00B0 now \u00B7 ${humidity}% humidity`);
-    } else if (current != null) {
-      parts.push(`${current}\u00B0 now`);
-    } else if (humidity != null) {
-      parts.push(`${humidity}% humidity`);
-    }
+    if (current != null) parts.push(`${current}\u00B0`);
+    if (humidity != null) parts.push(`${humidity}%`);
 
     if (outdoor != null) {
-      const label = mode.charAt(0).toUpperCase() + mode.slice(1);
-      parts.push(`${label} \u00B7 Outdoor ${outdoor}\u00B0`);
+      parts.push(`${outdoor}\u00B0`);
     }
 
     return parts.join(" \u00B7 ") || "";

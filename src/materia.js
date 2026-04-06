@@ -22,7 +22,6 @@ import "./elements/button-group/index.js";
 import "./elements/icon-button/index.js";
 import "./elements/checkbox/index.js";
 import "./elements/pill/index.js";
-import "./elements/select/index.js";
 
 // Inject Figtree font globally
 injectFonts();
