@@ -78,6 +78,8 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     margin-right: 16px;
     flex-shrink: 0;
     transition: transform 0.2s ease;
+    cursor: pointer;
+    pointer-events: auto;
   }
 
   .chevron.open {
@@ -109,12 +111,19 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
   }
 
   .dropdown {
-    background: var(--md-sys-color-surface-container-low, var(--ha-card-background));
-    border-radius: 16px;
+    background: var(--ha-card-background, var(--card-background-color));
     padding: 8px;
-    margin: 4px 0;
+    margin: 2px 0;
     box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
                 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+  }
+
+  .below .dropdown {
+    border-radius: 8px 8px 16px 16px;
+  }
+
+  .above .dropdown {
+    border-radius: 16px 16px 8px 8px;
   }
 
   .menu-item {

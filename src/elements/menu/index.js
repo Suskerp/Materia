@@ -25,7 +25,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
   }
 
   setConfig(config) {
-    this.config = { ...config };
+    this.config = { position: "below", ...config };
     this._open = false;
   }
 

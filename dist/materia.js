@@ -1314,6 +1314,8 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     margin-right: 16px;
     flex-shrink: 0;
     transition: transform 0.2s ease;
+    cursor: pointer;
+    pointer-events: auto;
   }
 
   .chevron.open {
@@ -1345,12 +1347,19 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
   }
 
   .dropdown {
-    background: var(--md-sys-color-surface-container-low, var(--ha-card-background));
-    border-radius: 16px;
+    background: var(--ha-card-background, var(--card-background-color));
     padding: 8px;
-    margin: 4px 0;
+    margin: 2px 0;
     box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
                 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+  }
+
+  .below .dropdown {
+    border-radius: 8px 8px 16px 16px;
+  }
+
+  .above .dropdown {
+    border-radius: 16px 16px 8px 8px;
   }
 
   .menu-item {
@@ -1494,7 +1503,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
                 `:""}
           </div>
         `)}
-    `:q``}_valueChanged(t){const e={...this._config,...t.detail.value};this._config=e,this._fireConfigChanged(e)}_addOption(){const t=[...this._config.options||[],{label:"",value:"",icon:""}],e={...this._config,options:t};this._config=e,this._expanded=t.length-1,this._fireConfigChanged(e)}_removeOption(t){const e=[...this._config.options||[]];e.splice(t,1);const i={...this._config,options:e};this._config=i,this._expanded===t&&(this._expanded=null),this._fireConfigChanged(i)}_moveOption(t,e){const i=[...this._config.options||[]],o=t+e;if(o<0||o>=i.length)return;[i[t],i[o]]=[i[o],i[t]];const n={...this._config,options:i};this._config=n,this._expanded===t&&(this._expanded=o),this._fireConfigChanged(n)}_updateOptionForm(t,e){const i=[...this._config.options||[]];i[t]={...i[t],...e};const o={...this._config,options:i};this._config=o,this._fireConfigChanged(o)}_toggleExpand(t){this._expanded=this._expanded===t?null:t,this.requestUpdate()}_fireConfigChanged(t){this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-menu-editor",It);class Vt extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_open:{state:!0},_optimisticValue:{state:!0}};static styles=Lt;static getConfigElement(){return document.createElement("materia-menu-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("input_select.")||t.startsWith("select."))||"";return{entity:e}}setConfig(t){this.config={...t},this._open=!1}get _resolvedOptions(){if(this.config.options?.length)return this.config.options;const t=this.hass?.states[this.config.entity],e=this.config.entity?.split(".")[0];return"input_select"!==e&&"select"!==e||!t?.attributes?.options?[]:t.attributes.options.map(t=>({label:this._capitalize(t),value:t}))}get _currentValue(){return null!=this._optimisticValue?this._optimisticValue:this.hass?.states[this.config.entity]?.state??""}_toggle(){this._open=!this._open}_selectOption(t){const e=t.value;this._optimisticValue=e,this._open=!1;const i=this.config.entity?.split(".")[0];"input_select"!==i&&"select"!==i||this.hass.callService(i,"select_option",{entity_id:this.config.entity,option:e}),clearTimeout(this._optimisticTimer),this._optimisticTimer=setTimeout(()=>{this._optimisticValue=null},1e4)}connectedCallback(){super.connectedCallback(),this._outsideClickHandler=t=>{this._open&&!this.shadowRoot.contains(t.composedPath()[0])&&(this._open=!1)},document.addEventListener("click",this._outsideClickHandler)}disconnectedCallback(){super.disconnectedCallback(),document.removeEventListener("click",this._outsideClickHandler)}updated(t){if(t.has("hass")&&null!=this._optimisticValue){const t=this.hass?.states[this.config.entity]?.state;t===this._optimisticValue&&(this._optimisticValue=null,clearTimeout(this._optimisticTimer))}}render(){if(!this.hass||!this.config)return q``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=this._resolvedOptions,o=this._currentValue,n=i.find(t=>t.value===o)?.label||this._capitalize(o),s=this.config.name||t?.attributes?.friendly_name||"";return q`
+    `:q``}_valueChanged(t){const e={...this._config,...t.detail.value};this._config=e,this._fireConfigChanged(e)}_addOption(){const t=[...this._config.options||[],{label:"",value:"",icon:""}],e={...this._config,options:t};this._config=e,this._expanded=t.length-1,this._fireConfigChanged(e)}_removeOption(t){const e=[...this._config.options||[]];e.splice(t,1);const i={...this._config,options:e};this._config=i,this._expanded===t&&(this._expanded=null),this._fireConfigChanged(i)}_moveOption(t,e){const i=[...this._config.options||[]],o=t+e;if(o<0||o>=i.length)return;[i[t],i[o]]=[i[o],i[t]];const n={...this._config,options:i};this._config=n,this._expanded===t&&(this._expanded=o),this._fireConfigChanged(n)}_updateOptionForm(t,e){const i=[...this._config.options||[]];i[t]={...i[t],...e};const o={...this._config,options:i};this._config=o,this._fireConfigChanged(o)}_toggleExpand(t){this._expanded=this._expanded===t?null:t,this.requestUpdate()}_fireConfigChanged(t){this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-menu-editor",It);class Vt extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_open:{state:!0},_optimisticValue:{state:!0}};static styles=Lt;static getConfigElement(){return document.createElement("materia-menu-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("input_select.")||t.startsWith("select."))||"";return{entity:e}}setConfig(t){this.config={position:"below",...t},this._open=!1}get _resolvedOptions(){if(this.config.options?.length)return this.config.options;const t=this.hass?.states[this.config.entity],e=this.config.entity?.split(".")[0];return"input_select"!==e&&"select"!==e||!t?.attributes?.options?[]:t.attributes.options.map(t=>({label:this._capitalize(t),value:t}))}get _currentValue(){return null!=this._optimisticValue?this._optimisticValue:this.hass?.states[this.config.entity]?.state??""}_toggle(){this._open=!this._open}_selectOption(t){const e=t.value;this._optimisticValue=e,this._open=!1;const i=this.config.entity?.split(".")[0];"input_select"!==i&&"select"!==i||this.hass.callService(i,"select_option",{entity_id:this.config.entity,option:e}),clearTimeout(this._optimisticTimer),this._optimisticTimer=setTimeout(()=>{this._optimisticValue=null},1e4)}connectedCallback(){super.connectedCallback(),this._outsideClickHandler=t=>{this._open&&!this.shadowRoot.contains(t.composedPath()[0])&&(this._open=!1)},document.addEventListener("click",this._outsideClickHandler)}disconnectedCallback(){super.disconnectedCallback(),document.removeEventListener("click",this._outsideClickHandler)}updated(t){if(t.has("hass")&&null!=this._optimisticValue){const t=this.hass?.states[this.config.entity]?.state;t===this._optimisticValue&&(this._optimisticValue=null,clearTimeout(this._optimisticTimer))}}render(){if(!this.hass||!this.config)return q``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=this._resolvedOptions,o=this._currentValue,n=i.find(t=>t.value===o)?.label||this._capitalize(o),s=this.config.name||t?.attributes?.friendly_name||"";return q`
       <ha-card>
         <div class="trigger ${e?"unavailable":""} ${this._open?"above"===this.config.position?"open-above":"open-below":""}" @click=${this._toggle}>
           ${this.config.icon?q`
