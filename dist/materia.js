@@ -1323,12 +1323,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
 
   .chevron {
     --mdc-icon-size: 20px;
-    transition: transform 0.2s ease;
     pointer-events: none;
-  }
-
-  .chevron.open {
-    transform: rotate(180deg);
   }
 
   .dropdown-wrapper {
@@ -1356,8 +1351,8 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
   }
 
   .dropdown {
-    background: var(--md-sys-color-tertiary-container, var(--ha-card-background));
-    color: var(--md-sys-color-on-tertiary-container, var(--primary-text-color));
+    background: var(--ha-card-background, var(--card-background-color));
+    color: var(--primary-text-color);
     padding: 8px;
     margin: 2px 0;
     box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
@@ -1381,7 +1376,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     cursor: pointer;
     font-size: 14px;
     font-weight: 400;
-    color: var(--md-sys-color-on-tertiary-container, var(--primary-text-color));
+    color: var(--primary-text-color);
     position: relative;
     overflow: hidden;
     border-radius: 16px;
@@ -1526,7 +1521,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
             <div class="value">${n}</div>
           </div>
           <div class="chevron-btn" @click=${t=>{t.stopPropagation(),this._toggle()}}>
-            <ha-icon class="chevron ${this._open?"open":""}" icon="mdi:arrow-drop-down"></ha-icon>
+            <ha-icon class="chevron" icon=${this._open?"m3of:arrow-drop-up":"m3of:arrow-drop-down"}></ha-icon>
           </div>
         </div>
         <div class="dropdown-wrapper ${this._open?"open":""} ${"above"===this.config.position?"above":"below"}">

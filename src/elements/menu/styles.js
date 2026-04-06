@@ -87,12 +87,7 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
 
   .chevron {
     --mdc-icon-size: 20px;
-    transition: transform 0.2s ease;
     pointer-events: none;
-  }
-
-  .chevron.open {
-    transform: rotate(180deg);
   }
 
   .dropdown-wrapper {
@@ -120,8 +115,8 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
   }
 
   .dropdown {
-    background: var(--md-sys-color-tertiary-container, var(--ha-card-background));
-    color: var(--md-sys-color-on-tertiary-container, var(--primary-text-color));
+    background: var(--ha-card-background, var(--card-background-color));
+    color: var(--primary-text-color);
     padding: 8px;
     margin: 2px 0;
     box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
@@ -145,7 +140,7 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     cursor: pointer;
     font-size: 14px;
     font-weight: 400;
-    color: var(--md-sys-color-on-tertiary-container, var(--primary-text-color));
+    color: var(--primary-text-color);
     position: relative;
     overflow: hidden;
     border-radius: 16px;

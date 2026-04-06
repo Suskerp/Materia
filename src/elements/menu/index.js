@@ -117,7 +117,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
             <div class="value">${currentLabel}</div>
           </div>
           <div class="chevron-btn" @click=${(e) => { e.stopPropagation(); this._toggle(); }}>
-            <ha-icon class="chevron ${this._open ? "open" : ""}" icon="mdi:arrow-drop-down"></ha-icon>
+            <ha-icon class="chevron" icon=${this._open ? "m3of:arrow-drop-up" : "m3of:arrow-drop-down"}></ha-icon>
           </div>
         </div>
         <div class="dropdown-wrapper ${this._open ? "open" : ""} ${this.config.position === "above" ? "above" : "below"}">
