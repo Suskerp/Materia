@@ -70,7 +70,8 @@ export const styles = [
     }
 
     ha-card.no-state .name {
-      margin: 10px 10px 14px 6px;
+      margin: 0 10px 10px 6px;
+      align-self: end;
     }
 
     ha-card.with-state .name {
