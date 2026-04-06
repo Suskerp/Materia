@@ -106,7 +106,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
 
     return html`
       <ha-card>
-        <div class="trigger ${unavailable ? "unavailable" : ""}" @click=${this._toggle}>
+        <div class="trigger ${unavailable ? "unavailable" : ""} ${this._open ? (this.config.position === "above" ? "open-above" : "open-below") : ""}" @click=${this._toggle}>
           ${this.config.icon ? html`
             <div class="icon-container">
               <ha-icon .icon=${this.config.icon}></ha-icon>

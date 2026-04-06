@@ -1258,6 +1258,15 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     box-sizing: border-box;
     cursor: pointer;
     z-index: 1;
+    transition: border-radius 0.2s ease;
+  }
+
+  .trigger.open-below {
+    border-radius: 28px 28px 12px 12px;
+  }
+
+  .trigger.open-above {
+    border-radius: 12px 12px 28px 28px;
   }
 
   .icon-container {
@@ -1337,7 +1346,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
 
   .dropdown {
     background: var(--md-sys-color-surface-container-low, var(--ha-card-background));
-    border-radius: 20px;
+    border-radius: 16px;
     padding: 8px;
     margin: 4px 0;
     box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
@@ -1382,7 +1391,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     background: var(--md-sys-color-tertiary-container, var(--md-sys-color-secondary-container));
     color: var(--md-sys-color-on-tertiary-container, var(--md-sys-color-on-secondary-container));
     font-weight: 500;
-    border-radius: 28px;
+    border-radius: 12px;
   }
 
   .menu-item ha-icon {
@@ -1487,7 +1496,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         `)}
     `:q``}_valueChanged(t){const e={...this._config,...t.detail.value};this._config=e,this._fireConfigChanged(e)}_addOption(){const t=[...this._config.options||[],{label:"",value:"",icon:""}],e={...this._config,options:t};this._config=e,this._expanded=t.length-1,this._fireConfigChanged(e)}_removeOption(t){const e=[...this._config.options||[]];e.splice(t,1);const i={...this._config,options:e};this._config=i,this._expanded===t&&(this._expanded=null),this._fireConfigChanged(i)}_moveOption(t,e){const i=[...this._config.options||[]],o=t+e;if(o<0||o>=i.length)return;[i[t],i[o]]=[i[o],i[t]];const n={...this._config,options:i};this._config=n,this._expanded===t&&(this._expanded=o),this._fireConfigChanged(n)}_updateOptionForm(t,e){const i=[...this._config.options||[]];i[t]={...i[t],...e};const o={...this._config,options:i};this._config=o,this._fireConfigChanged(o)}_toggleExpand(t){this._expanded=this._expanded===t?null:t,this.requestUpdate()}_fireConfigChanged(t){this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-menu-editor",It);class Vt extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_open:{state:!0},_optimisticValue:{state:!0}};static styles=Lt;static getConfigElement(){return document.createElement("materia-menu-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("input_select.")||t.startsWith("select."))||"";return{entity:e}}setConfig(t){this.config={...t},this._open=!1}get _resolvedOptions(){if(this.config.options?.length)return this.config.options;const t=this.hass?.states[this.config.entity],e=this.config.entity?.split(".")[0];return"input_select"!==e&&"select"!==e||!t?.attributes?.options?[]:t.attributes.options.map(t=>({label:this._capitalize(t),value:t}))}get _currentValue(){return null!=this._optimisticValue?this._optimisticValue:this.hass?.states[this.config.entity]?.state??""}_toggle(){this._open=!this._open}_selectOption(t){const e=t.value;this._optimisticValue=e,this._open=!1;const i=this.config.entity?.split(".")[0];"input_select"!==i&&"select"!==i||this.hass.callService(i,"select_option",{entity_id:this.config.entity,option:e}),clearTimeout(this._optimisticTimer),this._optimisticTimer=setTimeout(()=>{this._optimisticValue=null},1e4)}connectedCallback(){super.connectedCallback(),this._outsideClickHandler=t=>{this._open&&!this.shadowRoot.contains(t.composedPath()[0])&&(this._open=!1)},document.addEventListener("click",this._outsideClickHandler)}disconnectedCallback(){super.disconnectedCallback(),document.removeEventListener("click",this._outsideClickHandler)}updated(t){if(t.has("hass")&&null!=this._optimisticValue){const t=this.hass?.states[this.config.entity]?.state;t===this._optimisticValue&&(this._optimisticValue=null,clearTimeout(this._optimisticTimer))}}render(){if(!this.hass||!this.config)return q``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=this._resolvedOptions,o=this._currentValue,n=i.find(t=>t.value===o)?.label||this._capitalize(o),s=this.config.name||t?.attributes?.friendly_name||"";return q`
       <ha-card>
-        <div class="trigger ${e?"unavailable":""}" @click=${this._toggle}>
+        <div class="trigger ${e?"unavailable":""} ${this._open?"above"===this.config.position?"open-above":"open-below":""}" @click=${this._toggle}>
           ${this.config.icon?q`
             <div class="icon-container">
               <ha-icon .icon=${this.config.icon}></ha-icon>

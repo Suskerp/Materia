@@ -22,6 +22,15 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     box-sizing: border-box;
     cursor: pointer;
     z-index: 1;
+    transition: border-radius 0.2s ease;
+  }
+
+  .trigger.open-below {
+    border-radius: 28px 28px 12px 12px;
+  }
+
+  .trigger.open-above {
+    border-radius: 12px 12px 28px 28px;
   }
 
   .icon-container {
@@ -101,7 +110,7 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
 
   .dropdown {
     background: var(--md-sys-color-surface-container-low, var(--ha-card-background));
-    border-radius: 20px;
+    border-radius: 16px;
     padding: 8px;
     margin: 4px 0;
     box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
@@ -146,7 +155,7 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     background: var(--md-sys-color-tertiary-container, var(--md-sys-color-secondary-container));
     color: var(--md-sys-color-on-tertiary-container, var(--md-sys-color-on-secondary-container));
     font-weight: 500;
-    border-radius: 28px;
+    border-radius: 12px;
   }
 
   .menu-item ha-icon {
