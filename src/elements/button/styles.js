@@ -17,6 +17,7 @@ export const styles = [
   hostStyles,
   css`
     :host {
+      display: inline-block;
       margin-bottom: 10px;
     }
 
@@ -70,7 +71,7 @@ export const styles = [
     }
 
     ha-card.no-state .name {
-      margin: 10px 10px 22px 6px;
+      margin: 10px 10px 14px 6px;
     }
 
     ha-card.with-state .name {

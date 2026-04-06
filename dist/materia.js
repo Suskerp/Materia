@@ -854,6 +854,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
       </ha-card>
     `}_handleTap(){this.config.tap_action?this._handleAction(this.config.tap_action):this._fireMoreInfo(this.config.entity)}getCardSize(){return 1}}customElements.define("materia-sensor-display",Dt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-sensor-display",name:"Materia Sensor Display",description:"Sensor display with range-to-label classification (AQI, etc.)."});const Nt={primary:["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],secondary:["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],tertiary:["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],error:["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],device:["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-container":["var(--md-sys-color-primary-container)","var(--md-sys-color-on-primary-container)"],"secondary-container":["var(--md-sys-color-secondary-container)","var(--md-sys-color-secondary)"],"error-container":["var(--md-sys-color-error-container)","var(--md-sys-color-error)"],"device-container":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"]},qt=[ut,o`
     :host {
+      display: inline-block;
       margin-bottom: 10px;
     }
 
@@ -907,7 +908,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,E=C?C.createPolicy("lit-html",{create
     }
 
     ha-card.no-state .name {
-      margin: 10px 10px 22px 6px;
+      margin: 10px 10px 14px 6px;
     }
 
     ha-card.with-state .name {
