@@ -134,7 +134,7 @@ class MateriaClimate extends ActionMixin(LitElement) {
     const temp = this._targetTemp;
     if (temp == null) return;
     const newTemp = temp + delta;
-    if (this.config.optimistic) this._optimisticTemp = newTemp;
+    this._optimisticTemp = newTemp;
     this.hass.callService("climate", "set_temperature", {
       entity_id: this.config.entity,
       temperature: newTemp,

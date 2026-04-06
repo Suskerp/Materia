@@ -1,8 +1,7 @@
 import { LitElement, html, css } from "lit";
 import { computeLabel } from "../../utils/editor-helpers.js";
-import { PRESETS } from "./styles.js";
 
-class MateriaButtonGroupEditor extends LitElement {
+class MateriaMenuEditor extends LitElement {
   static properties = {
     hass: { attribute: false },
     _config: { state: true },
@@ -13,39 +12,19 @@ class MateriaButtonGroupEditor extends LitElement {
   }
 
   get _schema() {
-    const presetOptions = [
-      ...Object.keys(PRESETS).map((k) => ({
-        value: k,
-        label: k.charAt(0).toUpperCase() + k.slice(1).replace(/-/g, " "),
-      })),
-      { value: "custom", label: "Custom" },
-    ];
-
-    const base = [
+    return [
       { name: "entity", selector: { entity: {} } },
-      { name: "attribute", selector: { text: {} } },
-      { name: "preset", label: "Color preset", selector: { select: { options: presetOptions, mode: "dropdown" } } },
-      { name: "size", selector: { select: { options: [
-        { value: "xs", label: "XS (32dp)" },
-        { value: "s",  label: "S (40dp)" },
-        { value: "m",  label: "M (48dp)" },
-        { value: "l",  label: "L (56dp)" },
-        { value: "xl", label: "XL (64dp)" },
-      ], mode: "dropdown" } } },
-      { name: "variant", label: "Style", selector: { select: { options: [
-        { value: "filled", label: "Filled" },
-        { value: "tonal", label: "Tonal" },
-      ], mode: "dropdown" } } },
+      { name: "name", selector: { text: {} } },
+      { name: "icon", selector: { icon: {} } },
     ];
+  }
 
-    if (this._config?.preset === "custom") {
-      base.push(
-        { name: "color_active", label: "Active color (CSS)", selector: { text: {} } },
-        { name: "color_on_active", label: "Active text color (CSS)", selector: { text: {} } },
-      );
-    }
-
-    return base;
+  get _optionSchema() {
+    return [
+      { name: "label", selector: { text: {} } },
+      { name: "value", required: true, selector: { text: {} } },
+      { name: "icon", selector: { icon: {} } },
+    ];
   }
 
   static styles = css`
@@ -89,6 +68,8 @@ class MateriaButtonGroupEditor extends LitElement {
       width: 100%;
     }
   `;
+
+  _expanded = null;
 
   render() {
     if (!this.hass || !this._config) return html``;
@@ -145,30 +126,6 @@ class MateriaButtonGroupEditor extends LitElement {
     `;
   }
 
-  _expanded = null;
-
-  get _optionSchema() {
-    return [
-      { name: "label", selector: { text: {} } },
-      { name: "value", required: true, selector: { text: {} } },
-      { name: "icon", selector: { icon: {} } },
-      { name: "tap_action", label: "Action", selector: { ui_action: { default_action: "call-service" } } },
-    ];
-  }
-
-  _updateOptionForm(index, value) {
-    const options = [...(this._config.options || [])];
-    options[index] = { ...options[index], ...value };
-    const updated = { ...this._config, options };
-    this._config = updated;
-    this._fireConfigChanged(updated);
-  }
-
-  _toggleExpand(i) {
-    this._expanded = this._expanded === i ? null : i;
-    this.requestUpdate();
-  }
-
   _valueChanged(ev) {
     const updated = { ...this._config, ...ev.detail.value };
     this._config = updated;
@@ -203,12 +160,17 @@ class MateriaButtonGroupEditor extends LitElement {
     this._fireConfigChanged(updated);
   }
 
-  _updateOption(index, key, value) {
+  _updateOptionForm(index, value) {
     const options = [...(this._config.options || [])];
-    options[index] = { ...options[index], [key]: value };
+    options[index] = { ...options[index], ...value };
     const updated = { ...this._config, options };
     this._config = updated;
     this._fireConfigChanged(updated);
+  }
+
+  _toggleExpand(i) {
+    this._expanded = this._expanded === i ? null : i;
+    this.requestUpdate();
   }
 
   _fireConfigChanged(config) {
@@ -222,4 +184,4 @@ class MateriaButtonGroupEditor extends LitElement {
   }
 }
 
-customElements.define("materia-button-group-editor", MateriaButtonGroupEditor);
+customElements.define("materia-menu-editor", MateriaMenuEditor);

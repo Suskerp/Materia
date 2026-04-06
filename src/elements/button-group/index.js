@@ -128,11 +128,9 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
   }
 
   _handleOptionTap(opt) {
-    if (this.config.optimistic) {
-      this._optimisticValue = String(opt.value);
-      clearTimeout(this._optimisticTimer);
-      this._optimisticTimer = setTimeout(() => { this._optimisticValue = null; }, 10000);
-    }
+    this._optimisticValue = String(opt.value);
+    clearTimeout(this._optimisticTimer);
+    this._optimisticTimer = setTimeout(() => { this._optimisticValue = null; }, 10000);
 
     if (opt.tap_action) {
       this._handleAction(opt.tap_action);
