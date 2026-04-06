@@ -65,8 +65,8 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
   _isOptionActive(opt) {
     if (this.config.multi_select) {
       const stateStr = this._activeValue;
-      const values = stateStr.split(",").map(v => v.trim()).filter(Boolean);
-      return values.includes(String(opt.value));
+      const values = stateStr.split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
+      return values.includes(String(opt.value).toLowerCase());
     }
     return String(opt.value) === this._activeValue;
   }
