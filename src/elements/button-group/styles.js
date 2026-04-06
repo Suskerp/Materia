@@ -82,6 +82,18 @@ export const styles = [
       color: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
     }
 
+    .group.multi {
+      flex-wrap: wrap;
+      gap: 4px;
+      height: auto !important;
+      border-radius: 0;
+    }
+
+    .group.multi button {
+      flex: 1 0 calc(100% / var(--btn-columns, 4) - 4px);
+      min-height: 40px;
+    }
+
     button ha-icon {
       --mdc-icon-size: 18px;
       flex-shrink: 0;

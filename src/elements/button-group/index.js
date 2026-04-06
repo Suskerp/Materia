@@ -62,6 +62,15 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     return entity?.state ?? "";
   }
 
+  _isOptionActive(opt) {
+    if (this.config.multi_select) {
+      const stateStr = this._activeValue;
+      const values = stateStr.split(",").map(v => v.trim()).filter(Boolean);
+      return values.includes(String(opt.value));
+    }
+    return String(opt.value) === this._activeValue;
+  }
+
   _getActiveColors() {
     if (this.config.color_active && this.config.color_on_active) {
       return { active: this.config.color_active, onActive: this.config.color_on_active };
@@ -87,26 +96,33 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     const variant = this.config.variant || "filled";
     if (!options.length) return html``;
 
+    const multiSelect = this.config.multi_select;
+    const columns = this.config.columns || 0;
+
     return html`
       <ha-card>
-        <div class="group ${unavailable ? 'unavailable' : ''}" style="height: ${height}px;">
+        <div class="group ${unavailable ? 'unavailable' : ''} ${multiSelect ? 'multi' : ''}"
+          style="${!multiSelect ? `height: ${height}px;` : ''} ${columns ? `--btn-columns: ${columns};` : ''}">
           ${options.map((opt, i) => {
-            const isActive = String(opt.value) === activeValue;
+            const isActive = this._isOptionActive(opt);
             const isFirst = i === 0;
             const isLast = i === options.length - 1;
 
-            const ir = isActive ? `${outerR}px` : `${innerCorner}px`;
-            const or = `${outerR}px`;
-
             let radius;
-            if (options.length === 1) {
-              radius = or;
-            } else if (isFirst) {
-              radius = `${or} ${ir} ${ir} ${or}`;
-            } else if (isLast) {
-              radius = `${ir} ${or} ${or} ${ir}`;
+            if (multiSelect) {
+              radius = `${outerR}px`;
             } else {
-              radius = ir;
+              const ir = isActive ? `${outerR}px` : `${innerCorner}px`;
+              const or = `${outerR}px`;
+              if (options.length === 1) {
+                radius = or;
+              } else if (isFirst) {
+                radius = `${or} ${ir} ${ir} ${or}`;
+              } else if (isLast) {
+                radius = `${ir} ${or} ${or} ${ir}`;
+              } else {
+                radius = ir;
+              }
             }
 
             const bg = isActive ? colors.active : undefined;
@@ -128,9 +144,11 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
   }
 
   _handleOptionTap(opt) {
-    this._optimisticValue = String(opt.value);
-    clearTimeout(this._optimisticTimer);
-    this._optimisticTimer = setTimeout(() => { this._optimisticValue = null; }, 10000);
+    if (!this.config.multi_select) {
+      this._optimisticValue = String(opt.value);
+      clearTimeout(this._optimisticTimer);
+      this._optimisticTimer = setTimeout(() => { this._optimisticValue = null; }, 10000);
+    }
 
     if (opt.tap_action) {
       this._handleAction(opt.tap_action);
