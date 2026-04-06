@@ -99,11 +99,17 @@ class MateriaBadge extends ActionMixin(LitElement) {
     let bgColor = this._resolvedColor || this.config.color;
     let textColor = this._resolvedColorOn || this.config.color_on;
 
+    const alwaysColoredVariants = ["primary", "tertiary", "error", "primary-container", "secondary-container", "error-container", "device-container"];
+
     if (!bgColor) {
       if (variant === "battery") {
         const [bg, fg] = this._getBatteryColors(stateObj);
         bgColor = bg;
         textColor = fg;
+      } else if (alwaysColoredVariants.includes(variant)) {
+        const colors = VARIANT_COLORS[variant] || VARIANT_COLORS.secondary;
+        bgColor = colors[0];
+        textColor = textColor || colors[1];
       } else if (active && entity) {
         const colors = VARIANT_COLORS[variant] || VARIANT_COLORS.secondary;
         bgColor = colors[0];
@@ -112,13 +118,6 @@ class MateriaBadge extends ActionMixin(LitElement) {
         bgColor = "var(--ha-card-background)";
         textColor = textColor || "var(--primary-text-color)";
       }
-    }
-
-    const staticVariants = ["primary", "tertiary", "error", "primary-container", "secondary-container", "error-container", "device-container"];
-    if (!entity && !this.config.color && staticVariants.includes(variant)) {
-      const colors = VARIANT_COLORS[variant] || VARIANT_COLORS.secondary;
-      bgColor = colors[0];
-      textColor = colors[1];
     }
 
     textColor = textColor || "var(--primary-text-color)";

@@ -787,9 +787,9 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         .computeLabel=${_t}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:q``}_valueChanged(t){this._config={...this._config,...t.detail.value},this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:this._config},bubbles:!0,composed:!0}))}}customElements.define("materia-badge-editor",St);class Ut extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedStateDisplay:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0}};static getConfigElement(){return document.createElement("materia-badge-editor")}static getStubConfig(t){const e=(t?Object.keys(t.states):[]).find(t=>t.startsWith("light.")||t.startsWith("switch."))||"";return{name:"Badge",icon:"mdi:power-plug",variant:"primary",show_state:!1,active_state:"on",entity:e}}static styles=[pt,Et];setConfig(t){if(!t.icon)throw new Error("icon is required");if(!t.name)throw new Error("name is required");this.config={show_state:!1,active_state:"on",variant:"secondary",tap_action:{action:"toggle"},...t}}updated(t){super.updated?.(t),t.has("hass")&&this.hass&&(this._resolveField("state_display","_resolvedStateDisplay"),this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"))}_resolveField(t,e){const i=this.config?.[t];i&&"string"==typeof i&&(i.includes("{{")||i.includes("{%"))&&this._renderTemplate(i).then(t=>{const i="string"==typeof t?t.trim():t;i!==this[e]&&(this[e]=i)})}_isActive(t){if(!t)return!1;const e=t.state,i=this.config.active_state||"on";return e===String(i)||"open"===e}_getBatteryColors(t){const e=parseFloat(t?.state)||0;return e<10?["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"]:e<20?["var(--md-sys-cust-color-warning-container)","var(--md-sys-cust-color-on-warning-container)"]:["var(--ha-card-background)","var(--primary-text-color)"]}_isTemplate(t){return t&&"string"==typeof t&&(t.includes("{{")||t.includes("{%"))}get _templatesReady(){const t=this.config;return(!this._isTemplate(t.color)||void 0!==this._resolvedColor)&&((!this._isTemplate(t.color_on)||void 0!==this._resolvedColorOn)&&(!this._isTemplate(t.state_display)||void 0!==this._resolvedStateDisplay))}render(){if(!this.hass||!this.config)return q``;if(!this._templatesReady)return q``;const t=this.config.entity,e=t?this.hass.states[t]:void 0,i=!!t&&this._isUnavailable(e),o=!i&&this._isActive(e),n=this.config.variant||"secondary",s=this.config.show_state;let a=this._resolvedColor||this.config.color,r=this._resolvedColorOn||this.config.color_on;if(!a)if("battery"===n){const[t,i]=this._getBatteryColors(e);a=t,r=i}else if(o&&t){const t=At[n]||At.secondary;a=t[0],r=r||t[1]}else a="var(--ha-card-background)",r=r||"var(--primary-text-color)";if(!t&&!this.config.color&&["primary","tertiary","error","primary-container","secondary-container","error-container","device-container"].includes(n)){const t=At[n]||At.secondary;a=t[0],r=t[1]}r=r||"var(--primary-text-color)";const c=s?"with-state":"no-state",l=o?"active":"inactive";let h="";if(s&&i)h="Unavailable";else if(s&&e){const t=this.config.state_display&&(this.config.state_display.includes("{{")||this.config.state_display.includes("{%"));h=this._resolvedStateDisplay&&t?this._resolvedStateDisplay:this.config.state_display&&!t?this.config.state_display:e.state,h=this._capitalize(h)}return q`
+    `:q``}_valueChanged(t){this._config={...this._config,...t.detail.value},this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:this._config},bubbles:!0,composed:!0}))}}customElements.define("materia-badge-editor",St);class Ut extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedStateDisplay:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0}};static getConfigElement(){return document.createElement("materia-badge-editor")}static getStubConfig(t){const e=(t?Object.keys(t.states):[]).find(t=>t.startsWith("light.")||t.startsWith("switch."))||"";return{name:"Badge",icon:"mdi:power-plug",variant:"primary",show_state:!1,active_state:"on",entity:e}}static styles=[pt,Et];setConfig(t){if(!t.icon)throw new Error("icon is required");if(!t.name)throw new Error("name is required");this.config={show_state:!1,active_state:"on",variant:"secondary",tap_action:{action:"toggle"},...t}}updated(t){super.updated?.(t),t.has("hass")&&this.hass&&(this._resolveField("state_display","_resolvedStateDisplay"),this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"))}_resolveField(t,e){const i=this.config?.[t];i&&"string"==typeof i&&(i.includes("{{")||i.includes("{%"))&&this._renderTemplate(i).then(t=>{const i="string"==typeof t?t.trim():t;i!==this[e]&&(this[e]=i)})}_isActive(t){if(!t)return!1;const e=t.state,i=this.config.active_state||"on";return e===String(i)||"open"===e}_getBatteryColors(t){const e=parseFloat(t?.state)||0;return e<10?["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"]:e<20?["var(--md-sys-cust-color-warning-container)","var(--md-sys-cust-color-on-warning-container)"]:["var(--ha-card-background)","var(--primary-text-color)"]}_isTemplate(t){return t&&"string"==typeof t&&(t.includes("{{")||t.includes("{%"))}get _templatesReady(){const t=this.config;return(!this._isTemplate(t.color)||void 0!==this._resolvedColor)&&((!this._isTemplate(t.color_on)||void 0!==this._resolvedColorOn)&&(!this._isTemplate(t.state_display)||void 0!==this._resolvedStateDisplay))}render(){if(!this.hass||!this.config)return q``;if(!this._templatesReady)return q``;const t=this.config.entity,e=t?this.hass.states[t]:void 0,i=!!t&&this._isUnavailable(e),o=!i&&this._isActive(e),n=this.config.variant||"secondary",s=this.config.show_state;let a=this._resolvedColor||this.config.color,r=this._resolvedColorOn||this.config.color_on;const c=["primary","tertiary","error","primary-container","secondary-container","error-container","device-container"];if(!a)if("battery"===n){const[t,i]=this._getBatteryColors(e);a=t,r=i}else if(c.includes(n)){const t=At[n]||At.secondary;a=t[0],r=r||t[1]}else if(o&&t){const t=At[n]||At.secondary;a=t[0],r=r||t[1]}else a="var(--ha-card-background)",r=r||"var(--primary-text-color)";r=r||"var(--primary-text-color)";const l=s?"with-state":"no-state",h=o?"active":"inactive";let d="";if(s&&i)d="Unavailable";else if(s&&e){const t=this.config.state_display&&(this.config.state_display.includes("{{")||this.config.state_display.includes("{%"));d=this._resolvedStateDisplay&&t?this._resolvedStateDisplay:this.config.state_display&&!t?this.config.state_display:e.state,d=this._capitalize(d)}return q`
       <ha-card
-        class="${c} ${l} ${i?"unavailable":""}"
+        class="${l} ${h} ${i?"unavailable":""}"
         style="background-color: ${a}; color: ${r};"
         @click=${this._handleTap}
         @dblclick=${this._handleDoubleTap}
@@ -798,7 +798,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
           <ha-icon .icon=${this.config.icon} style="color: ${r};"></ha-icon>
         </div>
         <div class="name">${this.config.name}</div>
-        ${s?q`<div class="state">${h}</div>`:""}
+        ${s?q`<div class="state">${d}</div>`:""}
       </ha-card>
     `}_handleTap(){if(this.config.double_tap_action?.action&&"none"!==this.config.double_tap_action.action){if(this._dblClickTimer)return;this._dblClickTimer=setTimeout(()=>{this._dblClickTimer=null,this._handleAction(this.config.tap_action||{action:"toggle"})},250)}else this._handleAction(this.config.tap_action||{action:"toggle"})}_handleDoubleTap(){this.config.double_tap_action?.action&&"none"!==this.config.double_tap_action.action&&(clearTimeout(this._dblClickTimer),this._dblClickTimer=null,this._handleAction(this.config.double_tap_action))}getCardSize(){return 2}}customElements.define("materia-badge",Ut),window.customCards=window.customCards||[],window.customCards.push({type:"materia-badge",name:"Materia Badge",description:"Square badge for dashboard headers.",preview:!0});const Tt={primary:{active:"var(--md-sys-color-primary)",onActive:"var(--md-sys-color-on-primary)"},secondary:{active:"var(--md-sys-color-secondary)",onActive:"var(--md-sys-color-on-secondary)"},tertiary:{active:"var(--md-sys-color-tertiary)",onActive:"var(--md-sys-color-on-tertiary)"},"climate-heat":{active:"var(--md-sys-cust-color-climate-heat-container)",onActive:"var(--md-sys-cust-color-on-climate-heat)"},"climate-cool":{active:"var(--md-sys-cust-color-climate-cool-container)",onActive:"var(--md-sys-cust-color-on-climate-cool)"},"climate-auto":{active:"var(--md-sys-cust-color-climate-auto-container)",onActive:"var(--md-sys-cust-color-on-climate-auto)"},light:{active:"var(--md-sys-cust-color-light-container)",onActive:"var(--md-sys-cust-color-on-light)"},device:{active:"var(--md-sys-cust-color-device-container)",onActive:"var(--md-sys-cust-color-on-device)"}},zt={xs:{height:32,innerCorner:4},s:{height:40,innerCorner:8},m:{height:48,innerCorner:8},l:{height:56,innerCorner:16},xl:{height:64,innerCorner:20}},Ot=[ut,dt,s`
     .group {
@@ -1241,10 +1241,9 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
   .trigger {
     position: relative;
     width: 100%;
-    min-height: 88px;
+    min-height: 56px;
     background-color: var(--ha-card-background, var(--card-background-color));
     border-radius: 28px;
-    overflow: hidden;
     display: flex;
     align-items: center;
     box-sizing: border-box;
@@ -1309,14 +1308,15 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
   }
 
   .dropdown-wrapper.open {
-    max-height: 500px;
+    max-height: 600px;
   }
 
   .dropdown {
     background: var(--md-sys-color-surface-container-low, var(--ha-card-background));
-    border-radius: 0 0 16px 16px;
-    padding: 4px 0;
-    margin-top: 2px;
+    border-radius: 12px;
+    padding: 8px 0;
+    margin-top: 4px;
+    box-shadow: 0px 1px 2px 0px rgba(0,0,0,0.3), 0px 2px 6px 2px rgba(0,0,0,0.15);
   }
 
   .menu-item {
@@ -1324,15 +1324,13 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     align-items: center;
     gap: 12px;
     height: 48px;
-    padding: 0 12px;
+    padding: 0 16px;
     cursor: pointer;
     font-size: 14px;
     font-weight: 400;
     color: var(--md-sys-color-on-surface, var(--primary-text-color));
     position: relative;
     overflow: hidden;
-    border-radius: 12px;
-    margin: 0 4px;
   }
 
   .menu-item::before {
@@ -1366,6 +1364,12 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
 
   .menu-item .item-text {
     flex: 1;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--md-sys-color-outline-variant, var(--divider-color, rgba(0,0,0,0.08)));
+    margin: 8px 0;
   }
 `];class It extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config={...t}}get _schema(){return[{name:"entity",selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}}}]}get _optionSchema(){return[{name:"label",selector:{text:{}}},{name:"value",required:!0,selector:{text:{}}},{name:"icon",selector:{icon:{}}}]}static styles=s`
     .options-header {
