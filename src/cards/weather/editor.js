@@ -5,7 +5,7 @@ class MateriaWeatherEditor extends BaseEditor {
     return [
       { name: "entity", required: true, selector: { entity: { domain: "weather" } } },
       { name: "name", selector: { text: {} } },
-      { name: "icon", selector: { icon: {} } },
+      { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
       { name: "humidity_entity", selector: { entity: { domain: "sensor" } } },
       { name: "tap_action", selector: { ui_action: { default_action: "more-info" } } },
     ];

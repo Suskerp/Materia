@@ -10,6 +10,7 @@ class MateriaClimate extends ActionMixin(LitElement) {
       hass: { attribute: false },
       config: { state: true },
       _optimisticTemp: { state: true },
+      _resolvedName: { state: true },
     };
   }
 
@@ -146,6 +147,9 @@ class MateriaClimate extends ActionMixin(LitElement) {
   }
 
   updated(changedProps) {
+    if (changedProps.has("hass") && this.hass) {
+      this._resolveField("name", "_resolvedName");
+    }
     if (changedProps.has("hass") && this._optimisticTemp != null) {
       const actual = this._entity?.attributes?.temperature;
       if (actual === this._optimisticTemp) {
@@ -206,7 +210,7 @@ class MateriaClimate extends ActionMixin(LitElement) {
             style="color: ${this._modeColor()}; --mdc-icon-size: 20px;"
           ></ha-icon>
           <span class="name" style="color: ${this._modeColor()};">
-            ${this.config.name}
+            ${this._isTemplate(this.config.name) ? this._resolvedName : this.config.name}
           </span>
         </div>
 

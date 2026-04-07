@@ -5,7 +5,7 @@ class MateriaPillEditor extends BaseEditor {
     return [
       { name: "entity", required: true, selector: { entity: {} } },
       { name: "name", selector: { text: {} } },
-      { name: "icon", selector: { icon: {} } },
+      { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
       { name: "color", selector: { template: {} } },
       { name: "color_on", selector: { template: {} } },
       { name: "background", selector: { boolean: {} } },

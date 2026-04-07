@@ -9,24 +9,44 @@ class MateriaIconButtonEditor extends LitElement {
 
   static styles = css`
     :host { display: block; }
-    .yaml-label {
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .mapping-card {
+      border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+      border-radius: 12px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .mapping-header {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 4px 4px 12px;
+      background: var(--secondary-background-color, rgba(0,0,0,0.04));
+    }
+    .mapping-header span {
+      flex: 1;
       font-size: 13px;
       font-weight: 500;
-      margin: 8px 0 4px;
-      color: var(--secondary-text-color);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
-    textarea {
+    .mapping-body {
+      padding: 8px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .mapping-body ha-form {
+      display: block;
       width: 100%;
-      min-height: 80px;
-      box-sizing: border-box;
-      font-family: monospace;
-      font-size: 12px;
-      border: 1px solid var(--divider-color, #e0e0e0);
-      border-radius: 4px;
-      padding: 6px;
-      resize: vertical;
-      background: var(--card-background-color, #fff);
-      color: var(--primary-text-color, #000);
     }
   `;
 
@@ -36,7 +56,7 @@ class MateriaIconButtonEditor extends LitElement {
 
   get _schema() {
     return [
-      { name: "icon", required: true, selector: { icon: {} } },
+      { name: "icon", required: true, selector: { icon: {} }, context: { icon_entity: "entity" } },
       {
         name: "variant",
         selector: {
@@ -62,11 +82,29 @@ class MateriaIconButtonEditor extends LitElement {
         },
       },
       { name: "entity", selector: { entity: {} } },
+      { name: "disabled", selector: { template: {} } },
+      { name: "tap_action", label: "Default action", selector: { ui_action: {} } },
     ];
   }
 
+  get _mappingSchema() {
+    return [
+      { name: "state", required: true, selector: { text: {} } },
+      { name: "tap_action", label: "Action", selector: { ui_action: {} } },
+    ];
+  }
+
+  get _stateMappings() {
+    const map = this._config.tap_action_map || {};
+    return Object.keys(map).map(state => ({ state, tap_action: map[state] }));
+  }
+
+  _expanded = null;
+
   render() {
     if (!this.hass || !this._config) return html``;
+    const mappings = this._stateMappings;
+
     return html`
       <ha-form
         .hass=${this.hass}
@@ -76,54 +114,83 @@ class MateriaIconButtonEditor extends LitElement {
         @value-changed=${this._valueChanged}
       ></ha-form>
 
-      <div class="yaml-label">Icon map (JSON, state &rarr; icon)</div>
-      <textarea
-        .value=${this._config.icon_map ? JSON.stringify(this._config.icon_map, null, 2) : ""}
-        @change=${this._iconMapChanged}
-      ></textarea>
+      <div class="section-header">
+        <span>Action mappings</span>
+        <ha-icon-button @click=${this._addMapping}>
+          <ha-icon icon="mdi:plus"></ha-icon>
+        </ha-icon-button>
+      </div>
 
-      <div class="yaml-label">Tap action (JSON)</div>
-      <textarea
-        .value=${this._config.tap_action ? JSON.stringify(this._config.tap_action, null, 2) : ""}
-        @change=${this._tapActionChanged}
-      ></textarea>
+      ${mappings.map(
+        (m, i) => html`
+          <div class="mapping-card">
+            <div class="mapping-header">
+              <span>${m.state || `Mapping ${i + 1}`}</span>
+              <ha-icon-button @click=${() => this._toggleExpand(i)}>
+                <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
+              </ha-icon-button>
+              <ha-icon-button @click=${() => this._removeMapping(i)}>
+                <ha-icon icon="mdi:delete"></ha-icon>
+              </ha-icon-button>
+            </div>
+            ${this._expanded === i
+              ? html`
+                  <div class="mapping-body">
+                    <ha-form
+                      .hass=${this.hass}
+                      .data=${m}
+                      .schema=${this._mappingSchema}
+                      .computeLabel=${computeLabel}
+                      @value-changed=${(e) => this._updateMapping(i, e.detail.value)}
+                    ></ha-form>
+                  </div>
+                `
+              : ""}
+          </div>
+        `
+      )}
     `;
   }
 
+  _toggleExpand(i) {
+    this._expanded = this._expanded === i ? null : i;
+    this.requestUpdate();
+  }
+
   _valueChanged(ev) {
-    const updated = {
-      ...this._config,
-      ...ev.detail.value,
-      icon_map: this._config.icon_map,
-      tap_action: this._config.tap_action,
-    };
+    const updated = { ...this._config, ...ev.detail.value };
     this._fireConfig(updated);
   }
 
-  _iconMapChanged(ev) {
-    const raw = ev.target.value.trim();
-    if (!raw) {
-      const { icon_map: _, ...rest } = this._config;
-      this._fireConfig(rest);
-      return;
-    }
-    try {
-      const parsed = JSON.parse(raw);
-      this._fireConfig({ ...this._config, icon_map: parsed });
-    } catch (_) {}
+  _addMapping() {
+    const mappings = [...this._stateMappings, { state: "" }];
+    this._applyMappings(mappings);
+    this._expanded = mappings.length - 1;
   }
 
-  _tapActionChanged(ev) {
-    const raw = ev.target.value.trim();
-    if (!raw) {
-      const { tap_action: _, ...rest } = this._config;
-      this._fireConfig(rest);
-      return;
+  _removeMapping(index) {
+    const mappings = [...this._stateMappings];
+    mappings.splice(index, 1);
+    this._applyMappings(mappings);
+    if (this._expanded === index) this._expanded = null;
+  }
+
+  _updateMapping(index, value) {
+    const mappings = [...this._stateMappings];
+    mappings[index] = { ...mappings[index], ...value };
+    this._applyMappings(mappings);
+  }
+
+  _applyMappings(mappings) {
+    const { tap_action_map, ...rest } = this._config;
+    const newMap = {};
+    for (const m of mappings) {
+      if (m.state && m.tap_action) newMap[m.state] = m.tap_action;
     }
-    try {
-      const parsed = JSON.parse(raw);
-      this._fireConfig({ ...this._config, tap_action: parsed });
-    } catch (_) {}
+    const updated = Object.keys(newMap).length
+      ? { ...rest, tap_action_map: newMap }
+      : rest;
+    this._fireConfig(updated);
   }
 
   _fireConfig(config) {

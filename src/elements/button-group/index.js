@@ -9,6 +9,8 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     hass: { attribute: false },
     config: { state: true },
     _optimisticValue: { state: true },
+    _resolvedColorActive: { state: true },
+    _resolvedColorOnActive: { state: true },
   };
 
   static getConfigElement() {
@@ -72,8 +74,10 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
   }
 
   _getActiveColors() {
-    if (this.config.color_active && this.config.color_on_active) {
-      return { active: this.config.color_active, onActive: this.config.color_on_active };
+    const colorActive = this._resolvedColorActive || this.config.color_active;
+    const colorOnActive = this._resolvedColorOnActive || this.config.color_on_active;
+    if (colorActive && colorOnActive) {
+      return { active: colorActive, onActive: colorOnActive };
     }
     if (this.config.preset && PRESETS[this.config.preset]) {
       return PRESETS[this.config.preset];
@@ -174,6 +178,10 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
   }
 
   updated(changedProps) {
+    if (changedProps.has("hass") && this.hass) {
+      this._resolveField("color_active", "_resolvedColorActive");
+      this._resolveField("color_on_active", "_resolvedColorOnActive");
+    }
     if (changedProps.has("hass") && this._optimisticValue != null) {
       const entity = this.hass?.states[this.config.entity];
       const actual = this.config.attribute

@@ -5,13 +5,13 @@ class MateriaRoomEditor extends BaseEditor {
     return [
       { name: "entity", required: true, selector: { entity: {} } },
       { name: "name", selector: { text: {} } },
-      { name: "icon", selector: { icon: {} } },
+      { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
       {
         name: "entity_type",
         selector: { select: { options: ["light", "cover"] } },
       },
       { name: "columns", selector: { number: { min: 1, max: 6 } } },
-      { name: "color_on", selector: { text: {} } },
+      { name: "color_on", selector: { template: {} } },
     ];
   }
 }

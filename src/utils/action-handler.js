@@ -70,6 +70,22 @@ export const ActionMixin = (superClass) =>
       return str.charAt(0).toUpperCase() + str.slice(1);
     }
 
+    /** Check if a value is a Jinja2 template string. */
+    _isTemplate(val) {
+      return val && typeof val === "string" && (val.includes("{{") || val.includes("{%"));
+    }
+
+    /** Resolve a config field that may be a Jinja2 template into a reactive property. */
+    _resolveField(configKey, propKey) {
+      const val = this.config?.[configKey];
+      if (this._isTemplate(val)) {
+        this._renderTemplate(val).then(result => {
+          const trimmed = typeof result === "string" ? result.trim() : result;
+          if (trimmed !== this[propKey]) this[propKey] = trimmed;
+        });
+      }
+    }
+
     /**
      * Render a Jinja2 template via HA's REST API.
      * Returns the raw value if it doesn't contain {{ }}.

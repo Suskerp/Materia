@@ -42,8 +42,8 @@ class MateriaButtonGroupEditor extends LitElement {
 
     if (this._config?.preset === "custom") {
       base.push(
-        { name: "color_active", label: "Active color (CSS)", selector: { text: {} } },
-        { name: "color_on_active", label: "Active text color (CSS)", selector: { text: {} } },
+        { name: "color_active", label: "Active color", selector: { template: {} } },
+        { name: "color_on_active", label: "Active text color", selector: { template: {} } },
       );
     }
 

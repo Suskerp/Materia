@@ -11,6 +11,8 @@ class MateriaBadge extends ActionMixin(LitElement) {
     _resolvedStateDisplay: { state: true },
     _resolvedColor: { state: true },
     _resolvedColorOn: { state: true },
+    _resolvedIcon: { state: true },
+    _resolvedName: { state: true },
   };
 
   static getConfigElement() {
@@ -43,16 +45,8 @@ class MateriaBadge extends ActionMixin(LitElement) {
     this._resolveField("state_display", "_resolvedStateDisplay");
     this._resolveField("color", "_resolvedColor");
     this._resolveField("color_on", "_resolvedColorOn");
-  }
-
-  _resolveField(configKey, propKey) {
-    const val = this.config?.[configKey];
-    if (val && typeof val === "string" && (val.includes("{{") || val.includes("{%"))) {
-      this._renderTemplate(val).then(result => {
-        const trimmed = typeof result === "string" ? result.trim() : result;
-        if (trimmed !== this[propKey]) this[propKey] = trimmed;
-      });
-    }
+    this._resolveField("icon", "_resolvedIcon");
+    this._resolveField("name", "_resolvedName");
   }
 
   _isActive(stateObj) {
@@ -73,15 +67,13 @@ class MateriaBadge extends ActionMixin(LitElement) {
     return ["var(--ha-card-background)", "var(--primary-text-color)"];
   }
 
-  _isTemplate(val) {
-    return val && typeof val === "string" && (val.includes("{{") || val.includes("{%"));
-  }
-
   get _templatesReady() {
     const c = this.config;
     if (this._isTemplate(c.color) && this._resolvedColor === undefined) return false;
     if (this._isTemplate(c.color_on) && this._resolvedColorOn === undefined) return false;
     if (this._isTemplate(c.state_display) && this._resolvedStateDisplay === undefined) return false;
+    if (this._isTemplate(c.icon) && this._resolvedIcon === undefined) return false;
+    if (this._isTemplate(c.name) && this._resolvedName === undefined) return false;
     return true;
   }
 
@@ -148,9 +140,9 @@ class MateriaBadge extends ActionMixin(LitElement) {
         @dblclick=${this._handleDoubleTap}
       >
         <div class="icon-cell">
-          <ha-icon .icon=${this.config.icon} style="color: ${textColor};"></ha-icon>
+          <ha-icon .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon} style="color: ${textColor};"></ha-icon>
         </div>
-        <div class="name">${this.config.name}</div>
+        <div class="name">${this._isTemplate(this.config.name) ? this._resolvedName : this.config.name}</div>
         ${showState ? html`<div class="state">${stateDisplay}</div>` : ""}
       </ha-card>
     `;

@@ -9,6 +9,8 @@ class MateriaMenu extends ActionMixin(LitElement) {
     config: { state: true },
     _open: { state: true },
     _optimisticValue: { state: true },
+    _resolvedIcon: { state: true },
+    _resolvedName: { state: true },
   };
 
   static styles = styles;
@@ -86,6 +88,10 @@ class MateriaMenu extends ActionMixin(LitElement) {
   }
 
   updated(changedProps) {
+    if (changedProps.has("hass") && this.hass) {
+      this._resolveField("icon", "_resolvedIcon");
+      this._resolveField("name", "_resolvedName");
+    }
     if (changedProps.has("hass") && this._optimisticValue != null) {
       const actual = this.hass?.states[this.config.entity]?.state;
       if (actual === this._optimisticValue) {
@@ -102,14 +108,16 @@ class MateriaMenu extends ActionMixin(LitElement) {
     const options = this._resolvedOptions;
     const currentValue = this._currentValue;
     const currentLabel = options.find((o) => o.value === currentValue)?.label || this._capitalize(currentValue);
-    const name = this.config.name || stateObj?.attributes?.friendly_name || "";
+    const name = this._isTemplate(this.config.name)
+      ? this._resolvedName
+      : (this.config.name || stateObj?.attributes?.friendly_name || "");
 
     return html`
       <ha-card>
         <div class="trigger ${unavailable ? "unavailable" : ""} ${this._open ? (this.config.position === "above" ? "open-above" : "open-below") : ""}" @click=${this._toggle}>
           ${this.config.icon ? html`
             <div class="icon-container">
-              <ha-icon .icon=${this.config.icon}></ha-icon>
+              <ha-icon .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon}></ha-icon>
             </div>
           ` : ""}
           <div class="text-container">

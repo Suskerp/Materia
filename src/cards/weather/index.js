@@ -25,6 +25,8 @@ class MateriaWeather extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
+    _resolvedIcon: { state: true },
+    _resolvedName: { state: true },
   };
 
   static getConfigElement() {
@@ -43,6 +45,13 @@ class MateriaWeather extends ActionMixin(LitElement) {
     this.config = { ...config };
   }
 
+  updated(changedProps) {
+    if (changedProps.has("hass") && this.hass) {
+      this._resolveField("icon", "_resolvedIcon");
+      this._resolveField("name", "_resolvedName");
+    }
+  }
+
   render() {
     if (!this.hass || !this.config) return html``;
 
@@ -52,7 +61,9 @@ class MateriaWeather extends ActionMixin(LitElement) {
     const condition = stateObj?.state ?? "";
     const temp = stateObj?.attributes?.temperature;
     const tempUnit = stateObj?.attributes?.temperature_unit || "\u00B0";
-    const icon = this.config.icon || CONDITION_ICONS[condition] || "mdi:weather-partly-cloudy";
+    const icon = this._isTemplate(this.config.icon)
+      ? this._resolvedIcon
+      : (this.config.icon || CONDITION_ICONS[condition] || "mdi:weather-partly-cloudy");
 
     let humidity = null;
     if (this.config.humidity_entity) {
@@ -66,7 +77,7 @@ class MateriaWeather extends ActionMixin(LitElement) {
     const conditionDisplay = condition.replace(/-|_/g, " ");
     const primary = unavailable
       ? "Unavailable"
-      : this.config.name || (temp != null ? `${temp}${tempUnit}` : "\u2014");
+      : (this._isTemplate(this.config.name) ? this._resolvedName : this.config.name) || (temp != null ? `${temp}${tempUnit}` : "\u2014");
     const secondary = unavailable
       ? ""
       : humidity != null

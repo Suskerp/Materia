@@ -93,6 +93,8 @@ class MateriaCard extends ActionMixin(LitElement) {
     config: { state: true },
     _resolvedColor: { state: true },
     _resolvedColorOn: { state: true },
+    _resolvedIcon: { state: true },
+    _resolvedName: { state: true },
   };
 
   /* ---- Editor plumbing ------------------------------------------ */
@@ -199,15 +201,16 @@ class MateriaCard extends ActionMixin(LitElement) {
   /* ---- Name & icon ---------------------------------------------- */
 
   get _name() {
-    return (
-      this.config.name ||
-      this._stateObj?.attributes?.friendly_name ||
-      this.config.entity
-    );
+    if (this.config.name) {
+      return this._isTemplate(this.config.name) ? this._resolvedName : this.config.name;
+    }
+    return this._stateObj?.attributes?.friendly_name || this.config.entity;
   }
 
   get _icon() {
-    if (this.config.icon) return this.config.icon;
+    if (this.config.icon) {
+      return this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon;
+    }
     if (this._domain === "lock") {
       return this._isActive ? "m3o:lock" : "m3o:lock-open-right";
     }
@@ -284,26 +287,22 @@ class MateriaCard extends ActionMixin(LitElement) {
 
   /* ---- Jinja2 template support ---------------------------------- */
 
+  get _templatesReady() {
+    const c = this.config;
+    if (this._isTemplate(c?.color) && this._resolvedColor === undefined) return false;
+    if (this._isTemplate(c?.color_on) && this._resolvedColorOn === undefined) return false;
+    if (this._isTemplate(c?.icon) && this._resolvedIcon === undefined) return false;
+    if (this._isTemplate(c?.name) && this._resolvedName === undefined) return false;
+    return true;
+  }
+
   updated(changedProps) {
     super.updated?.(changedProps);
     if (!changedProps.has("hass") || !this.hass) return;
     this._resolveField("color", "_resolvedColor");
     this._resolveField("color_on", "_resolvedColorOn");
-  }
-
-  _resolveField(configKey, propKey) {
-    const val = this.config?.[configKey];
-    if (
-      val &&
-      typeof val === "string" &&
-      (val.includes("{{") || val.includes("{%"))
-    ) {
-      this._renderTemplate(val).then((result) => {
-        const trimmed =
-          typeof result === "string" ? result.trim() : result;
-        if (trimmed !== this[propKey]) this[propKey] = trimmed;
-      });
-    }
+    this._resolveField("icon", "_resolvedIcon");
+    this._resolveField("name", "_resolvedName");
   }
 
   /* ---- Pointer tracking (slider) -------------------------------- */
@@ -479,6 +478,7 @@ class MateriaCard extends ActionMixin(LitElement) {
 
   render() {
     if (!this.config || !this.hass) return html``;
+    if (!this._templatesReady) return html``;
 
     const stateObj = this._stateObj;
     const unavailable = this._isUnavailable(stateObj);

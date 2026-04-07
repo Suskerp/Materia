@@ -8,6 +8,7 @@ class MateriaCheckbox extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
+    _resolvedName: { state: true },
   };
 
   static getConfigElement() {
@@ -53,16 +54,21 @@ class MateriaCheckbox extends ActionMixin(LitElement) {
     return s === "on" || s === "true" || s === "home" || (!Number.isNaN(n) && n > 0);
   }
 
+  updated(changedProps) {
+    if (changedProps.has("hass") && this.hass) {
+      this._resolveField("name", "_resolvedName");
+    }
+  }
+
   render() {
     if (!this.hass || !this.config) return html``;
 
     const stateObj = this.hass.states[this.config.entity];
     const unavailable = this._isUnavailable(stateObj);
     const checked = !unavailable && this._isChecked(stateObj);
-    const name =
-      this.config.name ??
-      stateObj?.attributes?.friendly_name ??
-      this.config.entity;
+    const name = this._isTemplate(this.config.name)
+      ? this._resolvedName
+      : (this.config.name ?? stateObj?.attributes?.friendly_name ?? this.config.entity);
     const icon = checked ? "mdi:checkbox-marked" : "mdi:checkbox-blank-outline";
 
     return html`

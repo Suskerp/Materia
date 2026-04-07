@@ -10,6 +10,9 @@ class MateriaRoom extends ActionMixin(LitElement) {
     config: { state: true },
     _expanded: { state: true },
     _childCards: { state: true },
+    _resolvedColorOn: { state: true },
+    _resolvedIcon: { state: true },
+    _resolvedName: { state: true },
   };
 
   static styles = [hostStyles, unavailableStyles, styles];
@@ -53,6 +56,9 @@ class MateriaRoom extends ActionMixin(LitElement) {
     if (this._childCards) {
       this._childCards.forEach((c) => (c.hass = hass));
     }
+    this._resolveField("color_on", "_resolvedColorOn");
+    this._resolveField("icon", "_resolvedIcon");
+    this._resolveField("name", "_resolvedName");
     this.requestUpdate();
   }
 
@@ -129,8 +135,9 @@ class MateriaRoom extends ActionMixin(LitElement) {
     const unavailable = this._isUnavailable(stateObj);
 
     const active = this._isActive;
-    const iconColor = active && this.config.color_on
-      ? this.config.color_on
+    const colorOn = this._resolvedColorOn || this.config.color_on;
+    const iconColor = active && colorOn
+      ? colorOn
       : active
         ? "var(--md-sys-color-primary)"
         : "var(--primary-text-color)";
@@ -142,12 +149,12 @@ class MateriaRoom extends ActionMixin(LitElement) {
           <div class="title-left">
             <ha-icon
               class="entity-icon"
-              .icon=${this.config.icon || "mdi:home"}
+              .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : (this.config.icon || "mdi:home")}
               style="color: ${iconColor}"
               @click=${this._toggleEntity}
             ></ha-icon>
             <div class="info">
-              <div class="name">${this.config.name || ""}</div>
+              <div class="name">${this._isTemplate(this.config.name) ? this._resolvedName : (this.config.name || "")}</div>
               <div class="state">${this._stateDisplay}</div>
             </div>
           </div>

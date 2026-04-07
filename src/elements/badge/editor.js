@@ -19,7 +19,7 @@ class MateriaBadgeEditor extends LitElement {
     return [
       { name: "entity", selector: { entity: {} } },
       { name: "name", required: true, selector: { text: {} } },
-      { name: "icon", required: true, selector: { icon: {} } },
+      { name: "icon", required: true, selector: { icon: {} }, context: { icon_entity: "entity" } },
       {
         name: "variant",
         selector: {

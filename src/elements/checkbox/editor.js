@@ -7,6 +7,9 @@ class MateriaCheckboxEditor extends BaseEditor {
       { name: "name", selector: { text: {} } },
       { name: "checked_entity", selector: { entity: {} } },
       { name: "checked_value", selector: { text: {} } },
+      { name: "tap_action", selector: { ui_action: { default_action: "toggle" } } },
+      { name: "tap_action_checked", label: "Action (checked)", selector: { ui_action: {} } },
+      { name: "tap_action_unchecked", label: "Action (unchecked)", selector: { ui_action: {} } },
     ];
   }
 }

@@ -10,7 +10,7 @@ class MateriaCardEditor extends BaseEditor {
     return [
       { name: "entity", required: true, selector: { entity: {} } },
       { name: "name", selector: { text: {} } },
-      { name: "icon", selector: { icon: {} } },
+      { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
       { name: "variant", selector: { select: { options: ["filled", "tonal"] } } },
       { name: "show_slider", selector: { boolean: {} } },
       { name: "show_sub_buttons", selector: { boolean: {} } },

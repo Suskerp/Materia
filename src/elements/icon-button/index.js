@@ -8,6 +8,7 @@ class MateriaIconButton extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
+    _resolvedIcon: { state: true },
     _resolvedDisabled: { state: true },
   };
 
@@ -30,22 +31,10 @@ class MateriaIconButton extends ActionMixin(LitElement) {
     };
   }
 
-  _isTemplate(val) {
-    return val && typeof val === "string" && (val.includes("{{") || val.includes("{%"));
-  }
-
-  _resolveField(configKey, propKey) {
-    const val = this.config?.[configKey];
-    if (this._isTemplate(val)) {
-      this._renderTemplate(val).then(result => {
-        const trimmed = typeof result === "string" ? result.trim() : result;
-        if (trimmed !== this[propKey]) this[propKey] = trimmed;
-      });
-    }
-  }
-
   get _templatesReady() {
-    if (this._isTemplate(this.config?.disabled) && this._resolvedDisabled === undefined) return false;
+    const c = this.config;
+    if (this._isTemplate(c?.icon) && this._resolvedIcon === undefined) return false;
+    if (this._isTemplate(c?.disabled) && this._resolvedDisabled === undefined) return false;
     return true;
   }
 
@@ -62,14 +51,9 @@ class MateriaIconButton extends ActionMixin(LitElement) {
 
   updated(changedProps) {
     if (changedProps.has("hass") && this.hass) {
+      this._resolveField("icon", "_resolvedIcon");
       this._resolveField("disabled", "_resolvedDisabled");
     }
-  }
-
-  _resolveIcon() {
-    if (!this.config.icon_map || !this.config.entity) return this.config.icon;
-    const state = this.hass?.states[this.config.entity]?.state;
-    return this.config.icon_map[state] ?? this.config.icon_map.default ?? this.config.icon;
   }
 
   _defaultTapAction() {
@@ -87,7 +71,7 @@ class MateriaIconButton extends ActionMixin(LitElement) {
 
     const variant = this.config.variant || "filled";
     const size = this.config.size === "large" ? "large" : "default";
-    const icon = this._resolveIcon();
+    const icon = this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon;
 
     return html`
       <ha-card
