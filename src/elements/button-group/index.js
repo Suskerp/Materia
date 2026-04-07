@@ -110,7 +110,23 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
 
             let radius;
             if (multiSelect) {
-              radius = isActive ? `${outerR}px` : `${innerCorner}px`;
+              if (isActive) {
+                radius = `${outerR}px`;
+              } else {
+                const cols = columns || options.length;
+                const row = Math.floor(i / cols);
+                const col = i % cols;
+                const totalRows = Math.ceil(options.length / cols);
+                const isTopRow = row === 0;
+                const isBottomRow = row === totalRows - 1;
+                const isFirstCol = col === 0;
+                const isLastCol = col === cols - 1 || i === options.length - 1;
+                const tl = (isTopRow && isFirstCol) ? outerR : innerCorner;
+                const tr = (isTopRow && isLastCol) ? outerR : innerCorner;
+                const br = (isBottomRow && isLastCol) ? outerR : innerCorner;
+                const bl = (isBottomRow && isFirstCol) ? outerR : innerCorner;
+                radius = `${tl}px ${tr}px ${br}px ${bl}px`;
+              }
             } else {
               const ir = isActive ? `${outerR}px` : `${innerCorner}px`;
               const or = `${outerR}px`;

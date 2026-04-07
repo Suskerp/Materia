@@ -1034,10 +1034,10 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       <ha-card>
         <div class="group ${e?"unavailable":""} ${l?"multi":""}"
           style="${l?`--btn-height: ${o}px;`:`height: ${o}px;`} ${h?`--btn-columns: ${h};`:""}">
-          ${r.map((t,e)=>{const i=this._isOptionActive(t),o=0===e,h=e===r.length-1;let d;if(l)d=i?`${s}px`:`${n}px`;else{const t=i?`${s}px`:`${n}px`,e=`${s}px`;d=1===r.length?e:o?`${e} ${t} ${t} ${e}`:h?`${t} ${e} ${e} ${t}`:t}const p=i?a.active:void 0,u=i?a.onActive:void 0;return H`
+          ${r.map((t,e)=>{const i=this._isOptionActive(t),o=0===e,d=e===r.length-1;let p;if(l)if(i)p=`${s}px`;else{const t=h||r.length,i=Math.floor(e/t),o=e%t,a=0===i,c=i===Math.ceil(r.length/t)-1,l=0===o,d=o===t-1||e===r.length-1;p=`${a&&l?s:n}px ${a&&d?s:n}px ${c&&d?s:n}px ${c&&l?s:n}px`}else{const t=i?`${s}px`:`${n}px`,e=`${s}px`;p=1===r.length?e:o?`${e} ${t} ${t} ${e}`:d?`${t} ${e} ${e} ${t}`:t}const u=i?a.active:void 0,m=i?a.onActive:void 0;return H`
               <button
                 class="${i?"active":"inactive"} ${c}"
-                style="border-radius: ${d};${i?` background: ${p}; color: ${u};`:""}"
+                style="border-radius: ${p};${i?` background: ${u}; color: ${m};`:""}"
                 @click=${()=>this._handleOptionTap(t)}
               >
                 ${t.icon?H`<ha-icon .icon=${t.icon}></ha-icon>`:""}
