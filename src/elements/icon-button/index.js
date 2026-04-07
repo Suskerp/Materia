@@ -40,11 +40,19 @@ class MateriaIconButton extends ActionMixin(LitElement) {
     return { action: "none" };
   }
 
+  get _disabled() {
+    if (!this.config.entity) return false;
+    const stateObj = this.hass?.states?.[this.config.entity];
+    if (!stateObj || this._isUnavailable(stateObj)) return false;
+    return !stateObj.state?.trim();
+  }
+
   render() {
     if (!this.config) return html``;
 
     const stateObj = this.config.entity ? this.hass?.states?.[this.config.entity] : undefined;
     const unavailable = this.config.entity ? this._isUnavailable(stateObj) : false;
+    const disabled = this._disabled;
 
     const variant = this.config.variant || "filled";
     const size = this.config.size === "large" ? "large" : "default";
@@ -52,7 +60,7 @@ class MateriaIconButton extends ActionMixin(LitElement) {
 
     return html`
       <ha-card
-        class="${variant} size-${size} ${unavailable ? 'unavailable' : ''}"
+        class="${variant} size-${size} ${unavailable ? 'unavailable' : ''} ${disabled ? 'disabled' : ''}"
         @click=${this._handleTap}
       >
         <ha-icon .icon=${icon}></ha-icon>
@@ -70,6 +78,7 @@ class MateriaIconButton extends ActionMixin(LitElement) {
   }
 
   _handleTap() {
+    if (this._disabled) return;
     this._handleAction(this._resolveTapAction());
   }
 

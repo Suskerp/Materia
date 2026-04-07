@@ -1,8 +1,9 @@
 import { css } from "lit";
-import { hostStyles } from "../../styles/card-styles.js";
+import { hostStyles, haCardReset } from "../../styles/card-styles.js";
 
 export const styles = [
   hostStyles,
+  haCardReset,
   css`
     ha-card {
       padding: 0;
@@ -65,5 +66,10 @@ export const styles = [
     }
     ha-card:hover::before  { opacity: 0.08; }
     ha-card:active::before { opacity: 0.12; }
+
+    ha-card.disabled {
+      opacity: 0.38;
+      pointer-events: none;
+    }
   `,
 ];
