@@ -8,6 +8,7 @@ class MateriaIconButton extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
+    _resolvedDisabled: { state: true },
   };
 
   static getConfigElement() {
@@ -29,6 +30,42 @@ class MateriaIconButton extends ActionMixin(LitElement) {
     };
   }
 
+  _isTemplate(val) {
+    return val && typeof val === "string" && (val.includes("{{") || val.includes("{%"));
+  }
+
+  _resolveField(configKey, propKey) {
+    const val = this.config?.[configKey];
+    if (this._isTemplate(val)) {
+      this._renderTemplate(val).then(result => {
+        const trimmed = typeof result === "string" ? result.trim() : result;
+        if (trimmed !== this[propKey]) this[propKey] = trimmed;
+      });
+    }
+  }
+
+  get _templatesReady() {
+    if (this._isTemplate(this.config?.disabled) && this._resolvedDisabled === undefined) return false;
+    return true;
+  }
+
+  get _disabled() {
+    const val = this.config?.disabled;
+    if (val === undefined || val === null) return false;
+    if (typeof val === "boolean") return val;
+    if (this._isTemplate(val)) {
+      const r = this._resolvedDisabled;
+      return r === "True" || r === "true" || r === "1";
+    }
+    return val === "true" || val === "True";
+  }
+
+  updated(changedProps) {
+    if (changedProps.has("hass") && this.hass) {
+      this._resolveField("disabled", "_resolvedDisabled");
+    }
+  }
+
   _resolveIcon() {
     if (!this.config.icon_map || !this.config.entity) return this.config.icon;
     const state = this.hass?.states[this.config.entity]?.state;
@@ -40,15 +77,9 @@ class MateriaIconButton extends ActionMixin(LitElement) {
     return { action: "none" };
   }
 
-  get _disabled() {
-    if (!this.config.entity) return false;
-    const stateObj = this.hass?.states?.[this.config.entity];
-    if (!stateObj || this._isUnavailable(stateObj)) return false;
-    return !stateObj.state?.trim();
-  }
-
   render() {
     if (!this.config) return html``;
+    if (!this._templatesReady) return html``;
 
     const stateObj = this.config.entity ? this.hass?.states?.[this.config.entity] : undefined;
     const unavailable = this.config.entity ? this._isUnavailable(stateObj) : false;
