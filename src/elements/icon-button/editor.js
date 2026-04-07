@@ -54,9 +54,16 @@ class MateriaIconButtonEditor extends LitElement {
     this._config = config;
   }
 
+  _isTemplate(val) {
+    return val && typeof val === "string" && (val.includes("{{") || val.includes("{%"));
+  }
+
   get _schema() {
+    const iconIsTemplate = this._isTemplate(this._config?.icon);
     return [
-      { name: "icon", required: true, selector: { icon: {} }, context: { icon_entity: "entity" } },
+      iconIsTemplate
+        ? { name: "icon", required: true, selector: { template: {} } }
+        : { name: "icon", required: true, selector: { icon: {} }, context: { icon_entity: "entity" } },
       {
         name: "variant",
         selector: {

@@ -37,8 +37,11 @@ class MateriaButtonGroupEditor extends LitElement {
         { value: "tonal", label: "Tonal" },
       ], mode: "dropdown" } } },
       { name: "multi_select", label: "Multi-select", selector: { boolean: {} } },
-      { name: "columns", label: "Max columns", selector: { number: { min: 1, max: 8, mode: "box" } } },
     ];
+
+    if (this._config?.multi_select) {
+      base.push({ name: "columns", label: "Max columns", selector: { number: { min: 1, max: 8, mode: "box" } } });
+    }
 
     if (this._config?.preset === "custom") {
       base.push(

@@ -140,9 +140,7 @@ class MateriaCard extends ActionMixin(LitElement) {
   }
 
   get _variant() {
-    return (
-      this.config.variant || this._domainConfig.variant || "filled"
-    );
+    return this._domainConfig.variant || "filled";
   }
 
   get _isTonal() {
@@ -269,7 +267,12 @@ class MateriaCard extends ActionMixin(LitElement) {
 
     const customColor = this._resolvedColor || this.config.color;
     if (this._isActive) {
-      return customColor || this._domainConfig.colorActive;
+      if (customColor) return customColor;
+      // Non-dimmable lights use solid color since there's no slider fill
+      if (this._domain === "light" && !this._isDimmable) {
+        return this._domainConfig.sliderColor || this._domainConfig.colorActive;
+      }
+      return this._domainConfig.colorActive;
     }
     return "var(--ha-card-background, var(--card-background-color))";
   }
@@ -416,14 +419,14 @@ class MateriaCard extends ActionMixin(LitElement) {
 
     if (this._domain === "light") {
       const brightness = Math.round((pct / 100) * 255);
-      if (brightness <= 3) {
+      if (brightness <= 3 && this.config.slider_turn_off) {
         this.hass.callService("light", "turn_off", {
           entity_id: entityId,
         });
       } else {
         this.hass.callService("light", "turn_on", {
           entity_id: entityId,
-          brightness,
+          brightness: Math.max(brightness, 1),
         });
       }
       return;
