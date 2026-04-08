@@ -2,7 +2,15 @@ import { css } from "lit";
 
 export const styles = css`
   .container.slider-active {
+    touch-action: pan-y pinch-zoom;
+  }
+
+  .container.is-dragging {
     touch-action: none;
+  }
+
+  .container.is-dragging .fill {
+    transition: none !important;
   }
 
   .sub-buttons {

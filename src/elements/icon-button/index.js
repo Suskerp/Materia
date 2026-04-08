@@ -31,13 +31,6 @@ class MateriaIconButton extends ActionMixin(LitElement) {
     };
   }
 
-  get _templatesReady() {
-    const c = this.config;
-    if (this._isTemplate(c?.icon) && this._resolvedIcon === undefined) return false;
-    if (this._isTemplate(c?.disabled) && this._resolvedDisabled === undefined) return false;
-    return true;
-  }
-
   get _disabled() {
     const val = this.config?.disabled;
     if (val === undefined || val === null) return false;
@@ -63,7 +56,6 @@ class MateriaIconButton extends ActionMixin(LitElement) {
 
   render() {
     if (!this.config) return html``;
-    if (!this._templatesReady) return html``;
 
     const stateObj = this.config.entity ? this.hass?.states?.[this.config.entity] : undefined;
     const unavailable = this.config.entity ? this._isUnavailable(stateObj) : false;
@@ -71,7 +63,9 @@ class MateriaIconButton extends ActionMixin(LitElement) {
 
     const variant = this.config.variant || "filled";
     const size = this.config.size === "large" ? "large" : "default";
-    const icon = this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon;
+    const icon = this._isTemplate(this.config.icon)
+      ? (this._resolvedIcon || "mdi:circle-small")
+      : this.config.icon;
 
     return html`
       <ha-card

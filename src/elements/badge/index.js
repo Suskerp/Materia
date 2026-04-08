@@ -79,7 +79,6 @@ class MateriaBadge extends ActionMixin(LitElement) {
 
   render() {
     if (!this.hass || !this.config) return html``;
-    if (!this._templatesReady) return html``;
 
     const entity = this.config.entity;
     const stateObj = entity ? this.hass.states[entity] : undefined;

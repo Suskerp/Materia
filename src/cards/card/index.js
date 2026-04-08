@@ -308,17 +308,34 @@ class MateriaCard extends ActionMixin(LitElement) {
     this._resolveField("name", "_resolvedName");
   }
 
-  /* ---- Pointer tracking (slider) -------------------------------- */
+  /* ---- Slider ---------------------------------------------------- */
+  /* Based on Bubble Card's slider implementation.                     */
+  /*                                                                   */
+  /* Hold-to-slide: pointer down starts a 200ms long-press timer.     */
+  /*   - If finger moves >6px horizontally before timer → drag        */
+  /*     starts immediately (quick-slide).                             */
+  /*   - If finger moves >10px vertically first → scroll intent,      */
+  /*     slider aborts.                                                */
+  /*   - If timer fires → drag starts from current position.          */
+  /*   - If released before either → tap.                             */
+  /*                                                                   */
+  /* During drag: fill bar updates every pointer-move (transitions    */
+  /* disabled via .is-dragging class), service calls throttled at      */
+  /* 200ms leading+trailing. On release: final service call + CSS     */
+  /* transitions re-enabled.                                          */
+  /* ---------------------------------------------------------------- */
 
   _getContainer() {
     return this.shadowRoot?.querySelector(".container");
   }
 
-  _pctFromEvent(ev) {
-    const container = this._getContainer();
-    if (!container) return 0;
-    const rect = container.getBoundingClientRect();
-    const x = (ev.touches ? ev.touches[0] : ev).clientX;
+  _pctFromPointer(ev) {
+    if (!this._sliderRect) {
+      this._sliderRect = this._getContainer()?.getBoundingClientRect();
+    }
+    const rect = this._sliderRect;
+    if (!rect) return 0;
+    const x = ev.clientX;
     return Math.max(0, Math.min(100, ((x - rect.left) / rect.width) * 100));
   }
 
@@ -334,81 +351,150 @@ class MateriaCard extends ActionMixin(LitElement) {
     this._startY = ev.clientY;
     this._dragging = false;
     this._scrollIntent = false;
+    this._pointerId = ev.pointerId;
+    this._sliderRect = null; // recalculate on first move
 
-    try {
-      ev.currentTarget.setPointerCapture(ev.pointerId);
-    } catch (_) {}
+    // Detect immediate drag vs long-press vs scroll
+    this._onEarlyMoveRef = this._onEarlyMove.bind(this);
+    window.addEventListener("pointermove", this._onEarlyMoveRef);
 
-    this._onMoveRef = this._onPointerMove.bind(this);
+    this._longPressTimer = setTimeout(() => {
+      this._longPressTimer = null;
+      if (!this._scrollIntent) this._startDrag(ev);
+    }, 200);
+
     this._onUpRef = this._onPointerUp.bind(this);
-    window.addEventListener("pointermove", this._onMoveRef);
     window.addEventListener("pointerup", this._onUpRef);
     window.addEventListener("pointercancel", this._onUpRef);
   }
 
-  _onPointerMove(ev) {
-    if (this._startX == null || this._scrollIntent) return;
-
+  /** Fires during the 200ms detection phase before drag starts. */
+  _onEarlyMove(ev) {
+    if (this._dragging || this._scrollIntent) return;
     const dx = Math.abs(ev.clientX - this._startX);
     const dy = Math.abs(ev.clientY - this._startY);
 
-    if (!this._dragging && dy > 10 && dx < 4) {
+    // Vertical movement dominates → scroll intent, abort slider
+    if (dy > 10 && dx < 4) {
       this._scrollIntent = true;
-      this._cleanup(ev);
+      this._abortSlider();
       return;
     }
 
-    if (!this._dragging && dx > 4 && dx >= dy) {
-      this._dragging = true;
+    // Horizontal movement >6px → start drag immediately (quick-slide)
+    if (dx > 6 && dx >= dy) {
+      clearTimeout(this._longPressTimer);
+      this._longPressTimer = null;
+      this._startDrag(ev);
     }
+  }
 
-    if (this._dragging) {
-      ev.preventDefault();
-      const pct = this._pctFromEvent(ev);
-      this._updateFillVisual(pct);
+  _startDrag(ev) {
+    if (this._dragging) return;
+    this._dragging = true;
+    this._sliderRect = null; // fresh measurement
 
-      if (!this._throttleTimer) {
-        this._throttleTimer = setTimeout(() => {
-          this._throttleTimer = null;
-          this._setSliderValue(pct);
-        }, 200);
-      }
-    }
+    // Remove early detection listener, attach drag listener
+    window.removeEventListener("pointermove", this._onEarlyMoveRef);
+    this._onEarlyMoveRef = null;
+
+    // Capture pointer for reliable tracking
+    try {
+      this._getContainer()?.setPointerCapture(this._pointerId);
+    } catch (_) {}
+
+    // Disable CSS transitions on fill for instant feedback
+    this._getContainer()?.classList.add("is-dragging");
+
+    this._onDragMoveRef = this._onDragMove.bind(this);
+    window.addEventListener("pointermove", this._onDragMoveRef);
+
+    // Apply initial position
+    const pct = this._pctFromPointer(ev);
+    this._updateFillVisual(pct);
+    this._throttledSetValue(pct);
+  }
+
+  _onDragMove(ev) {
+    ev.preventDefault();
+    const pct = this._pctFromPointer(ev);
+    this._updateFillVisual(pct);
+    this._throttledSetValue(pct);
   }
 
   _onPointerUp(ev) {
     if (this._startX == null) return;
 
-    if (!this._dragging && !this._scrollIntent) {
-      this._handleTap();
-    } else if (this._dragging) {
-      const pct = this._pctFromEvent(ev);
+    if (this._dragging) {
+      // Final value on release
+      const pct = this._pctFromPointer(ev);
+      this._updateFillVisual(pct);
       this._setSliderValue(pct);
+    } else if (!this._scrollIntent) {
+      // No drag, no scroll → tap
+      this._handleTap();
     }
 
-    this._cleanup(ev);
+    this._cleanupSlider();
   }
 
-  _cleanup(ev) {
+  _abortSlider() {
+    clearTimeout(this._longPressTimer);
+    this._longPressTimer = null;
+    if (this._onEarlyMoveRef) {
+      window.removeEventListener("pointermove", this._onEarlyMoveRef);
+      this._onEarlyMoveRef = null;
+    }
+  }
+
+  _cleanupSlider() {
+    this._abortSlider();
     this._startX = null;
     this._dragging = false;
     this._scrollIntent = false;
-    clearTimeout(this._throttleTimer);
-    this._throttleTimer = null;
+    this._sliderRect = null;
 
+    // Flush pending throttled call
+    if (this._throttleTimeout) {
+      clearTimeout(this._throttleTimeout);
+      this._throttleTimeout = null;
+    }
+
+    // Re-enable CSS transitions
+    this._getContainer()?.classList.remove("is-dragging");
+
+    // Release pointer
     try {
-      const container = this._getContainer();
-      if (container && ev?.pointerId != null) {
-        container.releasePointerCapture(ev.pointerId);
-      }
+      this._getContainer()?.releasePointerCapture(this._pointerId);
     } catch (_) {}
 
-    if (this._onMoveRef) {
-      window.removeEventListener("pointermove", this._onMoveRef);
+    if (this._onDragMoveRef) {
+      window.removeEventListener("pointermove", this._onDragMoveRef);
+      this._onDragMoveRef = null;
+    }
+    if (this._onUpRef) {
       window.removeEventListener("pointerup", this._onUpRef);
       window.removeEventListener("pointercancel", this._onUpRef);
-      this._onMoveRef = null;
       this._onUpRef = null;
+    }
+  }
+
+  /* ---- Leading+trailing throttle for service calls (200ms) ------ */
+
+  _throttledSetValue(pct) {
+    const now = Date.now();
+    this._lastSliderArgs = pct;
+    const elapsed = now - (this._lastSliderCall || 0);
+
+    if (elapsed >= 200) {
+      this._lastSliderCall = now;
+      this._setSliderValue(pct);
+    } else if (!this._throttleTimeout) {
+      this._throttleTimeout = setTimeout(() => {
+        this._throttleTimeout = null;
+        this._lastSliderCall = Date.now();
+        this._setSliderValue(this._lastSliderArgs);
+      }, 200 - elapsed);
     }
   }
 
@@ -433,10 +519,9 @@ class MateriaCard extends ActionMixin(LitElement) {
     }
 
     if (this._domain === "cover") {
-      const position = Math.round(pct);
       this.hass.callService("cover", "set_cover_position", {
         entity_id: entityId,
-        position,
+        position: Math.round(pct),
       });
       return;
     }
@@ -481,7 +566,6 @@ class MateriaCard extends ActionMixin(LitElement) {
 
   render() {
     if (!this.config || !this.hass) return html``;
-    if (!this._templatesReady) return html``;
 
     const stateObj = this._stateObj;
     const unavailable = this._isUnavailable(stateObj);
