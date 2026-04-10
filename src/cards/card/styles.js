@@ -3,6 +3,9 @@ import { css } from "lit";
 export const styles = css`
   .container.slider-active {
     touch-action: pan-y pinch-zoom;
+    overscroll-behavior: contain;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   .container.is-dragging {
