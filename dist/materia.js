@@ -14,12 +14,12 @@ const t=globalThis,e=t.ShadowRoot&&(void 0===t.ShadyCSS||t.ShadyCSS.nativeShadow
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{createHTML:t=>t}):void 0,A="$lit$",E=`lit$${Math.random().toFixed(9).slice(2)}$`,S="?"+E,T=`<${S}>`,U=document,z=()=>U.createComment(""),O=t=>null===t||"object"!=typeof t&&"function"!=typeof t,F=Array.isArray,M="[ \t\n\f\r]",P=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,D=/-->/g,R=/>/g,N=RegExp(`>|${M}(?:([^\\s"'>=/]+)(${M}*=${M}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),j=/'/g,I=/"/g,B=/^(?:script|style|textarea|title)$/i,L=(t=>(e,...i)=>({_$litType$:t,strings:e,values:i}))(1),V=Symbol.for("lit-noChange"),q=Symbol.for("lit-nothing"),H=new WeakMap,W=U.createTreeWalker(U,129);function X(t,e){if(!F(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==k?k.createHTML(e):e}const G=(t,e)=>{const i=t.length-1,o=[];let s,n=2===e?"<svg>":3===e?"<math>":"",a=P;for(let e=0;e<i;e++){const i=t[e];let r,c,l=-1,h=0;for(;h<i.length&&(a.lastIndex=h,c=a.exec(i),null!==c);)h=a.lastIndex,a===P?"!--"===c[1]?a=D:void 0!==c[1]?a=R:void 0!==c[2]?(B.test(c[2])&&(s=RegExp("</"+c[2],"g")),a=N):void 0!==c[3]&&(a=N):a===N?">"===c[0]?(a=s??P,l=-1):void 0===c[1]?l=-2:(l=a.lastIndex-c[2].length,r=c[1],a=void 0===c[3]?N:'"'===c[3]?I:j):a===I||a===j?a=N:a===D||a===R?a=P:(a=N,s=void 0);const d=a===N&&t[e+1].startsWith("/>")?" ":"";n+=a===P?i+T:l>=0?(o.push(r),i.slice(0,l)+A+i.slice(l)+E+d):i+E+(-2===l?e:d)}return[X(t,n+(t[i]||"<?>")+(2===e?"</svg>":3===e?"</math>":"")),o]};class J{constructor({strings:t,_$litType$:e},i){let o;this.parts=[];let s=0,n=0;const a=t.length-1,r=this.parts,[c,l]=G(t,e);if(this.el=J.createElement(c,i),W.currentNode=this.el.content,2===e||3===e){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes)}for(;null!==(o=W.nextNode())&&r.length<a;){if(1===o.nodeType){if(o.hasAttributes())for(const t of o.getAttributeNames())if(t.endsWith(A)){const e=l[n++],i=o.getAttribute(t).split(E),a=/([.?@])?(.*)/.exec(e);r.push({type:1,index:s,name:a[2],strings:i,ctor:"."===a[1]?tt:"?"===a[1]?et:"@"===a[1]?it:Q}),o.removeAttribute(t)}else t.startsWith(E)&&(r.push({type:6,index:s}),o.removeAttribute(t));if(B.test(o.tagName)){const t=o.textContent.split(E),e=t.length-1;if(e>0){o.textContent=C?C.emptyScript:"";for(let i=0;i<e;i++)o.append(t[i],z()),W.nextNode(),r.push({type:2,index:++s});o.append(t[e],z())}}}else if(8===o.nodeType)if(o.data===S)r.push({type:2,index:s});else{let t=-1;for(;-1!==(t=o.data.indexOf(E,t+1));)r.push({type:7,index:s}),t+=E.length-1}s++}}static createElement(t,e){const i=U.createElement("template");return i.innerHTML=t,i}}function Y(t,e,i=t,o){if(e===V)return e;let s=void 0!==o?i._$Co?.[o]:i._$Cl;const n=O(e)?void 0:e._$litDirective$;return s?.constructor!==n&&(s?._$AO?.(!1),void 0===n?s=void 0:(s=new n(t),s._$AT(t,i,o)),void 0!==o?(i._$Co??=[])[o]=s:i._$Cl=s),void 0!==s&&(e=Y(t,s._$AS(t,e.values),s,o)),e}class K{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:e},parts:i}=this._$AD,o=(t?.creationScope??U).importNode(e,!0);W.currentNode=o;let s=W.nextNode(),n=0,a=0,r=i[0];for(;void 0!==r;){if(n===r.index){let e;2===r.type?e=new Z(s,s.nextSibling,this,t):1===r.type?e=new r.ctor(s,r.name,r.strings,this,t):6===r.type&&(e=new ot(s,this,t)),this._$AV.push(e),r=i[++a]}n!==r?.index&&(s=W.nextNode(),n++)}return W.currentNode=U,o}p(t){let e=0;for(const i of this._$AV)void 0!==i&&(void 0!==i.strings?(i._$AI(t,i,e),e+=i.strings.length-2):i._$AI(t[e])),e++}}class Z{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,i,o){this.type=2,this._$AH=q,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=i,this.options=o,this._$Cv=o?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return void 0!==e&&11===t?.nodeType&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=Y(this,t,e),O(t)?t===q||null==t||""===t?(this._$AH!==q&&this._$AR(),this._$AH=q):t!==this._$AH&&t!==V&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):(t=>F(t)||"function"==typeof t?.[Symbol.iterator])(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==q&&O(this._$AH)?this._$AA.nextSibling.data=t:this.T(U.createTextNode(t)),this._$AH=t}$(t){const{values:e,_$litType$:i}=t,o="number"==typeof i?this._$AC(t):(void 0===i.el&&(i.el=J.createElement(X(i.h,i.h[0]),this.options)),i);if(this._$AH?._$AD===o)this._$AH.p(e);else{const t=new K(o,this),i=t.u(this.options);t.p(e),this.T(i),this._$AH=t}}_$AC(t){let e=H.get(t.strings);return void 0===e&&H.set(t.strings,e=new J(t)),e}k(t){F(this._$AH)||(this._$AH=[],this._$AR());const e=this._$AH;let i,o=0;for(const s of t)o===e.length?e.push(i=new Z(this.O(z()),this.O(z()),this,this.options)):i=e[o],i._$AI(s),o++;o<e.length&&(this._$AR(i&&i._$AB.nextSibling,o),e.length=o)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){const e=$(t).nextSibling;$(t).remove(),t=e}}setConnected(t){void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t))}}class Q{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,i,o,s){this.type=1,this._$AH=q,this._$AN=void 0,this.element=t,this.name=e,this._$AM=o,this.options=s,i.length>2||""!==i[0]||""!==i[1]?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=q}_$AI(t,e=this,i,o){const s=this.strings;let n=!1;if(void 0===s)t=Y(this,t,e,0),n=!O(t)||t!==this._$AH&&t!==V,n&&(this._$AH=t);else{const o=t;let a,r;for(t=s[0],a=0;a<s.length-1;a++)r=Y(this,o[i+a],e,a),r===V&&(r=this._$AH[a]),n||=!O(r)||r!==this._$AH[a],r===q?t=q:t!==q&&(t+=(r??"")+s[a+1]),this._$AH[a]=r}n&&!o&&this.j(t)}j(t){t===q?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}}class tt extends Q{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===q?void 0:t}}class et extends Q{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==q)}}class it extends Q{constructor(t,e,i,o,s){super(t,e,i,o,s),this.type=5}_$AI(t,e=this){if((t=Y(this,t,e,0)??q)===V)return;const i=this._$AH,o=t===q&&i!==q||t.capture!==i.capture||t.once!==i.once||t.passive!==i.passive,s=t!==q&&(i===q||o);o&&this.element.removeEventListener(this.name,this,i),s&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}}class ot{constructor(t,e,i){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(t){Y(this,t)}}const st=w.litHtmlPolyfillSupport;st?.(J,Z),(w.litHtmlVersions??=[]).push("3.3.2");const nt=globalThis;
+const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{createHTML:t=>t}):void 0,A="$lit$",E=`lit$${Math.random().toFixed(9).slice(2)}$`,S="?"+E,T=`<${S}>`,U=document,z=()=>U.createComment(""),O=t=>null===t||"object"!=typeof t&&"function"!=typeof t,F=Array.isArray,M="[ \t\n\f\r]",P=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,R=/-->/g,D=/>/g,N=RegExp(`>|${M}(?:([^\\s"'>=/]+)(${M}*=${M}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),j=/'/g,I=/"/g,B=/^(?:script|style|textarea|title)$/i,q=(t=>(e,...i)=>({_$litType$:t,strings:e,values:i}))(1),L=Symbol.for("lit-noChange"),V=Symbol.for("lit-nothing"),H=new WeakMap,W=U.createTreeWalker(U,129);function X(t,e){if(!F(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==k?k.createHTML(e):e}const G=(t,e)=>{const i=t.length-1,o=[];let s,n=2===e?"<svg>":3===e?"<math>":"",a=P;for(let e=0;e<i;e++){const i=t[e];let r,c,l=-1,h=0;for(;h<i.length&&(a.lastIndex=h,c=a.exec(i),null!==c);)h=a.lastIndex,a===P?"!--"===c[1]?a=R:void 0!==c[1]?a=D:void 0!==c[2]?(B.test(c[2])&&(s=RegExp("</"+c[2],"g")),a=N):void 0!==c[3]&&(a=N):a===N?">"===c[0]?(a=s??P,l=-1):void 0===c[1]?l=-2:(l=a.lastIndex-c[2].length,r=c[1],a=void 0===c[3]?N:'"'===c[3]?I:j):a===I||a===j?a=N:a===R||a===D?a=P:(a=N,s=void 0);const d=a===N&&t[e+1].startsWith("/>")?" ":"";n+=a===P?i+T:l>=0?(o.push(r),i.slice(0,l)+A+i.slice(l)+E+d):i+E+(-2===l?e:d)}return[X(t,n+(t[i]||"<?>")+(2===e?"</svg>":3===e?"</math>":"")),o]};class J{constructor({strings:t,_$litType$:e},i){let o;this.parts=[];let s=0,n=0;const a=t.length-1,r=this.parts,[c,l]=G(t,e);if(this.el=J.createElement(c,i),W.currentNode=this.el.content,2===e||3===e){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes)}for(;null!==(o=W.nextNode())&&r.length<a;){if(1===o.nodeType){if(o.hasAttributes())for(const t of o.getAttributeNames())if(t.endsWith(A)){const e=l[n++],i=o.getAttribute(t).split(E),a=/([.?@])?(.*)/.exec(e);r.push({type:1,index:s,name:a[2],strings:i,ctor:"."===a[1]?tt:"?"===a[1]?et:"@"===a[1]?it:Q}),o.removeAttribute(t)}else t.startsWith(E)&&(r.push({type:6,index:s}),o.removeAttribute(t));if(B.test(o.tagName)){const t=o.textContent.split(E),e=t.length-1;if(e>0){o.textContent=C?C.emptyScript:"";for(let i=0;i<e;i++)o.append(t[i],z()),W.nextNode(),r.push({type:2,index:++s});o.append(t[e],z())}}}else if(8===o.nodeType)if(o.data===S)r.push({type:2,index:s});else{let t=-1;for(;-1!==(t=o.data.indexOf(E,t+1));)r.push({type:7,index:s}),t+=E.length-1}s++}}static createElement(t,e){const i=U.createElement("template");return i.innerHTML=t,i}}function Y(t,e,i=t,o){if(e===L)return e;let s=void 0!==o?i._$Co?.[o]:i._$Cl;const n=O(e)?void 0:e._$litDirective$;return s?.constructor!==n&&(s?._$AO?.(!1),void 0===n?s=void 0:(s=new n(t),s._$AT(t,i,o)),void 0!==o?(i._$Co??=[])[o]=s:i._$Cl=s),void 0!==s&&(e=Y(t,s._$AS(t,e.values),s,o)),e}class K{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:e},parts:i}=this._$AD,o=(t?.creationScope??U).importNode(e,!0);W.currentNode=o;let s=W.nextNode(),n=0,a=0,r=i[0];for(;void 0!==r;){if(n===r.index){let e;2===r.type?e=new Z(s,s.nextSibling,this,t):1===r.type?e=new r.ctor(s,r.name,r.strings,this,t):6===r.type&&(e=new ot(s,this,t)),this._$AV.push(e),r=i[++a]}n!==r?.index&&(s=W.nextNode(),n++)}return W.currentNode=U,o}p(t){let e=0;for(const i of this._$AV)void 0!==i&&(void 0!==i.strings?(i._$AI(t,i,e),e+=i.strings.length-2):i._$AI(t[e])),e++}}class Z{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,i,o){this.type=2,this._$AH=V,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=i,this.options=o,this._$Cv=o?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return void 0!==e&&11===t?.nodeType&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=Y(this,t,e),O(t)?t===V||null==t||""===t?(this._$AH!==V&&this._$AR(),this._$AH=V):t!==this._$AH&&t!==L&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):(t=>F(t)||"function"==typeof t?.[Symbol.iterator])(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==V&&O(this._$AH)?this._$AA.nextSibling.data=t:this.T(U.createTextNode(t)),this._$AH=t}$(t){const{values:e,_$litType$:i}=t,o="number"==typeof i?this._$AC(t):(void 0===i.el&&(i.el=J.createElement(X(i.h,i.h[0]),this.options)),i);if(this._$AH?._$AD===o)this._$AH.p(e);else{const t=new K(o,this),i=t.u(this.options);t.p(e),this.T(i),this._$AH=t}}_$AC(t){let e=H.get(t.strings);return void 0===e&&H.set(t.strings,e=new J(t)),e}k(t){F(this._$AH)||(this._$AH=[],this._$AR());const e=this._$AH;let i,o=0;for(const s of t)o===e.length?e.push(i=new Z(this.O(z()),this.O(z()),this,this.options)):i=e[o],i._$AI(s),o++;o<e.length&&(this._$AR(i&&i._$AB.nextSibling,o),e.length=o)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){const e=$(t).nextSibling;$(t).remove(),t=e}}setConnected(t){void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t))}}class Q{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,i,o,s){this.type=1,this._$AH=V,this._$AN=void 0,this.element=t,this.name=e,this._$AM=o,this.options=s,i.length>2||""!==i[0]||""!==i[1]?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=V}_$AI(t,e=this,i,o){const s=this.strings;let n=!1;if(void 0===s)t=Y(this,t,e,0),n=!O(t)||t!==this._$AH&&t!==L,n&&(this._$AH=t);else{const o=t;let a,r;for(t=s[0],a=0;a<s.length-1;a++)r=Y(this,o[i+a],e,a),r===L&&(r=this._$AH[a]),n||=!O(r)||r!==this._$AH[a],r===V?t=V:t!==V&&(t+=(r??"")+s[a+1]),this._$AH[a]=r}n&&!o&&this.j(t)}j(t){t===V?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}}class tt extends Q{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===V?void 0:t}}class et extends Q{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==V)}}class it extends Q{constructor(t,e,i,o,s){super(t,e,i,o,s),this.type=5}_$AI(t,e=this){if((t=Y(this,t,e,0)??V)===L)return;const i=this._$AH,o=t===V&&i!==V||t.capture!==i.capture||t.once!==i.once||t.passive!==i.passive,s=t!==V&&(i===V||o);o&&this.element.removeEventListener(this.name,this,i),s&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}}class ot{constructor(t,e,i){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(t){Y(this,t)}}const st=w.litHtmlPolyfillSupport;st?.(J,Z),(w.litHtmlVersions??=[]).push("3.3.2");const nt=globalThis;
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */class at extends x{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){const t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){const e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=((t,e,i)=>{const o=i?.renderBefore??e;let s=o._$litPart$;if(void 0===s){const t=i?.renderBefore??null;o._$litPart$=s=new Z(e.insertBefore(z(),t),t,void 0,i??{})}return s._$AI(t),s})(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return V}}at._$litElement$=!0,at.finalized=!0,nt.litElementHydrateSupport?.({LitElement:at});const rt=nt.litElementPolyfillSupport;let ct;rt?.({LitElement:at}),(nt.litElementVersions??=[]).push("4.2.2"),n`
+ */class at extends x{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){const t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){const e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=((t,e,i)=>{const o=i?.renderBefore??e;let s=o._$litPart$;if(void 0===s){const t=i?.renderBefore??null;o._$litPart$=s=new Z(e.insertBefore(z(),t),t,void 0,i??{})}return s._$AI(t),s})(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return L}}at._$litElement$=!0,at.finalized=!0,nt.litElementHydrateSupport?.({LitElement:at});const rt=nt.litElementPolyfillSupport;let ct;rt?.({LitElement:at}),(nt.litElementVersions??=[]).push("4.2.2"),n`
   :host {
     display: block;
     font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
@@ -109,7 +109,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     input[type="range"]:active::-moz-range-thumb {
       transform: scale(1.2);
     }
-  `;constructor(){super(),this.min=0,this.max=100,this.value=0,this.step=1,this.color="",this.trackColor="",this.disabled=!1,this.liveUpdate=!1,this._debounceTimer=null}get _fillColor(){return this.color||"var(--slider-color)"}get _trackColor(){return this.trackColor||"var(--slider-track-color)"}get _percentage(){const t=this.max-this.min;return 0===t?0:(this.value-this.min)/t*100}render(){const t=this._percentage,e=`linear-gradient(to right, ${this._fillColor} ${t}%, ${this._trackColor} ${t}%)`;return L`
+  `;constructor(){super(),this.min=0,this.max=100,this.value=0,this.step=1,this.color="",this.trackColor="",this.disabled=!1,this.liveUpdate=!1,this._debounceTimer=null}get _fillColor(){return this.color||"var(--slider-color)"}get _trackColor(){return this.trackColor||"var(--slider-track-color)"}get _percentage(){const t=this.max-this.min;return 0===t?0:(this.value-this.min)/t*100}render(){const t=this._percentage,e=`linear-gradient(to right, ${this._fillColor} ${t}%, ${this._trackColor} ${t}%)`;return q`
       <div class="slider-container">
         <input
           type="range"
@@ -349,7 +349,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
   .sub-btn:active {
     opacity: 0.7;
   }
-`,ft=t=>t.name.replace(/_/g," ").replace(/^\w/,t=>t.toUpperCase());class vt extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[]}render(){return this.hass&&this._config?L`
+`,ft=t=>t.label??t.name.replace(/_/g," ").replace(/^\w/,t=>t.toUpperCase());class vt extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config=t}get _schema(){return[]}render(){return this.hass&&this._config?q`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
@@ -357,7 +357,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         .computeLabel=${ft}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:L``}_valueChanged(t){this._config=t.detail.value,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:this._config},bubbles:!0,composed:!0}))}}customElements.define("materia-card-editor",class extends vt{static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("light."))||"light.example";return{entity:e}}get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}},context:{icon_entity:"entity"}},{name:"show_slider",selector:{boolean:{}}},{name:"slider_turn_off",label:"Slider can turn off",selector:{boolean:{}}},{name:"show_sub_buttons",selector:{boolean:{}}},{name:"show_stop",selector:{boolean:{}}},{name:"color",selector:{template:{}}},{name:"color_on",selector:{template:{}}},{name:"tap_action",selector:{ui_action:{default_action:"toggle"}}}]}});const bt={light:{showSlider:!0,activeState:"on",colorActive:"var(--md-sys-cust-color-light-container)",colorOn:"var(--md-sys-cust-color-on-light)",sliderColor:"var(--md-sys-cust-color-light)"},cover:{showSlider:!0,showSubButtons:!0,activeState:"open",colorActive:"var(--md-sys-cust-color-device-container)",colorOn:"var(--md-sys-cust-color-on-device)",sliderColor:"var(--md-sys-cust-color-device)"},switch:{activeState:"on",colorActive:"var(--md-sys-cust-color-device)",colorOn:"var(--md-sys-cust-color-on-device)"},fan:{activeState:"on",colorActive:"var(--md-sys-cust-color-device)",colorOn:"var(--md-sys-cust-color-on-device)"},lock:{activeState:"locked",colorActive:"var(--md-sys-cust-color-device-container)",colorOn:"var(--md-sys-cust-color-on-device)"},vacuum:{activeState:"cleaning",colorActive:"var(--md-sys-cust-color-device)",colorOn:"var(--md-sys-cust-color-on-device)"},climate:{activeState:"heat",colorActive:"var(--md-sys-cust-color-climate-heat-container)",colorOn:"var(--md-sys-cust-color-on-climate-heat)"},media_player:{activeState:"playing",colorActive:"var(--md-sys-cust-color-device)",colorOn:"var(--md-sys-cust-color-on-device)"},scene:{variant:"tonal",activeState:"__never__"},input_boolean:{activeState:"on",colorActive:"var(--md-sys-cust-color-device)",colorOn:"var(--md-sys-cust-color-on-device)"},alarm_control_panel:{activeState:"armed_away",colorActive:"var(--md-sys-color-error-container)",colorOn:"var(--md-sys-color-on-error-container)"}},yt={activeState:"on",colorActive:"var(--md-sys-cust-color-device)",colorOn:"var(--md-sys-cust-color-on-device)"};class xt extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0}};static getConfigElement(){return document.createElement("materia-card-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("light."))||"light.example";return{entity:e}}setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={tap_action:{action:"toggle"},...t}}get _domain(){return this.config.entity?.split(".")[0]||""}get _domainConfig(){return bt[this._domain]||yt}get _stateObj(){return this.hass?.states?.[this.config.entity]}get _isActive(){const t=this._stateObj?.state,e=this.config.active_state||this._domainConfig.activeState;return"__never__"!==e&&t===e}get _variant(){return this._domainConfig.variant||"filled"}get _isTonal(){return"tonal"===this._variant}get _isDimmable(){if("light"!==this._domain)return!1;const t=this._stateObj?.attributes;if(!t)return!1;return!!(t.supported_color_modes||[]).some(t=>"onoff"!==t)||void 0!==t.brightness}get _showSlider(){return!this._isTonal&&(void 0!==this.config.show_slider?this.config.show_slider:"light"===this._domain?this._isDimmable:"cover"===this._domain||(this._domainConfig.showSlider||!1))}get _showSubButtons(){return void 0!==this.config.show_sub_buttons?this.config.show_sub_buttons:this._domainConfig.showSubButtons||!1}get _showStop(){return void 0===this.config.show_stop||this.config.show_stop}get _fillPercent(){const t=this._stateObj;if(!t)return 0;if("light"===this._domain){const e=t.attributes?.brightness??0;return Math.round(e/255*100)}return"cover"===this._domain?t.attributes?.current_position??0:0}get _name(){return this.config.name?this._isTemplate(this.config.name)?this._resolvedName:this.config.name:this._stateObj?.attributes?.friendly_name||this.config.entity}get _icon(){return this.config.icon?this._isTemplate(this.config.icon)?this._resolvedIcon:this.config.icon:"lock"===this._domain?this._isActive?"m3o:lock":"m3o:lock-open-right":void 0}get _stateDisplay(){const t=this._stateObj;if(!t)return"";const e=this._domain;if("scene"===e)return"";if("light"===e){if("on"!==t.state)return this._capitalize("Off");if(this._isDimmable){return`${Math.round((t.attributes?.brightness??0)/255*100)}%`}return this._capitalize("On")}if("cover"===e){const e=t.attributes?.current_position;return 0===e||"closed"===t.state?this._capitalize("Closed"):100===e?this._capitalize("Open"):null!=e?`${e}% ${this._capitalize("open")}`:this._capitalize(t.state)}return"lock"===e?"locked"===t.state?this._capitalize("Locked"):this._capitalize("Unlocked"):this._capitalize(t.state)}_getContainerBg(){if(this._isTonal)return"var(--md-sys-color-secondary-container)";const t=this._resolvedColor||this.config.color;return this._isActive?t||("light"!==this._domain||this._isDimmable?this._domainConfig.colorActive:this._domainConfig.sliderColor||this._domainConfig.colorActive):"var(--ha-card-background, var(--card-background-color))"}_getTextColor(){if(this._isTonal)return"var(--md-sys-color-on-secondary-container)";const t=this._resolvedColorOn||this.config.color_on;return this._isActive?t||this._domainConfig.colorOn:"var(--primary-text-color)"}get _templatesReady(){const t=this.config;return(!this._isTemplate(t?.color)||void 0!==this._resolvedColor)&&((!this._isTemplate(t?.color_on)||void 0!==this._resolvedColorOn)&&((!this._isTemplate(t?.icon)||void 0!==this._resolvedIcon)&&(!this._isTemplate(t?.name)||void 0!==this._resolvedName)))}updated(t){super.updated?.(t),t.has("hass")&&this.hass&&(this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"))}_getContainer(){return this.shadowRoot?.querySelector(".container")}_getEventX(t){return void 0!==t.clientX&&0!==t.clientX?t.clientX:t.changedTouches?.[0]?t.changedTouches[0].clientX:t.touches?.[0]?t.touches[0].clientX:t.clientX||0}_getSliderRect(){const t=this._sliderFrameId||0;if(this._sliderRectCache&&this._sliderRectCacheFrame===t)return this._sliderRectCache;const e=this._getContainer()?.getBoundingClientRect();return this._sliderRectCache=e,this._sliderRectCacheFrame=t,this._sliderFrameRaf||(this._sliderFrameRaf=requestAnimationFrame(()=>{this._sliderFrameId=(this._sliderFrameId||0)+1,this._sliderFrameRaf=null})),e}_pctFromPointer(t){const e=this._getSliderRect();if(!e)return 0;const i=this._getEventX(t);return Math.max(0,Math.min(100,(i-e.left)/e.width*100))}_updateFillVisual(t){const e=this.shadowRoot?.querySelector(".fill");e&&(e.style.width=`${t}%`)}_onPointerDown(t){t.button&&0!==t.button||t.isPrimary&&(t.target.closest("button, .sub-btn")||"touch"===t.pointerType&&t.clientX<=30||(this._startX=t.clientX,this._startY=t.clientY,this._dragging=!1,this._scrollIntent=!1,this._pointerId=t.pointerId,this._sliderRectCache=null,this._onEarlyMoveRef=this._onEarlyMove.bind(this),window.addEventListener("pointermove",this._onEarlyMoveRef),this._longPressTimer=setTimeout(()=>{this._longPressTimer=null,this._scrollIntent||this._startDrag(t)},200),this._onUpRef=this._onPointerUp.bind(this),window.addEventListener("pointerup",this._onUpRef),window.addEventListener("pointercancel",this._onUpRef)))}_onEarlyMove(t){if(this._dragging||this._scrollIntent)return;const e=Math.abs(t.clientX-this._startX),i=Math.abs(t.clientY-this._startY);if(i>10&&i>e+4)return this._scrollIntent=!0,void this._abortSlider();e>6&&e>=i&&(clearTimeout(this._longPressTimer),this._longPressTimer=null,this._startDrag(t))}_startDrag(t){if(this._dragging)return;this._dragging=!0,this._dragStartTime=Date.now(),this._sliderRectCache=null,this._onEarlyMoveRef&&(window.removeEventListener("pointermove",this._onEarlyMoveRef),this._onEarlyMoveRef=null);const e=this._getContainer();try{e?.setPointerCapture(this._pointerId)}catch(t){}e?.classList.add("is-dragging"),document.documentElement.style.setProperty("touch-action","none"),document.documentElement.style.setProperty("overscroll-behavior","contain"),this._onDragMoveRef=this._onDragMove.bind(this),window.addEventListener("pointermove",this._onDragMoveRef),e&&e.addEventListener("touchmove",this._preventTouch,{passive:!1}),this._onVisibilityRef=()=>{document.hidden&&this._cleanupSlider()},document.addEventListener("visibilitychange",this._onVisibilityRef);const i=this._pctFromPointer(t);this._updateFillVisual(i),this._throttledSetValue(i)}_preventTouch(t){t.preventDefault()}_onDragMove(t){"touch"===t.pointerType&&t.preventDefault();const e=this._pctFromPointer(t);this._updateFillVisual(e),this._throttledSetValue(e)}_onPointerUp(t){if(null!=this._startX&&!("pointercancel"===t.type&&this._dragStartTime&&Date.now()-this._dragStartTime<150)){if(this._dragging){const e=this._pctFromPointer(t);this._updateFillVisual(e),this._setSliderValue(e)}else this._scrollIntent||this._handleTap();this._cleanupSlider()}}_abortSlider(){clearTimeout(this._longPressTimer),this._longPressTimer=null,this._onEarlyMoveRef&&(window.removeEventListener("pointermove",this._onEarlyMoveRef),this._onEarlyMoveRef=null)}_cleanupSlider(){this._abortSlider(),this._startX=null,this._dragging=!1,this._scrollIntent=!1,this._dragStartTime=null,this._sliderRectCache=null,this._throttleTimeout&&(clearTimeout(this._throttleTimeout),this._throttleTimeout=null);const t=this._getContainer();t?.classList.remove("is-dragging"),document.documentElement.style.removeProperty("touch-action"),document.documentElement.style.removeProperty("overscroll-behavior"),t&&t.removeEventListener("touchmove",this._preventTouch);try{t?.releasePointerCapture(this._pointerId)}catch(t){}this._onVisibilityRef&&(document.removeEventListener("visibilitychange",this._onVisibilityRef),this._onVisibilityRef=null),this._onDragMoveRef&&(window.removeEventListener("pointermove",this._onDragMoveRef),this._onDragMoveRef=null),this._onUpRef&&(window.removeEventListener("pointerup",this._onUpRef),window.removeEventListener("pointercancel",this._onUpRef),this._onUpRef=null)}_throttledSetValue(t){const e=Date.now();if(this._lastSliderArgs=t,this._throttleTimeout)return;e-(this._lastSliderCall||0)>=200?(this._lastSliderCall=e,this._setSliderValue(t)):this._throttleTimeout=setTimeout(()=>{this._throttleTimeout=null,this._lastSliderCall=Date.now(),this._setSliderValue(this._lastSliderArgs)},200)}_setSliderValue(t){const e=this.config.entity;if("light"===this._domain){let i=t;!this.config.slider_turn_off&&i<1&&(i=1);const o=Math.round(i/100*255);return void(o<=3&&this.config.slider_turn_off?this.hass.callService("light","turn_off",{entity_id:e}):this.hass.callService("light","turn_on",{entity_id:e,brightness:Math.max(o,1)}))}"cover"!==this._domain||this.hass.callService("cover","set_cover_position",{entity_id:e,position:Math.max(0,Math.min(100,Math.round(t)))})}_openCover(t){t.stopPropagation(),this.hass.callService("cover","open_cover",{entity_id:this.config.entity})}_stopCover(t){t.stopPropagation(),this.hass.callService("cover","stop_cover",{entity_id:this.config.entity})}_closeCover(t){t.stopPropagation(),this.hass.callService("cover","close_cover",{entity_id:this.config.entity})}_handleTap(){this.config.tap_action?this._handleAction(this.config.tap_action):this.hass.callService("homeassistant","toggle",{entity_id:this.config.entity})}render(){if(!this.config||!this.hass)return L``;const t=this._stateObj,e=this._isUnavailable(t),i=!e&&this._isActive;this._isTonal;const o=!e&&this._showSlider,s=!e&&this._showSubButtons,n=this._showStop,a=this._getContainerBg(),r=this._getTextColor(),c=o&&i?this._fillPercent:0,l=this._domainConfig.sliderColor||this._domainConfig.colorActive,h=this._icon,d=e?"Unavailable":this._stateDisplay;return L`
+    `:q``}_valueChanged(t){this._config=t.detail.value,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:this._config},bubbles:!0,composed:!0}))}}customElements.define("materia-card-editor",class extends vt{static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("light."))||"light.example";return{entity:e}}get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}},context:{icon_entity:"entity"}},{name:"show_slider",selector:{boolean:{}}},{name:"slider_turn_off",label:"Slider can turn off",selector:{boolean:{}}},{name:"show_sub_buttons",selector:{boolean:{}}},{name:"show_stop",selector:{boolean:{}}},{name:"color",selector:{template:{}}},{name:"color_on",selector:{template:{}}},{name:"tap_action",selector:{ui_action:{default_action:"toggle"}}}]}});const bt={light:{showSlider:!0,activeState:"on",colorActive:"var(--md-sys-cust-color-light-container)",colorOn:"var(--md-sys-cust-color-on-light)",sliderColor:"var(--md-sys-cust-color-light)"},cover:{showSlider:!0,showSubButtons:!0,activeState:"open",colorActive:"var(--md-sys-cust-color-device-container)",colorOn:"var(--md-sys-cust-color-on-device)",sliderColor:"var(--md-sys-cust-color-device)"},switch:{activeState:"on",colorActive:"var(--md-sys-cust-color-device)",colorOn:"var(--md-sys-cust-color-on-device)"},fan:{activeState:"on",colorActive:"var(--md-sys-cust-color-device)",colorOn:"var(--md-sys-cust-color-on-device)"},lock:{activeState:"locked",colorActive:"var(--md-sys-cust-color-device-container)",colorOn:"var(--md-sys-cust-color-on-device)"},vacuum:{activeState:"cleaning",colorActive:"var(--md-sys-cust-color-device)",colorOn:"var(--md-sys-cust-color-on-device)"},climate:{activeState:"heat",colorActive:"var(--md-sys-cust-color-climate-heat-container)",colorOn:"var(--md-sys-cust-color-on-climate-heat)"},media_player:{activeState:"playing",colorActive:"var(--md-sys-cust-color-device)",colorOn:"var(--md-sys-cust-color-on-device)"},scene:{variant:"tonal",activeState:"__never__"},input_boolean:{activeState:"on",colorActive:"var(--md-sys-cust-color-device)",colorOn:"var(--md-sys-cust-color-on-device)"},alarm_control_panel:{activeState:"armed_away",colorActive:"var(--md-sys-color-error-container)",colorOn:"var(--md-sys-color-on-error-container)"}},yt={activeState:"on",colorActive:"var(--md-sys-cust-color-device)",colorOn:"var(--md-sys-cust-color-on-device)"};class xt extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0}};static getConfigElement(){return document.createElement("materia-card-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("light."))||"light.example";return{entity:e}}setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={tap_action:{action:"toggle"},...t}}get _domain(){return this.config.entity?.split(".")[0]||""}get _domainConfig(){return bt[this._domain]||yt}get _stateObj(){return this.hass?.states?.[this.config.entity]}get _isActive(){const t=this._stateObj?.state,e=this.config.active_state||this._domainConfig.activeState;return"__never__"!==e&&t===e}get _variant(){return this._domainConfig.variant||"filled"}get _isTonal(){return"tonal"===this._variant}get _isDimmable(){if("light"!==this._domain)return!1;const t=this._stateObj?.attributes;if(!t)return!1;return!!(t.supported_color_modes||[]).some(t=>"onoff"!==t)||void 0!==t.brightness}get _showSlider(){return!this._isTonal&&(void 0!==this.config.show_slider?this.config.show_slider:"light"===this._domain?this._isDimmable:"cover"===this._domain||(this._domainConfig.showSlider||!1))}get _showSubButtons(){return void 0!==this.config.show_sub_buttons?this.config.show_sub_buttons:this._domainConfig.showSubButtons||!1}get _showStop(){return void 0===this.config.show_stop||this.config.show_stop}get _fillPercent(){const t=this._stateObj;if(!t)return 0;if("light"===this._domain){const e=t.attributes?.brightness??0;return Math.round(e/255*100)}return"cover"===this._domain?t.attributes?.current_position??0:0}get _name(){return this.config.name?this._isTemplate(this.config.name)?this._resolvedName:this.config.name:this._stateObj?.attributes?.friendly_name||this.config.entity}get _icon(){return this.config.icon?this._isTemplate(this.config.icon)?this._resolvedIcon:this.config.icon:"lock"===this._domain?this._isActive?"m3o:lock":"m3o:lock-open-right":void 0}get _stateDisplay(){const t=this._stateObj;if(!t)return"";const e=this._domain;if("scene"===e)return"";if("light"===e){if("on"!==t.state)return this._capitalize("Off");if(this._isDimmable){return`${Math.round((t.attributes?.brightness??0)/255*100)}%`}return this._capitalize("On")}if("cover"===e){const e=t.attributes?.current_position;return 0===e||"closed"===t.state?this._capitalize("Closed"):100===e?this._capitalize("Open"):null!=e?`${e}% ${this._capitalize("open")}`:this._capitalize(t.state)}return"lock"===e?"locked"===t.state?this._capitalize("Locked"):this._capitalize("Unlocked"):this._capitalize(t.state)}_getContainerBg(){if(this._isTonal)return"var(--md-sys-color-secondary-container)";const t=this._resolvedColor||this.config.color;return this._isActive?t||("light"!==this._domain||this._isDimmable?this._domainConfig.colorActive:this._domainConfig.sliderColor||this._domainConfig.colorActive):"var(--ha-card-background, var(--card-background-color))"}_getTextColor(){if(this._isTonal)return"var(--md-sys-color-on-secondary-container)";const t=this._resolvedColorOn||this.config.color_on;return this._isActive?t||this._domainConfig.colorOn:"var(--primary-text-color)"}get _templatesReady(){const t=this.config;return(!this._isTemplate(t?.color)||void 0!==this._resolvedColor)&&((!this._isTemplate(t?.color_on)||void 0!==this._resolvedColorOn)&&((!this._isTemplate(t?.icon)||void 0!==this._resolvedIcon)&&(!this._isTemplate(t?.name)||void 0!==this._resolvedName)))}updated(t){super.updated?.(t),t.has("hass")&&this.hass&&(this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"))}_getContainer(){return this.shadowRoot?.querySelector(".container")}_getEventX(t){return void 0!==t.clientX&&0!==t.clientX?t.clientX:t.changedTouches?.[0]?t.changedTouches[0].clientX:t.touches?.[0]?t.touches[0].clientX:t.clientX||0}_getSliderRect(){const t=this._sliderFrameId||0;if(this._sliderRectCache&&this._sliderRectCacheFrame===t)return this._sliderRectCache;const e=this._getContainer()?.getBoundingClientRect();return this._sliderRectCache=e,this._sliderRectCacheFrame=t,this._sliderFrameRaf||(this._sliderFrameRaf=requestAnimationFrame(()=>{this._sliderFrameId=(this._sliderFrameId||0)+1,this._sliderFrameRaf=null})),e}_pctFromPointer(t){const e=this._getSliderRect();if(!e)return 0;const i=this._getEventX(t);return Math.max(0,Math.min(100,(i-e.left)/e.width*100))}_updateFillVisual(t){const e=this.shadowRoot?.querySelector(".fill");e&&(e.style.width=`${t}%`)}_onPointerDown(t){t.button&&0!==t.button||t.isPrimary&&(t.target.closest("button, .sub-btn")||"touch"===t.pointerType&&t.clientX<=30||(this._startX=t.clientX,this._startY=t.clientY,this._dragging=!1,this._scrollIntent=!1,this._pointerId=t.pointerId,this._sliderRectCache=null,this._onEarlyMoveRef=this._onEarlyMove.bind(this),window.addEventListener("pointermove",this._onEarlyMoveRef),this._longPressTimer=setTimeout(()=>{this._longPressTimer=null,this._scrollIntent||this._startDrag(t)},200),this._onUpRef=this._onPointerUp.bind(this),window.addEventListener("pointerup",this._onUpRef),window.addEventListener("pointercancel",this._onUpRef)))}_onEarlyMove(t){if(this._dragging||this._scrollIntent)return;const e=Math.abs(t.clientX-this._startX),i=Math.abs(t.clientY-this._startY);if(i>10&&i>e+4)return this._scrollIntent=!0,void this._abortSlider();e>6&&e>=i&&(clearTimeout(this._longPressTimer),this._longPressTimer=null,this._startDrag(t))}_startDrag(t){if(this._dragging)return;this._dragging=!0,this._dragStartTime=Date.now(),this._sliderRectCache=null,this._onEarlyMoveRef&&(window.removeEventListener("pointermove",this._onEarlyMoveRef),this._onEarlyMoveRef=null);const e=this._getContainer();try{e?.setPointerCapture(this._pointerId)}catch(t){}e?.classList.add("is-dragging"),document.documentElement.style.setProperty("touch-action","none"),document.documentElement.style.setProperty("overscroll-behavior","contain"),this._onDragMoveRef=this._onDragMove.bind(this),window.addEventListener("pointermove",this._onDragMoveRef),e&&e.addEventListener("touchmove",this._preventTouch,{passive:!1}),this._onVisibilityRef=()=>{document.hidden&&this._cleanupSlider()},document.addEventListener("visibilitychange",this._onVisibilityRef);const i=this._pctFromPointer(t);this._updateFillVisual(i),this._throttledSetValue(i)}_preventTouch(t){t.preventDefault()}_onDragMove(t){"touch"===t.pointerType&&t.preventDefault();const e=this._pctFromPointer(t);this._updateFillVisual(e),this._throttledSetValue(e)}_onPointerUp(t){if(null!=this._startX&&!("pointercancel"===t.type&&this._dragStartTime&&Date.now()-this._dragStartTime<150)){if(this._dragging){const e=this._pctFromPointer(t);this._updateFillVisual(e),this._setSliderValue(e)}else this._scrollIntent||this._handleTap();this._cleanupSlider()}}_abortSlider(){clearTimeout(this._longPressTimer),this._longPressTimer=null,this._onEarlyMoveRef&&(window.removeEventListener("pointermove",this._onEarlyMoveRef),this._onEarlyMoveRef=null)}_cleanupSlider(){this._abortSlider(),this._startX=null,this._dragging=!1,this._scrollIntent=!1,this._dragStartTime=null,this._sliderRectCache=null,this._throttleTimeout&&(clearTimeout(this._throttleTimeout),this._throttleTimeout=null);const t=this._getContainer();t?.classList.remove("is-dragging"),document.documentElement.style.removeProperty("touch-action"),document.documentElement.style.removeProperty("overscroll-behavior"),t&&t.removeEventListener("touchmove",this._preventTouch);try{t?.releasePointerCapture(this._pointerId)}catch(t){}this._onVisibilityRef&&(document.removeEventListener("visibilitychange",this._onVisibilityRef),this._onVisibilityRef=null),this._onDragMoveRef&&(window.removeEventListener("pointermove",this._onDragMoveRef),this._onDragMoveRef=null),this._onUpRef&&(window.removeEventListener("pointerup",this._onUpRef),window.removeEventListener("pointercancel",this._onUpRef),this._onUpRef=null)}_throttledSetValue(t){const e=Date.now();if(this._lastSliderArgs=t,this._throttleTimeout)return;e-(this._lastSliderCall||0)>=200?(this._lastSliderCall=e,this._setSliderValue(t)):this._throttleTimeout=setTimeout(()=>{this._throttleTimeout=null,this._lastSliderCall=Date.now(),this._setSliderValue(this._lastSliderArgs)},200)}_setSliderValue(t){const e=this.config.entity;if("light"===this._domain){let i=t;!this.config.slider_turn_off&&i<1&&(i=1);const o=Math.round(i/100*255);return void(o<=3&&this.config.slider_turn_off?this.hass.callService("light","turn_off",{entity_id:e}):this.hass.callService("light","turn_on",{entity_id:e,brightness:Math.max(o,1)}))}"cover"!==this._domain||this.hass.callService("cover","set_cover_position",{entity_id:e,position:Math.max(0,Math.min(100,Math.round(t)))})}_openCover(t){t.stopPropagation(),this.hass.callService("cover","open_cover",{entity_id:this.config.entity})}_stopCover(t){t.stopPropagation(),this.hass.callService("cover","stop_cover",{entity_id:this.config.entity})}_closeCover(t){t.stopPropagation(),this.hass.callService("cover","close_cover",{entity_id:this.config.entity})}_handleTap(){this.config.tap_action?this._handleAction(this.config.tap_action):this.hass.callService("homeassistant","toggle",{entity_id:this.config.entity})}render(){if(!this.config||!this.hass)return q``;const t=this._stateObj,e=this._isUnavailable(t),i=!e&&this._isActive;this._isTonal;const o=!e&&this._showSlider,s=!e&&this._showSubButtons,n=this._showStop,a=this._getContainerBg(),r=this._getTextColor(),c=o&&i?this._fillPercent:0,l=this._domainConfig.sliderColor||this._domainConfig.colorActive,h=this._icon,d=e?"Unavailable":this._stateDisplay;return q`
       <ha-card>
         <div
           class="container ${e?"unavailable":""} ${o?"slider-active":""}"
@@ -365,7 +365,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
           @pointerdown=${o?this._onPointerDown:void 0}
           @click=${o?void 0:()=>this._handleTap()}
         >
-          ${o?L`
+          ${o?q`
                 <div
                   class="fill"
                   style="width: ${c}%; background-color: ${l}; opacity: 1;"
@@ -373,7 +373,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
               `:""}
 
           <div class="icon-container">
-            ${h?L`<ha-icon .icon=${h} style="color: ${r};"></ha-icon>`:L`<ha-state-icon
+            ${h?q`<ha-icon .icon=${h} style="color: ${r};"></ha-icon>`:q`<ha-state-icon
                   .hass=${this.hass}
                   .stateObj=${t}
                   style="color: ${r};"
@@ -382,21 +382,21 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
 
           <div class="name-container">
             <div class="name">${this._name}</div>
-            ${d?L`<div class="state">${d}</div>`:""}
+            ${d?q`<div class="state">${d}</div>`:""}
           </div>
 
-          ${this._hasNavigateAction?L`<ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>`:""}
+          ${this._hasNavigateAction?q`<ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>`:""}
 
-          ${s?L`
+          ${s?q`
                 <div class="sub-buttons">
                   <button class="sub-btn" @click=${this._openCover}>
                     <ha-icon icon="mdi:arrow-up"></ha-icon>
                   </button>
-                  ${n?L`
+                  ${n?q`
                         <button class="sub-btn" @click=${this._stopCover}>
                           <ha-icon icon="mdi:stop"></ha-icon>
                         </button>
-                      `:q}
+                      `:V}
                   <button class="sub-btn" @click=${this._closeCover}>
                     <ha-icon icon="mdi:arrow-down"></ha-icon>
                   </button>
@@ -516,7 +516,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
   .grid-item {
     min-width: 0;
   }
-`;customElements.define("materia-room-editor",class extends vt{get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}},context:{icon_entity:"entity"}},{name:"entity_type",selector:{select:{options:["light","cover"]}}},{name:"columns",selector:{number:{min:1,max:6}}},{name:"color_on",selector:{template:{}}}]}});class $t extends(ht(at)){static properties={config:{state:!0},_expanded:{state:!0},_childCards:{state:!0},_resolvedColorOn:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0}};static styles=[ut,pt,wt];constructor(){super(),this._expanded=!1,this._childCards=null,this._hass=null}static getConfigElement(){return document.createElement("materia-room-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("light."))||"light.example";return{entity:e,name:"Room",icon:"mdi:home",entity_type:"light",columns:2}}setConfig(t){if(!t.entity)throw new Error("entity is required");const e=this.config?.cards;this.config={columns:2,...t};const i=this.config.cards;JSON.stringify(e)!==JSON.stringify(i)&&(this._childCards=null,this.isConnected&&this._createChildCards())}set hass(t){this._hass=t,this._childCards&&this._childCards.forEach(e=>e.hass=t),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"),this.requestUpdate()}get hass(){return this._hass}firstUpdated(){this._createChildCards()}async _createChildCards(){const t=this.config?.cards;if(!t||0===t.length)return void(this._childCards=[]);const e=await async function(){return ct||(ct=await window.loadCardHelpers(),ct)}();this._childCards=await Promise.all(t.map(async t=>{const i=await e.createCardElement(t);return this._hass&&(i.hass=this._hass),i})),this.requestUpdate()}_toggleExpand(){this._expanded=!this._expanded}_toggleEntity(t){if(t.stopPropagation(),!this._hass||!this.config.entity)return;const e="cover"===(this.config.entity_type||"light")?"cover":"light";this._hass.callService(e,"toggle",{entity_id:this.config.entity})}get _isActive(){if(!this._hass||!this.config.entity)return!1;const t=this._hass.states[this.config.entity];if(!t)return!1;return"cover"===(this.config.entity_type||"light")?"open"===t.state:"on"===t.state}get _stateDisplay(){if(!this._hass||!this.config.entity)return"";const t=this._hass.states[this.config.entity];if(!t)return"unavailable";if(this.config.attribute){const e=t.attributes[this.config.attribute];return null==e?t.state:"brightness"===this.config.attribute?`${Math.round(e/255*100)}%`:String(e)}return this._hass.formatEntityState?this._hass.formatEntityState(t):t.state}render(){if(!this.config)return L``;const t=this._hass?.states?.[this.config.entity],e=this._isUnavailable(t),i=this._isActive,o=this._resolvedColorOn||this.config.color_on,s=i&&o?o:i?"var(--md-sys-color-primary)":"var(--primary-text-color)",n=this.config.columns||2;return L`
+`;customElements.define("materia-room-editor",class extends vt{get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}},context:{icon_entity:"entity"}},{name:"entity_type",selector:{select:{options:["light","cover"]}}},{name:"columns",selector:{number:{min:1,max:6}}},{name:"color_on",selector:{template:{}}}]}});class $t extends(ht(at)){static properties={config:{state:!0},_expanded:{state:!0},_childCards:{state:!0},_resolvedColorOn:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0}};static styles=[ut,pt,wt];constructor(){super(),this._expanded=!1,this._childCards=null,this._hass=null}static getConfigElement(){return document.createElement("materia-room-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("light."))||"light.example";return{entity:e,name:"Room",icon:"mdi:home",entity_type:"light",columns:2}}setConfig(t){if(!t.entity)throw new Error("entity is required");const e=this.config?.cards;this.config={columns:2,...t};const i=this.config.cards;JSON.stringify(e)!==JSON.stringify(i)&&(this._childCards=null,this.isConnected&&this._createChildCards())}set hass(t){this._hass=t,this._childCards&&this._childCards.forEach(e=>e.hass=t),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"),this.requestUpdate()}get hass(){return this._hass}firstUpdated(){this._createChildCards()}async _createChildCards(){const t=this.config?.cards;if(!t||0===t.length)return void(this._childCards=[]);const e=await async function(){return ct||(ct=await window.loadCardHelpers(),ct)}();this._childCards=await Promise.all(t.map(async t=>{const i=await e.createCardElement(t);return this._hass&&(i.hass=this._hass),i})),this.requestUpdate()}_toggleExpand(){this._expanded=!this._expanded}_toggleEntity(t){if(t.stopPropagation(),!this._hass||!this.config.entity)return;const e="cover"===(this.config.entity_type||"light")?"cover":"light";this._hass.callService(e,"toggle",{entity_id:this.config.entity})}get _isActive(){if(!this._hass||!this.config.entity)return!1;const t=this._hass.states[this.config.entity];if(!t)return!1;return"cover"===(this.config.entity_type||"light")?"open"===t.state:"on"===t.state}get _stateDisplay(){if(!this._hass||!this.config.entity)return"";const t=this._hass.states[this.config.entity];if(!t)return"unavailable";if(this.config.attribute){const e=t.attributes[this.config.attribute];return null==e?t.state:"brightness"===this.config.attribute?`${Math.round(e/255*100)}%`:String(e)}return this._hass.formatEntityState?this._hass.formatEntityState(t):t.state}render(){if(!this.config)return q``;const t=this._hass?.states?.[this.config.entity],e=this._isUnavailable(t),i=this._isActive,o=this._resolvedColorOn||this.config.color_on,s=i&&o?o:i?"var(--md-sys-color-primary)":"var(--primary-text-color)",n=this.config.columns||2;return q`
       <ha-card>
         <div class="title-row ${e?"unavailable":""}" @click=${this._toggleExpand}>
           <div class="title-left">
@@ -542,18 +542,18 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         <div class="collapsible ${this._expanded?"expanded":""}">
           <div class="collapsible-inner">
             <div class="grid" style="--room-columns: ${n}">
-              ${this._childCards?.map(t=>L`<div class="grid-item">${t}</div>`)}
+              ${this._childCards?.map(t=>q`<div class="grid-item">${t}</div>`)}
             </div>
           </div>
         </div>
       </ha-card>
-    `}_renderSubButtons(){const t=this.config.sub_button;return t&&Array.isArray(t)&&0!==t.length?t.map(t=>L`
+    `}_renderSubButtons(){const t=this.config.sub_button;return t&&Array.isArray(t)&&0!==t.length?t.map(t=>q`
         <ha-icon
           class="sub-btn"
           .icon=${t.icon||"mdi:dots-vertical"}
           @click=${e=>{e.stopPropagation(),t.entity&&this.dispatchEvent(new CustomEvent("hass-more-info",{bubbles:!0,composed:!0,detail:{entityId:t.entity}}))}}
         ></ha-icon>
-      `):L``}getCardSize(){return this._expanded?3+(this._childCards?.length||0):2}}customElements.define("materia-room",$t),window.customCards=window.customCards||[],window.customCards.push({type:"materia-room",name:"Materia Room",description:"Expandable room section with child card grid.",preview:!0});const Ct=n`
+      `):q``}getCardSize(){return this._expanded?3+(this._childCards?.length||0):2}}customElements.define("materia-room",$t),window.customCards=window.customCards||[],window.customCards.push({type:"materia-room",name:"Materia Room",description:"Expandable room section with child card grid.",preview:!0});const Ct=n`
   ha-card {
     border-radius: 30px;
     padding: 16px 20px 20px;
@@ -661,7 +661,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     text-align: center;
     width: 100%;
   }
-`;customElements.define("materia-climate-editor",class extends vt{get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"climate"}}},{name:"name",required:!0,selector:{text:{}}},{name:"temperature_entity",label:"Temperature sensor",selector:{entity:{domain:"sensor"}}},{name:"humidity_entity",label:"Humidity sensor",selector:{entity:{domain:"sensor"}}},{name:"outdoor_temp_entity",label:"Outdoor temperature sensor",selector:{entity:{domain:"sensor"}}},{name:"step",selector:{number:{min:.5,max:5,step:.5,mode:"box"}}}]}});class kt extends(ht(at)){static get properties(){return{hass:{attribute:!1},config:{state:!0},_optimisticTemp:{state:!0},_resolvedName:{state:!0}}}static styles=[ut,pt,Ct];static getConfigElement(){return document.createElement("materia-climate-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("climate."))||"climate.example";return{entity:e,name:"Climate",step:.5}}setConfig(t){if(!t.entity)throw new Error("entity is required");if(!t.name)throw new Error("name is required");this.config={step:.5,...t}}getCardSize(){return 3}get _entity(){return this.hass?.states[this.config.entity]}get _mode(){return this._entity?.state??"off"}get _targetTemp(){return null!=this._optimisticTemp?this._optimisticTemp:this._entity?.attributes?.temperature}get _currentTemp(){return this.config.temperature_entity?this.hass?.states[this.config.temperature_entity]?.state:this._entity?.attributes?.current_temperature}get _humidity(){if(this.config.humidity_entity)return this.hass?.states[this.config.humidity_entity]?.state}get _outdoorTemp(){if(this.config.outdoor_temp_entity)return this.hass?.states[this.config.outdoor_temp_entity]?.state}_modeIcon(){switch(this._mode){case"heat":return"mdi:fire";case"cool":return"mdi:snowflake";case"auto":return"mdi:autorenew";default:return"mdi:power"}}_modeBg(){switch(this._mode){case"heat":return"var(--md-sys-cust-color-climate-heat-container)";case"cool":return"var(--md-sys-cust-color-climate-cool-container)";case"auto":return"var(--md-sys-cust-color-climate-auto-container)";default:return"var(--md-sys-color-surface-variant)"}}_modeColor(){switch(this._mode){case"heat":return"var(--md-sys-cust-color-on-climate-heat)";case"cool":return"var(--md-sys-cust-color-on-climate-cool)";case"auto":return"var(--md-sys-cust-color-on-climate-auto)";default:return"var(--md-sys-color-on-surface-variant)"}}_buttonBg(){switch(this._mode){case"heat":return"var(--md-sys-cust-color-climate-heat)";case"cool":return"var(--md-sys-cust-color-climate-cool)";case"auto":return"var(--md-sys-cust-color-climate-auto)";default:return"rgba(68,68,68,0.7)"}}_buttonColor(){switch(this._mode){case"heat":return"var(--md-sys-cust-color-on-climate-heat)";case"cool":return"var(--md-sys-cust-color-on-climate-cool, #fff)";case"auto":return"var(--md-sys-cust-color-on-climate-auto, #000)";default:return"var(--md-sys-color-surface-variant-light, #45464f)"}}_statusText(){const t=this._mode,e=this._currentTemp,i=this._humidity,o=this._outdoorTemp,s=[];return"off"===t?(null!=o&&s.push(`${o}°`),null!=i&&s.push(`${i}%`),s.join(" · ")||""):(null!=e&&s.push(`${e}°`),null!=i&&s.push(`${i}%`),null!=o&&s.push(`${o}°`),s.join(" · ")||"")}_adjustTemp(t){const e=this._targetTemp;if(null==e)return;const i=e+t;this._optimisticTemp=i,this.hass.callService("climate","set_temperature",{entity_id:this.config.entity,temperature:i}),clearTimeout(this._optimisticTimer),this._optimisticTimer=setTimeout(()=>{this._optimisticTemp=null},1e4)}updated(t){if(t.has("hass")&&this.hass&&this._resolveField("name","_resolvedName"),t.has("hass")&&null!=this._optimisticTemp){const t=this._entity?.attributes?.temperature;t===this._optimisticTemp&&(this._optimisticTemp=null,clearTimeout(this._optimisticTimer))}}_handleTap(t){if(t.target.closest(".btn"))return;if("more-info"===(this.config.tap_action??{action:"more-info"}).action){const t=new Event("hass-more-info",{bubbles:!0,composed:!0});return t.detail={entityId:this.config.entity},void this.dispatchEvent(t)}const e=new Event("hass-action",{bubbles:!0,composed:!0});e.detail={config:this.config,action:"tap"},this.dispatchEvent(e)}render(){if(!this.hass||!this.config)return L``;const t=this._entity,e=this._isUnavailable(t),i="off"===this._mode||e,o=e?"Unavailable":i?"Off":null!=this._targetTemp?Math.round(this._targetTemp):"—";return L`
+`;customElements.define("materia-climate-editor",class extends vt{get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"climate"}}},{name:"name",required:!0,selector:{text:{}}},{name:"temperature_entity",label:"Temperature sensor",selector:{entity:{domain:"sensor"}}},{name:"humidity_entity",label:"Humidity sensor",selector:{entity:{domain:"sensor"}}},{name:"outdoor_temp_entity",label:"Outdoor temperature sensor",selector:{entity:{domain:"sensor"}}},{name:"step",selector:{number:{min:.5,max:5,step:.5,mode:"box"}}}]}});class kt extends(ht(at)){static get properties(){return{hass:{attribute:!1},config:{state:!0},_optimisticTemp:{state:!0},_resolvedName:{state:!0}}}static styles=[ut,pt,Ct];static getConfigElement(){return document.createElement("materia-climate-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("climate."))||"climate.example";return{entity:e,name:"Climate",step:.5}}setConfig(t){if(!t.entity)throw new Error("entity is required");if(!t.name)throw new Error("name is required");this.config={step:.5,...t}}getCardSize(){return 3}get _entity(){return this.hass?.states[this.config.entity]}get _mode(){return this._entity?.state??"off"}get _targetTemp(){return null!=this._optimisticTemp?this._optimisticTemp:this._entity?.attributes?.temperature}get _currentTemp(){return this.config.temperature_entity?this.hass?.states[this.config.temperature_entity]?.state:this._entity?.attributes?.current_temperature}get _humidity(){if(this.config.humidity_entity)return this.hass?.states[this.config.humidity_entity]?.state}get _outdoorTemp(){if(this.config.outdoor_temp_entity)return this.hass?.states[this.config.outdoor_temp_entity]?.state}_modeIcon(){switch(this._mode){case"heat":return"mdi:fire";case"cool":return"mdi:snowflake";case"auto":return"mdi:autorenew";default:return"mdi:power"}}_modeBg(){switch(this._mode){case"heat":return"var(--md-sys-cust-color-climate-heat-container)";case"cool":return"var(--md-sys-cust-color-climate-cool-container)";case"auto":return"var(--md-sys-cust-color-climate-auto-container)";default:return"var(--md-sys-color-surface-variant)"}}_modeColor(){switch(this._mode){case"heat":return"var(--md-sys-cust-color-on-climate-heat)";case"cool":return"var(--md-sys-cust-color-on-climate-cool)";case"auto":return"var(--md-sys-cust-color-on-climate-auto)";default:return"var(--md-sys-color-on-surface-variant)"}}_buttonBg(){switch(this._mode){case"heat":return"var(--md-sys-cust-color-climate-heat)";case"cool":return"var(--md-sys-cust-color-climate-cool)";case"auto":return"var(--md-sys-cust-color-climate-auto)";default:return"rgba(68,68,68,0.7)"}}_buttonColor(){switch(this._mode){case"heat":return"var(--md-sys-cust-color-on-climate-heat)";case"cool":return"var(--md-sys-cust-color-on-climate-cool, #fff)";case"auto":return"var(--md-sys-cust-color-on-climate-auto, #000)";default:return"var(--md-sys-color-surface-variant-light, #45464f)"}}_statusText(){const t=this._mode,e=this._currentTemp,i=this._humidity,o=this._outdoorTemp,s=[];return"off"===t?(null!=o&&s.push(`${o}°`),null!=i&&s.push(`${i}%`),s.join(" · ")||""):(null!=e&&s.push(`${e}°`),null!=i&&s.push(`${i}%`),null!=o&&s.push(`${o}°`),s.join(" · ")||"")}_adjustTemp(t){const e=this._targetTemp;if(null==e)return;const i=e+t;this._optimisticTemp=i,this.hass.callService("climate","set_temperature",{entity_id:this.config.entity,temperature:i}),clearTimeout(this._optimisticTimer),this._optimisticTimer=setTimeout(()=>{this._optimisticTemp=null},1e4)}updated(t){if(t.has("hass")&&this.hass&&this._resolveField("name","_resolvedName"),t.has("hass")&&null!=this._optimisticTemp){const t=this._entity?.attributes?.temperature;t===this._optimisticTemp&&(this._optimisticTemp=null,clearTimeout(this._optimisticTimer))}}_handleTap(t){if(t.target.closest(".btn"))return;if("more-info"===(this.config.tap_action??{action:"more-info"}).action){const t=new Event("hass-more-info",{bubbles:!0,composed:!0});return t.detail={entityId:this.config.entity},void this.dispatchEvent(t)}const e=new Event("hass-action",{bubbles:!0,composed:!0});e.detail={config:this.config,action:"tap"},this.dispatchEvent(e)}render(){if(!this.hass||!this.config)return q``;const t=this._entity,e=this._isUnavailable(t),i="off"===this._mode||e,o=e?"Unavailable":i?"Off":null!=this._targetTemp?Math.round(this._targetTemp):"—";return q`
       <ha-card
         class="${e?"unavailable":""}"
         @click=${this._handleTap}
@@ -682,7 +682,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
 
         <div class="center">
           <div class="center-side">
-            ${i?q:L`
+            ${i?V:q`
                   <button
                     class="btn"
                     style="background-color: ${this._buttonBg()}; color: ${this._buttonColor()};"
@@ -696,7 +696,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
           <span class="temp ${i?"off":""}">${o}</span>
 
           <div class="center-side">
-            ${i?q:L`
+            ${i?V:q`
                   <button
                     class="btn"
                     style="background-color: ${this._buttonBg()}; color: ${this._buttonColor()};"
@@ -765,7 +765,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     opacity: 0.7;
     white-space: nowrap;
   }
-`];customElements.define("materia-weather-editor",class extends vt{get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"weather"}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}},context:{icon_entity:"entity"}},{name:"humidity_entity",selector:{entity:{domain:"sensor"}}},{name:"tap_action",selector:{ui_action:{default_action:"more-info"}}}]}});const Et={sunny:"m3o:sunny",clear:"m3o:sunny","clear-night":"mdi:weather-night",partlycloudy:"m3o:partly-cloudy-day",partly_cloudy:"m3o:partly-cloudy-day",cloudy:"m3o:cloud",rainy:"m3o:rainy",pouring:"m3o:rainy",snowy:"mdi:weather-snowy",fog:"m3o:foggy",windy:"mdi:weather-windy",lightning:"mdi:weather-lightning","lightning-rainy":"mdi:weather-lightning-rainy",hail:"mdi:weather-hail",exceptional:"mdi:alert-circle-outline"};class St extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0}};static getConfigElement(){return document.createElement("materia-weather-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("weather."))||"";return{entity:e}}static styles=At;setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={...t}}updated(t){t.has("hass")&&this.hass&&(this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"))}render(){if(!this.hass||!this.config)return L``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=t?.state??"",o=t?.attributes?.temperature,s=t?.attributes?.temperature_unit||"°",n=this._isTemplate(this.config.icon)?this._resolvedIcon:this.config.icon||Et[i]||"mdi:weather-partly-cloudy";let a=null;if(this.config.humidity_entity){const t=this.hass.states[this.config.humidity_entity];t&&(a=t.state)}null==a&&null!=t?.attributes?.humidity&&(a=t.attributes.humidity);const r=i.replace(/-|_/g," "),c=e?"Unavailable":(this._isTemplate(this.config.name)?this._resolvedName:this.config.name)||(null!=o?`${o}${s}`:"—"),l=e?"":null!=a?`${this._capitalize(r)} · ${a}%`:this._capitalize(r);return L`
+`];customElements.define("materia-weather-editor",class extends vt{get _schema(){return[{name:"entity",required:!0,selector:{entity:{domain:"weather"}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}},context:{icon_entity:"entity"}},{name:"humidity_entity",selector:{entity:{domain:"sensor"}}},{name:"tap_action",selector:{ui_action:{default_action:"more-info"}}}]}});const Et={sunny:"m3o:sunny",clear:"m3o:sunny","clear-night":"mdi:weather-night",partlycloudy:"m3o:partly-cloudy-day",partly_cloudy:"m3o:partly-cloudy-day",cloudy:"m3o:cloud",rainy:"m3o:rainy",pouring:"m3o:rainy",snowy:"mdi:weather-snowy",fog:"m3o:foggy",windy:"mdi:weather-windy",lightning:"mdi:weather-lightning","lightning-rainy":"mdi:weather-lightning-rainy",hail:"mdi:weather-hail",exceptional:"mdi:alert-circle-outline"};class St extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0}};static getConfigElement(){return document.createElement("materia-weather-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("weather."))||"";return{entity:e}}static styles=At;setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={...t}}updated(t){t.has("hass")&&this.hass&&(this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"))}render(){if(!this.hass||!this.config)return q``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=t?.state??"",o=t?.attributes?.temperature,s=t?.attributes?.temperature_unit||"°",n=this._isTemplate(this.config.icon)?this._resolvedIcon:this.config.icon||Et[i]||"mdi:weather-partly-cloudy";let a=null;if(this.config.humidity_entity){const t=this.hass.states[this.config.humidity_entity];t&&(a=t.state)}null==a&&null!=t?.attributes?.humidity&&(a=t.attributes.humidity);const r=i.replace(/-|_/g," "),c=e?"Unavailable":(this._isTemplate(this.config.name)?this._resolvedName:this.config.name)||(null!=o?`${o}${s}`:"—"),l=e?"":null!=a?`${this._capitalize(r)} · ${a}%`:this._capitalize(r);return q`
       <ha-card>
         <div
           class="container ${e?"unavailable":""}"
@@ -780,7 +780,183 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
           </div>
         </div>
       </ha-card>
-    `}_handleTap(){this._handleAction(this.config.tap_action||{action:"more-info"})}getGridOptions(){return{columns:6,rows:"auto"}}getCardSize(){return 1}}customElements.define("materia-weather",St),window.customCards=window.customCards||[],window.customCards.push({type:"materia-weather",name:"Materia Weather",description:"Weather condition card with automatic icon mapping.",preview:!0});const Tt={primary:["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],secondary:["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],tertiary:["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],error:["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],device:["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-container":["var(--md-sys-color-primary-container)","var(--md-sys-color-on-primary-container)"],"secondary-container":["var(--md-sys-color-secondary-container)","var(--md-sys-color-secondary)"],"error-container":["var(--md-sys-color-error-container)","var(--md-sys-color-error)"],"device-container":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"]},Ut=[ut,n`
+    `}_handleTap(){this._handleAction(this.config.tap_action||{action:"more-info"})}getGridOptions(){return{columns:6,rows:"auto"}}getCardSize(){return 1}}customElements.define("materia-weather",St),window.customCards=window.customCards||[],window.customCards.push({type:"materia-weather",name:"Materia Weather",description:"Weather condition card with automatic icon mapping.",preview:!0});const Tt=[ut,dt,n`
+    ha-card {
+      padding: 0;
+      border-radius: 50%;
+      overflow: hidden;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    ha-icon {
+      --mdc-icon-size: 24px;
+    }
+
+    ha-card.size-default { width: 48px; height: 48px; }
+    ha-card.size-large   { width: 56px; height: 56px; }
+
+    ha-card.standard {
+      background: transparent;
+      box-shadow: none;
+      border: none;
+      color: var(--primary-text-color);
+    }
+
+    ha-card.outlined {
+      background: transparent;
+      box-shadow: none;
+      border: 1px solid var(--md-sys-color-outline);
+      color: var(--primary-text-color);
+    }
+
+    ha-card.filled {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      box-shadow: none;
+      border: none;
+    }
+
+    ha-card.filled-tonal {
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+      box-shadow: none;
+      border: none;
+    }
+
+    ha-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    ha-card:hover::before  { opacity: 0.08; }
+    ha-card:active::before { opacity: 0.12; }
+
+    ha-card.disabled {
+      opacity: 0.38;
+      pointer-events: none;
+    }
+  `];class Ut extends at{static properties={hass:{attribute:!1},_config:{state:!0}};static styles=n`
+    :host { display: block; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .mapping-card {
+      border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+      border-radius: 12px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .mapping-header {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 4px 4px 12px;
+      background: var(--secondary-background-color, rgba(0,0,0,0.04));
+    }
+    .mapping-header span {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .mapping-body {
+      padding: 8px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .mapping-body ha-form {
+      display: block;
+      width: 100%;
+    }
+  `;setConfig(t){this._config=t}_isTemplate(t){return t&&"string"==typeof t&&(t.includes("{{")||t.includes("{%"))}get _schema(){return[this._isTemplate(this._config?.icon)?{name:"icon",required:!0,selector:{template:{}}}:{name:"icon",required:!0,selector:{icon:{}},context:{icon_entity:"entity"}},{name:"variant",selector:{select:{options:[{value:"standard",label:"Standard"},{value:"outlined",label:"Outlined"},{value:"filled",label:"Filled"},{value:"filled-tonal",label:"Filled Tonal"}]}}},{name:"size",selector:{select:{options:[{value:"default",label:"Default (48px)"},{value:"large",label:"Large (56px)"}]}}},{name:"entity",selector:{entity:{}}},{name:"disabled",selector:{template:{}}},{name:"tap_action",label:"Default action",selector:{ui_action:{}}}]}get _mappingSchema(){return[{name:"state",required:!0,selector:{text:{}}},{name:"tap_action",label:"Action",selector:{ui_action:{}}}]}get _stateMappings(){const t=this._config.tap_action_map||{};return Object.keys(t).map(e=>({state:e,tap_action:t[e]}))}_expanded=null;render(){if(!this.hass||!this._config)return q``;const t=this._stateMappings;return q`
+      <ha-form
+        .hass=${this.hass}
+        .data=${this._config}
+        .schema=${this._schema}
+        .computeLabel=${ft}
+        @value-changed=${this._valueChanged}
+      ></ha-form>
+
+      <div class="section-header">
+        <span>Action mappings</span>
+        <ha-icon-button @click=${this._addMapping}>
+          <ha-icon icon="mdi:plus"></ha-icon>
+        </ha-icon-button>
+      </div>
+
+      ${t.map((t,e)=>q`
+          <div class="mapping-card">
+            <div class="mapping-header">
+              <span>${t.state||`Mapping ${e+1}`}</span>
+              <ha-icon-button @click=${()=>this._toggleExpand(e)}>
+                <ha-icon icon=${this._expanded===e?"mdi:chevron-up":"mdi:chevron-down"}></ha-icon>
+              </ha-icon-button>
+              <ha-icon-button @click=${()=>this._removeMapping(e)}>
+                <ha-icon icon="mdi:delete"></ha-icon>
+              </ha-icon-button>
+            </div>
+            ${this._expanded===e?q`
+                  <div class="mapping-body">
+                    <ha-form
+                      .hass=${this.hass}
+                      .data=${t}
+                      .schema=${this._mappingSchema}
+                      .computeLabel=${ft}
+                      @value-changed=${t=>this._updateMapping(e,t.detail.value)}
+                    ></ha-form>
+                  </div>
+                `:""}
+          </div>
+        `)}
+    `}_toggleExpand(t){this._expanded=this._expanded===t?null:t,this.requestUpdate()}_valueChanged(t){const e={...this._config,...t.detail.value};this._fireConfig(e)}_addMapping(){const t=[...this._stateMappings,{state:""}];this._applyMappings(t),this._expanded=t.length-1}_removeMapping(t){const e=[...this._stateMappings];e.splice(t,1),this._applyMappings(e),this._expanded===t&&(this._expanded=null)}_updateMapping(t,e){const i=[...this._stateMappings];i[t]={...i[t],...e},this._applyMappings(i)}_applyMappings(t){const{tap_action_map:e,...i}=this._config,o={};for(const e of t)e.state&&e.tap_action&&(o[e.state]=e.tap_action);const s=Object.keys(o).length?{...i,tap_action_map:o}:i;this._fireConfig(s)}_fireConfig(t){this._config=t,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-icon-button-editor",Ut);class zt extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedIcon:{state:!0},_resolvedDisabled:{state:!0}};static getConfigElement(){return document.createElement("materia-icon-button-editor")}static getStubConfig(){return{icon:"mdi:play",variant:"filled",size:"default"}}static styles=[pt,Tt];setConfig(t){if(!t.icon)throw new Error("icon is required");this.config={variant:"filled",size:"default",...t}}get _disabled(){const t=this.config?.disabled;if(null==t)return!1;if("boolean"==typeof t)return t;if(this._isTemplate(t)){const t=this._resolvedDisabled;return"True"===t||"true"===t||"1"===t}return"true"===t||"True"===t}updated(t){t.has("hass")&&this.hass&&(this._resolveField("icon","_resolvedIcon"),this._resolveField("disabled","_resolvedDisabled"))}_defaultTapAction(){return this.config.entity?{action:"toggle"}:{action:"none"}}render(){if(!this.config)return q``;const t=this.config.entity?this.hass?.states?.[this.config.entity]:void 0,e=!!this.config.entity&&this._isUnavailable(t),i=this._disabled,o=this.config.variant||"filled",s="large"===this.config.size?"large":"default",n=this._isTemplate(this.config.icon)?this._resolvedIcon||"mdi:circle-small":this.config.icon;return q`
+      <ha-card
+        class="${o} size-${s} ${e?"unavailable":""} ${i?"disabled":""}"
+        @click=${this._handleTap}
+      >
+        <ha-icon .icon=${n}></ha-icon>
+      </ha-card>
+    `}_resolveTapAction(){if(this.config.tap_action_map&&this.config.entity){const t=this.hass?.states[this.config.entity]?.state,e=this.config.tap_action_map[t]??this.config.tap_action_map.default;if(e)return e}return this.config.tap_action||this._defaultTapAction()}_handleTap(){this._disabled||this._handleAction(this._resolveTapAction())}getCardSize(){return 1}}customElements.define("materia-icon-button",zt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-icon-button",name:"Materia Icon Button",description:"M3 icon button with variants and state-based icons.",preview:!0});class Ot extends at{static properties={hass:{attribute:!1},config:{state:!0}};static styles=n`
+    :host {
+      display: block;
+      font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 4px 0;
+    }
+  `;setConfig(t){if(!Array.isArray(t.buttons)||0===t.buttons.length)throw new Error("buttons array is required");this.config=t}getCardSize(){return 1}render(){return this.hass&&this.config?q`
+      <div class="row">
+        ${this.config.buttons.map(t=>q`
+          <materia-icon-button
+            .hass=${this.hass}
+            .config=${{variant:"filled",size:"default",...t}}
+          ></materia-icon-button>
+        `)}
+      </div>
+    `:q``}}customElements.define("materia-icon-row",Ot),window.customCards=window.customCards||[],window.customCards.push({type:"materia-icon-row",name:"Materia Icon Row",description:"A centered row of icon buttons.",preview:!1});const Ft={primary:["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],secondary:["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],tertiary:["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],error:["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],device:["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-container":["var(--md-sys-color-primary-container)","var(--md-sys-color-on-primary-container)"],"secondary-container":["var(--md-sys-color-secondary-container)","var(--md-sys-color-secondary)"],"error-container":["var(--md-sys-color-error-container)","var(--md-sys-color-error)"],"device-container":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"]},Mt=[ut,n`
     :host {
       display: inline-block;
     }
@@ -796,6 +972,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       grid-template-columns: 1fr;
       font-family: inherit;
       -webkit-tap-highlight-color: transparent;
+      transition: none;
     }
 
     ha-card.no-state {
@@ -856,9 +1033,9 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       background-color: var(--ha-card-background);
       color: var(--primary-text-color);
     }
-  `];class zt extends at{static properties={hass:{attribute:!1},_config:{state:!0}};static styles=n`
+  `];class Pt extends at{static properties={hass:{attribute:!1},_config:{state:!0}};static styles=n`
     :host { display: block; }
-  `;setConfig(t){this._config=t}get _schema(){return[{name:"entity",selector:{entity:{}}},{name:"name",required:!0,selector:{text:{}}},{name:"icon",required:!0,selector:{icon:{}},context:{icon_entity:"entity"}},{name:"variant",selector:{select:{options:[{value:"primary",label:"Primary"},{value:"secondary",label:"Secondary"},{value:"tertiary",label:"Tertiary"},{value:"error",label:"Error"},{value:"device",label:"Device"},{value:"primary-container",label:"Primary Container"},{value:"secondary-container",label:"Secondary Container"},{value:"error-container",label:"Error Container"},{value:"device-container",label:"Device Container"},{value:"battery",label:"Battery"}]}}},{name:"show_state",selector:{boolean:{}}},{name:"active_state",selector:{text:{}}},{name:"state_display",selector:{template:{}}},{name:"color",selector:{template:{}}},{name:"color_on",selector:{template:{}}},{name:"tap_action",selector:{ui_action:{default_action:"toggle"}}},{name:"double_tap_action",selector:{ui_action:{default_action:"none"}}}]}render(){return this.hass&&this._config?L`
+  `;setConfig(t){this._config=t}get _schema(){return[{name:"entity",selector:{entity:{}}},{name:"name",required:!0,selector:{text:{}}},{name:"icon",required:!0,selector:{icon:{}},context:{icon_entity:"entity"}},{name:"variant",selector:{select:{options:[{value:"primary",label:"Primary"},{value:"secondary",label:"Secondary"},{value:"tertiary",label:"Tertiary"},{value:"error",label:"Error"},{value:"device",label:"Device"},{value:"primary-container",label:"Primary Container"},{value:"secondary-container",label:"Secondary Container"},{value:"error-container",label:"Error Container"},{value:"device-container",label:"Device Container"},{value:"battery",label:"Battery"}]}}},{name:"show_state",selector:{boolean:{}}},{name:"active_state",selector:{text:{}}},{name:"state_display",selector:{template:{}}},{name:"color",selector:{template:{}}},{name:"color_on",selector:{template:{}}},{name:"tap_action",selector:{ui_action:{default_action:"toggle"}}},{name:"double_tap_action",selector:{ui_action:{default_action:"none"}}}]}render(){return this.hass&&this._config?q`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
@@ -866,7 +1043,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         .computeLabel=${ft}
         @value-changed=${this._valueChanged}
       ></ha-form>
-    `:L``}_valueChanged(t){this._config={...this._config,...t.detail.value},this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:this._config},bubbles:!0,composed:!0}))}}customElements.define("materia-badge-editor",zt);class Ot extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedStateDisplay:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0}};static getConfigElement(){return document.createElement("materia-badge-editor")}static getStubConfig(t){const e=(t?Object.keys(t.states):[]).find(t=>t.startsWith("light.")||t.startsWith("switch."))||"";return{name:"Badge",icon:"mdi:power-plug",variant:"primary",show_state:!1,active_state:"on",entity:e}}static styles=[pt,Ut];setConfig(t){if(!t.icon)throw new Error("icon is required");if(!t.name)throw new Error("name is required");this.config={show_state:!1,active_state:"on",variant:"secondary",tap_action:{action:"toggle"},...t}}updated(t){super.updated?.(t),t.has("hass")&&this.hass&&(this._resolveField("state_display","_resolvedStateDisplay"),this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"))}_isActive(t){if(!t)return!1;const e=t.state,i=this.config.active_state||"on";return e===String(i)||"open"===e}_getBatteryColors(t){const e=parseFloat(t?.state)||0;return e<10?["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"]:e<20?["var(--md-sys-cust-color-warning-container)","var(--md-sys-cust-color-on-warning-container)"]:["var(--ha-card-background)","var(--primary-text-color)"]}get _templatesReady(){const t=this.config;return(!this._isTemplate(t.color)||void 0!==this._resolvedColor)&&((!this._isTemplate(t.color_on)||void 0!==this._resolvedColorOn)&&((!this._isTemplate(t.state_display)||void 0!==this._resolvedStateDisplay)&&((!this._isTemplate(t.icon)||void 0!==this._resolvedIcon)&&(!this._isTemplate(t.name)||void 0!==this._resolvedName))))}render(){if(!this.hass||!this.config)return L``;const t=this.config.entity,e=t?this.hass.states[t]:void 0,i=!!t&&this._isUnavailable(e),o=!i&&this._isActive(e),s=this.config.variant||"secondary",n=this.config.show_state;let a=this._resolvedColor||this.config.color,r=this._resolvedColorOn||this.config.color_on;const c=["primary","tertiary","error","primary-container","secondary-container","error-container","device-container"];if(!a)if("battery"===s){const[t,i]=this._getBatteryColors(e);a=t,r=i}else if(c.includes(s)){const t=Tt[s]||Tt.secondary;a=t[0],r=r||t[1]}else if(o&&t){const t=Tt[s]||Tt.secondary;a=t[0],r=r||t[1]}else a="var(--ha-card-background)",r=r||"var(--primary-text-color)";r=r||"var(--primary-text-color)";const l=n?"with-state":"no-state",h=o?"active":"inactive";let d="";if(n&&i)d="Unavailable";else if(n&&e){const t=this.config.state_display&&(this.config.state_display.includes("{{")||this.config.state_display.includes("{%"));d=this._resolvedStateDisplay&&t?this._resolvedStateDisplay:this.config.state_display&&!t?this.config.state_display:e.state,d=this._capitalize(d)}return L`
+    `:q``}_valueChanged(t){this._config={...this._config,...t.detail.value},this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:this._config},bubbles:!0,composed:!0}))}}customElements.define("materia-badge-editor",Pt);class Rt extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedStateDisplay:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0}};static getConfigElement(){return document.createElement("materia-badge-editor")}static getStubConfig(t){const e=(t?Object.keys(t.states):[]).find(t=>t.startsWith("light.")||t.startsWith("switch."))||"";return{name:"Badge",icon:"mdi:power-plug",variant:"primary",show_state:!1,active_state:"on",entity:e}}static styles=[pt,Mt];setConfig(t){if(!t.icon)throw new Error("icon is required");if(!t.name)throw new Error("name is required");this.config={show_state:!1,active_state:"on",variant:"secondary",tap_action:{action:"toggle"},...t}}updated(t){super.updated?.(t),t.has("hass")&&this.hass&&(this._resolveField("state_display","_resolvedStateDisplay"),this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"))}_isActive(t){if(!t)return!1;const e=t.state,i=this.config.active_state||"on";return e===String(i)||"open"===e}_getBatteryColors(t){const e=parseFloat(t?.state)||0;return e<10?["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"]:e<20?["var(--md-sys-cust-color-warning-container)","var(--md-sys-cust-color-on-warning-container)"]:["var(--ha-card-background)","var(--primary-text-color)"]}get _templatesReady(){const t=this.config;return(!this._isTemplate(t.color)||void 0!==this._resolvedColor)&&((!this._isTemplate(t.color_on)||void 0!==this._resolvedColorOn)&&((!this._isTemplate(t.state_display)||void 0!==this._resolvedStateDisplay)&&((!this._isTemplate(t.icon)||void 0!==this._resolvedIcon)&&(!this._isTemplate(t.name)||void 0!==this._resolvedName))))}render(){if(!this.hass||!this.config)return q``;const t=this.config.entity,e=t?this.hass.states[t]:void 0,i=!!t&&this._isUnavailable(e),o=!i&&this._isActive(e),s=this.config.variant||"secondary",n=this.config.show_state;let a=this._resolvedColor||this.config.color,r=this._resolvedColorOn||this.config.color_on;const c=["primary","tertiary","error","primary-container","secondary-container","error-container","device-container"];if(!a)if("battery"===s){const[t,i]=this._getBatteryColors(e);a=t,r=i}else if(c.includes(s)){const t=Ft[s]||Ft.secondary;a=t[0],r=r||t[1]}else if(o&&t){const t=Ft[s]||Ft.secondary;a=t[0],r=r||t[1]}else a="var(--ha-card-background)",r=r||"var(--primary-text-color)";r=r||"var(--primary-text-color)";const l=n?"with-state":"no-state",h=o?"active":"inactive";let d="";if(n&&i)d="Unavailable";else if(n&&e){const t=this.config.state_display&&(this.config.state_display.includes("{{")||this.config.state_display.includes("{%"));d=this._resolvedStateDisplay&&t?this._resolvedStateDisplay:this.config.state_display&&!t?this.config.state_display:e.state,d=this._capitalize(d)}return q`
       <ha-card
         class="${l} ${h} ${i?"unavailable":""}"
         style="background-color: ${a}; color: ${r};"
@@ -877,9 +1054,9 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
           <ha-icon .icon=${this._isTemplate(this.config.icon)?this._resolvedIcon:this.config.icon} style="color: ${r};"></ha-icon>
         </div>
         <div class="name">${this._isTemplate(this.config.name)?this._resolvedName:this.config.name}</div>
-        ${n?L`<div class="state">${d}</div>`:""}
+        ${n?q`<div class="state">${d}</div>`:""}
       </ha-card>
-    `}_handleTap(){if(this.config.double_tap_action?.action&&"none"!==this.config.double_tap_action.action){if(this._dblClickTimer)return;this._dblClickTimer=setTimeout(()=>{this._dblClickTimer=null,this._handleAction(this.config.tap_action||{action:"toggle"})},250)}else this._handleAction(this.config.tap_action||{action:"toggle"})}_handleDoubleTap(){this.config.double_tap_action?.action&&"none"!==this.config.double_tap_action.action&&(clearTimeout(this._dblClickTimer),this._dblClickTimer=null,this._handleAction(this.config.double_tap_action))}getCardSize(){return 2}}customElements.define("materia-badge",Ot),window.customCards=window.customCards||[],window.customCards.push({type:"materia-badge",name:"Materia Badge",description:"Square badge for dashboard headers.",preview:!0});const Ft={primary:{active:"var(--md-sys-color-primary)",onActive:"var(--md-sys-color-on-primary)"},secondary:{active:"var(--md-sys-color-secondary)",onActive:"var(--md-sys-color-on-secondary)"},tertiary:{active:"var(--md-sys-color-tertiary)",onActive:"var(--md-sys-color-on-tertiary)"},"climate-heat":{active:"var(--md-sys-cust-color-climate-heat-container)",onActive:"var(--md-sys-cust-color-on-climate-heat)"},"climate-cool":{active:"var(--md-sys-cust-color-climate-cool-container)",onActive:"var(--md-sys-cust-color-on-climate-cool)"},"climate-auto":{active:"var(--md-sys-cust-color-climate-auto-container)",onActive:"var(--md-sys-cust-color-on-climate-auto)"},light:{active:"var(--md-sys-cust-color-light-container)",onActive:"var(--md-sys-cust-color-on-light)"},device:{active:"var(--md-sys-cust-color-device-container)",onActive:"var(--md-sys-cust-color-on-device)"}},Mt={xs:{height:32,innerCorner:4},s:{height:36,innerCorner:8},m:{height:40,innerCorner:8},l:{height:48,innerCorner:16},xl:{height:56,innerCorner:20}},Pt=[ut,dt,n`
+    `}_handleTap(){if(this.config.double_tap_action?.action&&"none"!==this.config.double_tap_action.action){if(this._dblClickTimer)return;this._dblClickTimer=setTimeout(()=>{this._dblClickTimer=null,this._handleAction(this.config.tap_action||{action:"toggle"})},250)}else this._handleAction(this.config.tap_action||{action:"toggle"})}_handleDoubleTap(){this.config.double_tap_action?.action&&"none"!==this.config.double_tap_action.action&&(clearTimeout(this._dblClickTimer),this._dblClickTimer=null,this._handleAction(this.config.double_tap_action))}getCardSize(){return 2}}customElements.define("materia-badge",Rt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-badge",name:"Materia Badge",description:"Square badge for dashboard headers.",preview:!0});const Dt={primary:{active:"var(--md-sys-color-primary)",onActive:"var(--md-sys-color-on-primary)"},secondary:{active:"var(--md-sys-color-secondary)",onActive:"var(--md-sys-color-on-secondary)"},tertiary:{active:"var(--md-sys-color-tertiary)",onActive:"var(--md-sys-color-on-tertiary)"},"climate-heat":{active:"var(--md-sys-cust-color-climate-heat-container)",onActive:"var(--md-sys-cust-color-on-climate-heat)"},"climate-cool":{active:"var(--md-sys-cust-color-climate-cool-container)",onActive:"var(--md-sys-cust-color-on-climate-cool)"},"climate-auto":{active:"var(--md-sys-cust-color-climate-auto-container)",onActive:"var(--md-sys-cust-color-on-climate-auto)"},light:{active:"var(--md-sys-cust-color-light-container)",onActive:"var(--md-sys-cust-color-on-light)"},device:{active:"var(--md-sys-cust-color-device-container)",onActive:"var(--md-sys-cust-color-on-device)"}},Nt={xs:{height:32,innerCorner:4},s:{height:36,innerCorner:8},m:{height:40,innerCorner:8},l:{height:48,innerCorner:16},xl:{height:56,innerCorner:20}},jt=[ut,dt,n`
     .group {
       display: flex;
       gap: 2px;
@@ -955,7 +1132,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       --mdc-icon-size: 18px;
       flex-shrink: 0;
     }
-  `];class Dt extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config={...t}}get _schema(){const t=[...Object.keys(Ft).map(t=>({value:t,label:t.charAt(0).toUpperCase()+t.slice(1).replace(/-/g," ")})),{value:"custom",label:"Custom"}],e=[{name:"entity",selector:{entity:{}}},{name:"attribute",selector:{text:{}}},{name:"preset",label:"Color preset",selector:{select:{options:t,mode:"dropdown"}}},{name:"size",selector:{select:{options:[{value:"xs",label:"XS (32dp)"},{value:"s",label:"S (36dp)"},{value:"m",label:"M (40dp)"},{value:"l",label:"L (48dp)"},{value:"xl",label:"XL (56dp)"}],mode:"dropdown"}}},{name:"variant",label:"Style",selector:{select:{options:[{value:"filled",label:"Filled"},{value:"tonal",label:"Tonal"}],mode:"dropdown"}}},{name:"multi_select",label:"Multi-select",selector:{boolean:{}}}];return this._config?.multi_select&&e.push({name:"columns",label:"Max columns",selector:{number:{min:1,max:8,mode:"box"}}}),"custom"===this._config?.preset&&e.push({name:"color_active",label:"Active color",selector:{template:{}}},{name:"color_on_active",label:"Active text color",selector:{template:{}}}),e}static styles=n`
+  `];class It extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config={...t}}get _schema(){const t=[...Object.keys(Dt).map(t=>({value:t,label:t.charAt(0).toUpperCase()+t.slice(1).replace(/-/g," ")})),{value:"custom",label:"Custom"}],e=[{name:"entity",selector:{entity:{}}},{name:"attribute",selector:{text:{}}},{name:"preset",label:"Color preset",selector:{select:{options:t,mode:"dropdown"}}},{name:"size",selector:{select:{options:[{value:"xs",label:"XS (32dp)"},{value:"s",label:"S (36dp)"},{value:"m",label:"M (40dp)"},{value:"l",label:"L (48dp)"},{value:"xl",label:"XL (56dp)"}],mode:"dropdown"}}},{name:"variant",label:"Style",selector:{select:{options:[{value:"filled",label:"Filled"},{value:"tonal",label:"Tonal"}],mode:"dropdown"}}},{name:"multi_select",label:"Multi-select",selector:{boolean:{}}}];return this._config?.multi_select&&e.push({name:"columns",label:"Max columns",selector:{number:{min:1,max:8,mode:"box"}}}),"custom"===this._config?.preset&&e.push({name:"color_active",label:"Active color",selector:{template:{}}},{name:"color_on_active",label:"Active text color",selector:{template:{}}}),e}static styles=n`
     .options-header {
       display: flex;
       align-items: center;
@@ -995,7 +1172,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       display: block;
       width: 100%;
     }
-  `;render(){return this.hass&&this._config?L`
+  `;render(){return this.hass&&this._config?q`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
@@ -1011,7 +1188,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         </ha-icon-button>
       </div>
 
-      ${(this._config.options||[]).map((t,e)=>L`
+      ${(this._config.options||[]).map((t,e)=>q`
           <div class="option-card">
             <div class="option-header">
               <span>${t.label||t.value||`Option ${e+1}`}</span>
@@ -1028,7 +1205,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
                 <ha-icon icon="mdi:delete"></ha-icon>
               </ha-icon-button>
             </div>
-            ${this._expanded===e?L`
+            ${this._expanded===e?q`
                   <div class="option-body">
                     <ha-form
                       .hass=${this.hass}
@@ -1041,178 +1218,23 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
                 `:""}
           </div>
         `)}
-    `:L``}_expanded=null;get _optionSchema(){return[{name:"label",selector:{text:{}}},{name:"value",required:!0,selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"tap_action",label:"Action",selector:{ui_action:{default_action:"call-service"}}}]}_updateOptionForm(t,e){const i=[...this._config.options||[]];i[t]={...i[t],...e};const o={...this._config,options:i};this._config=o,this._fireConfigChanged(o)}_toggleExpand(t){this._expanded=this._expanded===t?null:t,this.requestUpdate()}_valueChanged(t){const e={...this._config,...t.detail.value};this._config=e,this._fireConfigChanged(e)}_addOption(){const t=[...this._config.options||[],{label:"",value:"",icon:""}],e={...this._config,options:t};this._config=e,this._expanded=t.length-1,this._fireConfigChanged(e)}_removeOption(t){const e=[...this._config.options||[]];e.splice(t,1);const i={...this._config,options:e};this._config=i,this._expanded===t&&(this._expanded=null),this._fireConfigChanged(i)}_moveOption(t,e){const i=[...this._config.options||[]],o=t+e;if(o<0||o>=i.length)return;[i[t],i[o]]=[i[o],i[t]];const s={...this._config,options:i};this._config=s,this._expanded===t&&(this._expanded=o),this._fireConfigChanged(s)}_updateOption(t,e,i){const o=[...this._config.options||[]];o[t]={...o[t],[e]:i};const s={...this._config,options:o};this._config=s,this._fireConfigChanged(s)}_fireConfigChanged(t){this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-button-group-editor",Dt);class Rt extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_optimisticValue:{state:!0},_resolvedColorActive:{state:!0},_resolvedColorOnActive:{state:!0}};static getConfigElement(){return document.createElement("materia-button-group-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("input_select.")||t.startsWith("select."))||"";return{entity:e,size:"m",options:[{label:"Option 1",value:"1"},{label:"Option 2",value:"2"}]}}static styles=[pt,Pt];setConfig(t){this.config={size:"m",...t}}get _resolvedOptions(){if(this.config.options?.length)return this.config.options;const t=this.hass?.states[this.config.entity],e=this.config.entity?.split(".")[0];return"input_select"!==e&&"select"!==e||!t?.attributes?.options?[]:t.attributes.options.map(t=>({label:this._capitalize(t),value:t,tap_action:{action:"perform-action",perform_action:`${e}.select_option`,data:{option:t},target:{entity_id:this.config.entity}}}))}get _activeValue(){if(null!=this._optimisticValue)return this._optimisticValue;const t=this.hass?.states[this.config.entity];return this.config.attribute?String(t?.attributes?.[this.config.attribute]??""):t?.state??""}_isOptionActive(t){if(this.config.multi_select){const e=this._activeValue.split(",").map(t=>t.trim().toLowerCase()).filter(Boolean);return e.includes(String(t.value).toLowerCase())}return String(t.value)===this._activeValue}_getActiveColors(){const t=this._resolvedColorActive||this.config.color_active,e=this._resolvedColorOnActive||this.config.color_on_active;return t&&e?{active:t,onActive:e}:this.config.preset&&Ft[this.config.preset]?Ft[this.config.preset]:Ft.primary}render(){if(!this.hass||!this.config)return L``;const t=this.config.entity?this.hass.states[this.config.entity]:void 0,e=!!t&&"unavailable"===t.state,i=this.config.size||"m",{height:o,innerCorner:s}=Mt[i]||Mt.m,n=o/2;this._activeValue;const a=this._getActiveColors(),r=this._resolvedOptions,c=this.config.variant||"filled";if(!r.length)return L``;const l=this.config.multi_select,h=this.config.columns||0;return L`
+    `:q``}_expanded=null;get _optionSchema(){return[{name:"label",selector:{text:{}}},{name:"value",required:!0,selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"tap_action",label:"Action",selector:{ui_action:{default_action:"call-service"}}}]}_updateOptionForm(t,e){const i=[...this._config.options||[]];i[t]={...i[t],...e};const o={...this._config,options:i};this._config=o,this._fireConfigChanged(o)}_toggleExpand(t){this._expanded=this._expanded===t?null:t,this.requestUpdate()}_valueChanged(t){const e={...this._config,...t.detail.value};this._config=e,this._fireConfigChanged(e)}_addOption(){const t=[...this._config.options||[],{label:"",value:"",icon:""}],e={...this._config,options:t};this._config=e,this._expanded=t.length-1,this._fireConfigChanged(e)}_removeOption(t){const e=[...this._config.options||[]];e.splice(t,1);const i={...this._config,options:e};this._config=i,this._expanded===t&&(this._expanded=null),this._fireConfigChanged(i)}_moveOption(t,e){const i=[...this._config.options||[]],o=t+e;if(o<0||o>=i.length)return;[i[t],i[o]]=[i[o],i[t]];const s={...this._config,options:i};this._config=s,this._expanded===t&&(this._expanded=o),this._fireConfigChanged(s)}_updateOption(t,e,i){const o=[...this._config.options||[]];o[t]={...o[t],[e]:i};const s={...this._config,options:o};this._config=s,this._fireConfigChanged(s)}_fireConfigChanged(t){this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-button-group-editor",It);class Bt extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_optimisticValue:{state:!0},_resolvedColorActive:{state:!0},_resolvedColorOnActive:{state:!0}};static getConfigElement(){return document.createElement("materia-button-group-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("input_select.")||t.startsWith("select."))||"";return{entity:e,size:"m",options:[{label:"Option 1",value:"1"},{label:"Option 2",value:"2"}]}}static styles=[pt,jt];setConfig(t){this.config={size:"m",...t}}get _resolvedOptions(){if(this.config.options?.length)return this.config.options;const t=this.hass?.states[this.config.entity],e=this.config.entity?.split(".")[0];return"input_select"!==e&&"select"!==e||!t?.attributes?.options?[]:t.attributes.options.map(t=>({label:this._capitalize(t),value:t,tap_action:{action:"perform-action",perform_action:`${e}.select_option`,data:{option:t},target:{entity_id:this.config.entity}}}))}get _activeValue(){if(null!=this._optimisticValue)return this._optimisticValue;const t=this.hass?.states[this.config.entity];return this.config.attribute?String(t?.attributes?.[this.config.attribute]??""):t?.state??""}_isOptionActive(t){if(this.config.multi_select){const e=this._activeValue.split(",").map(t=>t.trim().toLowerCase()).filter(Boolean);return e.includes(String(t.value).toLowerCase())}return String(t.value)===this._activeValue}_getActiveColors(){const t=this._resolvedColorActive||this.config.color_active,e=this._resolvedColorOnActive||this.config.color_on_active;return t&&e?{active:t,onActive:e}:this.config.preset&&Dt[this.config.preset]?Dt[this.config.preset]:Dt.primary}render(){if(!this.hass||!this.config)return q``;const t=this.config.entity?this.hass.states[this.config.entity]:void 0,e=!!t&&"unavailable"===t.state,i=this.config.size||"m",{height:o,innerCorner:s}=Nt[i]||Nt.m,n=o/2;this._activeValue;const a=this._getActiveColors(),r=this._resolvedOptions,c=this.config.variant||"filled";if(!r.length)return q``;const l=this.config.multi_select,h=this.config.columns||0;return q`
       <ha-card>
         <div class="group ${e?"unavailable":""} ${l?"multi":""}"
           style="${l?`--btn-height: ${o}px;`:`height: ${o}px;`} ${h?`--btn-columns: ${h};`:""}">
-          ${r.map((t,e)=>{const i=this._isOptionActive(t),o=0===e,d=e===r.length-1;let p;if(l)if(i)p=`${n}px`;else{const t=h||r.length,i=Math.floor(e/t),o=e%t,a=0===i,c=i===Math.ceil(r.length/t)-1,l=0===o,d=o===t-1||e===r.length-1;p=`${a&&l?n:s}px ${a&&d?n:s}px ${c&&d?n:s}px ${c&&l?n:s}px`}else{const t=i?`${n}px`:`${s}px`,e=`${n}px`;p=1===r.length?e:o?`${e} ${t} ${t} ${e}`:d?`${t} ${e} ${e} ${t}`:t}const u=i?a.active:void 0,m=i?a.onActive:void 0;return L`
+          ${r.map((t,e)=>{const i=this._isOptionActive(t),o=0===e,d=e===r.length-1;let p;if(l)if(i)p=`${n}px`;else{const t=h||r.length,i=Math.floor(e/t),o=e%t,a=0===i,c=i===Math.ceil(r.length/t)-1,l=0===o,d=o===t-1||e===r.length-1;p=`${a&&l?n:s}px ${a&&d?n:s}px ${c&&d?n:s}px ${c&&l?n:s}px`}else{const t=i?`${n}px`:`${s}px`,e=`${n}px`;p=1===r.length?e:o?`${e} ${t} ${t} ${e}`:d?`${t} ${e} ${e} ${t}`:t}const u=i?a.active:void 0,m=i?a.onActive:void 0;return q`
               <button
                 class="${i?"active":"inactive"} ${c}"
                 style="border-radius: ${p};${i?` background: ${u}; color: ${m};`:""}"
                 @click=${()=>this._handleOptionTap(t)}
               >
-                ${t.icon?L`<ha-icon .icon=${t.icon}></ha-icon>`:""}
-                ${t.label?L`<span>${t.label}</span>`:""}
+                ${t.icon?q`<ha-icon .icon=${t.icon}></ha-icon>`:""}
+                ${t.label?q`<span>${t.label}</span>`:""}
               </button>
             `})}
         </div>
       </ha-card>
-    `}_handleOptionTap(t){this.config.multi_select||(this._optimisticValue=String(t.value),clearTimeout(this._optimisticTimer),this._optimisticTimer=setTimeout(()=>{this._optimisticValue=null},1e4)),t.tap_action?this._handleAction(t.tap_action):this.config.entity&&this._fireMoreInfo(this.config.entity)}updated(t){if(t.has("hass")&&this.hass&&(this._resolveField("color_active","_resolvedColorActive"),this._resolveField("color_on_active","_resolvedColorOnActive")),t.has("hass")&&null!=this._optimisticValue){const t=this.hass?.states[this.config.entity];(this.config.attribute?String(t?.attributes?.[this.config.attribute]??""):t?.state??"")===this._optimisticValue&&(this._optimisticValue=null,clearTimeout(this._optimisticTimer))}}getCardSize(){return 1}}customElements.define("materia-button-group",Rt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-button-group",name:"Materia Button Group",description:"M3 connected button group with presets and sizes.",preview:!0});const Nt=[ut,dt,n`
-    ha-card {
-      padding: 0;
-      border-radius: 50%;
-      overflow: hidden;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: inherit;
-      position: relative;
-      -webkit-tap-highlight-color: transparent;
-      transition: background-color 0.25s ease, color 0.25s ease;
-    }
-
-    ha-icon {
-      --mdc-icon-size: 24px;
-    }
-
-    ha-card.size-default { width: 48px; height: 48px; }
-    ha-card.size-large   { width: 56px; height: 56px; }
-
-    ha-card.standard {
-      background: transparent;
-      box-shadow: none;
-      border: none;
-      color: var(--primary-text-color);
-    }
-
-    ha-card.outlined {
-      background: transparent;
-      box-shadow: none;
-      border: 1px solid var(--md-sys-color-outline);
-      color: var(--primary-text-color);
-    }
-
-    ha-card.filled {
-      background: var(--md-sys-color-primary);
-      color: var(--md-sys-color-on-primary);
-      box-shadow: none;
-      border: none;
-    }
-
-    ha-card.filled-tonal {
-      background: var(--md-sys-color-secondary-container);
-      color: var(--md-sys-color-on-secondary-container);
-      box-shadow: none;
-      border: none;
-    }
-
-    ha-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      background: currentColor;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-    }
-    ha-card:hover::before  { opacity: 0.08; }
-    ha-card:active::before { opacity: 0.12; }
-
-    ha-card.disabled {
-      opacity: 0.38;
-      pointer-events: none;
-    }
-  `];class jt extends at{static properties={hass:{attribute:!1},_config:{state:!0}};static styles=n`
-    :host { display: block; }
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 16px;
-      font-weight: 600;
-      font-size: 14px;
-    }
-    .mapping-card {
-      border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
-      border-radius: 12px;
-      margin-top: 8px;
-      overflow: hidden;
-    }
-    .mapping-header {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 4px 4px 12px;
-      background: var(--secondary-background-color, rgba(0,0,0,0.04));
-    }
-    .mapping-header span {
-      flex: 1;
-      font-size: 13px;
-      font-weight: 500;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .mapping-body {
-      padding: 8px 12px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .mapping-body ha-form {
-      display: block;
-      width: 100%;
-    }
-  `;setConfig(t){this._config=t}_isTemplate(t){return t&&"string"==typeof t&&(t.includes("{{")||t.includes("{%"))}get _schema(){return[this._isTemplate(this._config?.icon)?{name:"icon",required:!0,selector:{template:{}}}:{name:"icon",required:!0,selector:{icon:{}},context:{icon_entity:"entity"}},{name:"variant",selector:{select:{options:[{value:"standard",label:"Standard"},{value:"outlined",label:"Outlined"},{value:"filled",label:"Filled"},{value:"filled-tonal",label:"Filled Tonal"}]}}},{name:"size",selector:{select:{options:[{value:"default",label:"Default (48px)"},{value:"large",label:"Large (56px)"}]}}},{name:"entity",selector:{entity:{}}},{name:"disabled",selector:{template:{}}},{name:"tap_action",label:"Default action",selector:{ui_action:{}}}]}get _mappingSchema(){return[{name:"state",required:!0,selector:{text:{}}},{name:"tap_action",label:"Action",selector:{ui_action:{}}}]}get _stateMappings(){const t=this._config.tap_action_map||{};return Object.keys(t).map(e=>({state:e,tap_action:t[e]}))}_expanded=null;render(){if(!this.hass||!this._config)return L``;const t=this._stateMappings;return L`
-      <ha-form
-        .hass=${this.hass}
-        .data=${this._config}
-        .schema=${this._schema}
-        .computeLabel=${ft}
-        @value-changed=${this._valueChanged}
-      ></ha-form>
-
-      <div class="section-header">
-        <span>Action mappings</span>
-        <ha-icon-button @click=${this._addMapping}>
-          <ha-icon icon="mdi:plus"></ha-icon>
-        </ha-icon-button>
-      </div>
-
-      ${t.map((t,e)=>L`
-          <div class="mapping-card">
-            <div class="mapping-header">
-              <span>${t.state||`Mapping ${e+1}`}</span>
-              <ha-icon-button @click=${()=>this._toggleExpand(e)}>
-                <ha-icon icon=${this._expanded===e?"mdi:chevron-up":"mdi:chevron-down"}></ha-icon>
-              </ha-icon-button>
-              <ha-icon-button @click=${()=>this._removeMapping(e)}>
-                <ha-icon icon="mdi:delete"></ha-icon>
-              </ha-icon-button>
-            </div>
-            ${this._expanded===e?L`
-                  <div class="mapping-body">
-                    <ha-form
-                      .hass=${this.hass}
-                      .data=${t}
-                      .schema=${this._mappingSchema}
-                      .computeLabel=${ft}
-                      @value-changed=${t=>this._updateMapping(e,t.detail.value)}
-                    ></ha-form>
-                  </div>
-                `:""}
-          </div>
-        `)}
-    `}_toggleExpand(t){this._expanded=this._expanded===t?null:t,this.requestUpdate()}_valueChanged(t){const e={...this._config,...t.detail.value};this._fireConfig(e)}_addMapping(){const t=[...this._stateMappings,{state:""}];this._applyMappings(t),this._expanded=t.length-1}_removeMapping(t){const e=[...this._stateMappings];e.splice(t,1),this._applyMappings(e),this._expanded===t&&(this._expanded=null)}_updateMapping(t,e){const i=[...this._stateMappings];i[t]={...i[t],...e},this._applyMappings(i)}_applyMappings(t){const{tap_action_map:e,...i}=this._config,o={};for(const e of t)e.state&&e.tap_action&&(o[e.state]=e.tap_action);const s=Object.keys(o).length?{...i,tap_action_map:o}:i;this._fireConfig(s)}_fireConfig(t){this._config=t,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-icon-button-editor",jt);class It extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedIcon:{state:!0},_resolvedDisabled:{state:!0}};static getConfigElement(){return document.createElement("materia-icon-button-editor")}static getStubConfig(){return{icon:"mdi:play",variant:"filled",size:"default"}}static styles=[pt,Nt];setConfig(t){if(!t.icon)throw new Error("icon is required");this.config={variant:"filled",size:"default",...t}}get _disabled(){const t=this.config?.disabled;if(null==t)return!1;if("boolean"==typeof t)return t;if(this._isTemplate(t)){const t=this._resolvedDisabled;return"True"===t||"true"===t||"1"===t}return"true"===t||"True"===t}updated(t){t.has("hass")&&this.hass&&(this._resolveField("icon","_resolvedIcon"),this._resolveField("disabled","_resolvedDisabled"))}_defaultTapAction(){return this.config.entity?{action:"toggle"}:{action:"none"}}render(){if(!this.config)return L``;const t=this.config.entity?this.hass?.states?.[this.config.entity]:void 0,e=!!this.config.entity&&this._isUnavailable(t),i=this._disabled,o=this.config.variant||"filled",s="large"===this.config.size?"large":"default",n=this._isTemplate(this.config.icon)?this._resolvedIcon||"mdi:circle-small":this.config.icon;return L`
-      <ha-card
-        class="${o} size-${s} ${e?"unavailable":""} ${i?"disabled":""}"
-        @click=${this._handleTap}
-      >
-        <ha-icon .icon=${n}></ha-icon>
-      </ha-card>
-    `}_resolveTapAction(){if(this.config.tap_action_map&&this.config.entity){const t=this.hass?.states[this.config.entity]?.state,e=this.config.tap_action_map[t]??this.config.tap_action_map.default;if(e)return e}return this.config.tap_action||this._defaultTapAction()}_handleTap(){this._disabled||this._handleAction(this._resolveTapAction())}getCardSize(){return 1}}customElements.define("materia-icon-button",It),window.customCards=window.customCards||[],window.customCards.push({type:"materia-icon-button",name:"Materia Icon Button",description:"M3 icon button with variants and state-based icons.",preview:!0});const Bt=[ut,n`
+    `}_handleOptionTap(t){this.config.multi_select||(this._optimisticValue=String(t.value),clearTimeout(this._optimisticTimer),this._optimisticTimer=setTimeout(()=>{this._optimisticValue=null},1e4)),t.tap_action?this._handleAction(t.tap_action):this.config.entity&&this._fireMoreInfo(this.config.entity)}updated(t){if(t.has("hass")&&this.hass&&(this._resolveField("color_active","_resolvedColorActive"),this._resolveField("color_on_active","_resolvedColorOnActive")),t.has("hass")&&null!=this._optimisticValue){const t=this.hass?.states[this.config.entity];(this.config.attribute?String(t?.attributes?.[this.config.attribute]??""):t?.state??"")===this._optimisticValue&&(this._optimisticValue=null,clearTimeout(this._optimisticTimer))}}getCardSize(){return 1}}customElements.define("materia-button-group",Bt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-button-group",name:"Materia Button Group",description:"M3 connected button group with presets and sizes.",preview:!0});const qt=[ut,n`
     ha-card {
       box-sizing: border-box;
       height: 44px;
@@ -1256,7 +1278,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       height: 34px;
       color: var(--md-sys-color-primary);
     }
-  `];customElements.define("materia-checkbox-editor",class extends vt{get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"checked_entity",selector:{entity:{}}},{name:"checked_value",selector:{text:{}}},{name:"tap_action",selector:{ui_action:{default_action:"toggle"}}},{name:"tap_action_checked",label:"Action (checked)",selector:{ui_action:{}}},{name:"tap_action_unchecked",label:"Action (unchecked)",selector:{ui_action:{}}}]}});class Lt extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedName:{state:!0}};static getConfigElement(){return document.createElement("materia-checkbox-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("input_boolean."))||"";return{entity:e,name:"Checkbox"}}static styles=[pt,Bt];setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={tap_action:{action:"toggle"},...t}}_isChecked(t){if(this.config.checked_entity){const t=this.hass?.states[this.config.checked_entity];if(!t)return!1;const e=String(t.state??"").split(",").map(t=>t.trim()).filter(Boolean);return this.config.checked_values?this.config.checked_values.every(t=>e.includes(t)):!!this.config.checked_value&&e.includes(this.config.checked_value)}if(!t)return!1;const e=String(t.state??"").toLowerCase(),i=Number(e);return"on"===e||"true"===e||"home"===e||!Number.isNaN(i)&&i>0}updated(t){t.has("hass")&&this.hass&&this._resolveField("name","_resolvedName")}render(){if(!this.hass||!this.config)return L``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=!e&&this._isChecked(t),o=this._isTemplate(this.config.name)?this._resolvedName:this.config.name??t?.attributes?.friendly_name??this.config.entity,s=i?"mdi:checkbox-marked":"mdi:checkbox-blank-outline";return L`
+  `];customElements.define("materia-checkbox-editor",class extends vt{get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"checked_entity",selector:{entity:{}}},{name:"checked_value",selector:{text:{}}},{name:"tap_action",selector:{ui_action:{default_action:"toggle"}}},{name:"tap_action_checked",label:"Action (checked)",selector:{ui_action:{}}},{name:"tap_action_unchecked",label:"Action (unchecked)",selector:{ui_action:{}}}]}});class Lt extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedName:{state:!0}};static getConfigElement(){return document.createElement("materia-checkbox-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("input_boolean."))||"";return{entity:e,name:"Checkbox"}}static styles=[pt,qt];setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={tap_action:{action:"toggle"},...t}}_isChecked(t){if(this.config.checked_entity){const t=this.hass?.states[this.config.checked_entity];if(!t)return!1;const e=String(t.state??"").split(",").map(t=>t.trim()).filter(Boolean);return this.config.checked_values?this.config.checked_values.every(t=>e.includes(t)):!!this.config.checked_value&&e.includes(this.config.checked_value)}if(!t)return!1;const e=String(t.state??"").toLowerCase(),i=Number(e);return"on"===e||"true"===e||"home"===e||!Number.isNaN(i)&&i>0}updated(t){t.has("hass")&&this.hass&&this._resolveField("name","_resolvedName")}render(){if(!this.hass||!this.config)return q``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=!e&&this._isChecked(t),o=this._isTemplate(this.config.name)?this._resolvedName:this.config.name??t?.attributes?.friendly_name??this.config.entity,s=i?"mdi:checkbox-marked":"mdi:checkbox-blank-outline";return q`
       <ha-card class="${e?"unavailable":""}" @click=${this._handleTap}>
         <div class="name">${o}</div>
         <div class="icon-cell">
@@ -1341,14 +1363,14 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       position: relative;
       z-index: 1;
     }
-  `];customElements.define("materia-pill-editor",class extends vt{get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}},context:{icon_entity:"entity"}},{name:"color",selector:{template:{}}},{name:"color_on",selector:{template:{}}},{name:"background",selector:{boolean:{}}},{name:"tap_action",selector:{ui_action:{}}}]}});class qt extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0}};static getConfigElement(){return document.createElement("materia-pill-editor")}static getStubConfig(t){const e=(t?Object.keys(t.states):[]).find(t=>t.startsWith("sensor."))||"";return{entity:e,name:"",icon:"mdi:information-outline"}}static styles=[pt,Vt];setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={icon:"mdi:information-outline",...t}}_classify(t){const e=this.config.ranges||[];if(!e.length)return{label:"",color:""};const i=parseFloat(t);for(const t of e)if(null==t.max||i<=t.max)return{label:t.label,color:t.color};return{label:"",color:""}}get _templatesReady(){const t=this.config;return(!this._isTemplate(t?.color)||void 0!==this._resolvedColor)&&((!this._isTemplate(t?.color_on)||void 0!==this._resolvedColorOn)&&((!this._isTemplate(t?.icon)||void 0!==this._resolvedIcon)&&(!this._isTemplate(t?.name)||void 0!==this._resolvedName)))}updated(t){t.has("hass")&&this.hass&&(this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"))}render(){if(!this.hass||!this.config)return L``;if(!this._templatesReady)return L``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=this._isTemplate(this.config.name)?this._resolvedName:this.config.name||t?.attributes?.friendly_name||this.config.entity,o=this._isTemplate(this.config.icon)?this._resolvedIcon:this.config.icon||t?.attributes?.icon||"",s=t?.attributes?.unit_of_measurement||"",n=t?.state??"",a=this.config.ranges||[],r=this._classify(n);let c;c=e?"Unavailable":a.length?s?`${n} · ${r.label||i}`:n:s?`${this._capitalize(n)} ${s}`:this._capitalize(n);const l=a.length?e?i:s||(r.label||i):"",h=n.toLowerCase(),d="on"===h||"true"===h||"home"===h||"open"===h||"cleaning"===h||"playing"===h||!isNaN(Number(h))&&Number(h)>0,p=this._resolvedColor||this.config.color,u=this._resolvedColorOn||this.config.color_on,m=d&&p?p:"var(--ha-card-background, var(--card-background-color))",g=d&&u?u:"var(--primary-text-color)",_=!1===this.config.background||"none"===this.config.background;return L`
+  `];customElements.define("materia-pill-editor",class extends vt{get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}},context:{icon_entity:"entity"}},{name:"color",selector:{template:{}}},{name:"color_on",selector:{template:{}}},{name:"background",selector:{boolean:{}}},{name:"tap_action",selector:{ui_action:{}}}]}});class Ht extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0}};static getConfigElement(){return document.createElement("materia-pill-editor")}static getStubConfig(t){const e=(t?Object.keys(t.states):[]).find(t=>t.startsWith("sensor."))||"";return{entity:e,name:"",icon:"mdi:information-outline"}}static styles=[pt,Vt];setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={icon:"mdi:information-outline",...t}}_classify(t){const e=this.config.ranges||[];if(!e.length)return{label:"",color:""};const i=parseFloat(t);for(const t of e)if(null==t.max||i<=t.max)return{label:t.label,color:t.color};return{label:"",color:""}}get _templatesReady(){const t=this.config;return(!this._isTemplate(t?.color)||void 0!==this._resolvedColor)&&((!this._isTemplate(t?.color_on)||void 0!==this._resolvedColorOn)&&((!this._isTemplate(t?.icon)||void 0!==this._resolvedIcon)&&(!this._isTemplate(t?.name)||void 0!==this._resolvedName)))}updated(t){t.has("hass")&&this.hass&&(this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"))}render(){if(!this.hass||!this.config)return q``;if(!this._templatesReady)return q``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=this._isTemplate(this.config.name)?this._resolvedName:this.config.name||t?.attributes?.friendly_name||this.config.entity,o=this._isTemplate(this.config.icon)?this._resolvedIcon:this.config.icon||t?.attributes?.icon||"",s=t?.attributes?.unit_of_measurement||"",n=t?.state??"",a=this.config.ranges||[],r=this._classify(n);let c;c=e?"Unavailable":a.length?s?`${n} · ${r.label||i}`:n:s?`${this._capitalize(n)} ${s}`:this._capitalize(n);const l=a.length?e?i:s||(r.label||i):"",h=n.toLowerCase(),d="on"===h||"true"===h||"home"===h||"open"===h||"cleaning"===h||"playing"===h||!isNaN(Number(h))&&Number(h)>0,p=this._resolvedColor||this.config.color,u=this._resolvedColorOn||this.config.color_on,m=d&&p?p:"var(--ha-card-background, var(--card-background-color))",g=d&&u?u:"var(--primary-text-color)",_=!1===this.config.background||"none"===this.config.background;return q`
       <ha-card>
         <div
           class="container ${e?"unavailable":""} ${_?"no-bg":""}"
           style="background-color: ${_?"transparent":m}; color: ${g};"
           @click=${this._handleTap}
         >
-          ${o?L`
+          ${o?q`
             <div class="icon-container">
               <ha-icon .icon=${o} style="color: ${g};"></ha-icon>
             </div>
@@ -1357,10 +1379,10 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
             <div class="name">${a.length?c:i}</div>
             <div class="state">${a.length?l:c}</div>
           </div>
-          ${this._hasNavigateAction?L`<ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>`:""}
+          ${this._hasNavigateAction?q`<ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>`:""}
         </div>
       </ha-card>
-    `}_handleTap(){this._handleAction(this.config.tap_action||{action:"more-info"})}getGridOptions(){return{columns:6,rows:"auto"}}getCardSize(){return 1}}customElements.define("materia-pill",qt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-pill",name:"Materia Pill",description:"Compact info pill for sensors, weather, and status indicators.",preview:!0});const Ht=[ut,dt,pt,n`
+    `}_handleTap(){this._handleAction(this.config.tap_action||{action:"more-info"})}getGridOptions(){return{columns:6,rows:"auto"}}getCardSize(){return 1}}customElements.define("materia-pill",Ht),window.customCards=window.customCards||[],window.customCards.push({type:"materia-pill",name:"Materia Pill",description:"Compact info pill for sensors, weather, and status indicators.",preview:!0});const Wt=[ut,dt,pt,n`
   :host {
     position: relative;
     z-index: 1;
@@ -1545,7 +1567,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     background: var(--md-sys-color-outline-variant, var(--divider-color, rgba(0, 0, 0, 0.08)));
     margin: 8px 16px;
   }
-`];class Wt extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config={...t}}get _schema(){return[{name:"entity",selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}},context:{icon_entity:"entity"}},{name:"position",selector:{select:{options:[{value:"below",label:"Below"},{value:"above",label:"Above"}],mode:"dropdown"}}}]}get _optionSchema(){return[{name:"label",selector:{text:{}}},{name:"value",required:!0,selector:{text:{}}},{name:"icon",selector:{icon:{}}}]}static styles=n`
+`];class Xt extends at{static properties={hass:{attribute:!1},_config:{state:!0}};setConfig(t){this._config={...t}}get _schema(){return[{name:"entity",selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}},context:{icon_entity:"entity"}},{name:"position",selector:{select:{options:[{value:"below",label:"Below"},{value:"above",label:"Above"}],mode:"dropdown"}}}]}get _optionSchema(){return[{name:"label",selector:{text:{}}},{name:"value",required:!0,selector:{text:{}}},{name:"icon",selector:{icon:{}}}]}static styles=n`
     .options-header {
       display: flex;
       align-items: center;
@@ -1585,7 +1607,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       display: block;
       width: 100%;
     }
-  `;_expanded=null;render(){return this.hass&&this._config?L`
+  `;_expanded=null;render(){return this.hass&&this._config?q`
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
@@ -1601,7 +1623,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         </ha-icon-button>
       </div>
 
-      ${(this._config.options||[]).map((t,e)=>L`
+      ${(this._config.options||[]).map((t,e)=>q`
           <div class="option-card">
             <div class="option-header">
               <span>${t.label||t.value||`Option ${e+1}`}</span>
@@ -1618,7 +1640,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
                 <ha-icon icon="mdi:delete"></ha-icon>
               </ha-icon-button>
             </div>
-            ${this._expanded===e?L`
+            ${this._expanded===e?q`
                   <div class="option-body">
                     <ha-form
                       .hass=${this.hass}
@@ -1631,16 +1653,16 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
                 `:""}
           </div>
         `)}
-    `:L``}_valueChanged(t){const e={...this._config,...t.detail.value};this._config=e,this._fireConfigChanged(e)}_addOption(){const t=[...this._config.options||[],{label:"",value:"",icon:""}],e={...this._config,options:t};this._config=e,this._expanded=t.length-1,this._fireConfigChanged(e)}_removeOption(t){const e=[...this._config.options||[]];e.splice(t,1);const i={...this._config,options:e};this._config=i,this._expanded===t&&(this._expanded=null),this._fireConfigChanged(i)}_moveOption(t,e){const i=[...this._config.options||[]],o=t+e;if(o<0||o>=i.length)return;[i[t],i[o]]=[i[o],i[t]];const s={...this._config,options:i};this._config=s,this._expanded===t&&(this._expanded=o),this._fireConfigChanged(s)}_updateOptionForm(t,e){const i=[...this._config.options||[]];i[t]={...i[t],...e};const o={...this._config,options:i};this._config=o,this._fireConfigChanged(o)}_toggleExpand(t){this._expanded=this._expanded===t?null:t,this.requestUpdate()}_fireConfigChanged(t){this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-menu-editor",Wt);class Xt extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_open:{state:!0},_optimisticValue:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0}};static styles=Ht;static getConfigElement(){return document.createElement("materia-menu-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("input_select.")||t.startsWith("select."))||"";return{entity:e}}setConfig(t){this.config={position:"below",...t},this._open=!1}get _resolvedOptions(){if(this.config.options?.length)return this.config.options;const t=this.hass?.states[this.config.entity],e=this.config.entity?.split(".")[0];return"input_select"!==e&&"select"!==e||!t?.attributes?.options?[]:t.attributes.options.map(t=>({label:this._capitalize(t),value:t}))}get _currentValue(){return null!=this._optimisticValue?this._optimisticValue:this.hass?.states[this.config.entity]?.state??""}_toggle(){this._open=!this._open}_selectOption(t){const e=t.value;this._optimisticValue=e,this._open=!1;const i=this.config.entity?.split(".")[0];"input_select"!==i&&"select"!==i||this.hass.callService(i,"select_option",{entity_id:this.config.entity,option:e}),clearTimeout(this._optimisticTimer),this._optimisticTimer=setTimeout(()=>{this._optimisticValue=null},1e4)}connectedCallback(){super.connectedCallback(),this._outsideClickHandler=t=>{this._open&&!this.shadowRoot.contains(t.composedPath()[0])&&(this._open=!1)},document.addEventListener("click",this._outsideClickHandler)}disconnectedCallback(){super.disconnectedCallback(),document.removeEventListener("click",this._outsideClickHandler)}updated(t){if(t.has("hass")&&this.hass&&(this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName")),t.has("hass")&&null!=this._optimisticValue){const t=this.hass?.states[this.config.entity]?.state;t===this._optimisticValue&&(this._optimisticValue=null,clearTimeout(this._optimisticTimer))}}render(){if(!this.hass||!this.config)return L``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=this._resolvedOptions,o=this._currentValue,s=i.find(t=>t.value===o)?.label||this._capitalize(o),n=this._isTemplate(this.config.name)?this._resolvedName:this.config.name||t?.attributes?.friendly_name||"";return L`
+    `:q``}_valueChanged(t){const e={...this._config,...t.detail.value};this._config=e,this._fireConfigChanged(e)}_addOption(){const t=[...this._config.options||[],{label:"",value:"",icon:""}],e={...this._config,options:t};this._config=e,this._expanded=t.length-1,this._fireConfigChanged(e)}_removeOption(t){const e=[...this._config.options||[]];e.splice(t,1);const i={...this._config,options:e};this._config=i,this._expanded===t&&(this._expanded=null),this._fireConfigChanged(i)}_moveOption(t,e){const i=[...this._config.options||[]],o=t+e;if(o<0||o>=i.length)return;[i[t],i[o]]=[i[o],i[t]];const s={...this._config,options:i};this._config=s,this._expanded===t&&(this._expanded=o),this._fireConfigChanged(s)}_updateOptionForm(t,e){const i=[...this._config.options||[]];i[t]={...i[t],...e};const o={...this._config,options:i};this._config=o,this._fireConfigChanged(o)}_toggleExpand(t){this._expanded=this._expanded===t?null:t,this.requestUpdate()}_fireConfigChanged(t){this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-menu-editor",Xt);class Gt extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_open:{state:!0},_optimisticValue:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0}};static styles=Wt;static getConfigElement(){return document.createElement("materia-menu-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("input_select.")||t.startsWith("select."))||"";return{entity:e}}setConfig(t){this.config={position:"below",...t},this._open=!1}get _resolvedOptions(){if(this.config.options?.length)return this.config.options;const t=this.hass?.states[this.config.entity],e=this.config.entity?.split(".")[0];return"input_select"!==e&&"select"!==e||!t?.attributes?.options?[]:t.attributes.options.map(t=>({label:this._capitalize(t),value:t}))}get _currentValue(){return null!=this._optimisticValue?this._optimisticValue:this.hass?.states[this.config.entity]?.state??""}_toggle(){this._open=!this._open}_selectOption(t){const e=t.value;this._optimisticValue=e,this._open=!1;const i=this.config.entity?.split(".")[0];"input_select"!==i&&"select"!==i||this.hass.callService(i,"select_option",{entity_id:this.config.entity,option:e}),clearTimeout(this._optimisticTimer),this._optimisticTimer=setTimeout(()=>{this._optimisticValue=null},1e4)}connectedCallback(){super.connectedCallback(),this._outsideClickHandler=t=>{this._open&&!this.shadowRoot.contains(t.composedPath()[0])&&(this._open=!1)},document.addEventListener("click",this._outsideClickHandler)}disconnectedCallback(){super.disconnectedCallback(),document.removeEventListener("click",this._outsideClickHandler)}updated(t){if(t.has("hass")&&this.hass&&(this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName")),t.has("hass")&&null!=this._optimisticValue){const t=this.hass?.states[this.config.entity]?.state;t===this._optimisticValue&&(this._optimisticValue=null,clearTimeout(this._optimisticTimer))}}render(){if(!this.hass||!this.config)return q``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=this._resolvedOptions,o=this._currentValue,s=i.find(t=>t.value===o)?.label||this._capitalize(o),n=this._isTemplate(this.config.name)?this._resolvedName:this.config.name||t?.attributes?.friendly_name||"";return q`
       <ha-card>
         <div class="trigger ${e?"unavailable":""} ${this._open?"above"===this.config.position?"open-above":"open-below":""}" @click=${this._toggle}>
-          ${this.config.icon?L`
+          ${this.config.icon?q`
             <div class="icon-container">
               <ha-icon .icon=${this._isTemplate(this.config.icon)?this._resolvedIcon:this.config.icon}></ha-icon>
             </div>
           `:""}
           <div class="text-container">
-            ${n?L`<div class="label">${n}</div>`:""}
+            ${n?q`<div class="label">${n}</div>`:""}
             <div class="value">${s}</div>
           </div>
           <div class="chevron-btn" @click=${t=>{t.stopPropagation(),this._toggle()}}>
@@ -1649,16 +1671,16 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         </div>
         <div class="dropdown-wrapper ${this._open?"open":""} ${"above"===this.config.position?"above":"below"}">
           <div class="dropdown">
-            ${i.map(t=>L`
+            ${i.map(t=>q`
               <div
                 class="menu-item ${t.value===o?"selected":""}"
                 @click=${e=>{e.stopPropagation(),this._selectOption(t)}}
               >
-                ${t.icon?L`<ha-icon .icon=${t.icon}></ha-icon>`:""}
+                ${t.icon?q`<ha-icon .icon=${t.icon}></ha-icon>`:""}
                 <span class="item-text">${t.label||t.value}</span>
               </div>
             `)}
           </div>
         </div>
       </ha-card>
-    `}getCardSize(){return this._open?3:2}}customElements.define("materia-menu",Xt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-menu",name:"Materia Menu",description:"M3 vertical dropdown menu for select entities.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const t=document.createElement("style");t.id="materia-fonts",t.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(t)}();console.info("%c MATERIA %c v0.4.0 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");
+    `}getCardSize(){return this._open?3:2}}customElements.define("materia-menu",Gt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-menu",name:"Materia Menu",description:"M3 vertical dropdown menu for select entities.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const t=document.createElement("style");t.id="materia-fonts",t.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(t)}();console.info("%c MATERIA %c v0.4.0 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");
