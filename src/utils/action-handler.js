@@ -80,6 +80,7 @@ export const ActionMixin = (superClass) =>
       const val = this.config?.[configKey];
       if (this._isTemplate(val)) {
         this._renderTemplate(val).then(result => {
+          if (!this.isConnected) return;
           const trimmed = typeof result === "string" ? result.trim() : result;
           if (trimmed !== this[propKey]) this[propKey] = trimmed;
         });

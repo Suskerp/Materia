@@ -87,7 +87,7 @@ const DEFAULT_DOMAIN = {
 /* ------------------------------------------------------------------ */
 /*  MateriaCard                                                       */
 /* ------------------------------------------------------------------ */
-class MateriaCard extends ActionMixin(LitElement) {
+export class MateriaCard extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -306,6 +306,11 @@ class MateriaCard extends ActionMixin(LitElement) {
     this._resolveField("color_on", "_resolvedColorOn");
     this._resolveField("icon", "_resolvedIcon");
     this._resolveField("name", "_resolvedName");
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._cleanupSlider();
   }
 
   /* ---- Slider ---------------------------------------------------- */
@@ -573,6 +578,7 @@ class MateriaCard extends ActionMixin(LitElement) {
   /* ---- Slider value dispatch ------------------------------------ */
 
   _setSliderValue(pct) {
+    if (!this.hass) return;
     const entityId = this.config.entity;
 
     if (this._domain === "light") {

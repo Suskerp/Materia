@@ -164,6 +164,11 @@ class MateriaClimate extends ActionMixin(LitElement) {
     }
   }
 
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    clearTimeout(this._optimisticTimer);
+  }
+
   _handleTap(e) {
     if (e.target.closest(".btn")) return;
 

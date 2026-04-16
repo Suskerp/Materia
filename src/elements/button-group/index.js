@@ -89,7 +89,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     if (!this.hass || !this.config) return html``;
 
     const stateObj = this.config.entity ? this.hass.states[this.config.entity] : undefined;
-    const unavailable = stateObj ? stateObj.state === "unavailable" : false;
+    const unavailable = stateObj ? this._isUnavailable(stateObj) : false;
 
     const sizeKey = this.config.size || "m";
     const { height, innerCorner } = SIZES[sizeKey] || SIZES.m;

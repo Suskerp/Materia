@@ -75,7 +75,9 @@ class MateriaMenu extends ActionMixin(LitElement) {
   connectedCallback() {
     super.connectedCallback();
     this._outsideClickHandler = (e) => {
-      if (this._open && !this.shadowRoot.contains(e.composedPath()[0])) {
+      if (!this._open || !this.shadowRoot) return;
+      const target = e.composedPath?.()?.[0];
+      if (target && !this.shadowRoot.contains(target)) {
         this._open = false;
       }
     };
@@ -85,6 +87,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
   disconnectedCallback() {
     super.disconnectedCallback();
     document.removeEventListener("click", this._outsideClickHandler);
+    clearTimeout(this._optimisticTimer);
   }
 
   updated(changedProps) {

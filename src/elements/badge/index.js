@@ -166,6 +166,12 @@ class MateriaBadge extends ActionMixin(LitElement) {
     this._handleAction(this.config.double_tap_action);
   }
 
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    clearTimeout(this._dblClickTimer);
+    this._dblClickTimer = null;
+  }
+
   getCardSize() {
     return 2;
   }
