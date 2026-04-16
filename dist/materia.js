@@ -961,7 +961,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       display: inline-block;
     }
 
-    ha-card {
+    .badge {
       box-sizing: border-box;
       height: 107px;
       width: 110px;
@@ -972,15 +972,14 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       grid-template-columns: 1fr;
       font-family: inherit;
       -webkit-tap-highlight-color: transparent;
-      transition: none;
     }
 
-    ha-card.no-state {
+    .badge.no-state {
       grid-template-areas: "i" "n";
       grid-template-rows: 1fr min-content;
     }
 
-    ha-card.with-state {
+    .badge.with-state {
       grid-template-areas: "i" "n" "s";
       grid-template-rows: 1fr min-content min-content;
     }
@@ -1010,12 +1009,12 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       line-height: 18px;
     }
 
-    ha-card.no-state .name {
+    .badge.no-state .name {
       margin: 0px 10px 30px 6px;
       align-self: end;
     }
 
-    ha-card.with-state .name {
+    .badge.with-state .name {
       margin: 10px 10px 0 6px;
     }
 
@@ -1029,9 +1028,15 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       line-height: 18px;
     }
 
-    ha-card.inactive {
+    .badge.inactive {
       background-color: var(--ha-card-background);
       color: var(--primary-text-color);
+    }
+
+    .badge.unavailable {
+      opacity: 0.4;
+      pointer-events: none;
+      filter: grayscale(80%);
     }
   `];class Pt extends at{static properties={hass:{attribute:!1},_config:{state:!0}};static styles=n`
     :host { display: block; }
@@ -1044,8 +1049,8 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         @value-changed=${this._valueChanged}
       ></ha-form>
     `:q``}_valueChanged(t){this._config={...this._config,...t.detail.value},this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:this._config},bubbles:!0,composed:!0}))}}customElements.define("materia-badge-editor",Pt);class Rt extends(ht(at)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedStateDisplay:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0}};static getConfigElement(){return document.createElement("materia-badge-editor")}static getStubConfig(t){const e=(t?Object.keys(t.states):[]).find(t=>t.startsWith("light.")||t.startsWith("switch."))||"";return{name:"Badge",icon:"mdi:power-plug",variant:"primary",show_state:!1,active_state:"on",entity:e}}static styles=[pt,Mt];setConfig(t){if(!t.icon)throw new Error("icon is required");if(!t.name)throw new Error("name is required");this.config={show_state:!1,active_state:"on",variant:"secondary",tap_action:{action:"toggle"},...t}}updated(t){super.updated?.(t),t.has("hass")&&this.hass&&(this._resolveField("state_display","_resolvedStateDisplay"),this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"))}_isActive(t){if(!t)return!1;const e=t.state,i=this.config.active_state||"on";return e===String(i)||"open"===e}_getBatteryColors(t){const e=parseFloat(t?.state)||0;return e<10?["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"]:e<20?["var(--md-sys-cust-color-warning-container)","var(--md-sys-cust-color-on-warning-container)"]:["var(--ha-card-background)","var(--primary-text-color)"]}get _templatesReady(){const t=this.config;return(!this._isTemplate(t.color)||void 0!==this._resolvedColor)&&((!this._isTemplate(t.color_on)||void 0!==this._resolvedColorOn)&&((!this._isTemplate(t.state_display)||void 0!==this._resolvedStateDisplay)&&((!this._isTemplate(t.icon)||void 0!==this._resolvedIcon)&&(!this._isTemplate(t.name)||void 0!==this._resolvedName))))}render(){if(!this.hass||!this.config)return q``;const t=this.config.entity,e=t?this.hass.states[t]:void 0,i=!!t&&this._isUnavailable(e),o=!i&&this._isActive(e),s=this.config.variant||"secondary",n=this.config.show_state;let a=this._resolvedColor||this.config.color,r=this._resolvedColorOn||this.config.color_on;const c=["primary","tertiary","error","primary-container","secondary-container","error-container","device-container"];if(!a)if("battery"===s){const[t,i]=this._getBatteryColors(e);a=t,r=i}else if(c.includes(s)){const t=Ft[s]||Ft.secondary;a=t[0],r=r||t[1]}else if(o&&t){const t=Ft[s]||Ft.secondary;a=t[0],r=r||t[1]}else a="var(--ha-card-background)",r=r||"var(--primary-text-color)";r=r||"var(--primary-text-color)";const l=n?"with-state":"no-state",h=o?"active":"inactive";let d="";if(n&&i)d="Unavailable";else if(n&&e){const t=this.config.state_display&&(this.config.state_display.includes("{{")||this.config.state_display.includes("{%"));d=this._resolvedStateDisplay&&t?this._resolvedStateDisplay:this.config.state_display&&!t?this.config.state_display:e.state,d=this._capitalize(d)}return q`
-      <ha-card
-        class="${l} ${h} ${i?"unavailable":""}"
+      <div
+        class="badge ${l} ${h} ${i?"unavailable":""}"
         style="background-color: ${a}; color: ${r};"
         @click=${this._handleTap}
         @dblclick=${this._handleDoubleTap}
@@ -1055,7 +1060,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
         </div>
         <div class="name">${this._isTemplate(this.config.name)?this._resolvedName:this.config.name}</div>
         ${n?q`<div class="state">${d}</div>`:""}
-      </ha-card>
+      </div>
     `}_handleTap(){if(this.config.double_tap_action?.action&&"none"!==this.config.double_tap_action.action){if(this._dblClickTimer)return;this._dblClickTimer=setTimeout(()=>{this._dblClickTimer=null,this._handleAction(this.config.tap_action||{action:"toggle"})},250)}else this._handleAction(this.config.tap_action||{action:"toggle"})}_handleDoubleTap(){this.config.double_tap_action?.action&&"none"!==this.config.double_tap_action.action&&(clearTimeout(this._dblClickTimer),this._dblClickTimer=null,this._handleAction(this.config.double_tap_action))}getCardSize(){return 2}}customElements.define("materia-badge",Rt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-badge",name:"Materia Badge",description:"Square badge for dashboard headers.",preview:!0});const Dt={primary:{active:"var(--md-sys-color-primary)",onActive:"var(--md-sys-color-on-primary)"},secondary:{active:"var(--md-sys-color-secondary)",onActive:"var(--md-sys-color-on-secondary)"},tertiary:{active:"var(--md-sys-color-tertiary)",onActive:"var(--md-sys-color-on-tertiary)"},"climate-heat":{active:"var(--md-sys-cust-color-climate-heat-container)",onActive:"var(--md-sys-cust-color-on-climate-heat)"},"climate-cool":{active:"var(--md-sys-cust-color-climate-cool-container)",onActive:"var(--md-sys-cust-color-on-climate-cool)"},"climate-auto":{active:"var(--md-sys-cust-color-climate-auto-container)",onActive:"var(--md-sys-cust-color-on-climate-auto)"},light:{active:"var(--md-sys-cust-color-light-container)",onActive:"var(--md-sys-cust-color-on-light)"},device:{active:"var(--md-sys-cust-color-device-container)",onActive:"var(--md-sys-cust-color-on-device)"}},Nt={xs:{height:32,innerCorner:4},s:{height:36,innerCorner:8},m:{height:40,innerCorner:8},l:{height:48,innerCorner:16},xl:{height:56,innerCorner:20}},jt=[ut,dt,n`
     .group {
       display: flex;

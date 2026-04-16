@@ -20,7 +20,7 @@ export const styles = [
       display: inline-block;
     }
 
-    ha-card {
+    .badge {
       box-sizing: border-box;
       height: 107px;
       width: 110px;
@@ -31,15 +31,14 @@ export const styles = [
       grid-template-columns: 1fr;
       font-family: inherit;
       -webkit-tap-highlight-color: transparent;
-      transition: none;
     }
 
-    ha-card.no-state {
+    .badge.no-state {
       grid-template-areas: "i" "n";
       grid-template-rows: 1fr min-content;
     }
 
-    ha-card.with-state {
+    .badge.with-state {
       grid-template-areas: "i" "n" "s";
       grid-template-rows: 1fr min-content min-content;
     }
@@ -69,12 +68,12 @@ export const styles = [
       line-height: 18px;
     }
 
-    ha-card.no-state .name {
+    .badge.no-state .name {
       margin: 0px 10px 30px 6px;
       align-self: end;
     }
 
-    ha-card.with-state .name {
+    .badge.with-state .name {
       margin: 10px 10px 0 6px;
     }
 
@@ -88,9 +87,15 @@ export const styles = [
       line-height: 18px;
     }
 
-    ha-card.inactive {
+    .badge.inactive {
       background-color: var(--ha-card-background);
       color: var(--primary-text-color);
+    }
+
+    .badge.unavailable {
+      opacity: 0.4;
+      pointer-events: none;
+      filter: grayscale(80%);
     }
   `,
 ];

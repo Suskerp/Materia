@@ -132,8 +132,8 @@ class MateriaBadge extends ActionMixin(LitElement) {
     }
 
     return html`
-      <ha-card
-        class="${cardClass} ${activeClass} ${unavailable ? 'unavailable' : ''}"
+      <div
+        class="badge ${cardClass} ${activeClass} ${unavailable ? 'unavailable' : ''}"
         style="background-color: ${bgColor}; color: ${textColor};"
         @click=${this._handleTap}
         @dblclick=${this._handleDoubleTap}
@@ -143,7 +143,7 @@ class MateriaBadge extends ActionMixin(LitElement) {
         </div>
         <div class="name">${this._isTemplate(this.config.name) ? this._resolvedName : this.config.name}</div>
         ${showState ? html`<div class="state">${stateDisplay}</div>` : ""}
-      </ha-card>
+      </div>
     `;
   }
 
