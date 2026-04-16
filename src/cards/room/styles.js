@@ -2,49 +2,56 @@ import { css } from "lit";
 
 export const styles = css`
   ha-card {
-    background: var(--ha-card-background, var(--card-background-color));
-    border-radius: 18px;
-    overflow: hidden;
-    padding: 0;
+    background: none;
     box-shadow: none;
+    border: none;
+    padding: 0;
+    height: auto;
   }
 
-  .title-row {
+  .container {
+    position: relative;
+    width: 100%;
+    min-height: 88px;
+    border-radius: 28px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
+    box-sizing: border-box;
     cursor: pointer;
-    user-select: none;
     -webkit-tap-highlight-color: transparent;
+    user-select: none;
   }
 
-  .title-left {
+  .icon-container {
     display: flex;
     align-items: center;
-    gap: 12px;
-    min-width: 0;
-    flex: 1;
-  }
-
-  .entity-icon {
-    --mdc-icon-size: 24px;
+    justify-content: center;
+    min-width: 42px;
+    min-height: 42px;
+    margin: 6px 0 6px 8px;
+    border-radius: 50%;
     flex-shrink: 0;
-    cursor: pointer;
-    transition: color 0.3s ease;
   }
 
-  .info {
+  .icon-container ha-icon {
+    --mdc-icon-size: 24px;
+    display: flex;
+    transition: color 0.2s ease;
+  }
+
+  .name-container {
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
-    min-width: 0;
+    justify-content: center;
+    margin: 0 8px 0 10px;
+    overflow: hidden;
+    line-height: 18px;
   }
 
   .name {
+    font-size: 13px;
     font-weight: 600;
-    font-size: 14px;
-    line-height: 1.3;
-    color: var(--primary-text-color);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -52,34 +59,29 @@ export const styles = css`
 
   .state {
     font-size: 12px;
-    line-height: 1.3;
-    color: var(--secondary-text-color);
+    font-weight: normal;
+    opacity: 0.7;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
-  .title-right {
+  .right {
     display: flex;
     align-items: center;
-    gap: 8px;
     flex-shrink: 0;
+    margin-right: 4px;
   }
 
   .sub-btn {
     --mdc-icon-size: 20px;
     color: var(--secondary-text-color);
     cursor: pointer;
-    transition: color 0.2s ease;
-  }
-
-  .sub-btn:hover {
-    color: var(--primary-text-color);
+    padding: 10px;
   }
 
   .chevron {
     --mdc-icon-size: 20px;
-    color: var(--secondary-text-color);
+    opacity: 0.5;
+    padding: 10px;
     transition: transform 0.3s ease;
   }
 
@@ -106,7 +108,7 @@ export const styles = css`
     display: grid;
     grid-template-columns: repeat(var(--room-columns, 2), 1fr);
     gap: 8px;
-    padding: 4px 16px 16px;
+    padding: 4px 8px 12px;
   }
 
   .grid-item {

@@ -406,49 +406,56 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       </ha-card>
     `}getGridOptions(){return{columns:12,rows:1.5}}getCardSize(){return 2}static styles=[ut,dt,mt,gt,pt,_t]}customElements.define("materia-card",xt),window.customCards=window.customCards||[],window.customCards.push({type:"materia-card",name:"Materia Card",description:"Universal entity card. Auto-detects lights, covers, devices, locks, and scenes.",preview:!0});const wt=n`
   ha-card {
-    background: var(--ha-card-background, var(--card-background-color));
-    border-radius: 18px;
-    overflow: hidden;
-    padding: 0;
+    background: none;
     box-shadow: none;
+    border: none;
+    padding: 0;
+    height: auto;
   }
 
-  .title-row {
+  .container {
+    position: relative;
+    width: 100%;
+    min-height: 88px;
+    border-radius: 28px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
+    box-sizing: border-box;
     cursor: pointer;
-    user-select: none;
     -webkit-tap-highlight-color: transparent;
+    user-select: none;
   }
 
-  .title-left {
+  .icon-container {
     display: flex;
     align-items: center;
-    gap: 12px;
-    min-width: 0;
-    flex: 1;
-  }
-
-  .entity-icon {
-    --mdc-icon-size: 24px;
+    justify-content: center;
+    min-width: 42px;
+    min-height: 42px;
+    margin: 6px 0 6px 8px;
+    border-radius: 50%;
     flex-shrink: 0;
-    cursor: pointer;
-    transition: color 0.3s ease;
   }
 
-  .info {
+  .icon-container ha-icon {
+    --mdc-icon-size: 24px;
+    display: flex;
+    transition: color 0.2s ease;
+  }
+
+  .name-container {
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
-    min-width: 0;
+    justify-content: center;
+    margin: 0 8px 0 10px;
+    overflow: hidden;
+    line-height: 18px;
   }
 
   .name {
+    font-size: 13px;
     font-weight: 600;
-    font-size: 14px;
-    line-height: 1.3;
-    color: var(--primary-text-color);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -456,34 +463,29 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
 
   .state {
     font-size: 12px;
-    line-height: 1.3;
-    color: var(--secondary-text-color);
+    font-weight: normal;
+    opacity: 0.7;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
-  .title-right {
+  .right {
     display: flex;
     align-items: center;
-    gap: 8px;
     flex-shrink: 0;
+    margin-right: 4px;
   }
 
   .sub-btn {
     --mdc-icon-size: 20px;
     color: var(--secondary-text-color);
     cursor: pointer;
-    transition: color 0.2s ease;
-  }
-
-  .sub-btn:hover {
-    color: var(--primary-text-color);
+    padding: 10px;
   }
 
   .chevron {
     --mdc-icon-size: 20px;
-    color: var(--secondary-text-color);
+    opacity: 0.5;
+    padding: 10px;
     transition: transform 0.3s ease;
   }
 
@@ -510,7 +512,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     display: grid;
     grid-template-columns: repeat(var(--room-columns, 2), 1fr);
     gap: 8px;
-    padding: 4px 16px 16px;
+    padding: 4px 8px 12px;
   }
 
   .grid-item {
@@ -543,9 +545,37 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       font-weight: 500;
     }
 
-    hui-card-picker {
-      display: block;
+    .card-picker {
+      border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+      border-radius: 12px;
       margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .pick-item {
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 13px;
+      border-bottom: 1px solid var(--divider-color, rgba(0,0,0,0.06));
+      position: relative;
+    }
+
+    .pick-item:last-child {
+      border-bottom: none;
+    }
+
+    .pick-item:hover {
+      background: var(--secondary-background-color, rgba(0,0,0,0.04));
+    }
+
+    .pick-name {
+      font-weight: 500;
+    }
+
+    .pick-desc {
+      font-size: 12px;
+      opacity: 0.6;
+      margin-top: 2px;
     }
   `;setConfig(t){this._config=t,this._showPicker=!1}get _schema(){return[{name:"entity",required:!0,selector:{entity:{}}},{name:"name",selector:{text:{}}},{name:"icon",selector:{icon:{}},context:{icon_entity:"entity"}},{name:"entity_type",selector:{select:{options:["light","cover"]}}},{name:"columns",selector:{number:{min:1,max:6}}},{name:"color_on",selector:{template:{}}}]}render(){if(!this.hass||!this._config)return L``;const t=this._config.cards||[];return L`
       <ha-form
@@ -573,37 +603,45 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
       `)}
 
       ${this._showPicker?L`
-        <hui-card-picker
-          .hass=${this.hass}
-          @config-changed=${this._cardPicked}
-        ></hui-card-picker>
-      `:""}
-    `}_togglePicker(){this._showPicker=!this._showPicker}_cardPicked(t){t.stopPropagation();const e=[...this._config.cards||[],t.detail.config];this._showPicker=!1,this._fireConfig({...this._config,cards:e})}_removeCard(t){const e=[...this._config.cards||[]];e.splice(t,1),this._fireConfig({...this._config,cards:e})}_valueChanged(t){this._fireConfig({...this._config,...t.detail.value})}_fireConfig(t){this._config=t,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-room-editor",$t);class Ct extends(ht(at)){static properties={config:{state:!0},_expanded:{state:!0},_childCards:{state:!0},_resolvedColorOn:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0}};static styles=[ut,pt,wt];constructor(){super(),this._expanded=!1,this._childCards=null,this._hass=null}static getConfigElement(){return document.createElement("materia-room-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("light."))||"light.example";return{entity:e,name:"Room",icon:"mdi:home",entity_type:"light",columns:2}}setConfig(t){if(!t.entity)throw new Error("entity is required");const e=this.config?.cards;this.config={columns:2,...t};const i=this.config.cards;JSON.stringify(e)!==JSON.stringify(i)&&(this._childCards=null,this.isConnected&&this._createChildCards())}set hass(t){this._hass=t,this._childCards&&this._childCards.forEach(e=>e.hass=t),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"),this.requestUpdate()}get hass(){return this._hass}firstUpdated(){this._createChildCards()}async _createChildCards(){const t=this.config?.cards;if(!t||0===t.length)return void(this._childCards=[]);const e=await async function(){return ct||(ct=await window.loadCardHelpers(),ct)}();this._childCards=await Promise.all(t.map(async t=>{const i=await e.createCardElement(t);return this._hass&&(i.hass=this._hass),i})),this.requestUpdate()}_toggleExpand(){this._expanded=!this._expanded}_toggleEntity(t){if(t.stopPropagation(),!this._hass||!this.config.entity)return;const e="cover"===(this.config.entity_type||"light")?"cover":"light";this._hass.callService(e,"toggle",{entity_id:this.config.entity})}get _isActive(){if(!this._hass||!this.config.entity)return!1;const t=this._hass.states[this.config.entity];if(!t)return!1;return"cover"===(this.config.entity_type||"light")?"open"===t.state:"on"===t.state}get _stateDisplay(){if(!this._hass||!this.config.entity)return"";const t=this._hass.states[this.config.entity];if(!t)return"unavailable";if(this.config.attribute){const e=t.attributes[this.config.attribute];return null==e?t.state:"brightness"===this.config.attribute?`${Math.round(e/255*100)}%`:String(e)}return this._hass.formatEntityState?this._hass.formatEntityState(t):t.state}render(){if(!this.config)return L``;const t=this._hass?.states?.[this.config.entity],e=this._isUnavailable(t),i=this._isActive,o=this._resolvedColorOn||this.config.color_on,s=i&&o?o:i?"var(--md-sys-color-primary)":"var(--primary-text-color)",n=this.config.columns||2;return L`
-      <ha-card>
-        <div class="title-row ${e?"unavailable":""}" @click=${this._toggleExpand}>
-          <div class="title-left">
-            <ha-icon
-              class="entity-icon"
-              .icon=${this._isTemplate(this.config.icon)?this._resolvedIcon:this.config.icon||"mdi:home"}
-              style="color: ${s}"
-              @click=${this._toggleEntity}
-            ></ha-icon>
-            <div class="info">
-              <div class="name">${this._isTemplate(this.config.name)?this._resolvedName:this.config.name||""}</div>
-              <div class="state">${this._stateDisplay}</div>
+        <div class="card-picker">
+          ${(window.customCards||[]).map(t=>L`
+            <div class="pick-item" @click=${()=>this._pickCard(t.type)}>
+              <div class="pick-name">${t.name}</div>
+              ${t.description?L`<div class="pick-desc">${t.description}</div>`:""}
             </div>
+          `)}
+        </div>
+      `:""}
+    `}_togglePicker(){this._showPicker=!this._showPicker}async _pickCard(t){const e=customElements.get(t);let i={};e?.getStubConfig&&(i=await e.getStubConfig(this.hass)||{});const o=[...this._config.cards||[],{type:`custom:${t}`,...i}];this._showPicker=!1,this._fireConfig({...this._config,cards:o})}_removeCard(t){const e=[...this._config.cards||[]];e.splice(t,1),this._fireConfig({...this._config,cards:e})}_valueChanged(t){this._fireConfig({...this._config,...t.detail.value})}_fireConfig(t){this._config=t,this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}}customElements.define("materia-room-editor",$t);class Ct extends(ht(at)){static properties={config:{state:!0},_expanded:{state:!0},_childCards:{state:!0},_resolvedColorOn:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0}};static styles=[pt,wt];constructor(){super(),this._expanded=!1,this._childCards=null,this._hass=null}static getConfigElement(){return document.createElement("materia-room-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("light."))||"light.example";return{entity:e,name:"Room",icon:"mdi:home",entity_type:"light",columns:2}}setConfig(t){if(!t.entity)throw new Error("entity is required");const e=this.config?.cards;this.config={columns:2,...t};const i=this.config.cards;JSON.stringify(e)!==JSON.stringify(i)&&(this._childCards=null,this.isConnected&&this._createChildCards())}set hass(t){this._hass=t,this._childCards&&this._childCards.forEach(e=>e.hass=t),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"),this.requestUpdate()}get hass(){return this._hass}firstUpdated(){this._createChildCards()}async _createChildCards(){const t=this.config?.cards;if(!t||0===t.length)return void(this._childCards=[]);const e=await async function(){return ct||(ct=await window.loadCardHelpers(),ct)}();this._childCards=await Promise.all(t.map(async t=>{const i=await e.createCardElement(t);return this._hass&&(i.hass=this._hass),i})),this.requestUpdate()}_toggleExpand(){this._expanded=!this._expanded}_toggleEntity(t){if(t.stopPropagation(),!this._hass||!this.config.entity)return;const e="cover"===(this.config.entity_type||"light")?"cover":"light";this._hass.callService(e,"toggle",{entity_id:this.config.entity})}get _isActive(){if(!this._hass||!this.config.entity)return!1;const t=this._hass.states[this.config.entity];if(!t)return!1;return"cover"===(this.config.entity_type||"light")?"open"===t.state:"on"===t.state}get _stateDisplay(){if(!this._hass||!this.config.entity)return"";const t=this._hass.states[this.config.entity];if(!t)return"unavailable";if(this.config.attribute){const e=t.attributes[this.config.attribute];return null==e?t.state:"brightness"===this.config.attribute?`${Math.round(e/255*100)}%`:String(e)}return this._hass.formatEntityState?this._hass.formatEntityState(t):t.state}render(){if(!this.config)return L``;const t=this._hass?.states?.[this.config.entity],e=this._isUnavailable(t),i=this._isActive,o=this._resolvedColorOn||this.config.color_on||(i?"var(--md-sys-color-primary)":"var(--primary-text-color)"),s=i?o:"var(--primary-text-color)";return L`
+      <ha-card>
+        <div
+          class="container ${e?"unavailable":""}"
+          @click=${this._toggleExpand}
+        >
+          <div
+            class="icon-container"
+            @click=${this._toggleEntity}
+          >
+            <ha-icon
+              .icon=${this._isTemplate(this.config.icon)?this._resolvedIcon:this.config.icon||"mdi:home"}
+              style="color: ${s};"
+            ></ha-icon>
           </div>
-          <div class="title-right">
+          <div class="name-container">
+            <span class="name">${this._isTemplate(this.config.name)?this._resolvedName:this.config.name||""}</span>
+            <span class="state">${this._stateDisplay}</span>
+          </div>
+          <div class="right">
             ${this._renderSubButtons()}
             <ha-icon
               class="chevron ${this._expanded?"rotated":""}"
-              .icon=${"mdi:chevron-down"}
+              icon="mdi:chevron-down"
             ></ha-icon>
           </div>
         </div>
         <div class="collapsible ${this._expanded?"expanded":""}">
           <div class="collapsible-inner">
-            <div class="grid" style="--room-columns: ${n}">
+            <div class="grid" style="--room-columns: ${this.config.columns||2}">
               ${this._childCards?.map(t=>L`<div class="grid-item">${t}</div>`)}
             </div>
           </div>

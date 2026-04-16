@@ -1,7 +1,7 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { loadCardHelpers } from "../../styles/shared.js";
-import { hostStyles, unavailableStyles } from "../../styles/card-styles.js";
+import { unavailableStyles } from "../../styles/card-styles.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -15,7 +15,7 @@ class MateriaRoom extends ActionMixin(LitElement) {
     _resolvedName: { state: true },
   };
 
-  static styles = [hostStyles, unavailableStyles, styles];
+  static styles = [unavailableStyles, styles];
 
   constructor() {
     super();
@@ -133,45 +133,42 @@ class MateriaRoom extends ActionMixin(LitElement) {
 
     const stateObj = this._hass?.states?.[this.config.entity];
     const unavailable = this._isUnavailable(stateObj);
-
     const active = this._isActive;
-    const colorOn = this._resolvedColorOn || this.config.color_on;
-    const iconColor = active && colorOn
-      ? colorOn
-      : active
-        ? "var(--md-sys-color-primary)"
-        : "var(--primary-text-color)";
-    const columns = this.config.columns || 2;
+    const colorOn = this._resolvedColorOn || this.config.color_on
+      || (active ? "var(--md-sys-color-primary)" : "var(--primary-text-color)");
+    const iconColor = active ? colorOn : "var(--primary-text-color)";
 
     return html`
       <ha-card>
-        <div class="title-row ${unavailable ? 'unavailable' : ''}" @click=${this._toggleExpand}>
-          <div class="title-left">
+        <div
+          class="container ${unavailable ? 'unavailable' : ''}"
+          @click=${this._toggleExpand}
+        >
+          <div
+            class="icon-container"
+            @click=${this._toggleEntity}
+          >
             <ha-icon
-              class="entity-icon"
               .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : (this.config.icon || "mdi:home")}
-              style="color: ${iconColor}"
-              @click=${this._toggleEntity}
+              style="color: ${iconColor};"
             ></ha-icon>
-            <div class="info">
-              <div class="name">${this._isTemplate(this.config.name) ? this._resolvedName : (this.config.name || "")}</div>
-              <div class="state">${this._stateDisplay}</div>
-            </div>
           </div>
-          <div class="title-right">
+          <div class="name-container">
+            <span class="name">${this._isTemplate(this.config.name) ? this._resolvedName : (this.config.name || "")}</span>
+            <span class="state">${this._stateDisplay}</span>
+          </div>
+          <div class="right">
             ${this._renderSubButtons()}
             <ha-icon
-              class="chevron ${this._expanded ? "rotated" : ""}"
-              .icon=${"mdi:chevron-down"}
+              class="chevron ${this._expanded ? 'rotated' : ''}"
+              icon="mdi:chevron-down"
             ></ha-icon>
           </div>
         </div>
-        <div class="collapsible ${this._expanded ? "expanded" : ""}">
+        <div class="collapsible ${this._expanded ? 'expanded' : ''}">
           <div class="collapsible-inner">
-            <div class="grid" style="--room-columns: ${columns}">
-              ${this._childCards?.map(
-                (c) => html`<div class="grid-item">${c}</div>`
-              )}
+            <div class="grid" style="--room-columns: ${this.config.columns || 2}">
+              ${this._childCards?.map(c => html`<div class="grid-item">${c}</div>`)}
             </div>
           </div>
         </div>

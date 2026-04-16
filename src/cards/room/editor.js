@@ -35,9 +35,37 @@ class MateriaRoomEditor extends LitElement {
       font-weight: 500;
     }
 
-    hui-card-picker {
-      display: block;
+    .card-picker {
+      border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+      border-radius: 12px;
       margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .pick-item {
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 13px;
+      border-bottom: 1px solid var(--divider-color, rgba(0,0,0,0.06));
+      position: relative;
+    }
+
+    .pick-item:last-child {
+      border-bottom: none;
+    }
+
+    .pick-item:hover {
+      background: var(--secondary-background-color, rgba(0,0,0,0.04));
+    }
+
+    .pick-name {
+      font-weight: 500;
+    }
+
+    .pick-desc {
+      font-size: 12px;
+      opacity: 0.6;
+      margin-top: 2px;
     }
   `;
 
@@ -90,10 +118,14 @@ class MateriaRoomEditor extends LitElement {
       `)}
 
       ${this._showPicker ? html`
-        <hui-card-picker
-          .hass=${this.hass}
-          @config-changed=${this._cardPicked}
-        ></hui-card-picker>
+        <div class="card-picker">
+          ${(window.customCards || []).map(card => html`
+            <div class="pick-item" @click=${() => this._pickCard(card.type)}>
+              <div class="pick-name">${card.name}</div>
+              ${card.description ? html`<div class="pick-desc">${card.description}</div>` : ""}
+            </div>
+          `)}
+        </div>
       ` : ""}
     `;
   }
@@ -102,9 +134,13 @@ class MateriaRoomEditor extends LitElement {
     this._showPicker = !this._showPicker;
   }
 
-  _cardPicked(ev) {
-    ev.stopPropagation();
-    const cards = [...(this._config.cards || []), ev.detail.config];
+  async _pickCard(type) {
+    const ctor = customElements.get(type);
+    let stub = {};
+    if (ctor?.getStubConfig) {
+      stub = (await ctor.getStubConfig(this.hass)) || {};
+    }
+    const cards = [...(this._config.cards || []), { type: `custom:${type}`, ...stub }];
     this._showPicker = false;
     this._fireConfig({ ...this._config, cards });
   }
