@@ -9,6 +9,7 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
 
   ha-card {
     overflow: visible !important;
+    height: auto;
   }
 
   .trigger {

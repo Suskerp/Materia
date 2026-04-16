@@ -146,7 +146,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
   }
 
   getCardSize() {
-    return this._open ? 3 : 2;
+    return this._open ? 3 : 1;
   }
 }
 
