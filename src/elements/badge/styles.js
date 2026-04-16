@@ -31,6 +31,7 @@ export const styles = [
       grid-template-columns: 1fr;
       font-family: inherit;
       -webkit-tap-highlight-color: transparent;
+      transition: none;
     }
 
     ha-card.no-state {
