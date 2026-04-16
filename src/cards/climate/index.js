@@ -49,12 +49,17 @@ class MateriaClimate extends ActionMixin(LitElement) {
   }
 
   get _currentTemp() {
+    if (this.config.temperature_entity) {
+      return this.hass?.states[this.config.temperature_entity]?.state;
+    }
     return this._entity?.attributes?.current_temperature;
   }
 
   get _humidity() {
-    if (!this.config.humidity_entity) return undefined;
-    return this.hass?.states[this.config.humidity_entity]?.state;
+    if (this.config.humidity_entity) {
+      return this.hass?.states[this.config.humidity_entity]?.state;
+    }
+    return undefined;
   }
 
   get _outdoorTemp() {

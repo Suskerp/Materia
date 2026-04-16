@@ -16,6 +16,7 @@ import "./cards/card/index.js";
 import "./cards/room/index.js";
 import "./cards/climate/index.js";
 import "./cards/weather/index.js";
+import "./cards/icon-row/index.js";
 
 // Elements (native Lit)
 import "./elements/badge/index.js";

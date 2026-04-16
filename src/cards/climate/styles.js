@@ -11,7 +11,7 @@ export const styles = css`
     flex-direction: column;
     height: 205px;
     -webkit-tap-highlight-color: transparent;
-    transition: background-color 0.3s ease;
+    transition: none;
   }
 
   .header {
