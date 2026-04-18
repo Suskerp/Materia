@@ -4,6 +4,16 @@ import { unavailableStyles } from "../../styles/card-styles.js";
 import { styles, VARIANT_COLORS } from "./styles.js";
 import "./editor.js";
 
+/** Default "active" state per entity domain. Mirrors materia-card DOMAIN_CONFIG. */
+const DOMAIN_ACTIVE_STATE = {
+  cover: "open",
+  lock: "locked",
+  vacuum: "cleaning",
+  media_player: "playing",
+  climate: "heat",
+  alarm_control_panel: "armed_away",
+};
+
 class MateriaBadge extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
@@ -52,8 +62,10 @@ class MateriaBadge extends ActionMixin(LitElement) {
   _isActive(stateObj) {
     if (!stateObj) return false;
     const s = stateObj.state;
-    const target = this.config.active_state || "on";
-    return s === String(target) || s === "open";
+    if (this.config.active_state) return s === String(this.config.active_state);
+    const domain = stateObj.entity_id.split(".")[0];
+    const defaultActive = DOMAIN_ACTIVE_STATE[domain] || "on";
+    return s === defaultActive;
   }
 
   _getBatteryColors(stateObj) {
