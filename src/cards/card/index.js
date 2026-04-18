@@ -41,7 +41,7 @@ const DOMAIN_CONFIG = {
   },
   lock: {
     activeState: "locked",
-    colorActive: "var(--md-sys-cust-color-device-container)",
+    colorActive: "var(--md-sys-cust-color-device)",
     colorOn: "var(--md-sys-cust-color-on-device)",
   },
   vacuum: {
