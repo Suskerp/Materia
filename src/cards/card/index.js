@@ -40,7 +40,7 @@ const DOMAIN_CONFIG = {
     colorOn: "var(--md-sys-cust-color-on-device)",
   },
   lock: {
-    activeState: "locked",
+    activeState: ["locked", "locking"],
     colorActive: "var(--md-sys-cust-color-device)",
     colorOn: "var(--md-sys-cust-color-on-device)",
   },
@@ -144,6 +144,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
     const activeState =
       this.config.active_state || this._domainConfig.activeState;
     if (activeState === "__never__") return false;
+    if (Array.isArray(activeState)) return activeState.includes(state);
     return state === activeState;
   }
 
@@ -317,9 +318,14 @@ export class MateriaCard extends ActionMixin(LitElement) {
 
     // Lock
     if (domain === "lock") {
-      return stateObj.state === "locked"
-        ? this._capitalize("Locked")
-        : this._capitalize("Unlocked");
+      const map = {
+        locked: "Locked",
+        unlocked: "Unlocked",
+        locking: "Locking",
+        unlocking: "Unlocking",
+        jammed: "Jammed",
+      };
+      return map[stateObj.state] || this._capitalize(stateObj.state);
     }
 
     // Default: capitalized state
