@@ -19,7 +19,7 @@ export const styles = css`
   .sub-buttons {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
     margin-right: 8px;
     position: relative;
     z-index: 3;
@@ -30,20 +30,26 @@ export const styles = css`
     height: 36px;
     border-radius: 50%;
     border: none;
-    background: var(--ha-card-background, var(--card-background-color));
-    color: var(--primary-text-color);
+    background: transparent;
+    color: currentColor;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
+    transition: background-color 0.15s ease;
   }
 
   .sub-btn ha-icon {
-    --mdc-icon-size: 18px;
+    --mdc-icon-size: 20px;
+    display: flex;
+  }
+
+  .sub-btn:hover {
+    background: color-mix(in srgb, currentColor 8%, transparent);
   }
 
   .sub-btn:active {
-    opacity: 0.7;
+    background: color-mix(in srgb, currentColor 14%, transparent);
   }
 `;

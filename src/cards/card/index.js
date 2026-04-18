@@ -115,7 +115,14 @@ export class MateriaCard extends ActionMixin(LitElement) {
 
   setConfig(config) {
     if (!config.entity) throw new Error("entity is required");
-    this.config = { tap_action: { action: "toggle" }, ...config };
+    const domain = config.entity.split(".")[0];
+    const dc = DOMAIN_CONFIG[domain] || DEFAULT_DOMAIN;
+    const defaults = { tap_action: { action: "toggle" } };
+    if (dc.showSubButtons) {
+      defaults.show_sub_buttons = true;
+      defaults.show_stop = true;
+    }
+    this.config = { ...defaults, ...config };
   }
 
   /* ---- Helpers --------------------------------------------------- */
@@ -167,18 +174,58 @@ export class MateriaCard extends ActionMixin(LitElement) {
     return this._domainConfig.showSlider || false;
   }
 
-  /* ---- Sub-buttons detection ------------------------------------ */
+  /* ---- Sub-buttons resolution ----------------------------------- */
 
-  get _showSubButtons() {
-    if (this.config.show_sub_buttons !== undefined)
-      return this.config.show_sub_buttons;
-    return this._domainConfig.showSubButtons || false;
-  }
+  /**
+   * Returns the effective sub-button list.
+   *  - If config.sub_buttons is an array, use it verbatim.
+   *  - Else if show_sub_buttons is true and entity is a cover, auto-build
+   *    up/[stop/]down. Bubble-card inspired shape: [{icon,tap_action}].
+   */
+  get _subButtons() {
+    const explicit = this.config.sub_buttons;
+    if (Array.isArray(explicit)) return explicit;
 
-  get _showStop() {
-    return this.config.show_stop !== undefined
-      ? this.config.show_stop
-      : true;
+    const enabled = this.config.show_sub_buttons !== undefined
+      ? this.config.show_sub_buttons
+      : this._domainConfig.showSubButtons || false;
+    if (!enabled) return [];
+
+    if (this._domain === "cover") {
+      const entity_id = this.config.entity;
+      const showStop = this.config.show_stop !== false;
+      const buttons = [
+        {
+          icon: "mdi:arrow-up",
+          tap_action: {
+            action: "perform-action",
+            perform_action: "cover.open_cover",
+            target: { entity_id },
+          },
+        },
+      ];
+      if (showStop) {
+        buttons.push({
+          icon: "mdi:stop",
+          tap_action: {
+            action: "perform-action",
+            perform_action: "cover.stop_cover",
+            target: { entity_id },
+          },
+        });
+      }
+      buttons.push({
+        icon: "mdi:arrow-down",
+        tap_action: {
+          action: "perform-action",
+          perform_action: "cover.close_cover",
+          target: { entity_id },
+        },
+      });
+      return buttons;
+    }
+
+    return [];
   }
 
   /* ---- Fill width ----------------------------------------------- */
@@ -619,27 +666,11 @@ export class MateriaCard extends ActionMixin(LitElement) {
     }
   }
 
-  /* ---- Cover controls ------------------------------------------- */
+  /* ---- Sub-button click handler --------------------------------- */
 
-  _openCover(ev) {
+  _handleSubButton(btn, ev) {
     ev.stopPropagation();
-    this.hass.callService("cover", "open_cover", {
-      entity_id: this.config.entity,
-    });
-  }
-
-  _stopCover(ev) {
-    ev.stopPropagation();
-    this.hass.callService("cover", "stop_cover", {
-      entity_id: this.config.entity,
-    });
-  }
-
-  _closeCover(ev) {
-    ev.stopPropagation();
-    this.hass.callService("cover", "close_cover", {
-      entity_id: this.config.entity,
-    });
+    this._handleAction(btn.tap_action);
   }
 
   /* ---- Tap handler ---------------------------------------------- */
@@ -664,8 +695,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
     const isActive = !unavailable && this._isActive;
     const isTonal = this._isTonal;
     const showSlider = !unavailable && this._showSlider;
-    const showSubButtons = !unavailable && this._showSubButtons;
-    const showStop = this._showStop;
+    const subButtons = unavailable ? [] : this._subButtons;
 
     const containerBg = this._getContainerBg();
     const textColor = this._getTextColor();
@@ -718,25 +748,23 @@ export class MateriaCard extends ActionMixin(LitElement) {
             ? html`<ha-icon class="chevron" icon="mdi:chevron-right"></ha-icon>`
             : ""}
 
-          ${showSubButtons
+          ${subButtons.length
             ? html`
                 <div class="sub-buttons">
-                  <button class="sub-btn" @click=${this._openCover}>
-                    <ha-icon icon="mdi:arrow-up"></ha-icon>
-                  </button>
-                  ${showStop
-                    ? html`
-                        <button class="sub-btn" @click=${this._stopCover}>
-                          <ha-icon icon="mdi:stop"></ha-icon>
-                        </button>
-                      `
-                    : nothing}
-                  <button class="sub-btn" @click=${this._closeCover}>
-                    <ha-icon icon="mdi:arrow-down"></ha-icon>
-                  </button>
+                  ${subButtons.map(
+                    (btn) => html`
+                      <button
+                        class="sub-btn"
+                        title=${btn.name || ""}
+                        @click=${(ev) => this._handleSubButton(btn, ev)}
+                      >
+                        <ha-icon .icon=${btn.icon}></ha-icon>
+                      </button>
+                    `
+                  )}
                 </div>
               `
-            : ""}
+            : nothing}
         </div>
       </ha-card>
     `;

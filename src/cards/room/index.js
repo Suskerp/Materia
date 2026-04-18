@@ -96,6 +96,7 @@ class MateriaRoom extends MateriaCard {
     const unavailable = this._isUnavailable(stateObj);
     const isActive = !unavailable && this._isActive;
     const showSlider = !unavailable && this._showSlider;
+    const subButtons = unavailable ? [] : this._subButtons;
 
     const containerBg = this._getContainerBg();
     const textColor = this._getTextColor();
@@ -104,6 +105,7 @@ class MateriaRoom extends MateriaCard {
 
     const icon = this._icon;
     const stateDisplay = unavailable ? "Unavailable" : this._stateDisplay;
+    const subtitle = this._subtitle;
     const columns = this.config.columns || 2;
 
     return html`
@@ -126,11 +128,23 @@ class MateriaRoom extends MateriaCard {
 
           <div class="name-container">
             <div class="name">${this._name}</div>
+            ${subtitle ? html`<div class="subtitle">${subtitle}</div>` : nothing}
             ${stateDisplay ? html`<div class="state">${stateDisplay}</div>` : nothing}
           </div>
 
           <div class="sub-buttons">
-            <button class="sub-btn" @click=${this._toggleExpand}>
+            ${subButtons.map(
+              (btn) => html`
+                <button
+                  class="sub-btn"
+                  title=${btn.name || ""}
+                  @click=${(ev) => this._handleSubButton(btn, ev)}
+                >
+                  <ha-icon .icon=${btn.icon}></ha-icon>
+                </button>
+              `
+            )}
+            <button class="sub-btn room-expand" @click=${this._toggleExpand}>
               <ha-icon icon=${this._expanded ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
             </button>
           </div>
@@ -149,6 +163,10 @@ class MateriaRoom extends MateriaCard {
 
   getCardSize() {
     return this._expanded ? 3 + (this._childCards?.length || 0) : 2;
+  }
+
+  getGridOptions() {
+    return { columns: 12, rows: "auto" };
   }
 }
 
