@@ -12,6 +12,7 @@ class MateriaPill extends ActionMixin(LitElement) {
     _resolvedColorOn: { state: true },
     _resolvedIcon: { state: true },
     _resolvedName: { state: true },
+    _resolvedStateDisplay: { state: true },
   };
 
   static getConfigElement() {
@@ -62,6 +63,7 @@ class MateriaPill extends ActionMixin(LitElement) {
       this._resolveField("color_on", "_resolvedColorOn");
       this._resolveField("icon", "_resolvedIcon");
       this._resolveField("name", "_resolvedName");
+      this._resolveField("state_display", "_resolvedStateDisplay");
     }
   }
 
@@ -86,6 +88,10 @@ class MateriaPill extends ActionMixin(LitElement) {
     let stateText;
     if (unavailable) {
       stateText = "Unavailable";
+    } else if (this.config.state_display) {
+      stateText = this._isTemplate(this.config.state_display)
+        ? (this._resolvedStateDisplay ?? "")
+        : this.config.state_display;
     } else if (ranges.length) {
       // Sensor-display style: show value + classification label
       stateText = unit

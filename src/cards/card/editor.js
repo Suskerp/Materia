@@ -82,9 +82,9 @@ export class MateriaCardEditor extends LitElement {
     const hasSlider = isLight || isCover;
     return [
       { name: "entity", required: true, selector: { entity: {} } },
-      { name: "name", selector: { text: {} } },
+      { name: "name", selector: { template: {} } },
       { name: "subtitle", selector: { template: {} } },
-      { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
+      { name: "icon", selector: { template: {} }, context: { icon_entity: "entity" } },
       ...(hasSlider ? [{ name: "show_slider", selector: { boolean: {} } }] : []),
       ...(isLight ? [{ name: "slider_turn_off", label: "Slider can turn off", selector: { boolean: {} } }] : []),
       { name: "show_sub_buttons", selector: { boolean: {} } },

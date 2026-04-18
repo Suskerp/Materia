@@ -19,8 +19,8 @@ class MateriaBadgeEditor extends LitElement {
     const hasEntity = !!this._config?.entity;
     return [
       { name: "entity", selector: { entity: {} } },
-      { name: "name", required: true, selector: { text: {} } },
-      { name: "icon", required: true, selector: { icon: {} }, context: { icon_entity: "entity" } },
+      { name: "name", required: true, selector: { template: {} } },
+      { name: "icon", required: true, selector: { template: {} }, context: { icon_entity: "entity" } },
       {
         name: "variant",
         selector: {
