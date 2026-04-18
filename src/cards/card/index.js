@@ -95,6 +95,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
     _resolvedColorOn: { state: true },
     _resolvedIcon: { state: true },
     _resolvedName: { state: true },
+    _resolvedSubtitle: { state: true },
   };
 
   /* ---- Editor plumbing ------------------------------------------ */
@@ -215,6 +216,12 @@ export class MateriaCard extends ActionMixin(LitElement) {
     return undefined; // let HA choose
   }
 
+  get _subtitle() {
+    const val = this.config.subtitle;
+    if (!val) return "";
+    return this._isTemplate(val) ? this._resolvedSubtitle : val;
+  }
+
   /* ---- State display -------------------------------------------- */
 
   get _stateDisplay() {
@@ -306,6 +313,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
     this._resolveField("color_on", "_resolvedColorOn");
     this._resolveField("icon", "_resolvedIcon");
     this._resolveField("name", "_resolvedName");
+    this._resolveField("subtitle", "_resolvedSubtitle");
   }
 
   disconnectedCallback() {
@@ -698,6 +706,9 @@ export class MateriaCard extends ActionMixin(LitElement) {
 
           <div class="name-container">
             <div class="name">${this._name}</div>
+            ${this._subtitle
+              ? html`<div class="subtitle">${this._subtitle}</div>`
+              : ""}
             ${stateDisplay
               ? html`<div class="state">${stateDisplay}</div>`
               : ""}

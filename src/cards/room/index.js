@@ -3,6 +3,7 @@ import { MateriaCard } from "../card/index.js";
 import { loadCardHelpers } from "../../styles/shared.js";
 import {
   hostStyles,
+  haCardReset,
   rowCardStyles,
   fillBarStyles,
   unavailableStyles,
@@ -20,6 +21,7 @@ class MateriaRoom extends MateriaCard {
 
   static styles = [
     hostStyles,
+    haCardReset,
     rowCardStyles,
     fillBarStyles,
     unavailableStyles,

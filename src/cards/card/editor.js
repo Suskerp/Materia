@@ -10,6 +10,7 @@ class MateriaCardEditor extends BaseEditor {
     return [
       { name: "entity", required: true, selector: { entity: {} } },
       { name: "name", selector: { text: {} } },
+      { name: "subtitle", selector: { template: {} } },
       { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
       { name: "show_slider", selector: { boolean: {} } },
       { name: "slider_turn_off", label: "Slider can turn off", selector: { boolean: {} } },

@@ -82,6 +82,15 @@ export const rowCardStyles = css`
     text-overflow: ellipsis;
   }
 
+  .subtitle {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .state {
     font-size: 12px;
     font-weight: normal;
