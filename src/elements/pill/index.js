@@ -108,19 +108,10 @@ class MateriaPill extends ActionMixin(LitElement) {
       ? (unavailable ? name : (unit ? unit : (classification.label || name)))
       : "";
 
-    const s = stateVal.toLowerCase();
-    const isActive = s === "on" || s === "true" || s === "home" || s === "open"
-      || s === "cleaning" || s === "playing"
-      || (!isNaN(Number(s)) && Number(s) > 0);
-
     const color = this._resolvedColor || this.config.color;
     const colorOn = this._resolvedColorOn || this.config.color_on;
-    const containerBg = isActive && color
-      ? color
-      : "var(--ha-card-background, var(--card-background-color))";
-    const textColor = isActive && colorOn
-      ? colorOn
-      : "var(--primary-text-color)";
+    const containerBg = color || "var(--ha-card-background, var(--card-background-color))";
+    const textColor = colorOn || "var(--primary-text-color)";
 
     const noBg = this.config.background === false || this.config.background === "none";
 
