@@ -107,15 +107,20 @@ class MateriaRoomEditor extends LitElement {
   }
 
   get _mainSchema() {
+    const domain = this._config?.entity?.split(".")[0];
+    const isCover = domain === "cover";
+    const isLight = domain === "light";
+    const hasSlider = isLight || isCover;
     return [
       { name: "entity", required: true, selector: { entity: {} } },
       { name: "name", selector: { text: {} } },
       { name: "subtitle", selector: { template: {} } },
       { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
       { name: "columns", selector: { number: { min: 1, max: 6, mode: "slider" } } },
-      { name: "show_slider", selector: { boolean: {} } },
+      ...(hasSlider ? [{ name: "show_slider", selector: { boolean: {} } }] : []),
+      ...(isLight ? [{ name: "slider_turn_off", label: "Slider can turn off", selector: { boolean: {} } }] : []),
       { name: "show_sub_buttons", selector: { boolean: {} } },
-      { name: "show_stop", label: "Show stop (covers)", selector: { boolean: {} } },
+      ...(isCover ? [{ name: "show_stop", label: "Show stop", selector: { boolean: {} } }] : []),
       { name: "color", selector: { template: {} } },
       { name: "color_on", selector: { template: {} } },
       { name: "tap_action", selector: { ui_action: { default_action: "toggle" } } },

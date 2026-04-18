@@ -11,6 +11,12 @@ export const VARIANT_COLORS = {
   "secondary-container": ["var(--md-sys-color-secondary-container)",    "var(--md-sys-color-secondary)"],
   "error-container":     ["var(--md-sys-color-error-container)",        "var(--md-sys-color-error)"],
   "device-container":    ["var(--md-sys-cust-color-device-container)",  "var(--md-sys-cust-color-on-device)"],
+  // State-driven: colored only when entity is active, default bg when inactive.
+  "primary-state":       ["var(--md-sys-color-primary)",                "var(--md-sys-color-on-primary)"],
+  "secondary-state":     ["var(--md-sys-color-secondary)",              "var(--md-sys-color-on-secondary)"],
+  "tertiary-state":      ["var(--md-sys-color-tertiary)",               "var(--md-sys-color-on-tertiary)"],
+  "error-state":         ["var(--md-sys-color-error)",                  "var(--md-sys-color-on-error)"],
+  "device-state":        ["var(--md-sys-cust-color-device-container)",  "var(--md-sys-cust-color-on-device)"],
 };
 
 export const styles = [

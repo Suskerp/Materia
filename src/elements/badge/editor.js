@@ -16,6 +16,7 @@ class MateriaBadgeEditor extends LitElement {
   }
 
   get _schema() {
+    const hasEntity = !!this._config?.entity;
     return [
       { name: "entity", selector: { entity: {} } },
       { name: "name", required: true, selector: { text: {} } },
@@ -34,14 +35,23 @@ class MateriaBadgeEditor extends LitElement {
               { value: "secondary-container", label: "Secondary Container" },
               { value: "error-container", label: "Error Container" },
               { value: "device-container", label: "Device Container" },
+              { value: "primary-state", label: "Primary State" },
+              { value: "secondary-state", label: "Secondary State" },
+              { value: "tertiary-state", label: "Tertiary State" },
+              { value: "error-state", label: "Error State" },
+              { value: "device-state", label: "Device State" },
               { value: "battery", label: "Battery" },
             ],
           },
         },
       },
-      { name: "show_state", selector: { boolean: {} } },
-      { name: "active_state", selector: { text: {} } },
-      { name: "state_display", selector: { template: {} } },
+      ...(hasEntity
+        ? [
+            { name: "show_state", selector: { boolean: {} } },
+            { name: "active_state", selector: { text: {} } },
+            { name: "state_display", selector: { template: {} } },
+          ]
+        : []),
       { name: "color", selector: { template: {} } },
       { name: "color_on", selector: { template: {} } },
       { name: "tap_action", selector: { ui_action: { default_action: "toggle" } } },

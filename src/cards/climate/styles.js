@@ -26,12 +26,19 @@ export const styles = css`
   }
 
   .name {
+    flex: 1;
     font-size: 16px;
     font-weight: 500;
     line-height: 28px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .chevron {
+    --mdc-icon-size: 20px;
+    flex-shrink: 0;
+    opacity: 0.7;
   }
 
   .center {

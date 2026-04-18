@@ -545,6 +545,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
       const pct = this._pctFromPointer(ev);
       this._updateFillVisual(pct);
       this._setSliderValue(pct);
+      this._fireHaptic("light");
     } else if (!this._scrollIntent) {
       this._handleTap();
     }

@@ -87,6 +87,7 @@ class MateriaRoom extends MateriaCard {
   _toggleExpand(ev) {
     ev?.stopPropagation?.();
     this._expanded = !this._expanded;
+    this._fireHaptic("selection");
   }
 
   render() {

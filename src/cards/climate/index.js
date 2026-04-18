@@ -222,6 +222,13 @@ class MateriaClimate extends ActionMixin(LitElement) {
           <span class="name" style="color: ${this._modeColor()};">
             ${this._isTemplate(this.config.name) ? this._resolvedName : this.config.name}
           </span>
+          ${this._hasNavigateAction
+            ? html`<ha-icon
+                class="chevron"
+                icon="mdi:chevron-right"
+                style="color: ${this._modeColor()};"
+              ></ha-icon>`
+            : nothing}
         </div>
 
         <div class="center">

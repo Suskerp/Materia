@@ -10,11 +10,27 @@
 export const ActionMixin = (superClass) =>
   class extends superClass {
     /**
+     * Fire a haptic event. The HA Android Companion app listens for this
+     * and triggers a native haptic on the device.
+     * type: light | medium | heavy | success | warning | failure | selection
+     */
+    _fireHaptic(type = "light") {
+      this.dispatchEvent(
+        new CustomEvent("haptic", {
+          detail: type,
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+
+    /**
      * Dispatch an action based on a tap_action / hold_action config object.
      * Supports: toggle, call-service, navigate, more-info, none.
      */
     _handleAction(actionConfig) {
       if (!actionConfig || actionConfig.action === "none") return;
+      this._fireHaptic("light");
 
       switch (actionConfig.action) {
         case "toggle":
