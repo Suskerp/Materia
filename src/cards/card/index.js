@@ -41,7 +41,7 @@ const DOMAIN_CONFIG = {
   },
   lock: {
     activeState: "locked",
-    colorActive: "var(--md-sys-cust-color-device)",
+    colorActive: "var(--md-sys-cust-color-device-container)",
     colorOn: "var(--md-sys-cust-color-on-device)",
   },
   vacuum: {
@@ -271,7 +271,20 @@ export class MateriaCard extends ActionMixin(LitElement) {
 
   /* ---- State display -------------------------------------------- */
 
-  get _stateDisplay() {
+  _relativeLastChanged() {
+    const stateObj = this._stateObj;
+    if (!stateObj?.last_changed) return "";
+    const delta = (Date.now() - new Date(stateObj.last_changed)) / 1000;
+    if (delta < 60) return "just now";
+    const mins = Math.floor(delta / 60);
+    if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"} ago`;
+    const hours = Math.floor(delta / 3600);
+    if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+    const days = Math.floor(delta / 86400);
+    return `${days} day${days === 1 ? "" : "s"} ago`;
+  }
+
+  _baseStateDisplay() {
     const stateObj = this._stateObj;
     if (!stateObj) return "";
 
@@ -311,6 +324,16 @@ export class MateriaCard extends ActionMixin(LitElement) {
 
     // Default: capitalized state
     return this._capitalize(stateObj.state);
+  }
+
+  get _stateDisplay() {
+    const showState = this.config.show_state !== false;
+    let text = showState ? this._baseStateDisplay() : "";
+    if (this.config.show_last_changed) {
+      const rel = this._relativeLastChanged();
+      if (rel) text = text ? `${text} · ${rel}` : rel;
+    }
+    return text;
   }
 
   /* ---- Colors --------------------------------------------------- */

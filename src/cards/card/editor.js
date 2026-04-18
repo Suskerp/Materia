@@ -11,7 +11,7 @@ function isTemplate(val) {
 export function applyCardFormDefaults(config) {
   if (!config?.entity) return { ...config };
   const domain = config.entity.split(".")[0];
-  const defaults = { show_sub_buttons: false, show_stop: true };
+  const defaults = { show_sub_buttons: false, show_stop: true, show_state: true };
   if (DOMAINS_WITH_SUB_BUTTONS.has(domain)) defaults.show_sub_buttons = true;
   return { ...defaults, ...config };
 }
@@ -87,8 +87,10 @@ export class MateriaCardEditor extends LitElement {
       { name: "icon", selector: { template: {} }, context: { icon_entity: "entity" } },
       ...(hasSlider ? [{ name: "show_slider", selector: { boolean: {} } }] : []),
       ...(isLight ? [{ name: "slider_turn_off", label: "Slider can turn off", selector: { boolean: {} } }] : []),
+      { name: "show_state", selector: { boolean: {} } },
       { name: "show_sub_buttons", selector: { boolean: {} } },
       ...(isCover ? [{ name: "show_stop", label: "Show stop", selector: { boolean: {} } }] : []),
+      { name: "show_last_changed", label: "Show last changed", selector: { boolean: {} } },
       { name: "color", selector: { template: {} } },
       { name: "color_on", selector: { template: {} } },
       { name: "tap_action", selector: { ui_action: { default_action: "toggle" } } },
