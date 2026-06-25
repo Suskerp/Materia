@@ -328,8 +328,17 @@ export class MateriaCard extends ActionMixin(LitElement) {
       return map[stateObj.state] || this._capitalize(stateObj.state);
     }
 
-    // Default: capitalized state
-    return this._capitalize(stateObj.state);
+    // Default: numeric states get rounded to 2 decimals + unit; otherwise
+    // show the capitalized state text.
+    const raw = stateObj.state;
+    const num = Number(raw);
+    if (raw !== "" && raw != null && !Number.isNaN(num)) {
+      const rounded = Math.round(num * 100) / 100;
+      const unit = stateObj.attributes?.unit_of_measurement;
+      if (unit) return unit === "%" ? `${rounded}%` : `${rounded} ${unit}`;
+      return `${rounded}`;
+    }
+    return this._capitalize(raw);
   }
 
   get _stateDisplay() {

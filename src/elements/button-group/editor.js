@@ -1,18 +1,64 @@
-import { LitElement, html, css } from "lit";
+import { html, css } from "lit";
 import { computeLabel } from "../../utils/editor-helpers.js";
+import { SmartEditorBase } from "../../utils/smart-editor.js";
 import { PRESETS } from "./styles.js";
 
-class MateriaButtonGroupEditor extends LitElement {
+class MateriaButtonGroupEditor extends SmartEditorBase {
   static properties = {
-    hass: { attribute: false },
-    _config: { state: true },
+    _expanded: { state: true },
   };
 
+  static styles = [
+    SmartEditorBase.styles,
+    css`
+      .options-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 16px;
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .option-card {
+        border: 1px solid var(--divider-color, rgba(0, 0, 0, 0.12));
+        border-radius: 12px;
+        margin-top: 8px;
+        overflow: hidden;
+      }
+      .option-header {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 4px 4px 12px;
+        background: var(--secondary-background-color, rgba(0, 0, 0, 0.04));
+      }
+      .option-header span {
+        flex: 1;
+        font-size: 13px;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .option-body {
+        padding: 8px 12px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .option-body ha-form {
+        display: block;
+        width: 100%;
+      }
+    `,
+  ];
+
   setConfig(config) {
-    this._config = { ...config };
+    super.setConfig(config);
+    this._expanded = null;
   }
 
-  get _schema() {
+  get _sections() {
     const presetOptions = [
       ...Object.keys(PRESETS).map((k) => ({
         value: k,
@@ -21,91 +67,58 @@ class MateriaButtonGroupEditor extends LitElement {
       { value: "custom", label: "Custom" },
     ];
 
-    const base = [
-      { name: "entity", selector: { entity: {} } },
-      { name: "attribute", selector: { text: {} } },
-      { name: "preset", label: "Color preset", selector: { select: { options: presetOptions, mode: "dropdown" } } },
-      { name: "size", selector: { select: { options: [
-        { value: "xs", label: "XS (32dp)" },
-        { value: "s",  label: "S (36dp)" },
-        { value: "m",  label: "M (40dp)" },
-        { value: "l",  label: "L (48dp)" },
-        { value: "xl", label: "XL (56dp)" },
-      ], mode: "dropdown" } } },
-      { name: "variant", label: "Style", selector: { select: { options: [
-        { value: "filled", label: "Filled" },
-        { value: "tonal", label: "Tonal" },
-      ], mode: "dropdown" } } },
-      { name: "multi_select", label: "Multi-select", selector: { boolean: {} } },
-    ];
+    const setup = {
+      title: "Setup",
+      icon: "mdi:tune",
+      fields: [
+        { name: "entity", selector: { entity: {} } },
+        { name: "attribute", selector: { text: {} } },
+        { name: "preset", label: "Color preset", selector: { select: { mode: "dropdown", options: presetOptions } } },
+        { name: "size", selector: { select: { mode: "dropdown", options: [
+          { value: "xs", label: "XS (32dp)" },
+          { value: "s", label: "S (36dp)" },
+          { value: "m", label: "M (40dp)" },
+          { value: "l", label: "L (48dp)" },
+          { value: "xl", label: "XL (56dp)" },
+        ] } } },
+        { name: "variant", label: "Style", selector: { select: { mode: "dropdown", options: [
+          { value: "filled", label: "Filled" },
+          { value: "tonal", label: "Tonal" },
+        ] } } },
+        { name: "multi_select", label: "Multi-select", selector: { boolean: {} } },
+        ...(this._config?.multi_select
+          ? [{ name: "columns", label: "Max columns", selector: { number: { min: 1, max: 8, mode: "box" } } }]
+          : []),
+      ],
+    };
 
-    if (this._config?.multi_select) {
-      base.push({ name: "columns", label: "Max columns", selector: { number: { min: 1, max: 8, mode: "box" } } });
-    }
+    const sections = [setup];
 
     if (this._config?.preset === "custom") {
-      base.push(
-        { name: "color_active", label: "Active color", selector: { template: {} } },
-        { name: "color_on_active", label: "Active text color", selector: { template: {} } },
-      );
+      sections.push({
+        title: "Appearance",
+        icon: "mdi:palette-outline",
+        fields: [
+          { name: "color_active", label: "Active color", color: true, template: true, selector: { text: {} } },
+          { name: "color_on_active", label: "Active text color", color: true, template: true, selector: { text: {} } },
+        ],
+      });
     }
 
-    return base;
+    return sections;
   }
 
-  static styles = css`
-    .options-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 16px;
-      font-weight: 600;
-      font-size: 14px;
-    }
-    .option-card {
-      border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
-      border-radius: 12px;
-      margin-top: 8px;
-      overflow: hidden;
-    }
-    .option-header {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 4px 4px 12px;
-      background: var(--secondary-background-color, rgba(0,0,0,0.04));
-    }
-    .option-header span {
-      flex: 1;
-      font-size: 13px;
-      font-weight: 500;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .option-body {
-      padding: 8px 12px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .option-body ha-form {
-      display: block;
-      width: 100%;
-    }
-  `;
+  get _optionSchema() {
+    return [
+      { name: "label", selector: { text: {} } },
+      { name: "value", required: true, selector: { text: {} } },
+      { name: "icon", selector: { icon: {} } },
+      { name: "tap_action", label: "Action", selector: { ui_action: { default_action: "call-service" } } },
+    ];
+  }
 
-  render() {
-    if (!this.hass || !this._config) return html``;
+  _renderExtra() {
     return html`
-      <ha-form
-        .hass=${this.hass}
-        .data=${this._config}
-        .schema=${this._schema}
-        .computeLabel=${computeLabel}
-        @value-changed=${this._valueChanged}
-      ></ha-form>
-
       <div class="options-header">
         <span>Options</span>
         <ha-icon-button @click=${this._addOption}>
@@ -150,51 +163,17 @@ class MateriaButtonGroupEditor extends LitElement {
     `;
   }
 
-  _expanded = null;
-
-  get _optionSchema() {
-    return [
-      { name: "label", selector: { text: {} } },
-      { name: "value", required: true, selector: { text: {} } },
-      { name: "icon", selector: { icon: {} } },
-      { name: "tap_action", label: "Action", selector: { ui_action: { default_action: "call-service" } } },
-    ];
-  }
-
-  _updateOptionForm(index, value) {
-    const options = [...(this._config.options || [])];
-    options[index] = { ...options[index], ...value };
-    const updated = { ...this._config, options };
-    this._config = updated;
-    this._fireConfigChanged(updated);
-  }
-
-  _toggleExpand(i) {
-    this._expanded = this._expanded === i ? null : i;
-    this.requestUpdate();
-  }
-
-  _valueChanged(ev) {
-    const updated = { ...this._config, ...ev.detail.value };
-    this._config = updated;
-    this._fireConfigChanged(updated);
-  }
-
   _addOption() {
     const options = [...(this._config.options || []), { label: "", value: "", icon: "" }];
-    const updated = { ...this._config, options };
-    this._config = updated;
     this._expanded = options.length - 1;
-    this._fireConfigChanged(updated);
+    this._commit({ ...this._config, options });
   }
 
   _removeOption(index) {
     const options = [...(this._config.options || [])];
     options.splice(index, 1);
-    const updated = { ...this._config, options };
-    this._config = updated;
     if (this._expanded === index) this._expanded = null;
-    this._fireConfigChanged(updated);
+    this._commit({ ...this._config, options });
   }
 
   _moveOption(index, direction) {
@@ -202,28 +181,18 @@ class MateriaButtonGroupEditor extends LitElement {
     const target = index + direction;
     if (target < 0 || target >= options.length) return;
     [options[index], options[target]] = [options[target], options[index]];
-    const updated = { ...this._config, options };
-    this._config = updated;
     if (this._expanded === index) this._expanded = target;
-    this._fireConfigChanged(updated);
+    this._commit({ ...this._config, options });
   }
 
-  _updateOption(index, key, value) {
+  _updateOptionForm(index, value) {
     const options = [...(this._config.options || [])];
-    options[index] = { ...options[index], [key]: value };
-    const updated = { ...this._config, options };
-    this._config = updated;
-    this._fireConfigChanged(updated);
+    options[index] = { ...options[index], ...value };
+    this._commit({ ...this._config, options });
   }
 
-  _fireConfigChanged(config) {
-    this.dispatchEvent(
-      new CustomEvent("config-changed", {
-        detail: { config },
-        bubbles: true,
-        composed: true,
-      })
-    );
+  _toggleExpand(i) {
+    this._expanded = this._expanded === i ? null : i;
   }
 }
 

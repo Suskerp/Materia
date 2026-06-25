@@ -1,25 +1,85 @@
-import { LitElement, html, css } from "lit";
+import { html, css } from "lit";
 import { computeLabel } from "../../utils/editor-helpers.js";
+import { SmartEditorBase } from "../../utils/smart-editor.js";
 
-class MateriaMenuEditor extends LitElement {
+class MateriaMenuEditor extends SmartEditorBase {
   static properties = {
-    hass: { attribute: false },
-    _config: { state: true },
+    _expanded: { state: true },
   };
 
+  static styles = [
+    SmartEditorBase.styles,
+    css`
+      .options-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 16px;
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .option-card {
+        border: 1px solid var(--divider-color, rgba(0, 0, 0, 0.12));
+        border-radius: 12px;
+        margin-top: 8px;
+        overflow: hidden;
+      }
+      .option-header {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 4px 4px 12px;
+        background: var(--secondary-background-color, rgba(0, 0, 0, 0.04));
+      }
+      .option-header span {
+        flex: 1;
+        font-size: 13px;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .option-body {
+        padding: 8px 12px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .option-body ha-form {
+        display: block;
+        width: 100%;
+      }
+    `,
+  ];
+
   setConfig(config) {
-    this._config = { ...config };
+    super.setConfig(config);
+    this._expanded = null;
   }
 
-  get _schema() {
+  get _sections() {
     return [
-      { name: "entity", selector: { entity: {} } },
-      { name: "name", selector: { text: {} } },
-      { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
-      { name: "position", selector: { select: { options: [
-        { value: "below", label: "Below" },
-        { value: "above", label: "Above" },
-      ], mode: "dropdown" } } },
+      {
+        title: "Content",
+        icon: "mdi:card-text-outline",
+        fields: [
+          { name: "entity", selector: { entity: {} } },
+          { name: "name", template: true, selector: { text: {} } },
+          {
+            name: "icon",
+            template: true,
+            selector: { icon: {} },
+            context: { icon_entity: "entity" },
+          },
+          {
+            name: "position",
+            selector: { select: { mode: "dropdown", options: [
+              { value: "below", label: "Below" },
+              { value: "above", label: "Above" },
+            ] } },
+          },
+        ],
+      },
     ];
   }
 
@@ -31,61 +91,8 @@ class MateriaMenuEditor extends LitElement {
     ];
   }
 
-  static styles = css`
-    .options-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 16px;
-      font-weight: 600;
-      font-size: 14px;
-    }
-    .option-card {
-      border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
-      border-radius: 12px;
-      margin-top: 8px;
-      overflow: hidden;
-    }
-    .option-header {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 4px 4px 12px;
-      background: var(--secondary-background-color, rgba(0,0,0,0.04));
-    }
-    .option-header span {
-      flex: 1;
-      font-size: 13px;
-      font-weight: 500;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .option-body {
-      padding: 8px 12px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .option-body ha-form {
-      display: block;
-      width: 100%;
-    }
-  `;
-
-  _expanded = null;
-
-  render() {
-    if (!this.hass || !this._config) return html``;
+  _renderExtra() {
     return html`
-      <ha-form
-        .hass=${this.hass}
-        .data=${this._config}
-        .schema=${this._schema}
-        .computeLabel=${computeLabel}
-        @value-changed=${this._valueChanged}
-      ></ha-form>
-
       <div class="options-header">
         <span>Options</span>
         <ha-icon-button @click=${this._addOption}>
@@ -130,27 +137,17 @@ class MateriaMenuEditor extends LitElement {
     `;
   }
 
-  _valueChanged(ev) {
-    const updated = { ...this._config, ...ev.detail.value };
-    this._config = updated;
-    this._fireConfigChanged(updated);
-  }
-
   _addOption() {
     const options = [...(this._config.options || []), { label: "", value: "", icon: "" }];
-    const updated = { ...this._config, options };
-    this._config = updated;
     this._expanded = options.length - 1;
-    this._fireConfigChanged(updated);
+    this._commit({ ...this._config, options });
   }
 
   _removeOption(index) {
     const options = [...(this._config.options || [])];
     options.splice(index, 1);
-    const updated = { ...this._config, options };
-    this._config = updated;
     if (this._expanded === index) this._expanded = null;
-    this._fireConfigChanged(updated);
+    this._commit({ ...this._config, options });
   }
 
   _moveOption(index, direction) {
@@ -158,33 +155,18 @@ class MateriaMenuEditor extends LitElement {
     const target = index + direction;
     if (target < 0 || target >= options.length) return;
     [options[index], options[target]] = [options[target], options[index]];
-    const updated = { ...this._config, options };
-    this._config = updated;
     if (this._expanded === index) this._expanded = target;
-    this._fireConfigChanged(updated);
+    this._commit({ ...this._config, options });
   }
 
   _updateOptionForm(index, value) {
     const options = [...(this._config.options || [])];
     options[index] = { ...options[index], ...value };
-    const updated = { ...this._config, options };
-    this._config = updated;
-    this._fireConfigChanged(updated);
+    this._commit({ ...this._config, options });
   }
 
   _toggleExpand(i) {
     this._expanded = this._expanded === i ? null : i;
-    this.requestUpdate();
-  }
-
-  _fireConfigChanged(config) {
-    this.dispatchEvent(
-      new CustomEvent("config-changed", {
-        detail: { config },
-        bubbles: true,
-        composed: true,
-      })
-    );
   }
 }
 

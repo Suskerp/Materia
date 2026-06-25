@@ -1,96 +1,102 @@
-import { LitElement, html, css } from "lit";
+import { html, css } from "lit";
 import { computeLabel } from "../../utils/editor-helpers.js";
+import { SmartEditorBase } from "../../utils/smart-editor.js";
 
-class MateriaIconButtonEditor extends LitElement {
+class MateriaIconButtonEditor extends SmartEditorBase {
   static properties = {
-    hass: { attribute: false },
-    _config: { state: true },
+    _expanded: { state: true },
   };
 
-  static styles = css`
-    :host { display: block; }
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 16px;
-      font-weight: 600;
-      font-size: 14px;
-    }
-    .mapping-card {
-      border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
-      border-radius: 12px;
-      margin-top: 8px;
-      overflow: hidden;
-    }
-    .mapping-header {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 4px 4px 12px;
-      background: var(--secondary-background-color, rgba(0,0,0,0.04));
-    }
-    .mapping-header span {
-      flex: 1;
-      font-size: 13px;
-      font-weight: 500;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .mapping-body {
-      padding: 8px 12px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .mapping-body ha-form {
-      display: block;
-      width: 100%;
-    }
-  `;
+  static styles = [
+    SmartEditorBase.styles,
+    css`
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 16px;
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .mapping-card {
+        border: 1px solid var(--divider-color, rgba(0, 0, 0, 0.12));
+        border-radius: 12px;
+        margin-top: 8px;
+        overflow: hidden;
+      }
+      .mapping-header {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 4px 4px 12px;
+        background: var(--secondary-background-color, rgba(0, 0, 0, 0.04));
+      }
+      .mapping-header span {
+        flex: 1;
+        font-size: 13px;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .mapping-body {
+        padding: 8px 12px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .mapping-body ha-form {
+        display: block;
+        width: 100%;
+      }
+    `,
+  ];
 
   setConfig(config) {
-    this._config = config;
+    super.setConfig(config);
+    this._expanded = null;
   }
 
-  _isTemplate(val) {
-    return val && typeof val === "string" && (val.includes("{{") || val.includes("{%"));
-  }
-
-  get _schema() {
-    const iconIsTemplate = this._isTemplate(this._config?.icon);
+  get _sections() {
     return [
-      iconIsTemplate
-        ? { name: "icon", required: true, selector: { template: {} } }
-        : { name: "icon", required: true, selector: { icon: {} }, context: { icon_entity: "entity" } },
       {
-        name: "variant",
-        selector: {
-          select: {
-            options: [
+        title: "Button",
+        icon: "mdi:gesture-tap-button",
+        fields: [
+          {
+            name: "icon",
+            required: true,
+            template: true,
+            selector: { icon: {} },
+            context: { icon_entity: "entity" },
+          },
+          {
+            name: "variant",
+            selector: { select: { mode: "dropdown", options: [
               { value: "standard", label: "Standard" },
               { value: "outlined", label: "Outlined" },
               { value: "filled", label: "Filled" },
               { value: "filled-tonal", label: "Filled Tonal" },
-            ],
+            ] } },
           },
-        },
-      },
-      {
-        name: "size",
-        selector: {
-          select: {
-            options: [
+          {
+            name: "size",
+            selector: { select: { mode: "dropdown", options: [
               { value: "default", label: "Default (48px)" },
               { value: "large", label: "Large (56px)" },
-            ],
+            ] } },
           },
-        },
+          { name: "entity", selector: { entity: {} } },
+          { name: "disabled", helper: "Template returning true / false", selector: { template: {} } },
+        ],
       },
-      { name: "entity", selector: { entity: {} } },
-      { name: "disabled", selector: { template: {} } },
-      { name: "tap_action", label: "Default action", selector: { ui_action: {} } },
+      {
+        title: "Actions",
+        icon: "mdi:gesture-tap",
+        fields: [
+          { name: "tap_action", label: "Default action", selector: { ui_action: {} } },
+        ],
+      },
     ];
   }
 
@@ -103,24 +109,12 @@ class MateriaIconButtonEditor extends LitElement {
 
   get _stateMappings() {
     const map = this._config.tap_action_map || {};
-    return Object.keys(map).map(state => ({ state, tap_action: map[state] }));
+    return Object.keys(map).map((state) => ({ state, tap_action: map[state] }));
   }
 
-  _expanded = null;
-
-  render() {
-    if (!this.hass || !this._config) return html``;
+  _renderExtra() {
     const mappings = this._stateMappings;
-
     return html`
-      <ha-form
-        .hass=${this.hass}
-        .data=${this._config}
-        .schema=${this._schema}
-        .computeLabel=${computeLabel}
-        @value-changed=${this._valueChanged}
-      ></ha-form>
-
       <div class="section-header">
         <span>Action mappings</span>
         <ha-icon-button @click=${this._addMapping}>
@@ -161,12 +155,6 @@ class MateriaIconButtonEditor extends LitElement {
 
   _toggleExpand(i) {
     this._expanded = this._expanded === i ? null : i;
-    this.requestUpdate();
-  }
-
-  _valueChanged(ev) {
-    const updated = { ...this._config, ...ev.detail.value };
-    this._fireConfig(updated);
   }
 
   _addMapping() {
@@ -194,21 +182,8 @@ class MateriaIconButtonEditor extends LitElement {
     for (const m of mappings) {
       if (m.state && m.tap_action) newMap[m.state] = m.tap_action;
     }
-    const updated = Object.keys(newMap).length
-      ? { ...rest, tap_action_map: newMap }
-      : rest;
-    this._fireConfig(updated);
-  }
-
-  _fireConfig(config) {
-    this._config = config;
-    this.dispatchEvent(
-      new CustomEvent("config-changed", {
-        detail: { config },
-        bubbles: true,
-        composed: true,
-      })
-    );
+    const updated = Object.keys(newMap).length ? { ...rest, tap_action_map: newMap } : rest;
+    this._commit(updated);
   }
 }
 

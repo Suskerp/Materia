@@ -1,13 +1,36 @@
-import { BaseEditor } from "../../utils/editor-helpers.js";
+import { SmartEditorBase } from "../../utils/smart-editor.js";
 
-class MateriaWeatherEditor extends BaseEditor {
-  get _schema() {
+class MateriaWeatherEditor extends SmartEditorBase {
+  get _sections() {
     return [
-      { name: "entity", required: true, selector: { entity: { domain: "weather" } } },
-      { name: "name", selector: { text: {} } },
-      { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
-      { name: "humidity_entity", selector: { entity: { domain: "sensor" } } },
-      { name: "tap_action", selector: { ui_action: { default_action: "more-info" } } },
+      {
+        title: "Content",
+        icon: "mdi:card-text-outline",
+        fields: [
+          { name: "entity", required: true, selector: { entity: { domain: "weather" } } },
+          { name: "name", template: true, selector: { text: {} } },
+          {
+            name: "icon",
+            template: true,
+            selector: { icon: {} },
+            context: { icon_entity: "entity" },
+          },
+        ],
+      },
+      {
+        title: "Sensors",
+        icon: "mdi:water-percent",
+        fields: [
+          { name: "humidity_entity", label: "Humidity sensor", selector: { entity: { domain: "sensor" } } },
+        ],
+      },
+      {
+        title: "Actions",
+        icon: "mdi:gesture-tap",
+        fields: [
+          { name: "tap_action", selector: { ui_action: { default_action: "more-info" } } },
+        ],
+      },
     ];
   }
 }

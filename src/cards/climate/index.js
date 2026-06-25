@@ -113,25 +113,15 @@ class MateriaClimate extends ActionMixin(LitElement) {
   }
 
   _statusText() {
-    const mode = this._mode;
     const current = this._currentTemp;
     const humidity = this._humidity;
     const outdoor = this._outdoorTemp;
-    const isOff = mode === "off";
     const parts = [];
 
-    if (isOff) {
-      if (outdoor != null) parts.push(`${outdoor}\u00B0`);
-      if (humidity != null) parts.push(`${humidity}%`);
-      return parts.join(" \u00B7 ") || "";
-    }
-
+    // Show room temp / humidity / outdoor in every mode, including off.
     if (current != null) parts.push(`${current}\u00B0`);
     if (humidity != null) parts.push(`${humidity}%`);
-
-    if (outdoor != null) {
-      parts.push(`${outdoor}\u00B0`);
-    }
+    if (outdoor != null) parts.push(`${outdoor}\u00B0`);
 
     return parts.join(" \u00B7 ") || "";
   }

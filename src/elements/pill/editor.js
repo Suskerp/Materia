@@ -1,18 +1,38 @@
-import { BaseEditor } from "../../utils/editor-helpers.js";
+import { SmartEditorBase } from "../../utils/smart-editor.js";
 
-class MateriaPillEditor extends BaseEditor {
-  get _schema() {
+class MateriaPillEditor extends SmartEditorBase {
+  get _sections() {
     return [
-      { name: "entity", required: true, selector: { entity: {} } },
-      { name: "name", selector: { template: {} } },
-      { name: "icon", selector: { template: {} }, context: { icon_entity: "entity" } },
-      { name: "state_display", selector: { template: {} } },
-      { name: "color", selector: { template: {} } },
-      { name: "color_on", selector: { template: {} } },
-      { name: "background", selector: { boolean: {} } },
       {
-        name: "tap_action",
-        selector: { ui_action: {} },
+        title: "Content",
+        icon: "mdi:card-text-outline",
+        fields: [
+          { name: "entity", required: true, selector: { entity: {} } },
+          { name: "name", template: true, selector: { text: {} } },
+          {
+            name: "icon",
+            template: true,
+            selector: { icon: {} },
+            context: { icon_entity: "entity" },
+          },
+          { name: "state_display", template: true, selector: { text: {} } },
+        ],
+      },
+      {
+        title: "Appearance",
+        icon: "mdi:palette-outline",
+        fields: [
+          { name: "color", label: "Color", color: true, template: true, selector: { text: {} } },
+          { name: "color_on", label: "Text / icon", color: true, template: true, selector: { text: {} } },
+          { name: "background", selector: { boolean: {} } },
+        ],
+      },
+      {
+        title: "Actions",
+        icon: "mdi:gesture-tap",
+        fields: [
+          { name: "tap_action", selector: { ui_action: {} } },
+        ],
       },
     ];
   }
