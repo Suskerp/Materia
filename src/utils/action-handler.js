@@ -101,31 +101,78 @@ export const ActionMixin = (superClass) =>
       return val && typeof val === "string" && (val.includes("{{") || val.includes("{%"));
     }
 
-    /** Resolve a config field that may be a Jinja2 template into a reactive property. */
+    /**
+     * Resolve a config field that may be a Jinja2 template into a reactive
+     * property.
+     *
+     * Uses HA's WebSocket `render_template` subscription — NOT the REST
+     * `/api/template` endpoint. The subscription renders once and then pushes a
+     * new value only when the result actually changes, over the already
+     * authenticated WS connection. This is critical: the old REST approach fired
+     * one POST per templatable field on every single `hass` update across every
+     * card, which floods `/api/template`, trips HA's http.ban, and fails for
+     * non-admin users. Because we keep the subscription alive and short-circuit
+     * when the template string is unchanged, calling _resolveField on every
+     * `hass` update (as the cards do) costs nothing after the first subscribe.
+     */
     _resolveField(configKey, propKey) {
       const val = this.config?.[configKey];
-      if (this._isTemplate(val)) {
-        this._renderTemplate(val).then(result => {
-          if (!this.isConnected) return;
-          const trimmed = typeof result === "string" ? result.trim() : result;
-          if (trimmed !== this[propKey]) this[propKey] = trimmed;
-        });
+      this._tplSubs ??= {};
+      const existing = this._tplSubs[propKey];
+
+      // Not (or no longer) a template — tear down any live subscription.
+      if (!this._isTemplate(val)) {
+        if (existing) {
+          this._tplSubs[propKey] = null;
+          existing.unsub?.then((u) => u && u()).catch(() => {});
+          this[propKey] = undefined;
+        }
+        return;
       }
+
+      // Same template already subscribed — no-op (the cheap repeat path).
+      if (existing && existing.template === val) return;
+
+      // Template string changed — replace the subscription.
+      if (existing) existing.unsub?.then((u) => u && u()).catch(() => {});
+
+      const conn = this.hass?.connection;
+      if (!conn) return;
+
+      const rec = { template: val, unsub: null };
+      this._tplSubs[propKey] = rec;
+
+      rec.unsub = conn
+        .subscribeMessage(
+          (msg) => {
+            if (this._tplSubs?.[propKey] !== rec) return; // superseded
+            const result = msg?.result;
+            const value = typeof result === "string" ? result.trim() : result;
+            if (value !== this[propKey]) this[propKey] = value;
+          },
+          { type: "render_template", template: val, report_errors: false }
+        )
+        .catch(() => {
+          // Subscription failed (e.g. a bad template) — show the raw string.
+          if (this._tplSubs?.[propKey] === rec && this[propKey] === undefined) {
+            this[propKey] = val;
+          }
+          return null;
+        });
     }
 
-    /**
-     * Render a Jinja2 template via HA's REST API.
-     * Returns the raw value if it doesn't contain {{ }}.
-     */
-    async _renderTemplate(template) {
-      if (!template || typeof template !== "string") return template;
-      if (!template.includes("{{") && !template.includes("{%")) return template;
-      try {
-        const result = await this.hass.callApi("POST", "template", { template });
-        return typeof result === "string" ? result.trim() : String(result).trim();
-      } catch {
-        return template;
+    /** Tear down all live template subscriptions (called on disconnect). */
+    _unsubscribeTemplates() {
+      if (!this._tplSubs) return;
+      for (const key of Object.keys(this._tplSubs)) {
+        this._tplSubs[key]?.unsub?.then((u) => u && u()).catch(() => {});
       }
+      this._tplSubs = {};
+    }
+
+    disconnectedCallback() {
+      super.disconnectedCallback?.();
+      this._unsubscribeTemplates();
     }
 
     /** Check if tap_action is navigate (for chevron rendering). */
