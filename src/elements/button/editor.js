@@ -2,7 +2,7 @@ import { html, css } from "lit";
 import { computeLabel } from "../../utils/editor-helpers.js";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 
-class MateriaIconButtonEditor extends SmartEditorBase {
+class MateriaButtonEditor extends SmartEditorBase {
   static properties = {
     _expanded: { state: true },
   };
@@ -58,54 +58,61 @@ class MateriaIconButtonEditor extends SmartEditorBase {
   }
 
   get _sections() {
-    // When per-state action mappings are defined, the single default-action
-    // dropdown is redundant — hide it.
-    const hasMappings = this._stateMappings.length > 0;
-    const sections = [
+    return [
       {
         title: "Button",
         icon: "mdi:gesture-tap-button",
         fields: [
-          {
-            name: "icon",
-            required: true,
-            template: true,
-            selector: { icon: {} },
-            context: { icon_entity: "entity" },
-          },
+          { name: "icon", template: true, selector: { icon: {} }, context: { icon_entity: "entity" } },
+          { name: "label", template: true, selector: { text: {} } },
           {
             name: "variant",
             selector: { select: { mode: "dropdown", options: [
-              { value: "standard", label: "Standard" },
-              { value: "outlined", label: "Outlined" },
+              { value: "elevated", label: "Elevated" },
               { value: "filled", label: "Filled" },
-              { value: "filled-tonal", label: "Filled Tonal" },
+              { value: "tonal", label: "Tonal" },
+              { value: "outlined", label: "Outlined" },
+              { value: "text", label: "Text" },
             ] } },
           },
           {
             name: "size",
             selector: { select: { mode: "dropdown", options: [
-              { value: "default", label: "Default (48px)" },
-              { value: "large", label: "Large (56px)" },
+              { value: "xs", label: "XS (32)" },
+              { value: "s", label: "S (40)" },
+              { value: "m", label: "M (56)" },
+              { value: "l", label: "L (96)" },
+              { value: "xl", label: "XL (136)" },
             ] } },
           },
+          {
+            name: "shape",
+            selector: { select: { mode: "dropdown", options: [
+              { value: "round", label: "Round (pill)" },
+              { value: "square", label: "Square" },
+            ] } },
+          },
+          { name: "wide", selector: { boolean: {} } },
           { name: "entity", selector: { entity: {} } },
           { name: "disabled", helper: "Template returning true / false", selector: { template: {} } },
         ],
       },
-    ];
-
-    if (!hasMappings) {
-      sections.push({
+      {
+        title: "Behavior",
+        icon: "mdi:tune",
+        fields: [
+          { name: "active_state", label: "Active state", helper: "State(s) considered active (defaults by domain)", selector: { text: {} } },
+          { name: "morph_on_active", label: "Morph shape when active", selector: { boolean: {} } },
+        ],
+      },
+      {
         title: "Actions",
         icon: "mdi:gesture-tap",
         fields: [
           { name: "tap_action", label: "Default action", selector: { ui_action: {} } },
         ],
-      });
-    }
-
-    return sections;
+      },
+    ];
   }
 
   get _mappingSchema() {
@@ -195,4 +202,4 @@ class MateriaIconButtonEditor extends SmartEditorBase {
   }
 }
 
-customElements.define("materia-icon-button-editor", MateriaIconButtonEditor);
+customElements.define("materia-button-editor", MateriaButtonEditor);

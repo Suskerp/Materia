@@ -1,7 +1,7 @@
 import { html, css } from "lit";
 import { ref } from "lit/directives/ref.js";
 import { SmartEditorBase, isTemplate } from "../../utils/smart-editor.js";
-import "../../elements/icon-button/editor.js";
+import "../../elements/button/editor.js";
 
 class MateriaIconRowEditor extends SmartEditorBase {
   static properties = {
@@ -102,7 +102,7 @@ class MateriaIconRowEditor extends SmartEditorBase {
             ${this._expandedButton === i
               ? html`
                   <div class="button-body">
-                    <materia-icon-button-editor
+                    <materia-button-editor
                       .hass=${this.hass}
                       ${ref((el) => {
                         if (el && el.__materiaIdx !== i) {
@@ -114,7 +114,7 @@ class MateriaIconRowEditor extends SmartEditorBase {
                         e.stopPropagation();
                         this._buttonChanged(i, e.detail.config);
                       }}
-                    ></materia-icon-button-editor>
+                    ></materia-button-editor>
                   </div>
                 `
               : ""}

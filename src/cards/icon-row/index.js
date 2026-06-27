@@ -1,6 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { hostStyles } from "../../styles/card-styles.js";
-import "../../elements/icon-button/index.js";
+import "../../elements/button/index.js";
 import "./editor.js";
 
 class MateriaIconRow extends LitElement {
@@ -57,10 +57,10 @@ class MateriaIconRow extends LitElement {
     return html`
       <div class="row" style="gap: ${gap}px; padding: ${padding}px 0;">
         ${this.config.buttons.map(btn => html`
-          <materia-icon-button
+          <materia-button
             .hass=${this.hass}
             .config=${{ variant: "filled", size: "default", ...btn }}
-          ></materia-icon-button>
+          ></materia-button>
         `)}
       </div>
     `;
