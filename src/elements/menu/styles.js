@@ -116,7 +116,9 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
   }
 
   .dropdown {
-    background: var(--ha-card-background, var(--card-background-color));
+    /* Opaque menu surface — themes can make --ha-card-background translucent,
+       which would let cards below show through the open dropdown. */
+    background: var(--md-sys-color-surface-container-high, var(--card-background-color, var(--ha-card-background, #1c1c1c)));
     color: var(--primary-text-color);
     padding: 8px;
     margin: 2px 0;

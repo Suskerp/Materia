@@ -5,7 +5,7 @@ import { SmartEditorBase } from "../../utils/smart-editor.js";
 class MateriaButtonEditor extends SmartEditorBase {
   static properties = {
     _expanded: { state: true },
-    _expandedIcon: { state: true },
+    _actionRows: { state: true },
   };
 
   static styles = [
@@ -56,7 +56,11 @@ class MateriaButtonEditor extends SmartEditorBase {
   setConfig(config) {
     super.setConfig(config);
     this._expanded ??= null;
-    this._expandedIcon ??= null;
+    // Working rows in local state so a blank row isn't dropped before it's
+    // filled in. Initialized once from config.
+    this._actionRows ??= Object.entries(config.tap_action_map || {}).map(
+      ([state, tap_action]) => ({ state, tap_action })
+    );
   }
 
   get _sections() {
@@ -117,20 +121,8 @@ class MateriaButtonEditor extends SmartEditorBase {
     ];
   }
 
-  get _mappingSchema() {
-    return [
-      { name: "state", required: true, selector: { text: {} } },
-      { name: "tap_action", label: "Action", selector: { ui_action: {} } },
-    ];
-  }
-
-  get _stateMappings() {
-    const map = this._config.tap_action_map || {};
-    return Object.keys(map).map((state) => ({ state, tap_action: map[state] }));
-  }
-
   _renderExtra() {
-    const mappings = this._stateMappings;
+    const rows = this._actionRows || [];
     return html`
       <div class="section-header">
         <span>Action mappings</span>
@@ -139,11 +131,11 @@ class MateriaButtonEditor extends SmartEditorBase {
         </ha-icon-button>
       </div>
 
-      ${mappings.map(
-        (m, i) => html`
+      ${rows.map(
+        (row, i) => html`
           <div class="mapping-card">
             <div class="mapping-header">
-              <span>${m.state || `Mapping ${i + 1}`}</span>
+              <span>${row.state || `Mapping ${i + 1}`}</span>
               <ha-icon-button @click=${() => this._toggleExpand(i)}>
                 <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
               </ha-icon-button>
@@ -156,7 +148,7 @@ class MateriaButtonEditor extends SmartEditorBase {
                   <div class="mapping-body">
                     <ha-form
                       .hass=${this.hass}
-                      .data=${m}
+                      .data=${row}
                       .schema=${this._mappingSchema}
                       .computeLabel=${computeLabel}
                       @value-changed=${(e) => this._updateMapping(i, e.detail.value)}
@@ -167,94 +159,14 @@ class MateriaButtonEditor extends SmartEditorBase {
           </div>
         `
       )}
-      ${this._renderIconMappings()}
     `;
   }
 
-  _renderIconMappings() {
-    const icons = this._iconMappings;
-    return html`
-      <div class="section-header">
-        <span>Icon mappings</span>
-        <ha-icon-button @click=${this._addIconMap}>
-          <ha-icon icon="mdi:plus"></ha-icon>
-        </ha-icon-button>
-      </div>
-
-      ${icons.map(
-        (m, i) => html`
-          <div class="mapping-card">
-            <div class="mapping-header">
-              <span>${m.state || `Icon ${i + 1}`}</span>
-              <ha-icon-button @click=${() => this._toggleExpandIcon(i)}>
-                <ha-icon icon=${this._expandedIcon === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
-              </ha-icon-button>
-              <ha-icon-button @click=${() => this._removeIconMap(i)}>
-                <ha-icon icon="mdi:delete"></ha-icon>
-              </ha-icon-button>
-            </div>
-            ${this._expandedIcon === i
-              ? html`
-                  <div class="mapping-body">
-                    <ha-form
-                      .hass=${this.hass}
-                      .data=${m}
-                      .schema=${this._iconMapSchema}
-                      .computeLabel=${computeLabel}
-                      @value-changed=${(e) => this._updateIconMap(i, e.detail.value)}
-                    ></ha-form>
-                  </div>
-                `
-              : ""}
-          </div>
-        `
-      )}
-    `;
-  }
-
-  get _iconMapSchema() {
+  get _mappingSchema() {
     return [
-      { name: "state", required: true, helper: "Use 'default' for the fallback icon", selector: { text: {} } },
-      { name: "icon", selector: { icon: {} } },
+      { name: "state", required: true, helper: "Use 'default' for the fallback", selector: { text: {} } },
+      { name: "tap_action", label: "Action", selector: { ui_action: {} } },
     ];
-  }
-
-  get _iconMappings() {
-    const map = this._config.icon_map || {};
-    return Object.keys(map).map((state) => ({ state, icon: map[state] }));
-  }
-
-  _toggleExpandIcon(i) {
-    this._expandedIcon = this._expandedIcon === i ? null : i;
-  }
-
-  _addIconMap() {
-    const icons = [...this._iconMappings, { state: "" }];
-    this._applyIconMap(icons);
-    this._expandedIcon = icons.length - 1;
-  }
-
-  _removeIconMap(index) {
-    const icons = [...this._iconMappings];
-    icons.splice(index, 1);
-    this._applyIconMap(icons);
-    if (this._expandedIcon === index) this._expandedIcon = null;
-  }
-
-  _updateIconMap(index, value) {
-    const icons = [...this._iconMappings];
-    icons[index] = { ...icons[index], ...value };
-    this._applyIconMap(icons);
-  }
-
-  _applyIconMap(icons) {
-    const { icon_map, ...rest } = this._config;
-    const newMap = {};
-    for (const m of icons) {
-      if (m.state && m.icon) newMap[m.state] = m.icon;
-    }
-    const updated = Object.keys(newMap).length ? { ...rest, icon_map: newMap } : rest;
-    this._commit(updated);
   }
 
   _toggleExpand(i) {
@@ -262,32 +174,28 @@ class MateriaButtonEditor extends SmartEditorBase {
   }
 
   _addMapping() {
-    const mappings = [...this._stateMappings, { state: "" }];
-    this._applyMappings(mappings);
-    this._expanded = mappings.length - 1;
+    this._actionRows = [...(this._actionRows || []), { state: "" }];
+    this._expanded = this._actionRows.length - 1;
   }
 
-  _removeMapping(index) {
-    const mappings = [...this._stateMappings];
-    mappings.splice(index, 1);
-    this._applyMappings(mappings);
-    if (this._expanded === index) this._expanded = null;
+  _updateMapping(i, value) {
+    this._actionRows = (this._actionRows || []).map((r, idx) => (idx === i ? { ...r, ...value } : r));
+    this._commitActionRows();
   }
 
-  _updateMapping(index, value) {
-    const mappings = [...this._stateMappings];
-    mappings[index] = { ...mappings[index], ...value };
-    this._applyMappings(mappings);
+  _removeMapping(i) {
+    this._actionRows = (this._actionRows || []).filter((_, idx) => idx !== i);
+    if (this._expanded === i) this._expanded = null;
+    this._commitActionRows();
   }
 
-  _applyMappings(mappings) {
-    const { tap_action_map, ...rest } = this._config;
-    const newMap = {};
-    for (const m of mappings) {
-      if (m.state && m.tap_action) newMap[m.state] = m.tap_action;
+  _commitActionRows() {
+    const map = {};
+    for (const r of this._actionRows || []) {
+      if (r.state && r.tap_action) map[r.state] = r.tap_action;
     }
-    const updated = Object.keys(newMap).length ? { ...rest, tap_action_map: newMap } : rest;
-    this._commit(updated);
+    const { tap_action_map, ...rest } = this._config;
+    this._commit(Object.keys(map).length ? { ...rest, tap_action_map: map } : rest);
   }
 }
 
