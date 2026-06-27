@@ -95,24 +95,50 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
   }
 
   updated() {
+    // Cache the few nodes the rAF loop mutates so it never has to touch Lit.
+    const root = this.shadowRoot;
+    this._clipRect = root?.querySelector("clipPath rect");
+    this._thumbEl = root?.querySelector(".thumb");
+    this._trackEl = root?.querySelector(".track");
+    this._posEl = root?.querySelector(".time");
+
     const playing = this.hass?.states[this.config.entity]?.state === "playing";
     // The rAF loop exists only to advance the played position smoothly. When
     // the position is frozen (live stream latched at its rolling end), there's
-    // nothing to advance — running it just re-renders 60×/sec and hitches the
-    // CSS wave flow. Stop it; CSS keeps the wave moving on its own.
+    // nothing to advance. Stop it; CSS keeps the wave moving on its own.
     if (playing && !this._live) this._startLoop();
     else this._stopLoop();
     if (this.hass) this._resolveField("color", "_resolvedColor");
   }
 
-  /** Smoothly advance the played position with rAF while playing. */
+  /**
+   * Smoothly advance the played position with rAF while playing. Crucially this
+   * mutates only the changing attributes directly on the cached DOM nodes — it
+   * does NOT call requestUpdate(). Running Lit's full re-render lifecycle 60×/sec
+   * on the main thread starves the (main-thread) SVG wave animation and makes it
+   * hitch; direct attribute writes are cheap and leave the animation untouched.
+   */
   _startLoop() {
     if (this._raf) return;
     const step = () => {
       this._raf = requestAnimationFrame(step);
-      this.requestUpdate();
+      this._tickDom();
     };
     this._raf = requestAnimationFrame(step);
+  }
+
+  _tickDom() {
+    const { pos, dur, live } = this._position();
+    const w = this._w || 300;
+    const frac = live ? 1 : dur > 0 ? Math.min(1, pos / dur) : 0;
+    const playedX = frac * w;
+    if (this._clipRect) this._clipRect.setAttribute("width", Math.max(0, playedX));
+    if (this._thumbEl) this._thumbEl.setAttribute("x", playedX - 2);
+    if (this._trackEl) this._trackEl.setAttribute("x1", playedX);
+    if (this._posEl) this._posEl.textContent = this._fmt(pos);
+    // Position just reached the rolling end of a live stream — freeze and let
+    // CSS carry the wave alone (no more per-frame work).
+    if (live) this._stopLoop();
   }
 
   _stopLoop() {

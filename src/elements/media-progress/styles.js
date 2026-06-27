@@ -60,6 +60,9 @@ export const styles = css`
     /* Animation is always defined; pausing freezes it in place (no snap-back). */
     animation: mp-flow 0.9s linear infinite;
     animation-play-state: paused;
+    /* Hint the compositor to give the wave its own layer so the flow animation
+       isn't disturbed by repaints elsewhere in the card. */
+    will-change: transform;
   }
 
   .wave.playing {
