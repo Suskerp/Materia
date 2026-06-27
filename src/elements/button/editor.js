@@ -5,6 +5,7 @@ import { SmartEditorBase } from "../../utils/smart-editor.js";
 class MateriaButtonEditor extends SmartEditorBase {
   static properties = {
     _expanded: { state: true },
+    _expandedIcon: { state: true },
   };
 
   static styles = [
@@ -55,6 +56,7 @@ class MateriaButtonEditor extends SmartEditorBase {
   setConfig(config) {
     super.setConfig(config);
     this._expanded ??= null;
+    this._expandedIcon ??= null;
   }
 
   get _sections() {
@@ -165,7 +167,94 @@ class MateriaButtonEditor extends SmartEditorBase {
           </div>
         `
       )}
+      ${this._renderIconMappings()}
     `;
+  }
+
+  _renderIconMappings() {
+    const icons = this._iconMappings;
+    return html`
+      <div class="section-header">
+        <span>Icon mappings</span>
+        <ha-icon-button @click=${this._addIconMap}>
+          <ha-icon icon="mdi:plus"></ha-icon>
+        </ha-icon-button>
+      </div>
+
+      ${icons.map(
+        (m, i) => html`
+          <div class="mapping-card">
+            <div class="mapping-header">
+              <span>${m.state || `Icon ${i + 1}`}</span>
+              <ha-icon-button @click=${() => this._toggleExpandIcon(i)}>
+                <ha-icon icon=${this._expandedIcon === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
+              </ha-icon-button>
+              <ha-icon-button @click=${() => this._removeIconMap(i)}>
+                <ha-icon icon="mdi:delete"></ha-icon>
+              </ha-icon-button>
+            </div>
+            ${this._expandedIcon === i
+              ? html`
+                  <div class="mapping-body">
+                    <ha-form
+                      .hass=${this.hass}
+                      .data=${m}
+                      .schema=${this._iconMapSchema}
+                      .computeLabel=${computeLabel}
+                      @value-changed=${(e) => this._updateIconMap(i, e.detail.value)}
+                    ></ha-form>
+                  </div>
+                `
+              : ""}
+          </div>
+        `
+      )}
+    `;
+  }
+
+  get _iconMapSchema() {
+    return [
+      { name: "state", required: true, helper: "Use 'default' for the fallback icon", selector: { text: {} } },
+      { name: "icon", selector: { icon: {} } },
+    ];
+  }
+
+  get _iconMappings() {
+    const map = this._config.icon_map || {};
+    return Object.keys(map).map((state) => ({ state, icon: map[state] }));
+  }
+
+  _toggleExpandIcon(i) {
+    this._expandedIcon = this._expandedIcon === i ? null : i;
+  }
+
+  _addIconMap() {
+    const icons = [...this._iconMappings, { state: "" }];
+    this._applyIconMap(icons);
+    this._expandedIcon = icons.length - 1;
+  }
+
+  _removeIconMap(index) {
+    const icons = [...this._iconMappings];
+    icons.splice(index, 1);
+    this._applyIconMap(icons);
+    if (this._expandedIcon === index) this._expandedIcon = null;
+  }
+
+  _updateIconMap(index, value) {
+    const icons = [...this._iconMappings];
+    icons[index] = { ...icons[index], ...value };
+    this._applyIconMap(icons);
+  }
+
+  _applyIconMap(icons) {
+    const { icon_map, ...rest } = this._config;
+    const newMap = {};
+    for (const m of icons) {
+      if (m.state && m.icon) newMap[m.state] = m.icon;
+    }
+    const updated = Object.keys(newMap).length ? { ...rest, icon_map: newMap } : rest;
+    this._commit(updated);
   }
 
   _toggleExpand(i) {

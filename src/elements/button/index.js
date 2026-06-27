@@ -42,8 +42,8 @@ class MateriaButton extends ActionMixin(LitElement) {
   }
 
   setConfig(config) {
-    if (!config.icon && !config.label) {
-      throw new Error("icon or label is required");
+    if (!config.icon && !config.label && !config.icon_map) {
+      throw new Error("icon, label or icon_map is required");
     }
     this.config = { variant: "filled", size: "m", shape: "round", ...config };
     this.toggleAttribute("wide", !!config.wide);
@@ -128,9 +128,14 @@ class MateriaButton extends ActionMixin(LitElement) {
         ? baseShape === "round" ? "square" : "round"
         : baseShape;
 
-    const icon = this._isTemplate(this.config.icon)
+    let icon = this._isTemplate(this.config.icon)
       ? (this._resolvedIcon || "")
       : this.config.icon;
+    // State-based icon (e.g. { playing: m3o:pause, default: m3o:play-arrow })
+    if (this.config.icon_map && this.config.entity) {
+      const mapped = this.config.icon_map[stateObj?.state] ?? this.config.icon_map.default;
+      if (mapped) icon = mapped;
+    }
     const label = this._isTemplate(this.config.label)
       ? (this._resolvedLabel || "")
       : this.config.label;
