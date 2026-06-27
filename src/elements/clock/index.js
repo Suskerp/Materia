@@ -45,7 +45,7 @@ class MateriaClock extends LitElement {
 
   // Scalloped "squiggle" face — a 12-lobe wavy circle (Material You expressive)
   _scallop() {
-    const N = 12, R = 47, A = 1.8, steps = 240;
+    const N = 12, R = 48, A = 1.0, steps = 240;
     let d = "";
     for (let i = 0; i <= steps; i++) {
       const t = (i / steps) * Math.PI * 2;
