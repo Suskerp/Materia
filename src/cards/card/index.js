@@ -759,7 +759,11 @@ export class MateriaCard extends ActionMixin(LitElement) {
     const containerBg = this._getContainerBg();
     const textColor = this._getTextColor();
 
-    const fillPct = showSlider && isActive ? this._fillPercent : 0;
+    // Fill reflects the live level (cover position / light brightness), which is
+    // already 0 when closed/off — do NOT gate it on _isActive, or a cover stuck
+    // in the transient "opening"/"closing" state would snap the bar to 0 while
+    // its position is still changing live.
+    const fillPct = showSlider ? this._fillPercent : 0;
     const sliderColor =
       this._domainConfig.sliderColor || this._domainConfig.colorActive;
 

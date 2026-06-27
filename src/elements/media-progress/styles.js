@@ -71,7 +71,7 @@ export const styles = css`
 
   @keyframes mp-flow {
     to {
-      transform: translateX(-32px);
+      transform: translateX(32px);
     }
   }
 
