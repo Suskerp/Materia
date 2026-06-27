@@ -35,7 +35,7 @@ export const styles = css`
   }
 
   .segment {
-    flex: 1;
+    height: 130px;
     border: none;
     background: transparent;
     color: var(--primary-text-color);
