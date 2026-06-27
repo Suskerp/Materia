@@ -104,52 +104,26 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
 
   .dropdown-wrapper.below {
     top: 100%;
-    border-radius: 8px 8px 16px 16px;
   }
 
   .dropdown-wrapper.above {
     bottom: 100%;
-    border-radius: 16px 16px 8px 8px;
   }
 
-  /* Shadow lives on the wrapper — an element's own box-shadow isn't clipped by
-     its own overflow:hidden, so it stays rounded (the dropdown's would be cut
-     square by the wrapper clip). */
   .dropdown-wrapper.open {
     max-height: 600px;
     pointer-events: auto;
-    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
-                0px 2px 6px 2px rgba(0, 0, 0, 0.15);
   }
 
   .dropdown {
-    position: relative;
+    /* Opaque menu surface — themes can make --ha-card-background translucent,
+       which would let cards below show through the open dropdown. */
+    background: var(--md-sys-color-surface-container-high, var(--card-background-color, var(--ha-card-background, #1c1c1c)));
     color: var(--primary-text-color);
     padding: 8px;
     margin: 2px 0;
-  }
-
-  /* Opaque backdrop so cards below never show through, even when the theme's
-     card/surface colors carry alpha. Layer the (possibly translucent) card
-     color over the opaque page background — no reliance on relative-color
-     syntax, which some webviews don't support. The visible tint / state color
-     paints over it. */
-  .dropdown::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    z-index: -1;
-    background:
-      linear-gradient(
-        var(--ha-card-background, var(--card-background-color, #1c1c1c)),
-        var(--ha-card-background, var(--card-background-color, #1c1c1c))
-      ),
-      linear-gradient(
-        var(--primary-background-color, var(--lovelace-background, #1c1c1c)),
-        var(--primary-background-color, var(--lovelace-background, #1c1c1c))
-      ),
-      var(--primary-background-color, #1c1c1c);
+    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
+                0px 2px 6px 2px rgba(0, 0, 0, 0.15);
   }
 
   .below .dropdown {
