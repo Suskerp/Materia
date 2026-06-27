@@ -8,7 +8,7 @@ const DOMAINS_WITH_SUB_BUTTONS = new Set(["cover"]);
 export function applyCardFormDefaults(config) {
   if (!config?.entity) return { ...config };
   const domain = config.entity.split(".")[0];
-  const defaults = { show_sub_buttons: false, show_stop: true, show_state: true };
+  const defaults = { show_sub_buttons: false, show_stop: true, show_state: true, subtitle_inline: true };
   if (DOMAINS_WITH_SUB_BUTTONS.has(domain)) defaults.show_sub_buttons = true;
   return { ...defaults, ...config };
 }
@@ -82,7 +82,7 @@ export class MateriaCardEditor extends SmartEditorBase {
         title: "Content",
         icon: "mdi:card-text-outline",
         fields: [
-          { name: "entity", required: true, selector: { entity: {} } },
+          { name: "entity", selector: { entity: {} } },
           { name: "name", template: true, selector: { text: {} } },
           { name: "subtitle", template: true, selector: { text: {} } },
           {
@@ -101,6 +101,7 @@ export class MateriaCardEditor extends SmartEditorBase {
           { name: "color_on", label: "Active text / icon", color: true, template: true, selector: { text: {} } },
           { name: "show_state", selector: { boolean: {} } },
           { name: "show_last_changed", label: "Show last changed", selector: { boolean: {} } },
+          { name: "subtitle_inline", label: "Subtitle inline with state", selector: { boolean: {} } },
           ...(hasSlider ? [{ name: "show_slider", selector: { boolean: {} } }] : []),
           ...(isLight ? [{ name: "slider_turn_off", label: "Slider can turn off", selector: { boolean: {} } }] : []),
           { name: "show_sub_buttons", selector: { boolean: {} } },

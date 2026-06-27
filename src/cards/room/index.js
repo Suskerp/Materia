@@ -107,6 +107,13 @@ class MateriaRoom extends MateriaCard {
     const icon = this._icon;
     const stateDisplay = unavailable ? "Unavailable" : this._stateDisplay;
     const subtitle = this._subtitle;
+    const inlineSubtitle = this.config.subtitle_inline !== false;
+    const stateLine =
+      inlineSubtitle && subtitle
+        ? stateDisplay
+          ? `${stateDisplay} · ${subtitle}`
+          : subtitle
+        : stateDisplay;
     const columns = this.config.columns || 2;
 
     return html`
@@ -129,8 +136,8 @@ class MateriaRoom extends MateriaCard {
 
           <div class="name-container">
             <div class="name">${this._name}</div>
-            ${subtitle ? html`<div class="subtitle">${subtitle}</div>` : nothing}
-            ${stateDisplay ? html`<div class="state">${stateDisplay}</div>` : nothing}
+            ${!inlineSubtitle && subtitle ? html`<div class="subtitle">${subtitle}</div>` : nothing}
+            ${stateLine ? html`<div class="state">${stateLine}</div>` : nothing}
           </div>
 
           <div class="sub-buttons">

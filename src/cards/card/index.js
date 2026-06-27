@@ -114,11 +114,13 @@ export class MateriaCard extends ActionMixin(LitElement) {
   /* ---- Config ---------------------------------------------------- */
 
   setConfig(config) {
-    if (!config.entity) throw new Error("entity is required");
-    const domain = config.entity.split(".")[0];
+    // entity is optional — an entity-less card acts as a navigation/action
+    // tile (icon + name + subtitle + tap_action).
+    const domain = config.entity ? config.entity.split(".")[0] : "";
     const dc = DOMAIN_CONFIG[domain] || DEFAULT_DOMAIN;
-    const defaults = { tap_action: { action: "toggle" } };
-    if (dc.showSubButtons) {
+    // Only default to toggle when there's an entity to toggle.
+    const defaults = config.entity ? { tap_action: { action: "toggle" } } : {};
+    if (config.entity && dc.showSubButtons) {
       defaults.show_sub_buttons = true;
       defaults.show_stop = true;
     }
@@ -717,7 +719,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
   _handleTap() {
     if (this.config.tap_action) {
       this._handleAction(this.config.tap_action);
-    } else {
+    } else if (this.config.entity) {
       this.hass.callService("homeassistant", "toggle", {
         entity_id: this.config.entity,
       });
@@ -730,7 +732,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
     if (!this.config || !this.hass) return html``;
 
     const stateObj = this._stateObj;
-    const unavailable = this._isUnavailable(stateObj);
+    const unavailable = this.config.entity ? this._isUnavailable(stateObj) : false;
     const isActive = !unavailable && this._isActive;
     const isTonal = this._isTonal;
     const showSlider = !unavailable && this._showSlider;
@@ -745,6 +747,17 @@ export class MateriaCard extends ActionMixin(LitElement) {
 
     const icon = this._icon;
     const stateDisplay = unavailable ? "Unavailable" : this._stateDisplay;
+
+    // Optionally merge the subtitle into the state line ("State · Subtitle")
+    // instead of stacking it on its own row above the state.
+    const subtitle = this._subtitle;
+    const inlineSubtitle = this.config.subtitle_inline !== false;
+    const stateLine =
+      inlineSubtitle && subtitle
+        ? stateDisplay
+          ? `${stateDisplay} · ${subtitle}`
+          : subtitle
+        : stateDisplay;
 
     return html`
       <ha-card>
@@ -775,11 +788,11 @@ export class MateriaCard extends ActionMixin(LitElement) {
 
           <div class="name-container">
             <div class="name">${this._name}</div>
-            ${this._subtitle
-              ? html`<div class="subtitle">${this._subtitle}</div>`
+            ${!inlineSubtitle && subtitle
+              ? html`<div class="subtitle">${subtitle}</div>`
               : ""}
-            ${stateDisplay
-              ? html`<div class="state">${stateDisplay}</div>`
+            ${stateLine
+              ? html`<div class="state">${stateLine}</div>`
               : ""}
           </div>
 

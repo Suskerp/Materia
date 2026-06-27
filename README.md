@@ -4,19 +4,20 @@ Material You card collection for Home Assistant.
 
 ## Overview
 
-Materia is an opinionated collection of native [Lit](https://lit.dev/) custom cards styled with Material You (M3) design tokens. Born from patterns that emerged while building dashboards with off-the-shelf cards, Materia distills those layouts and interactions into standalone components -- no wrapping, no templates, no dependencies on other custom cards.
+Materia is an opinionated collection of native [Lit](https://lit.dev/) custom cards styled with Material You (M3) design tokens. Born from patterns that emerged while building dashboards with off-the-shelf cards, Materia distills those layouts and interactions into standalone components -- no wrapping, no template cards, no dependencies on other custom cards.
 
 The collection is split into two categories:
 
-- **Cards** -- Dashboard content cards for lights, covers, climate, devices, locks, rooms, sensors, and weather.
-- **Elements** -- Smaller UI primitives: buttons, button groups, checkboxes, pills, badges, selects, and separators.
+- **Cards** -- Dashboard content cards: a universal entity card, rooms, climate, weather, and an icon row.
+- **Elements** -- Smaller UI primitives: badges, pills, button groups, checkboxes, icon buttons, and dropdown menus.
 
 Key capabilities:
 
-- Jinja2 template support for dynamic colors and state text (via Home Assistant's template REST API).
-- Navigate chevron automatically shown when `tap_action` is set to `navigate`.
-- Domain-aware active states (`materia-device` auto-detects vacuum=cleaning, lock=locked, cover=open, climate=heat, etc.).
-- Auto-dimmable light detection (`materia-light` checks `supported_color_modes` and renders a slider when the light supports brightness).
+- **Universal entity card** -- one `materia-card` auto-detects the domain (light, cover, switch, lock, vacuum, climate, scene, …) and adapts its controls, colors, and active state.
+- **Visual editor** -- every card ships a sectioned GUI editor with an icon picker, a Material You color picker, and a per-field `</>` toggle that flips any field between a friendly control and a Jinja template.
+- **Jinja2 templates** -- `name`, `subtitle`, `icon`, `color`, and `color_on` accept templates (rendered via Home Assistant's template REST API), so any field can be dynamic.
+- **Domain-aware active states** -- each domain maps to its own "active" state and accent colors (vacuum = cleaning, lock = locked, cover = open, climate = heat, …).
+- **Smart sliders** -- dimmable lights and covers render a drag slider; non-dimmable entities render a tap toggle.
 
 ## Prerequisites
 
@@ -35,11 +36,11 @@ Key capabilities:
 ### Manual
 
 1. Download `dist/materia.js` from this repository.
-2. Copy it to `config/www/materia/materia.js`.
+2. Copy it to `config/www/community/materia/materia.js`.
 3. Add the resource in **Settings > Dashboards > Resources**:
 
 ```yaml
-url: /local/materia/materia.js
+url: /local/community/materia/materia.js
 type: module
 ```
 
@@ -49,7 +50,7 @@ Materia expects a set of semantic custom-color tokens provided by the material-y
 
 ### Default colors included
 
-Materia ships a default `custom_colors.json` in the `dist/` folder. After HACS installation, it is available at:
+The canonical palette lives at `src/custom_colors.json` and the build copies it into `dist/custom_colors.json` on every build, so it is always present after HACS installation at:
 
 ```
 /local/community/materia/custom_colors.json
@@ -57,7 +58,7 @@ Materia ships a default `custom_colors.json` in the `dist/` folder. After HACS i
 
 Configure your [material-you-utilities-custom-harmonization](https://github.com/Suskerp/material-you-utilities-custom-harmonization) to reference this path for custom color harmonization. No manual file copying required.
 
-To use your own colors, either edit the file directly at `config/www/community/materia/custom_colors.json`, or place a custom JSON elsewhere and point your material-you-utilities config to that path instead.
+To use your own colors, edit `src/custom_colors.json` and rebuild, edit the served file directly at `config/www/community/materia/custom_colors.json`, or point your material-you-utilities config at a JSON elsewhere.
 
 ### Color structure
 
@@ -86,33 +87,11 @@ To use your own colors, either edit the file directly at `config/www/community/m
       "on-warning-container": "#745D00"
     }
   },
-  "dark": {
-    "colors": {
-      "light": "#4F4629",
-      "on-light": "#FEE080",
-      "light-container": "#33312A",
-      "device": "#004E58",
-      "on-device": "#87F0FF",
-      "device-container": "#253234",
-      "climate-heat-container": "#3E3732",
-      "climate-heat": "#684A3D",
-      "on-climate-heat": "#EAD5D0",
-      "climate-cool-container": "#373639",
-      "climate-cool": "#425161",
-      "on-climate-cool": "#C5D0DC",
-      "climate-auto-container": "#363B36",
-      "climate-auto": "#4A584F",
-      "on-climate-auto": "#D2E7DA",
-      "warning": "#FEE082",
-      "on-warning": "#745D00",
-      "warning-container": "#33312A",
-      "on-warning-container": "#FEE080"
-    }
-  }
+  "dark": { "colors": { "...": "see src/custom_colors.json" } }
 }
 ```
 
-The semantic color names used across Materia cards are: `light`, `device`, `climate-heat`, `climate-cool`, `climate-auto`, `warning`, and their `on-*` / `*-container` variants.
+The semantic color names used across Materia cards are: `light`, `device`, `climate-heat`, `climate-cool`, `climate-auto`, `water-eco`, `water-performance`, `warning`, and their `on-*` / `*-container` variants. These are surfaced (with swatches) in the color picker of every card editor, alongside the standard `--md-sys-color-*` system roles.
 
 ## Card Reference
 
@@ -120,133 +99,71 @@ The semantic color names used across Materia cards are: `light`, `device`, `clim
 
 ---
 
-#### `materia-light`
+#### `materia-card`
 
-A unified light card that auto-detects whether the light supports brightness. Dimmable lights render a fill slider (drag to set brightness); non-dimmable lights render a simple toggle. Tap toggles the light on/off.
+The universal entity card. It auto-detects the entity's domain and adapts: dimmable lights and covers get a drag slider, covers get up/stop/down sub-buttons, scenes render tonal, and each domain maps to its own active state and accent colors. Numeric sensor states are rounded to 2 decimals and shown with their unit. `entity` is **optional** -- omit it for a navigation/action tile (icon + name + subtitle + `tap_action`).
 
 ```yaml
-type: custom:materia-light
-entity: light.bedroom
-name: Bedroom
-icon: mdi:lamp
+type: custom:materia-card
+entity: light.living_room
+name: Living Room
+icon: mdi:sofa
 ```
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `entity` | string | **required** | Light entity ID |
-| `name` | string | Entity friendly name | Display name |
-| `icon` | string | `mdi:track-light` | Icon to show |
-| `tap_action` | object | toggle | Tap action (supports `navigate` chevron) |
+| `entity` | string | | Entity ID. **Optional** -- omit for a navigation/action tile |
+| `name` | string | friendly name | Display name. *Templatable* |
+| `subtitle` | string | | Secondary line. *Templatable* |
+| `subtitle_inline` | boolean | `true` | Render the subtitle on the state line as `State · Subtitle`. Set `false` to stack it on its own row |
+| `icon` | string | domain / entity default | Icon to show. *Templatable* |
+| `color` | string | domain color | Background color when active. *Templatable* |
+| `color_on` | string | domain color | Text/icon color when active. *Templatable* |
+| `show_state` | boolean | `true` | Show the entity state text |
+| `show_last_changed` | boolean | `false` | Append relative "x ago" to the state line |
+| `show_slider` | boolean | auto | Force the brightness/position slider on or off (lights/covers) |
+| `slider_turn_off` | boolean | `false` | Allow the light slider to reach 0% and turn the light off |
+| `show_sub_buttons` | boolean | auto (cover) | Show the auto cover up/stop/down buttons |
+| `show_stop` | boolean | `true` | Include the stop button on cover sub-buttons |
+| `active_state` | string \| list | domain default | Override the state(s) considered "active" |
+| `sub_buttons` | array | | Custom buttons `{ icon, name, tap_action }` (overrides the auto cover buttons) |
+| `tap_action` | object | toggle | Tap action. `navigate` adds a chevron |
 
----
-
-#### `materia-cover`
-
-A cover card with up/stop/down controls and a position slider. Drag the card to set cover position.
-
-```yaml
-type: custom:materia-cover
-entity: cover.blinds
-name: Blinds
-icon: mdi:window-shutter
-show_stop: true
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `entity` | string | **required** | Cover entity ID |
-| `name` | string | Entity friendly name | Display name |
-| `icon` | string | `mdi:window-shutter` | Icon to show |
-| `show_stop` | boolean | `true` | Show the stop button between up/down |
-| `tap_action` | object | | Tap action (supports `navigate` chevron) |
-
----
-
-#### `materia-device`
-
-A generic device/switch card with domain-aware active-state detection. Automatically maps domains to their active state (e.g. `vacuum` = `cleaning`, `lock` = `locked`, `cover` = `open`, `media_player` = `playing`). Falls back to `on` for unknown domains.
-
-```yaml
-type: custom:materia-device
-entity: switch.fan
-name: Fan
-icon: mdi:fan
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `entity` | string | **required** | Entity ID |
-| `name` | string | Entity friendly name | Display name |
-| `icon` | string | `mdi:power-plug` | Icon to show |
-| `button_type` | string | `switch` | Button type: `switch` or `state` |
-| `active_state` | string | Domain-dependent | Entity state that counts as active |
-| `color_active` | string | `var(--md-sys-cust-color-device)` | Background color when active |
-| `color_on_active` | string | `var(--md-sys-cust-color-on-device)` | Text/icon color when active |
-| `show_state` | boolean | `true` | Show entity state text |
-| `tap_action` | object | toggle | Tap action (supports `navigate` chevron) |
-
----
-
-#### `materia-lock`
-
-A lock display card with conditional lock/unlock icons (`m3o:lock` / `m3o:lock-open-right`). Changes background to `device-container` colors when locked.
-
-```yaml
-type: custom:materia-lock
-entity: lock.front_door
-name: Front Door
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `entity` | string | **required** | Lock entity ID |
-| `name` | string | Entity friendly name | Display name |
-| `tap_action` | object | | Tap action (supports `navigate` chevron) |
+See [Domain-aware active states](#domain-aware-active-states) for the auto-detected behavior per domain.
 
 ---
 
 #### `materia-room`
 
-An expandable room section with a title row (icon toggles the entity) and a collapsible grid of child cards. Click the row to expand/collapse.
+A room card built on `materia-card` (so it accepts all of its title-row options) with an expandable grid of child cards. The title row reflects/controls the primary entity; tapping the body toggles or runs `tap_action`.
 
 ```yaml
 type: custom:materia-room
-entity: light.living_room_group
+entity: light.living_room
 name: Living Room
 icon: mdi:sofa
 columns: 2
-entity_type: light
-color_on: "var(--md-sys-cust-color-on-light)"
-attribute: brightness
-sub_button:
-  - icon: mdi:television
-    entity: switch.tv
 cards:
-  - type: custom:materia-light
+  - type: custom:materia-card
     entity: light.floor_lamp
     name: Floor Lamp
-  - type: custom:materia-device
-    entity: switch.tv
-    name: TV
+  - type: custom:materia-card
+    entity: light.table_lamp
+    name: Table Lamp
 ```
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
+| *(all `materia-card` title-row options)* | | | `name`, `subtitle`, `icon`, `color`, `color_on`, `show_state`, `subtitle_inline`, `tap_action`, … |
 | `entity` | string | **required** | Primary entity for the title row (typically a light group) |
-| `name` | string | | Room name |
-| `icon` | string | `mdi:home` | Icon for the title row |
-| `columns` | number | `2` | Number of columns in the child card grid |
-| `entity_type` | string | `light` | Entity type for state logic: `light` (active = on) or `cover` (active = open) |
-| `color_on` | string | `var(--md-sys-color-primary)` | Icon color when active |
-| `attribute` | string | | Attribute to show as state display (e.g. `brightness` renders as percentage) |
-| `sub_button` | array | | Array of sub-button configs with `icon` and `entity` (opens more-info on tap) |
-| `cards` | array | | Array of card configs rendered in the expandable grid |
+| `columns` | number | `2` | Number of columns in the child grid |
+| `cards` | array | | Child card configs rendered in the grid |
 
 ---
 
 #### `materia-climate`
 
-A climate thermostat card with mode-based theming (heat/cool/auto/off) and temperature controls.
+A climate thermostat card with mode-based theming (heat / cool / auto / off) and `±` temperature controls. The status line shows current / humidity / outdoor temperatures, including when the thermostat is off.
 
 ```yaml
 type: custom:materia-climate
@@ -260,71 +177,18 @@ outdoor_temp_entity: sensor.outdoor_temperature
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `entity` | string | **required** | Climate entity ID |
-| `name` | string | **required** | Display name |
+| `name` | string | **required** | Display name. *Templatable* |
+| `temperature_entity` | string | | Current-temperature sensor (defaults to the climate entity's `current_temperature`) |
+| `humidity_entity` | string | | Humidity sensor shown in the status line |
+| `outdoor_temp_entity` | string | | Outdoor-temperature sensor shown in the status line |
 | `step` | number | `0.5` | Temperature adjustment step |
-| `humidity_entity` | string | | Humidity sensor entity ID (shown in status line) |
-| `outdoor_temp_entity` | string | | Outdoor temperature sensor entity ID (shown in status line) |
-| `tap_action` | object | `{ action: "more-info" }` | Tap action |
-
----
-
-#### `materia-sensor-row`
-
-A simple name/value row for displaying sensor data.
-
-```yaml
-type: custom:materia-sensor-row
-entity: sensor.living_room_temperature
-name: Temperature
-padding: "0px 20px"
-tap_action:
-  action: more-info
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `entity` | string | **required** | Sensor entity ID |
-| `name` | string | **required** | Label text |
-| `padding` | string | `0px 20px` | CSS padding for the row |
-| `tap_action` | object | | Tap action (supports `navigate` chevron) |
-
----
-
-#### `materia-sensor-display`
-
-A sensor display card with optional range-to-label classification (useful for AQI, CO2, etc.).
-
-```yaml
-type: custom:materia-sensor-display
-entity: sensor.aqi
-name: Air Quality
-icon: mdi:air-filter
-unit: AQI
-ranges:
-  - max: 50
-    label: Good
-    color: green
-  - max: 100
-    label: Moderate
-    color: orange
-  - label: Poor
-    color: red
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `entity` | string | **required** | Sensor entity ID |
-| `name` | string | Entity friendly name | Display name |
-| `icon` | string | Entity icon | Icon to show |
-| `unit` | string | Entity unit | Unit of measurement override |
-| `ranges` | array | | Array of `{ max, label, color }` for range-to-label classification |
 | `tap_action` | object | `{ action: "more-info" }` | Tap action |
 
 ---
 
 #### `materia-weather`
 
-A weather display card showing temperature, condition icon, and optional humidity.
+A weather card showing temperature, a condition icon, and optional humidity.
 
 ```yaml
 type: custom:materia-weather
@@ -336,9 +200,38 @@ humidity_entity: sensor.outdoor_humidity
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `entity` | string | **required** | Weather entity ID |
-| `name` | string | | Display name |
-| `humidity_entity` | string | | Humidity sensor entity (falls back to the weather entity's humidity attribute) |
+| `name` | string | temperature | Display name. *Templatable* |
+| `icon` | string | condition icon | Icon override. *Templatable* |
+| `humidity_entity` | string | | Humidity sensor (falls back to the weather entity's humidity attribute) |
 | `tap_action` | object | `{ action: "more-info" }` | Tap action |
+
+---
+
+#### `materia-icon-row`
+
+A horizontal row of `materia-icon-button`s -- handy for media transport or scene shortcuts.
+
+```yaml
+type: custom:materia-icon-row
+gap: 8
+padding: 4
+buttons:
+  - icon: mdi:skip-previous
+    variant: filled-tonal
+    tap_action:
+      action: call-service
+      service: media_player.media_previous_track
+      service_data: { entity_id: media_player.living_room }
+  - icon: mdi:play-pause
+    variant: filled
+    entity: media_player.living_room
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `gap` | number | `8` | Horizontal gap between buttons (px) |
+| `padding` | number | `4` | Vertical padding of the row (px) |
+| `buttons` | array | **required** | Array of button configs (see `materia-icon-button` options: `icon`, `variant`, `size`, `entity`, `disabled`, `tap_action`) |
 
 ---
 
@@ -346,39 +239,74 @@ humidity_entity: sensor.outdoor_humidity
 
 ---
 
-#### `materia-button`
+#### `materia-badge`
 
-A compact Material You badge/button with icon, name, optional state display, and color variants. Supports Jinja2 templates for `color`, `color_on`, and `state_display`. Includes a special `battery` variant with threshold-based colors.
+A compact Material You badge for the view's badge area, with color variants, optional state text, and templated colors. Includes a special `battery` variant.
 
 ```yaml
-type: custom:materia-button
-entity: switch.desk_lamp
-icon: mdi:desk-lamp
-name: Desk Lamp
-variant: secondary
+type: custom:materia-badge
+entity: lock.front_door
+name: Front Door
+icon: m3o:lock
+variant: primary-container
 show_state: true
-tap_action:
-  action: toggle
 ```
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `icon` | string | **required** | Icon to display |
-| `name` | string | **required** | Button label |
-| `entity` | string | | Entity ID (optional; without it the button is stateless) |
-| `variant` | string | `secondary` | Color variant: `primary`, `secondary`, `tertiary`, `error`, `device`, `primary-container`, `secondary-container`, `error-container`, `device-container`, `battery` |
-| `show_state` | boolean | `false` | Show entity state below the name |
-| `active_state` | string | `on` | Entity state that counts as active |
+| `name` | string | **required** | Badge label. *Templatable* |
+| `icon` | string | **required** | Icon to display. *Templatable* |
+| `entity` | string | | Entity ID (enables state / active logic) |
+| `variant` | string | `primary` | See variants below |
+| `show_state` | boolean | `false` | Show the entity state |
+| `active_state` | string | | State considered active |
+| `state_display` | string | | Custom state text. *Templatable* |
+| `color` | string | | Background override when active. *Templatable* |
+| `color_on` | string | | Text/icon override when active. *Templatable* |
 | `tap_action` | object | `{ action: "toggle" }` | Tap action |
-| `color` | string | | Background color override when active. **Supports Jinja2 templates.** |
-| `color_on` | string | | Text/icon color override when active. **Supports Jinja2 templates.** |
-| `state_display` | string | | Custom state text. **Supports Jinja2 templates.** |
+| `double_tap_action` | object | `{ action: "none" }` | Double-tap action |
+
+**Variants:** `primary`, `secondary`, `tertiary`, `error`, `device`, `primary-container`, `secondary-container`, `error-container`, `device-container`, `primary-state`, `secondary-state`, `tertiary-state`, `error-state`, `device-state`, `battery`.
+
+---
+
+#### `materia-pill`
+
+A compact info pill showing icon, name, and state, with active-state coloring and optional numeric range-to-label classification (useful for AQI, CO₂, soil moisture, …).
+
+```yaml
+type: custom:materia-pill
+entity: sensor.air_quality
+name: Air Quality
+icon: mdi:air-filter
+ranges:
+  - max: 50
+    label: Good
+    color: var(--md-sys-cust-color-water-eco)
+  - max: 100
+    label: Moderate
+    color: var(--md-sys-cust-color-warning-container)
+  - label: Poor
+    color: var(--md-sys-color-error-container)
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `entity` | string | **required** | Entity ID |
+| `name` | string | friendly name | Display name. *Templatable* |
+| `icon` | string | | Icon to show. *Templatable* |
+| `state_display` | string | | Custom state text. *Templatable* |
+| `color` | string | | Background when active. *Templatable* |
+| `color_on` | string | | Text/icon when active. *Templatable* |
+| `background` | boolean | `true` | Render the filled pill background |
+| `ranges` | array | | `{ max, label, color }` entries; the first whose `max ≥ value` (or with no `max`) wins |
+| `tap_action` | object | `{ action: "more-info" }` | Tap action |
 
 ---
 
 #### `materia-button-group`
 
-An M3 connected button group rendered as a segmented pill. Buttons receive position-aware corner radii. Selection state is driven by entity state or attribute.
+An M3 connected button group rendered as a segmented pill. Selection is driven by an entity's state or attribute. Supports single- or multi-select.
 
 ```yaml
 type: custom:materia-button-group
@@ -393,45 +321,34 @@ options:
     tap_action:
       action: call-service
       service: climate.set_hvac_mode
-      service_data:
-        entity_id: climate.living_room
-        hvac_mode: heat
+      service_data: { entity_id: climate.living_room, hvac_mode: heat }
   - label: Cool
     value: cool
     icon: mdi:snowflake
     tap_action:
       action: call-service
       service: climate.set_hvac_mode
-      service_data:
-        entity_id: climate.living_room
-        hvac_mode: cool
+      service_data: { entity_id: climate.living_room, hvac_mode: cool }
 ```
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `entity` | string | | Entity whose state (or attribute) determines the active button |
+| `options` | array | **required** | Button options `{ label, value, icon, tap_action }` |
+| `entity` | string | | Entity whose state/attribute determines the active button |
 | `attribute` | string | | Entity attribute to read instead of state |
-| `options` | array | **required** | Array of button options (see below) |
-| `size` | string | `m` | Button height: `xs` (32dp), `s` (40dp), `m` (48dp), `l` (56dp), `xl` (64dp) |
-| `variant` | string | `filled` | Surface style: `filled`, `tonal`, `outlined`, `elevated` |
-| `preset` | string | | Color preset: `primary`, `secondary`, `climate-heat`, `climate-cool`, `climate-auto`, `light`, `device` |
-| `color_active` | string | | Override active background color |
-| `color_on_active` | string | | Override active text color |
-
-Each **option** object:
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `value` | string | Value to match against entity state/attribute |
-| `label` | string | Button label text |
-| `icon` | string | Optional icon |
-| `tap_action` | object | Action to perform on tap |
+| `preset` | string | | Color preset: `primary`, `secondary`, `tertiary`, `light`, `device`, or `custom` |
+| `size` | string | `m` | Button height: `xs`, `s`, `m`, `l`, `xl` |
+| `variant` | string | `filled` | Surface style: `filled` or `tonal` |
+| `multi_select` | boolean | `false` | Allow multiple active buttons (wraps into a grid) |
+| `columns` | number | | Max columns when `multi_select` is on |
+| `color_active` | string | | Active background (when `preset: custom`). *Templatable* |
+| `color_on_active` | string | | Active text color (when `preset: custom`). *Templatable* |
 
 ---
 
 #### `materia-checkbox`
 
-A checkbox row with name and toggle icon. Supports custom checked-state logic via `checked_entity` / `checked_value` / `checked_values`, and separate actions for checked and unchecked states.
+A checkbox row with custom checked-state logic and separate actions for the checked and unchecked states.
 
 ```yaml
 type: custom:materia-checkbox
@@ -442,10 +359,10 @@ name: Do Not Disturb
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `entity` | string | **required** | Entity ID |
-| `name` | string | Entity friendly name | Display name |
-| `checked_entity` | string | | Separate entity to evaluate checked state against |
-| `checked_value` | string | | Single value that must be present in `checked_entity` state (comma-separated) |
-| `checked_values` | array | | Array of values that must ALL be present in `checked_entity` state |
+| `name` | string | friendly name | Display name. *Templatable* |
+| `checked_entity` | string | | Separate entity to evaluate the checked state against |
+| `checked_value` | string | | Value that must be present in `checked_entity` state |
+| `checked_values` | array | | Values that must ALL be present in `checked_entity` state |
 | `tap_action` | object | `{ action: "toggle" }` | Default tap action |
 | `tap_action_checked` | object | | Tap action when currently checked |
 | `tap_action_unchecked` | object | | Tap action when currently unchecked |
@@ -454,7 +371,7 @@ name: Do Not Disturb
 
 #### `materia-icon-button`
 
-An M3 icon button with four variants and optional state-based icon and action mapping.
+An M3 icon button with four variants and optional state-based action mapping.
 
 ```yaml
 type: custom:materia-icon-button
@@ -462,220 +379,107 @@ icon: mdi:play
 variant: filled
 size: default
 entity: media_player.living_room
-icon_map:
-  playing: mdi:pause
-  paused: mdi:play
-  default: mdi:play
 tap_action_map:
   playing:
     action: call-service
     service: media_player.media_pause
-    service_data:
-      entity_id: media_player.living_room
+    service_data: { entity_id: media_player.living_room }
   default:
     action: call-service
     service: media_player.media_play
-    service_data:
-      entity_id: media_player.living_room
+    service_data: { entity_id: media_player.living_room }
 ```
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `icon` | string | **required** | Default icon |
-| `variant` | string | `filled` | M3 variant: `standard`, `outlined`, `filled`, `filled-tonal` |
-| `size` | string | `default` | Size: `default` (48px) or `large` (56px) |
-| `entity` | string | | Entity ID (used for toggle and state-based maps) |
-| `icon_map` | object | | State-to-icon mapping (e.g. `{ "playing": "mdi:pause", "default": "mdi:play" }`) |
-| `tap_action` | object | toggle (if entity) | Tap action |
-| `tap_action_map` | object | | State-to-action mapping (e.g. `{ "playing": { action: "call-service", ... } }`) |
+| `icon` | string | **required** | Icon. *Templatable* |
+| `variant` | string | `filled` | `standard`, `outlined`, `filled`, `filled-tonal` |
+| `size` | string | `default` | `default` (48px) or `large` (56px) |
+| `entity` | string | | Entity ID (used for toggle and state maps) |
+| `disabled` | string | | Template returning `true`/`false` to disable the button |
+| `tap_action` | object | toggle (if entity) | Default tap action |
+| `tap_action_map` | object | | State-to-action mapping, e.g. `{ playing: {…}, default: {…} }` |
 
 ---
 
-#### `materia-pill`
+#### `materia-menu`
 
-A compact info pill card showing icon, name, and state. Colors change based on entity active state.
+A button that opens a dropdown of options -- useful for `input_select`/`select` entities or a list of actions.
 
 ```yaml
-type: custom:materia-pill
-entity: binary_sensor.motion
-name: Motion
-icon: mdi:motion-sensor
-color: "var(--md-sys-cust-color-device)"
-color_on: "var(--md-sys-cust-color-on-device)"
-tap_action:
-  action: more-info
+type: custom:materia-menu
+entity: input_select.scene_mode
+name: Scene
+icon: mdi:palette
+position: below
+options:
+  - label: Movie
+    value: movie
+    icon: mdi:movie
+  - label: Relax
+    value: relax
+    icon: mdi:sofa
 ```
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `entity` | string | **required** | Entity ID |
-| `name` | string | Entity friendly name | Display name |
-| `icon` | string | `mdi:information-outline` | Icon to show |
-| `color` | string | | Background color when active. **Supports Jinja2 templates.** |
-| `color_on` | string | | Text/icon color when active. **Supports Jinja2 templates.** |
-| `tap_action` | object | `{ action: "more-info" }` | Tap action (supports `navigate` chevron) |
-
----
-
-#### `materia-pill-badge`
-
-A small pill-shaped badge with outlined border and active-state highlighting.
-
-```yaml
-type: custom:materia-pill-badge
-entity: binary_sensor.front_door
-icon: mdi:door
-name: Front Door
-active_state: "on"
-tap_action:
-  action: more-info
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `entity` | string | **required** | Entity ID |
-| `icon` | string | **required** | Icon to display |
-| `name` | string | **required** | Badge label |
-| `active_state` | string | `on` | Entity state that counts as active |
-| `tap_action` | object | `{ action: "more-info" }` | Tap action |
-
----
-
-#### `materia-select`
-
-A dropdown select card for `input_select` and `select` entities. Shows the current option and a native `<select>` dropdown to change it.
-
-```yaml
-type: custom:materia-select
-entity: input_select.wash_cycle
-name: Wash Cycle
-icon: mdi:washing-machine
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `entity` | string | **required** | `input_select` or `select` entity ID |
-| `name` | string | Entity friendly name | Display name |
-| `icon` | string | | Icon to show |
-
----
-
-#### `materia-separator`
-
-A horizontal line divider with an optional centered label.
-
-```yaml
-type: custom:materia-separator
-label: Settings
-color: "var(--md-sys-color-outline-variant)"
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `label` | string | | Optional centered label text |
-| `color` | string | `var(--md-sys-color-outline-variant)` | Line color |
-
----
-
-#### `materia-tonal-button`
-
-A tonal pill-shaped button with icon and label. Uses `secondary-container` colors with M3 hover/active state layers.
-
-```yaml
-type: custom:materia-tonal-button
-icon: mdi:lightbulb-group
-name: All Lights
-tap_action:
-  action: navigate
-  navigation_path: /lovelace/lights
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `icon` | string | **required** | Icon to display |
-| `name` | string | **required** | Button label |
-| `entity` | string | | Entity ID (used by toggle action) |
-| `tap_action` | object | | Tap action |
-
----
-
-#### `materia-circle-action`
-
-A circular action button. Legacy component kept for compatibility; prefer `materia-icon-button` for new dashboards.
-
-```yaml
-type: custom:materia-circle-action
-icon: mdi:play
-size: normal
-tap_action:
-  action: call-service
-  service: media_player.media_play
-  service_data:
-    entity_id: media_player.living_room
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `icon` | string | **required** | Icon to display |
-| `size` | string | `normal` | Button size: `normal` (66px) or `small` (52px) |
-| `entity` | string | | Entity ID (used by toggle action) |
-| `tap_action` | object | | Tap action |
+| `entity` | string | | Entity reflected/controlled by the menu |
+| `name` | string | | Display name. *Templatable* |
+| `icon` | string | | Icon to show. *Templatable* |
+| `position` | string | `below` | Menu open direction: `below` or `above` |
+| `options` | array | | Option entries `{ label, value, icon }` |
 
 ---
 
 ## Features
 
-### Jinja2 Template Support
+### Visual editor
 
-The `materia-button` and `materia-pill` cards support Jinja2 templates in the `color`, `color_on`, and `state_display` fields. Templates are rendered via Home Assistant's template REST API whenever `hass` updates.
+Every card has a GUI editor organized into collapsible **Content / Appearance / Actions** sections. Editors use a searchable icon picker, a Material You color picker (theme palette first, with swatches and a custom-color escape hatch), and HA selectors instead of raw text fields. Any templatable field shows a `</>` toggle that switches it between the friendly control and a Jinja template editor; fields that already contain a `{{ … }}` template open in template mode automatically.
+
+### Jinja2 template support
+
+`name`, `subtitle`, `icon`, `color`, and `color_on` (and `state_display` on badges/pills) accept Jinja2 templates, rendered via Home Assistant's template REST API whenever `hass` updates.
 
 ```yaml
-type: custom:materia-button
+type: custom:materia-card
 entity: sensor.cpu_temperature
 icon: mdi:thermometer
-name: CPU
 show_state: true
-state_display: "{{ states('sensor.cpu_temperature') }}C"
 color: >-
   {% if states('sensor.cpu_temperature') | float > 80 %}
     var(--md-sys-color-error-container)
   {% else %}
     var(--ha-card-background)
   {% endif %}
-color_on: >-
-  {% if states('sensor.cpu_temperature') | float > 80 %}
-    var(--md-sys-color-on-error-container)
-  {% else %}
-    var(--primary-text-color)
-  {% endif %}
 ```
 
-### Navigate Chevron
+### Domain-aware active states
 
-Cards that use the `ActionMixin` automatically render a right-chevron icon when `tap_action.action` is set to `navigate`. This applies to: `materia-light`, `materia-cover`, `materia-device`, `materia-lock`, `materia-sensor-row`, and `materia-pill`.
+`materia-card` detects the "active" state and accent colors per domain:
 
-### Domain-Aware Active States
+| Domain | Active state | Extras |
+|--------|--------------|--------|
+| `light` | `on` | brightness slider when dimmable; `light` colors |
+| `cover` | `open` | position slider + up/stop/down sub-buttons; `device` colors |
+| `switch`, `fan`, `input_boolean` | `on` | `device` colors |
+| `lock` | `locked` / `locking` | conditional lock icon; `device` colors |
+| `vacuum` | `cleaning` | `device` colors |
+| `climate` | `heat` | `climate-heat` colors |
+| `media_player` | `playing` | `device` colors |
+| `scene` | *(never)* | tonal style |
+| `alarm_control_panel` | `armed_away` | `error` colors |
+| *anything else* | `on` | `device` colors |
 
-`materia-device` automatically detects the appropriate "active" state based on the entity domain:
+Override with `active_state`, and override colors with `color` / `color_on`.
 
-| Domain | Active State |
-|--------|-------------|
-| `light`, `switch`, `fan`, `binary_sensor`, `input_boolean` | `on` |
-| `vacuum` | `cleaning` |
-| `lock` | `locked` |
-| `cover` | `open` |
-| `climate` | `heat` |
-| `media_player` | `playing` |
+### Action handler
 
-This can be overridden with the `active_state` config option.
-
-### Action Handler
-
-All interactive cards support the following `tap_action` types:
+All interactive cards support these `tap_action` (and `double_tap_action`) types:
 
 - `toggle` -- toggles the entity via `homeassistant.toggle`
 - `call-service` / `perform-action` -- calls a service with `service_data`/`data` and optional `target`
-- `navigate` -- navigates to a path
+- `navigate` -- navigates to a path (adds a chevron to the card)
 - `more-info` -- opens the entity more-info dialog
 - `none` -- no action
 
@@ -687,20 +491,16 @@ A minimal working example combining several Materia cards:
 views:
   - title: Home
     type: sections
+    badges:
+      - type: custom:materia-badge
+        entity: lock.front_door
+        name: Front Door
+        icon: m3o:lock
+        variant: primary-container
+        show_state: true
     sections:
       - type: grid
         cards:
-          - type: custom:materia-pill-badge
-            entity: binary_sensor.front_door
-            icon: mdi:door
-            name: Front Door
-
-          - type: custom:materia-pill-badge
-            entity: person.john
-            icon: mdi:account
-            name: John
-            active_state: home
-
           - type: custom:materia-weather
             entity: weather.home
             humidity_entity: sensor.outdoor_humidity
@@ -712,62 +512,29 @@ views:
             outdoor_temp_entity: sensor.outdoor_temperature
 
           - type: custom:materia-room
-            entity: light.living_room_group
+            entity: light.living_room
             name: Living Room
             icon: mdi:sofa
             columns: 2
-            color_on: "var(--md-sys-cust-color-on-light)"
-            attribute: brightness
             cards:
-              - type: custom:materia-light
+              - type: custom:materia-card
                 entity: light.floor_lamp
                 name: Floor Lamp
-              - type: custom:materia-light
-                entity: light.table_lamp
-                name: Table Lamp
-              - type: custom:materia-device
+              - type: custom:materia-card
                 entity: switch.tv
                 name: TV
                 icon: mdi:television
 
-          - type: custom:materia-light
-            entity: light.hallway
-            name: Hallway
-            icon: mdi:ceiling-light
+          - type: custom:materia-card
+            entity: cover.living_room_blinds
+            name: Blinds
 
-          - type: custom:materia-sensor-row
-            entity: sensor.indoor_temperature
-            name: Indoor Temperature
-
-          - type: custom:materia-button
-            entity: switch.desk_lamp
-            icon: mdi:desk-lamp
-            name: Desk
-            variant: secondary
-
-          - type: custom:materia-tonal-button
-            icon: mdi:lightbulb-group
-            name: All Lights
+          # Entity-less navigation tile
+          - type: custom:materia-card
+            name: Automations
+            icon: m3o:automation
+            subtitle: Manage your automations
             tap_action:
               action: navigate
-              navigation_path: /lovelace/lights
+              navigation_path: /lovelace/automations
 ```
-
-## Development
-
-```bash
-# Install dependencies
-npm install
-
-# Build for production
-npm run build
-
-# Watch for changes during development
-npm run watch
-```
-
-The build output is written to `dist/materia.js`.
-
-## License
-
-MIT
