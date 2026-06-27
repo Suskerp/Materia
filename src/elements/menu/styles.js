@@ -116,9 +116,21 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
   }
 
   .dropdown {
-    /* Opaque menu surface — themes can make --ha-card-background translucent,
-       which would let cards below show through the open dropdown. */
-    background: var(--md-sys-color-surface-container-high, var(--card-background-color, var(--ha-card-background, #1c1c1c)));
+    /* Opaque menu surface. Some themes define the surface token with alpha
+       (glassy look); stacking the SAME color over itself composites its alpha
+       up to fully opaque while keeping the exact hue — and needs no
+       relative-color syntax (some webviews drop it). Without this, when the open
+       dropdown overlaps a card below it, that card's text bleeds through. */
+    --_surf: var(--md-sys-color-surface-container-high, var(--card-background-color, var(--ha-card-background, #1c1c1c)));
+    background:
+      linear-gradient(var(--_surf), var(--_surf)),
+      linear-gradient(var(--_surf), var(--_surf)),
+      linear-gradient(var(--_surf), var(--_surf)),
+      linear-gradient(var(--_surf), var(--_surf)),
+      linear-gradient(var(--_surf), var(--_surf)),
+      linear-gradient(var(--_surf), var(--_surf)),
+      linear-gradient(var(--_surf), var(--_surf)),
+      var(--_surf);
     color: var(--primary-text-color);
     padding: 8px;
     margin: 2px 0;

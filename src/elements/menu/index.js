@@ -99,6 +99,11 @@ class MateriaMenu extends ActionMixin(LitElement) {
       this._resolveField("color", "_resolvedColor");
       this._resolveField("color_on", "_resolvedColorOn");
     }
+    if (changedProps.has("_open")) {
+      // Lift the whole menu (and its absolutely-positioned dropdown) above any
+      // sibling cards that follow it in the grid while the dropdown is open.
+      this.style.zIndex = this._open ? "9" : "";
+    }
     if (changedProps.has("hass") && this._optimisticValue != null) {
       const actual = this.hass?.states[this.config.entity]?.state;
       if (actual === this._optimisticValue) {

@@ -32,6 +32,7 @@ export const styles = css`
     border-radius: 999px;
     overflow: hidden;
     background: var(--ha-card-background, var(--card-background-color));
+    --_active: var(--materia-active-bg, var(--md-sys-cust-color-device-container, var(--md-sys-color-secondary-container)));
   }
 
   .segment {
@@ -54,6 +55,14 @@ export const styles = css`
     border-bottom: 1px solid var(--md-sys-color-outline-variant, var(--divider-color, rgba(0, 0, 0, 0.12)));
   }
 
+  /* The divider touching an active segment takes the active color rather than
+     staying gray — both the active segment's own bottom edge and the edge of
+     the segment directly above it. */
+  .segment.active:not(:last-child),
+  .segment:not(:last-child):has(+ .segment.active) {
+    border-bottom-color: var(--_active);
+  }
+
   .segment ha-icon {
     --mdc-icon-size: 28px;
   }
@@ -64,7 +73,7 @@ export const styles = css`
   }
 
   .segment.active {
-    background: var(--materia-active-bg, var(--md-sys-cust-color-device-container, var(--md-sys-color-secondary-container)));
+    background: var(--_active);
     color: var(--materia-active-fg, var(--md-sys-cust-color-on-device, var(--md-sys-color-on-secondary-container)));
   }
 
