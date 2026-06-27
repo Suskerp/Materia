@@ -90,6 +90,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
     super.disconnectedCallback();
     document.removeEventListener("click", this._outsideClickHandler);
     clearTimeout(this._optimisticTimer);
+    clearTimeout(this._zTimer);
   }
 
   updated(changedProps) {
@@ -102,7 +103,17 @@ class MateriaMenu extends ActionMixin(LitElement) {
     if (changedProps.has("_open")) {
       // Lift the whole menu (and its absolutely-positioned dropdown) above any
       // sibling cards that follow it in the grid while the dropdown is open.
-      this.style.zIndex = this._open ? "9" : "";
+      // On close, stay elevated until the collapse animation finishes —
+      // dropping z-index immediately would let the card behind show through the
+      // still-visible panel for the ~250ms transition.
+      clearTimeout(this._zTimer);
+      if (this._open) {
+        this.style.zIndex = "9";
+      } else {
+        this._zTimer = setTimeout(() => {
+          this.style.zIndex = "";
+        }, 300);
+      }
     }
     if (changedProps.has("hass") && this._optimisticValue != null) {
       const actual = this.hass?.states[this.config.entity]?.state;
