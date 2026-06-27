@@ -28,6 +28,7 @@ import "./elements/menu/index.js";
 import "./elements/button-stack/index.js";
 import "./elements/media-progress/index.js";
 import "./elements/media/index.js";
+import "./elements/clock/index.js";
 
 // Inject Figtree font globally
 injectFonts();
