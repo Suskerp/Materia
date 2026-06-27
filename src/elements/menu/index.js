@@ -1,4 +1,4 @@
-import { LitElement, html } from "lit";
+import { LitElement, html, render } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
 import "./editor.js";
@@ -76,12 +76,12 @@ class MateriaMenu extends ActionMixin(LitElement) {
 
   connectedCallback() {
     super.connectedCallback();
+    // Close when clicking anywhere outside the trigger AND outside the portal.
     this._outsideClickHandler = (e) => {
-      if (!this._open || !this.shadowRoot) return;
-      const target = e.composedPath?.()?.[0];
-      if (target && !this.shadowRoot.contains(target)) {
-        this._open = false;
-      }
+      if (!this._open) return;
+      const path = e.composedPath?.() || [];
+      if (path.includes(this) || (this._portal && path.includes(this._portal))) return;
+      this._open = false;
     };
     document.addEventListener("click", this._outsideClickHandler);
   }
@@ -90,7 +90,9 @@ class MateriaMenu extends ActionMixin(LitElement) {
     super.disconnectedCallback();
     document.removeEventListener("click", this._outsideClickHandler);
     clearTimeout(this._optimisticTimer);
-    clearTimeout(this._zTimer);
+    clearTimeout(this._portalTimer);
+    this._detachReposition();
+    this._removePortal();
   }
 
   updated(changedProps) {
@@ -100,29 +102,21 @@ class MateriaMenu extends ActionMixin(LitElement) {
       this._resolveField("color", "_resolvedColor");
       this._resolveField("color_on", "_resolvedColorOn");
     }
-    if (changedProps.has("_open")) {
-      // Lift the whole menu (and its absolutely-positioned dropdown) above any
-      // sibling cards that follow it in the grid while the dropdown is open.
-      // On close, stay elevated until the collapse animation finishes —
-      // dropping z-index immediately would let the card behind show through the
-      // still-visible panel for the ~250ms transition.
-      clearTimeout(this._zTimer);
-      if (this._open) {
-        // High enough to clear sibling cards AND a swipe/carousel card's
-        // pagination dots (Swiper's pagination sits at z-index 10).
-        this.style.zIndex = "100";
-      } else {
-        this._zTimer = setTimeout(() => {
-          this.style.zIndex = "";
-        }, 300);
-      }
-    }
     if (changedProps.has("hass") && this._optimisticValue != null) {
       const actual = this.hass?.states[this.config.entity]?.state;
       if (actual === this._optimisticValue) {
         this._optimisticValue = null;
         clearTimeout(this._optimisticTimer);
       }
+    }
+
+    if (changedProps.has("_open")) {
+      if (this._open) this._openPortal();
+      else this._closePortal();
+    } else if (this._open && this._portalRoot && !this._closing) {
+      // Keep the open panel's selection / colors fresh on state updates.
+      this._renderPortal();
+      this._positionPortal();
     }
   }
 
@@ -141,17 +135,11 @@ class MateriaMenu extends ActionMixin(LitElement) {
     );
   }
 
-  render() {
-    if (!this.hass || !this.config) return html``;
+  /** Resolve trigger/panel colors from config + state_colors. */
+  _colors() {
     const stateObj = this.hass.states[this.config.entity];
     const unavailable = this._isUnavailable(stateObj);
-    const options = this._resolvedOptions;
     const currentValue = this._currentValue;
-    const currentLabel = options.find((o) => o.value === currentValue)?.label || this._capitalize(currentValue);
-    const name = this._isTemplate(this.config.name)
-      ? this._resolvedName
-      : (this.config.name || stateObj?.attributes?.friendly_name || "");
-
     let bg = this._resolvedColor || this.config.color;
     let fg = this._resolvedColorOn || this.config.color_on;
     const sc = this.config.state_colors ? this._matchStateColor(currentValue) : null;
@@ -163,14 +151,154 @@ class MateriaMenu extends ActionMixin(LitElement) {
     const triggerStyle = colored
       ? `${bg ? `background-color:${bg};` : ""}${fg ? `color:${fg};` : ""}`
       : "";
-    // The dropdown panel matches the trigger; the selected item becomes a
-    // tint of the active text color. Feed the panel color into --_surf so the
-    // opaque-stacking backdrop builds from THIS color (not the default surface).
+    // Feed the panel color into --_surf so the opaque-stacking backdrop builds
+    // from THIS color (not the default surface).
     const panelStyle =
       `${bg ? `--_surf:${bg};` : ""}` +
       (colored && fg
         ? `${triggerStyle}--menu-selected-bg:color-mix(in srgb, ${fg} 22%, transparent);--menu-selected-fg:${fg};`
         : triggerStyle);
+    return { stateObj, unavailable, currentValue, colored, triggerStyle, panelStyle };
+  }
+
+  /* ---- Top-layer portal ----------------------------------------- */
+  /* The dropdown is rendered into a body-level element so it escapes any
+     ancestor stacking context (e.g. a swipe/carousel card's pagination, or an
+     overflow container). It carries its own shadow root with the same adopted
+     styles, and we copy the live theme custom properties onto it because a
+     body-level node won't otherwise inherit them. */
+
+  _ensurePortal() {
+    if (this._portal) return;
+    const host = document.createElement("div");
+    host.className = "materia-menu-portal";
+    host.style.cssText = "position:fixed; z-index:1000; pointer-events:auto;";
+    const root = host.attachShadow({ mode: "open" });
+    const sheets = Array.isArray(styles) ? styles : [styles];
+    if ("adoptedStyleSheets" in root && sheets.every((s) => s.styleSheet)) {
+      root.adoptedStyleSheets = sheets.map((s) => s.styleSheet);
+    } else {
+      const styleEl = document.createElement("style");
+      styleEl.textContent = sheets.map((s) => s.cssText).join("\n");
+      root.appendChild(styleEl);
+    }
+    document.body.appendChild(host);
+    this._portal = host;
+    this._portalRoot = root;
+  }
+
+  _removePortal() {
+    if (this._portal) {
+      this._portal.remove();
+      this._portal = null;
+      this._portalRoot = null;
+    }
+  }
+
+  /** Copy the menu's resolved CSS custom properties onto the body-level host. */
+  _syncThemeVars() {
+    if (!this._portal) return;
+    const cs = getComputedStyle(this);
+    for (let i = 0; i < cs.length; i++) {
+      const prop = cs[i];
+      if (prop.charCodeAt(0) === 45 && prop.charCodeAt(1) === 45) {
+        this._portal.style.setProperty(prop, cs.getPropertyValue(prop));
+      }
+    }
+  }
+
+  _positionPortal() {
+    if (!this._portal) return;
+    const trigger = this.shadowRoot?.querySelector(".trigger");
+    if (!trigger) return;
+    const r = trigger.getBoundingClientRect();
+    const host = this._portal;
+    host.style.left = `${r.left}px`;
+    host.style.width = `${r.width}px`;
+    if (this.config.position === "above") {
+      host.style.top = "auto";
+      host.style.bottom = `${window.innerHeight - r.top + 2}px`;
+    } else {
+      host.style.bottom = "auto";
+      host.style.top = `${r.bottom + 2}px`;
+    }
+  }
+
+  _attachReposition() {
+    if (this._repositionRef) return;
+    this._repositionRef = () => this._positionPortal();
+    window.addEventListener("scroll", this._repositionRef, true);
+    window.addEventListener("resize", this._repositionRef);
+  }
+
+  _detachReposition() {
+    if (!this._repositionRef) return;
+    window.removeEventListener("scroll", this._repositionRef, true);
+    window.removeEventListener("resize", this._repositionRef);
+    this._repositionRef = null;
+  }
+
+  _openPortal() {
+    this._closing = false;
+    clearTimeout(this._portalTimer);
+    this._ensurePortal();
+    this._syncThemeVars();
+    this._positionPortal();
+    this._renderPortal();
+    this._attachReposition();
+  }
+
+  _closePortal() {
+    if (!this._portalRoot) return;
+    this._closing = true;
+    this._renderPortal(); // play the close animation
+    this._detachReposition();
+    clearTimeout(this._portalTimer);
+    this._portalTimer = setTimeout(() => {
+      this._removePortal();
+      this._closing = false;
+    }, 170);
+  }
+
+  _renderPortal() {
+    if (!this._portalRoot) return;
+    render(this._dropdownTemplate(), this._portalRoot);
+  }
+
+  _dropdownTemplate() {
+    if (!this.hass || !this.config) return html``;
+    const { panelStyle, currentValue } = this._colors();
+    const options = this._resolvedOptions;
+    const pos = this.config.position === "above" ? "above" : "below";
+    return html`
+      <div class="portal-panel ${pos} ${this._closing ? "closing" : ""}">
+        <div class="dropdown" style=${panelStyle}>
+          ${options.map((opt) => html`
+            <div
+              class="menu-item ${opt.value === currentValue ? "selected" : ""}"
+              @click=${(e) => { e.stopPropagation(); this._selectOption(opt); }}
+            >
+              ${opt.icon ? html`<ha-icon .icon=${opt.icon}></ha-icon>` : ""}
+              <span class="item-text">${opt.label || opt.value}</span>
+            </div>
+          `)}
+        </div>
+      </div>
+    `;
+  }
+
+  render() {
+    if (!this.hass || !this.config) return html``;
+    const stateObj = this.hass.states[this.config.entity];
+    const unavailable = this._isUnavailable(stateObj);
+    const currentValue = this._currentValue;
+    const options = this._resolvedOptions;
+    const currentLabel = options.find((o) => o.value === currentValue)?.label || this._capitalize(currentValue);
+    const name = this._isTemplate(this.config.name)
+      ? this._resolvedName
+      : (this.config.name || stateObj?.attributes?.friendly_name || "");
+
+    const { triggerStyle } = this._colors();
 
     return html`
       <ha-card>
@@ -188,25 +316,12 @@ class MateriaMenu extends ActionMixin(LitElement) {
             <ha-icon class="chevron" icon=${this._open ? "m3of:arrow-drop-up" : "m3of:arrow-drop-down"}></ha-icon>
           </div>
         </div>
-        <div class="dropdown-wrapper ${this._open ? "open" : ""} ${this.config.position === "above" ? "above" : "below"}">
-          <div class="dropdown" style=${panelStyle}>
-            ${options.map((opt) => html`
-              <div
-                class="menu-item ${opt.value === currentValue ? "selected" : ""}"
-                @click=${(e) => { e.stopPropagation(); this._selectOption(opt); }}
-              >
-                ${opt.icon ? html`<ha-icon .icon=${opt.icon}></ha-icon>` : ""}
-                <span class="item-text">${opt.label || opt.value}</span>
-              </div>
-            `)}
-          </div>
-        </div>
       </ha-card>
     `;
   }
 
   getCardSize() {
-    return this._open ? 3 : 1;
+    return 1;
   }
 }
 

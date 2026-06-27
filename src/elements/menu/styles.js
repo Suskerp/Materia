@@ -91,38 +91,32 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     pointer-events: none;
   }
 
-  .dropdown-wrapper {
-    position: absolute;
-    left: 0;
-    right: 0;
-    z-index: 10;
-    overflow: hidden;
-    max-height: 0;
-    transition: max-height 0.25s ease;
-    pointer-events: none;
+  /* The dropdown is rendered into a body-level portal so it escapes any
+     ancestor stacking/overflow context. The panel animates in/out; positioning
+     (left/top/width) is set imperatively on the portal host. */
+  .portal-panel {
+    max-height: min(600px, 70vh);
+    overflow-y: auto;
+    transform-origin: top center;
+    animation: menu-pop-in 0.16s ease both;
   }
 
-  .dropdown-wrapper.below {
-    top: 100%;
+  .portal-panel.above {
+    transform-origin: bottom center;
   }
 
-  .dropdown-wrapper.above {
-    bottom: 100%;
+  .portal-panel.closing {
+    animation: menu-pop-out 0.14s ease both;
   }
 
-  .dropdown-wrapper.open {
-    max-height: 600px;
-    pointer-events: auto;
+  @keyframes menu-pop-in {
+    from { opacity: 0; transform: scaleY(0.9); }
+    to { opacity: 1; transform: scaleY(1); }
   }
 
-  /* Gap sits between the trigger and the panel — above it when the dropdown
-     opens below, below it when it opens above. */
-  .dropdown-wrapper.below.open {
-    margin-top: 2px;
-  }
-
-  .dropdown-wrapper.above.open {
-    margin-bottom: 2px;
+  @keyframes menu-pop-out {
+    from { opacity: 1; }
+    to { opacity: 0; transform: scaleY(0.96); }
   }
 
   .dropdown {
