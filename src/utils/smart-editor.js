@@ -318,7 +318,10 @@ export class SmartEditorBase extends LitElement {
 
   setConfig(config) {
     this._config = config;
-    this._modes = {};
+    // Initialize once — NOT on every call. HA round-trips config-changed back
+    // through setConfig on every edit; resetting here would wipe transient UI
+    // state (open dropdowns, expanded managers, template toggles) each keystroke.
+    this._modes ??= {};
   }
 
   /** Values to render — subclasses may override to inject defaults. */

@@ -107,7 +107,20 @@ class MateriaButton extends ActionMixin(LitElement) {
     const disabled = this._disabled;
 
     const variant = VARIANT_ALIAS[this.config.variant] || this.config.variant || "filled";
-    const size = this.config.size || "m";
+    // size may be a named token (xs/s/m/l/xl) or a custom height in px
+    // (e.g. 72) for an in-between size.
+    const sizeVal = this.config.size ?? "m";
+    const numeric = typeof sizeVal === "number" || /^\d+$/.test(String(sizeVal));
+    let sizeClass = "";
+    let sizeStyle = "";
+    if (numeric) {
+      const h = Number(sizeVal);
+      sizeStyle =
+        `--mb-h:${h}px;--mb-icon:${Math.round(h * 0.43)}px;--mb-font:16px;` +
+        `--mb-px:${Math.round(h * 0.42)}px;--mb-rsq:${Math.round(h * 0.28)}px;--mb-gap:8px;`;
+    } else {
+      sizeClass = `size-${sizeVal}`;
+    }
     const baseShape = this.config.shape === "square" ? "square" : "round";
     const active = this._isActive(stateObj);
     const shape =
@@ -125,7 +138,8 @@ class MateriaButton extends ActionMixin(LitElement) {
 
     return html`
       <button
-        class="btn variant-${variant} size-${size} shape-${shape} ${iconOnly ? "icon-only" : ""} ${disabled ? "disabled" : ""} ${unavailable ? "unavailable" : ""}"
+        class="btn variant-${variant} ${sizeClass} shape-${shape} ${iconOnly ? "icon-only" : ""} ${disabled ? "disabled" : ""} ${unavailable ? "unavailable" : ""}"
+        style=${sizeStyle}
         @click=${this._handleTap}
       >
         ${icon ? html`<ha-icon .icon=${icon}></ha-icon>` : nothing}

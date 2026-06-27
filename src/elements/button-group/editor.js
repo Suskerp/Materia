@@ -55,7 +55,7 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
 
   setConfig(config) {
     super.setConfig(config);
-    this._expanded = null;
+    this._expanded ??= null;
   }
 
   _sectionsSignature() {

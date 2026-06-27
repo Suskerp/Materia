@@ -87,8 +87,8 @@ class MateriaRoomEditor extends SmartEditorBase {
 
   setConfig(config) {
     super.setConfig(config);
-    this._selectedCard = -1;
-    this._expandedButton = null;
+    this._selectedCard ??= -1;
+    this._expandedButton ??= null;
   }
 
   _formData() {

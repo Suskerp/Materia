@@ -54,7 +54,7 @@ class MateriaButtonEditor extends SmartEditorBase {
 
   setConfig(config) {
     super.setConfig(config);
-    this._expanded = null;
+    this._expanded ??= null;
   }
 
   get _sections() {

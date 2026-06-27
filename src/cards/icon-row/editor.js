@@ -49,7 +49,7 @@ class MateriaIconRowEditor extends SmartEditorBase {
 
   setConfig(config) {
     super.setConfig(config);
-    this._expandedButton = null;
+    this._expandedButton ??= null;
   }
 
   _formData() {
