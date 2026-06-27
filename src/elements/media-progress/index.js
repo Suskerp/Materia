@@ -5,8 +5,8 @@ import "./editor.js";
 
 const H = 28;
 const MID = 14;
-const AMP = 4;
-const WL = 22; // wavelength (must match the CSS mp-flow keyframe translateX)
+const AMP = 3; // center-to-peak amplitude (M3 spec ≈ flat: amp/wavelength ~0.1)
+const WL = 32; // wavelength (must match the CSS mp-flow keyframe translateX)
 const STEP = 2;
 
 let _uid = 0;
