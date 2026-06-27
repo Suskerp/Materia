@@ -57,6 +57,10 @@ class MateriaButtonStackEditor extends SmartEditorBase {
     this._expanded ??= null;
   }
 
+  _formData() {
+    return { show_state: true, ...this._config };
+  }
+
   get _sections() {
     return [
       {

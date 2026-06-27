@@ -1,6 +1,10 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaMediaEditor extends SmartEditorBase {
+  _formData() {
+    return { show_art: true, ...this._config };
+  }
+
   get _sections() {
     return [
       {

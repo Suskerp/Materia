@@ -1,6 +1,11 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaMediaProgressEditor extends SmartEditorBase {
+  // These default to on in the card; reflect that in the toggles.
+  _formData() {
+    return { show_times: true, seekable: true, ...this._config };
+  }
+
   get _sections() {
     return [
       {

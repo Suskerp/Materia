@@ -83,19 +83,38 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
 
   updated() {
     const playing = this.hass?.states[this.config.entity]?.state === "playing";
-    if (playing && !this._tick) {
-      this._tick = setInterval(() => this.requestUpdate(), 1000);
-    } else if (!playing && this._tick) {
-      clearInterval(this._tick);
-      this._tick = null;
-    }
+    if (playing) this._startLoop();
+    else this._stopLoop();
     if (this.hass) this._resolveField("color", "_resolvedColor");
+  }
+
+  /** Smoothly advance the played position with rAF while playing. */
+  _startLoop() {
+    if (this._raf) return;
+    const step = () => {
+      this._raf = requestAnimationFrame(step);
+      this.requestUpdate();
+    };
+    this._raf = requestAnimationFrame(step);
+  }
+
+  _stopLoop() {
+    if (this._raf) cancelAnimationFrame(this._raf);
+    this._raf = null;
+  }
+
+  /** Full-width wave path, memoized by width (only regenerated on resize). */
+  _fullWave(w) {
+    if (this._waveW !== w) {
+      this._waveW = w;
+      this._wavePathCache = this._wavePath(-WL, w);
+    }
+    return this._wavePathCache;
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    if (this._tick) clearInterval(this._tick);
-    this._tick = null;
+    this._stopLoop();
     this._ro?.disconnect();
   }
 
@@ -135,7 +154,7 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
               </defs>
               <line class="track" x1=${playedX} y1=${MID} x2=${w} y2=${MID}></line>
               <g clip-path="url(#${this._cid})">
-                <path class="wave ${playing ? "playing" : ""}" d=${this._wavePath(-WL, playedX)}></path>
+                <path class="wave ${playing ? "playing" : ""}" d=${this._fullWave(w)}></path>
               </g>
               <rect class="thumb" x=${playedX - 2} y=${MID - 10} width="4" height="20" rx="2"></rect>
             </svg>
