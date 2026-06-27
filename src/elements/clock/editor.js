@@ -1,6 +1,10 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaClockEditor extends SmartEditorBase {
+  _formData() {
+    return { hand_width: 5, size: 10, ...this._config };
+  }
+
   get _sections() {
     return [
       {
@@ -17,6 +21,9 @@ class MateriaClockEditor extends SmartEditorBase {
           },
           { name: "show_seconds", selector: { boolean: {} } },
           { name: "smooth", label: "Smooth second hand", selector: { boolean: {} } },
+          { name: "squiggle", label: "Squiggly face", selector: { boolean: {} } },
+          { name: "hand_width", label: "Hand thickness", selector: { number: { min: 1, max: 12, step: 0.5, mode: "slider" } } },
+          { name: "size", label: "Size (10 = fill)", selector: { number: { min: 1, max: 10, step: 1, mode: "slider" } } },
         ],
       },
       {

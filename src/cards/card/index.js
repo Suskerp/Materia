@@ -314,7 +314,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
       if (pos === 0 || stateObj.state === "closed")
         return this._capitalize("Closed");
       if (pos === 100) return this._capitalize("Open");
-      if (pos != null) return `${pos}% ${this._capitalize("open")}`;
+      if (pos != null) return `${this._capitalize("Open")} · ${pos}%`;
       return this._capitalize(stateObj.state);
     }
 

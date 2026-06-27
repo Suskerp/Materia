@@ -59,8 +59,16 @@ class MateriaWeather extends ActionMixin(LitElement) {
     const unavailable = this._isUnavailable(stateObj);
 
     const condition = stateObj?.state ?? "";
-    const temp = stateObj?.attributes?.temperature;
-    const tempUnit = stateObj?.attributes?.temperature_unit || "\u00B0";
+    const showTemp = this.config.show_temperature !== false;
+    let temp = stateObj?.attributes?.temperature;
+    let tempUnit = stateObj?.attributes?.temperature_unit || "\u00B0";
+    if (this.config.temperature_entity) {
+      const tObj = this.hass.states[this.config.temperature_entity];
+      if (tObj) {
+        temp = tObj.state;
+        tempUnit = tObj.attributes?.unit_of_measurement || tempUnit;
+      }
+    }
     const icon = this._isTemplate(this.config.icon)
       ? this._resolvedIcon
       : (this.config.icon || CONDITION_ICONS[condition] || "mdi:weather-partly-cloudy");
@@ -74,15 +82,24 @@ class MateriaWeather extends ActionMixin(LitElement) {
       humidity = stateObj.attributes.humidity;
     }
 
-    const conditionDisplay = condition.replace(/-|_/g, " ");
-    const primary = unavailable
-      ? "Unavailable"
-      : (this._isTemplate(this.config.name) ? this._resolvedName : this.config.name) || (temp != null ? `${temp}${tempUnit}` : "\u2014");
-    const secondary = unavailable
-      ? ""
-      : humidity != null
-        ? `${this._capitalize(conditionDisplay)} \u00B7 ${humidity}%`
-        : this._capitalize(conditionDisplay);
+    const conditionDisplay = this._capitalize(condition.replace(/-|_/g, " "));
+    const nameVal = this._isTemplate(this.config.name) ? this._resolvedName : this.config.name;
+    const tempStr = showTemp && temp != null ? `${temp}${tempUnit}` : null;
+
+    let primary;
+    if (unavailable) primary = "Unavailable";
+    else if (nameVal) primary = nameVal;
+    else if (tempStr) primary = tempStr;
+    else primary = conditionDisplay || "\u2014";
+
+    const parts = [];
+    if (!unavailable) {
+      // temperature joins the state line inline whenever it isn't the headline
+      if (tempStr && primary !== tempStr) parts.push(tempStr);
+      if (primary !== conditionDisplay) parts.push(conditionDisplay);
+      if (humidity != null) parts.push(`${humidity}%`);
+    }
+    const secondary = parts.join(" \u00B7 ");
 
     return html`
       <ha-card>
