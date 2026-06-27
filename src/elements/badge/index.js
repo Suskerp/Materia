@@ -74,12 +74,20 @@ class MateriaBadge extends ActionMixin(LitElement) {
   }
 
   _getBatteryColors(stateObj) {
-    const pct = parseFloat(stateObj?.state) || 0;
+    const pct = parseFloat(stateObj?.state);
+    if (Number.isNaN(pct)) {
+      return ["var(--ha-card-background)", "var(--primary-text-color)"];
+    }
     if (pct < 10) {
       return ["var(--md-sys-color-error-container)", "var(--md-sys-color-on-error-container)"];
     }
     if (pct < 20) {
-      return ["var(--md-sys-cust-color-warning-container)", "var(--md-sys-cust-color-on-warning-container)"];
+      // Warning tokens are custom (not part of base M3); fall back to amber
+      // so the warning tier still renders if the theme doesn't emit them.
+      return [
+        "var(--md-sys-cust-color-warning-container, #ffecb3)",
+        "var(--md-sys-cust-color-on-warning-container, #6d4c00)",
+      ];
     }
     return ["var(--ha-card-background)", "var(--primary-text-color)"];
   }
@@ -143,7 +151,15 @@ class MateriaBadge extends ActionMixin(LitElement) {
       } else if (this.config.state_display && !hasTpl) {
         stateDisplay = this.config.state_display;
       } else {
-        stateDisplay = stateObj.state;
+        const raw = stateObj.state;
+        const num = Number(raw);
+        if (raw !== "" && raw != null && !Number.isNaN(num)) {
+          const unit = stateObj.attributes?.unit_of_measurement;
+          const rounded = Math.round(num * 100) / 100;
+          stateDisplay = unit ? (unit === "%" ? `${rounded}%` : `${rounded} ${unit}`) : `${rounded}`;
+        } else {
+          stateDisplay = raw;
+        }
       }
       stateDisplay = this._capitalize(stateDisplay);
     }

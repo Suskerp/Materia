@@ -11,6 +11,8 @@ class MateriaMenu extends ActionMixin(LitElement) {
     _optimisticValue: { state: true },
     _resolvedIcon: { state: true },
     _resolvedName: { state: true },
+    _resolvedColor: { state: true },
+    _resolvedColorOn: { state: true },
   };
 
   static styles = styles;
@@ -94,6 +96,8 @@ class MateriaMenu extends ActionMixin(LitElement) {
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("icon", "_resolvedIcon");
       this._resolveField("name", "_resolvedName");
+      this._resolveField("color", "_resolvedColor");
+      this._resolveField("color_on", "_resolvedColorOn");
     }
     if (changedProps.has("hass") && this._optimisticValue != null) {
       const actual = this.hass?.states[this.config.entity]?.state;
@@ -115,9 +119,15 @@ class MateriaMenu extends ActionMixin(LitElement) {
       ? this._resolvedName
       : (this.config.name || stateObj?.attributes?.friendly_name || "");
 
+    const bg = this._resolvedColor || this.config.color;
+    const fg = this._resolvedColorOn || this.config.color_on;
+    const triggerStyle = !unavailable && (bg || fg)
+      ? `${bg ? `background-color:${bg};` : ""}${fg ? `color:${fg};` : ""}`
+      : "";
+
     return html`
       <ha-card>
-        <div class="trigger ${unavailable ? "unavailable" : ""} ${this._open ? (this.config.position === "above" ? "open-above" : "open-below") : ""}" @click=${this._toggle}>
+        <div class="trigger ${unavailable ? "unavailable" : ""} ${this._open ? (this.config.position === "above" ? "open-above" : "open-below") : ""}" style=${triggerStyle} @click=${this._toggle}>
           ${this.config.icon ? html`
             <div class="icon-container">
               <ha-icon .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon}></ha-icon>

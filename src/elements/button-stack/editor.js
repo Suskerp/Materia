@@ -1,8 +1,8 @@
 import { html, css } from "lit";
 import { computeLabel } from "../../utils/editor-helpers.js";
-import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { SmartEditorBase, isTemplate } from "../../utils/smart-editor.js";
 
-class MateriaMenuEditor extends SmartEditorBase {
+class MateriaButtonStackEditor extends SmartEditorBase {
   static properties = {
     _expanded: { state: true },
   };
@@ -10,7 +10,7 @@ class MateriaMenuEditor extends SmartEditorBase {
   static styles = [
     SmartEditorBase.styles,
     css`
-      .options-header {
+      .opt-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -18,20 +18,20 @@ class MateriaMenuEditor extends SmartEditorBase {
         font-weight: 600;
         font-size: 14px;
       }
-      .option-card {
+      .opt-card {
         border: 1px solid var(--divider-color, rgba(0, 0, 0, 0.12));
         border-radius: 12px;
         margin-top: 8px;
         overflow: hidden;
       }
-      .option-header {
+      .opt-row {
         display: flex;
         align-items: center;
         gap: 4px;
         padding: 4px 4px 4px 12px;
         background: var(--secondary-background-color, rgba(0, 0, 0, 0.04));
       }
-      .option-header span {
+      .opt-row span {
         flex: 1;
         font-size: 13px;
         font-weight: 500;
@@ -39,13 +39,13 @@ class MateriaMenuEditor extends SmartEditorBase {
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .option-body {
+      .opt-body {
         padding: 8px 12px 12px;
         display: flex;
         flex-direction: column;
         gap: 8px;
       }
-      .option-body ha-form {
+      .opt-body ha-form {
         display: block;
         width: 100%;
       }
@@ -64,62 +64,56 @@ class MateriaMenuEditor extends SmartEditorBase {
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", selector: { entity: {} } },
+          { name: "attribute", helper: "Match option values against this attribute instead of state", selector: { text: {} } },
           { name: "name", template: true, selector: { text: {} } },
-          {
-            name: "icon",
-            template: true,
-            selector: { icon: {} },
-            context: { icon_entity: "entity" },
-          },
-          {
-            name: "position",
-            selector: { select: { mode: "dropdown", options: [
-              { value: "below", label: "Below" },
-              { value: "above", label: "Above" },
-            ] } },
-          },
+          { name: "show_state", selector: { boolean: {} } },
         ],
       },
       {
         title: "Appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "color", label: "Background", color: true, template: true, selector: { text: {} } },
-          { name: "color_on", label: "Text / icon", color: true, template: true, selector: { text: {} } },
+          { name: "active_color", label: "Active background", color: true, template: true, selector: { text: {} } },
+          { name: "active_color_on", label: "Active text / icon", color: true, template: true, selector: { text: {} } },
         ],
       },
     ];
   }
 
-  get _optionSchema() {
+  _optionSchema(opt) {
+    const iconIsTemplate = isTemplate(opt?.icon);
     return [
+      iconIsTemplate
+        ? { name: "icon", selector: { template: {} } }
+        : { name: "icon", selector: { icon: {} } },
       { name: "label", selector: { text: {} } },
-      { name: "value", required: true, selector: { text: {} } },
-      { name: "icon", selector: { icon: {} } },
+      { name: "value", label: "Active when state equals (optional)", selector: { text: {} } },
+      { name: "tap_action", label: "Action", selector: { ui_action: {} } },
     ];
   }
 
   _renderExtra() {
+    const options = Array.isArray(this._config.options) ? this._config.options : [];
     return html`
-      <div class="options-header">
+      <div class="opt-header">
         <span>Options</span>
         <ha-icon-button @click=${this._addOption}>
           <ha-icon icon="mdi:plus"></ha-icon>
         </ha-icon-button>
       </div>
 
-      ${(this._config.options || []).map(
+      ${options.map(
         (opt, i) => html`
-          <div class="option-card">
-            <div class="option-header">
-              <span>${opt.label || opt.value || `Option ${i + 1}`}</span>
+          <div class="opt-card">
+            <div class="opt-row">
+              <span>${opt.label || (opt.icon && !isTemplate(opt.icon) ? opt.icon : `Option ${i + 1}`)}</span>
               <ha-icon-button @click=${() => this._moveOption(i, -1)}>
                 <ha-icon icon="mdi:arrow-up"></ha-icon>
               </ha-icon-button>
               <ha-icon-button @click=${() => this._moveOption(i, 1)}>
                 <ha-icon icon="mdi:arrow-down"></ha-icon>
               </ha-icon-button>
-              <ha-icon-button @click=${() => this._toggleExpand(i)}>
+              <ha-icon-button @click=${() => this._toggleOption(i)}>
                 <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
               </ha-icon-button>
               <ha-icon-button @click=${() => this._removeOption(i)}>
@@ -128,13 +122,13 @@ class MateriaMenuEditor extends SmartEditorBase {
             </div>
             ${this._expanded === i
               ? html`
-                  <div class="option-body">
+                  <div class="opt-body">
                     <ha-form
                       .hass=${this.hass}
                       .data=${opt}
-                      .schema=${this._optionSchema}
+                      .schema=${this._optionSchema(opt)}
                       .computeLabel=${computeLabel}
-                      @value-changed=${(e) => this._updateOptionForm(i, e.detail.value)}
+                      @value-changed=${(e) => this._optionChanged(i, e.detail.value)}
                     ></ha-form>
                   </div>
                 `
@@ -146,36 +140,36 @@ class MateriaMenuEditor extends SmartEditorBase {
   }
 
   _addOption() {
-    const options = [...(this._config.options || []), { label: "", value: "", icon: "" }];
+    const options = [...(this._config.options || []), { icon: "mdi:circle-outline" }];
     this._expanded = options.length - 1;
     this._commit({ ...this._config, options });
   }
 
-  _removeOption(index) {
+  _removeOption(i) {
     const options = [...(this._config.options || [])];
-    options.splice(index, 1);
-    if (this._expanded === index) this._expanded = null;
+    options.splice(i, 1);
+    if (this._expanded === i) this._expanded = null;
     this._commit({ ...this._config, options });
   }
 
-  _moveOption(index, direction) {
+  _moveOption(i, delta) {
     const options = [...(this._config.options || [])];
-    const target = index + direction;
-    if (target < 0 || target >= options.length) return;
-    [options[index], options[target]] = [options[target], options[index]];
-    if (this._expanded === index) this._expanded = target;
+    const to = i + delta;
+    if (to < 0 || to >= options.length) return;
+    [options[i], options[to]] = [options[to], options[i]];
+    if (this._expanded === i) this._expanded = to;
     this._commit({ ...this._config, options });
   }
 
-  _updateOptionForm(index, value) {
+  _optionChanged(i, value) {
     const options = [...(this._config.options || [])];
-    options[index] = { ...options[index], ...value };
+    options[i] = { ...options[i], ...value };
     this._commit({ ...this._config, options });
   }
 
-  _toggleExpand(i) {
+  _toggleOption(i) {
     this._expanded = this._expanded === i ? null : i;
   }
 }
 
-customElements.define("materia-menu-editor", MateriaMenuEditor);
+customElements.define("materia-button-stack-editor", MateriaButtonStackEditor);

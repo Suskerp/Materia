@@ -58,7 +58,10 @@ class MateriaIconButtonEditor extends SmartEditorBase {
   }
 
   get _sections() {
-    return [
+    // When per-state action mappings are defined, the single default-action
+    // dropdown is redundant — hide it.
+    const hasMappings = this._stateMappings.length > 0;
+    const sections = [
       {
         title: "Button",
         icon: "mdi:gesture-tap-button",
@@ -90,14 +93,19 @@ class MateriaIconButtonEditor extends SmartEditorBase {
           { name: "disabled", helper: "Template returning true / false", selector: { template: {} } },
         ],
       },
-      {
+    ];
+
+    if (!hasMappings) {
+      sections.push({
         title: "Actions",
         icon: "mdi:gesture-tap",
         fields: [
           { name: "tap_action", label: "Default action", selector: { ui_action: {} } },
         ],
-      },
-    ];
+      });
+    }
+
+    return sections;
   }
 
   get _mappingSchema() {
