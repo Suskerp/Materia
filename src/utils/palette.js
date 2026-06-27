@@ -93,7 +93,9 @@ export const COLOR_GROUPS = [
     options: [
       sys("primary", "Primary"),
       sys("primary-container", "Primary container"),
+      sys("secondary", "Secondary"),
       sys("secondary-container", "Secondary container"),
+      sys("tertiary", "Tertiary"),
       sys("tertiary-container", "Tertiary container"),
       sys("error", "Error"),
       sys("error-container", "Error container"),

@@ -21,6 +21,14 @@ const CONDITION_ICONS = {
   exceptional: "mdi:alert-circle-outline",
 };
 
+const CONDITION_LABELS = {
+  "clear-night": "Clear night",
+  partlycloudy: "Partly cloudy",
+  "lightning-rainy": "Thunderstorm",
+  "snowy-rainy": "Sleet",
+  exceptional: "Exceptional",
+};
+
 class MateriaWeather extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
@@ -82,7 +90,7 @@ class MateriaWeather extends ActionMixin(LitElement) {
       humidity = stateObj.attributes.humidity;
     }
 
-    const conditionDisplay = this._capitalize(condition.replace(/-|_/g, " "));
+    const conditionDisplay = CONDITION_LABELS[condition] || this._capitalize(condition.replace(/-|_/g, " "));
     const nameVal = this._isTemplate(this.config.name) ? this._resolvedName : this.config.name;
     const tempStr = showTemp && temp != null ? `${temp}${tempUnit}` : null;
 
