@@ -1954,26 +1954,43 @@ const Vt=2;
 
   .dropdown-wrapper.below {
     top: 100%;
+    border-radius: 8px 8px 16px 16px;
   }
 
   .dropdown-wrapper.above {
     bottom: 100%;
+    border-radius: 16px 16px 8px 8px;
   }
 
+  /* Shadow lives on the wrapper — an element's own box-shadow isn't clipped by
+     its own overflow:hidden, so it stays rounded (the dropdown's would be cut
+     square by the wrapper clip). */
   .dropdown-wrapper.open {
     max-height: 600px;
     pointer-events: auto;
+    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
+                0px 2px 6px 2px rgba(0, 0, 0, 0.15);
   }
 
   .dropdown {
-    /* Opaque menu surface — themes can make --ha-card-background translucent,
-       which would let cards below show through the open dropdown. */
-    background: var(--md-sys-color-surface-container-high, var(--card-background-color, var(--ha-card-background, #1c1c1c)));
+    position: relative;
+    background: var(--ha-card-background, var(--card-background-color));
     color: var(--primary-text-color);
     padding: 8px;
     margin: 2px 0;
-    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
-                0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Opaque backdrop so cards below never show through, even when the theme's
+     surface colors are translucent. rgb(from …) strips any alpha. The visible
+     tint / state color paints over it. */
+  .dropdown::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--card-background-color, #1c1c1c);
+    background: rgb(from var(--ha-card-background, var(--card-background-color, #1c1c1c)) r g b);
+    z-index: -1;
   }
 
   .below .dropdown {

@@ -8,8 +8,8 @@ Materia is an opinionated collection of native [Lit](https://lit.dev/) custom ca
 
 The collection is split into two categories:
 
-- **Cards** -- Dashboard content cards: a universal entity card, rooms, climate, weather, and an icon row.
-- **Elements** -- Smaller UI primitives: badges, pills, button groups, checkboxes, icon buttons, and dropdown menus.
+- **Cards** -- Dashboard content cards: a universal entity card, rooms, climate, weather, now-playing media + a wavy media seek bar, and an icon row.
+- **Elements** -- Smaller UI primitives: M3 buttons, button groups, vertical button stacks, badges, pills, checkboxes, and dropdown menus.
 
 Key capabilities:
 
@@ -209,7 +209,7 @@ humidity_entity: sensor.outdoor_humidity
 
 #### `materia-icon-row`
 
-A horizontal row of `materia-icon-button`s -- handy for media transport or scene shortcuts.
+A horizontal row of `materia-button`s -- handy for media transport or volume controls. Buttons auto-center; mark a button `wide: true` to let it grow.
 
 ```yaml
 type: custom:materia-icon-row
@@ -231,7 +231,7 @@ buttons:
 |--------|------|---------|-------------|
 | `gap` | number | `8` | Horizontal gap between buttons (px) |
 | `padding` | number | `4` | Vertical padding of the row (px) |
-| `buttons` | array | **required** | Array of button configs (see `materia-icon-button` options: `icon`, `variant`, `size`, `entity`, `disabled`, `tap_action`) |
+| `buttons` | array | **required** | Array of `materia-button` configs (`icon`, `label`, `variant`, `size`, `shape`, `wide`, `entity`, `disabled`, `tap_action`, …) |
 
 ---
 
@@ -369,34 +369,44 @@ name: Do Not Disturb
 
 ---
 
-#### `materia-icon-button`
+#### `materia-button`
 
-An M3 icon button with four variants and optional state-based action mapping.
+An M3 (expressive) button — icon and/or label, five variants, five sizes (or a custom pixel height), round/square shape, optional full-width, and shape-morphing on state. Supersedes the old `materia-icon-button` (legacy `variant`/`size` names still accepted).
 
 ```yaml
-type: custom:materia-icon-button
+type: custom:materia-button
 icon: mdi:play
 variant: filled
-size: default
+size: m
+shape: round
 entity: media_player.living_room
+# stateful icon — template the icon field:
+# icon: "{{ 'mdi:pause' if is_state('media_player.living_room','playing') else 'mdi:play' }}"
 tap_action_map:
   playing:
-    action: call-service
-    service: media_player.media_pause
-    service_data: { entity_id: media_player.living_room }
+    action: perform-action
+    perform_action: media_player.media_pause
+    target: { entity_id: media_player.living_room }
   default:
-    action: call-service
-    service: media_player.media_play
-    service_data: { entity_id: media_player.living_room }
+    action: perform-action
+    perform_action: media_player.media_play
+    target: { entity_id: media_player.living_room }
 ```
+
+`icon` or `label` (or both) is required.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `icon` | string | **required** | Icon. *Templatable* |
-| `variant` | string | `filled` | `standard`, `outlined`, `filled`, `filled-tonal` |
-| `size` | string | `default` | `default` (48px) or `large` (56px) |
-| `entity` | string | | Entity ID (used for toggle and state maps) |
-| `disabled` | string | | Template returning `true`/`false` to disable the button |
+| `icon` | string | | Icon. *Templatable* (template it for a stateful icon) |
+| `label` | string | | Text label, with or instead of an icon. *Templatable* |
+| `variant` | string | `filled` | `elevated`, `filled`, `tonal`, `outlined`, `text` (legacy `filled-tonal`→tonal, `standard`→text) |
+| `size` | string \| number | `m` | `xs` (32) · `s` (40) · `m` (56) · `l` (96) · `xl` (136), or a custom height in px (e.g. `72`) |
+| `shape` | string | `round` | `round` (pill) or `square` (rounded-rect) |
+| `wide` | boolean | `false` | Grow to fill the row width |
+| `entity` | string | | Entity ID (for state maps, morph, toggle) |
+| `active_state` | string \| list | domain default | State(s) considered active |
+| `morph_on_active` | boolean | `false` | Swap shape (round↔square) when active |
+| `disabled` | string | | Template returning `true`/`false` to disable |
 | `tap_action` | object | toggle (if entity) | Default tap action |
 | `tap_action_map` | object | | State-to-action mapping, e.g. `{ playing: {…}, default: {…} }` |
 
@@ -428,6 +438,79 @@ options:
 | `icon` | string | | Icon to show. *Templatable* |
 | `position` | string | `below` | Menu open direction: `below` or `above` |
 | `options` | array | | Option entries `{ label, value, icon }` |
+| `color` / `color_on` | string | | Trigger background / text. *Templatable* |
+| `state_colors` | array | | Per-state colors `{ state, color, color_on }` — the matching state tints the trigger and dropdown (`state` may be a list). Set in the editor's **State colors** manager |
+
+---
+
+#### `materia-button-stack`
+
+A vertical segmented button — stacked option segments (the M3 connected-buttons idea, vertical). The segment whose `value` matches the entity state is highlighted. Good for locks, alarm modes, fan speeds, etc.
+
+```yaml
+type: custom:materia-button-stack
+entity: lock.front_door
+name: Front Door
+options:
+  - icon: m3o:lock-open
+    value: [unlocked, open]
+    tap_action: { action: perform-action, perform_action: lock.unlock, target: { entity_id: lock.front_door } }
+  - icon: m3o:lock
+    value: [locked, locking]
+    tap_action: { action: perform-action, perform_action: lock.lock, target: { entity_id: lock.front_door } }
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `options` | array | **required** | Segments `{ icon, label, value, tap_action }`, top→bottom |
+| `entity` | string | | Drives active matching + the state label |
+| `attribute` | string | | Match `value` against an attribute instead of state |
+| `value` (per option) | string \| list | | Matching option highlights; omit for a plain action button |
+| `show_state` | boolean | `true` | State label below the stack |
+| `name` | string | | Label above. *Templatable* |
+| `active_color` / `active_color_on` | string | device colors | Active-segment fill. *Templatable* |
+
+---
+
+#### `materia-media`
+
+A now-playing card — album art, title and subtitle (all templatable).
+
+```yaml
+type: custom:materia-media
+entity: media_player.living_room
+fallback_image: /local/cover.jpg
+art_size: 220
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `entity` | string | **required** | Media player |
+| `name` | string | `media_title` | Title. *Templatable* |
+| `subtitle` | string | artist / album | Secondary line. *Templatable* |
+| `image` | string | `entity_picture` | Album-art URL. *Templatable* |
+| `fallback_image` | string | | Shown when there's no art |
+| `show_art` | boolean | `true` | Show the album art |
+| `art_size` | number | `240` | Max art size (px) |
+| `tap_action` | object | `{ action: "more-info" }` | Tap action |
+
+---
+
+#### `materia-media-progress`
+
+A wavy (M3 expressive) media seek bar — a flowing squiggle for the played portion, a flat track for the rest, elapsed/duration labels below, and tap-to-seek.
+
+```yaml
+type: custom:materia-media-progress
+entity: media_player.living_room
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `entity` | string | **required** | Media player |
+| `show_times` | boolean | `true` | Elapsed / duration labels |
+| `seekable` | boolean | `true` | Tap to seek |
+| `color` | string | primary | Wave color. *Templatable* |
 
 ---
 
@@ -481,6 +564,7 @@ All interactive cards support these `tap_action` (and `double_tap_action`) types
 - `call-service` / `perform-action` -- calls a service with `service_data`/`data` and optional `target`
 - `navigate` -- navigates to a path (adds a chevron to the card)
 - `more-info` -- opens the entity more-info dialog
+- `fire-dom-event` -- fires a `ll-custom` DOM event with the config (for browser_mod popups, etc.)
 - `none` -- no action
 
 ## Example Dashboard
