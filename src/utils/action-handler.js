@@ -26,7 +26,8 @@ export const ActionMixin = (superClass) =>
 
     /**
      * Dispatch an action based on a tap_action / hold_action config object.
-     * Supports: toggle, call-service, navigate, more-info, none.
+     * Supports: toggle, call-service/perform-action, navigate, more-info,
+     * fire-dom-event, none.
      */
     _handleAction(actionConfig) {
       if (!actionConfig || actionConfig.action === "none") return;
@@ -74,6 +75,15 @@ export const ActionMixin = (superClass) =>
             })
           );
           break;
+
+        case "fire-dom-event": {
+          // Fires a `ll-custom` DOM event with the config as detail — picked
+          // up by browser_mod and other listeners (e.g. popups).
+          const ev = new Event("ll-custom", { bubbles: true, composed: true, cancelable: false });
+          ev.detail = actionConfig;
+          this.dispatchEvent(ev);
+          break;
+        }
 
         default:
           break;
