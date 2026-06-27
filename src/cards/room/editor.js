@@ -95,6 +95,10 @@ class MateriaRoomEditor extends SmartEditorBase {
     return { columns: 2, ...applyCardFormDefaults(this._config) };
   }
 
+  _sectionsSignature() {
+    return this._config?.entity?.split(".")[0] || "";
+  }
+
   get _sections() {
     const domain = this._config?.entity?.split(".")[0];
     const isCover = domain === "cover";

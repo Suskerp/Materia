@@ -7,6 +7,9 @@ export function isTemplate(val) {
   return val && typeof val === "string" && (val.includes("{{") || val.includes("{%"));
 }
 
+/** Stable selector object for template-mode fields (avoids re-render churn). */
+const TEMPLATE_SELECTOR = { template: {} };
+
 /* ------------------------------------------------------------------ */
 /*  Material You color picker                                          */
 /*                                                                     */
@@ -327,6 +330,37 @@ export class SmartEditorBase extends LitElement {
     return [];
   }
 
+  /**
+   * Structural signature for the sections. While it's unchanged, the memoized
+   * sections (and their selector objects) keep a stable identity across
+   * re-renders, so ha-selector doesn't re-create its controls — which would
+   * otherwise close open dropdowns on every hass tick / field edit.
+   * Editors with config-dependent fields override this.
+   */
+  _sectionsSignature() {
+    return "";
+  }
+
+  get _sectionsMemo() {
+    const sig = this._sectionsSignature();
+    if (this.__secSig !== sig || !this.__secVal) {
+      this.__secSig = sig;
+      this.__secVal = this._sections;
+    }
+    return this.__secVal;
+  }
+
+  /** Reuse the context object when its resolved values are unchanged. */
+  _stableContext(name, ctxDef, data) {
+    const resolved = {};
+    for (const [k, v] of Object.entries(ctxDef)) resolved[k] = data[v];
+    this.__ctx ??= {};
+    const prev = this.__ctx[name];
+    if (prev && Object.keys(resolved).every((k) => prev[k] === resolved[k])) return prev;
+    this.__ctx[name] = resolved;
+    return resolved;
+  }
+
   /* ---- mode (simple vs template) per field ---------------------- */
 
   _modeFor(name, value) {
@@ -347,7 +381,7 @@ export class SmartEditorBase extends LitElement {
     if (!this.hass || !this._config) return html``;
     const data = this._formData();
     return html`
-      ${this._sections.map((s) => this._renderSection(s, data))}
+      ${this._sectionsMemo.map((s) => this._renderSection(s, data))}
       ${this._renderExtra ? this._renderExtra(data) : ""}
     `;
   }
@@ -378,7 +412,7 @@ export class SmartEditorBase extends LitElement {
     // Resolve context references to their live data values, like ha-form does
     // (e.g. { icon_entity: "entity" } → { icon_entity: "light.kitchen" }).
     const context = field.context
-      ? Object.fromEntries(Object.entries(field.context).map(([k, v]) => [k, data[v]]))
+      ? this._stableContext(field.name, field.context, data)
       : undefined;
 
     let control;
@@ -387,7 +421,7 @@ export class SmartEditorBase extends LitElement {
         <ha-selector
           class="field-control"
           .hass=${this.hass}
-          .selector=${{ template: {} }}
+          .selector=${TEMPLATE_SELECTOR}
           .value=${value}
           .label=${label}
           .required=${!!field.required}

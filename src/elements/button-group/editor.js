@@ -58,6 +58,10 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
     this._expanded = null;
   }
 
+  _sectionsSignature() {
+    return `${this._config?.preset || ""}|${this._config?.multi_select ? 1 : 0}`;
+  }
+
   get _sections() {
     const presetOptions = [
       ...Object.keys(PRESETS).map((k) => ({

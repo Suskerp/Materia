@@ -142,7 +142,71 @@ class MateriaMenuEditor extends SmartEditorBase {
           </div>
         `
       )}
+      ${this._renderStateColors()}
     `;
+  }
+
+  _renderStateColors() {
+    const items = Array.isArray(this._config.state_colors) ? this._config.state_colors : [];
+    return html`
+      <div class="options-header">
+        <span>State colors</span>
+        <ha-icon-button @click=${this._addStateColor}>
+          <ha-icon icon="mdi:plus"></ha-icon>
+        </ha-icon-button>
+      </div>
+      ${items.map(
+        (it, i) => html`
+          <div class="option-card">
+            <div class="option-header">
+              <span>${it.state || `State ${i + 1}`}</span>
+              <ha-icon-button @click=${() => this._removeStateColor(i)}>
+                <ha-icon icon="mdi:delete"></ha-icon>
+              </ha-icon-button>
+            </div>
+            <div class="option-body">
+              <ha-textfield
+                label="State"
+                .value=${it.state || ""}
+                @change=${(e) => this._updateStateColor(i, "state", e.target.value)}
+              ></ha-textfield>
+              <materia-color-picker
+                label="Background"
+                .value=${it.color || ""}
+                @value-changed=${(e) => { e.stopPropagation(); this._updateStateColor(i, "color", e.detail.value); }}
+              ></materia-color-picker>
+              <materia-color-picker
+                label="Text / icon"
+                .value=${it.color_on || ""}
+                @value-changed=${(e) => { e.stopPropagation(); this._updateStateColor(i, "color_on", e.detail.value); }}
+              ></materia-color-picker>
+            </div>
+          </div>
+        `
+      )}
+    `;
+  }
+
+  _addStateColor() {
+    const list = [...(this._config.state_colors || []), {}];
+    this._commit({ ...this._config, state_colors: list });
+  }
+
+  _removeStateColor(i) {
+    const list = [...(this._config.state_colors || [])];
+    list.splice(i, 1);
+    const next = { ...this._config };
+    if (list.length) next.state_colors = list;
+    else delete next.state_colors;
+    this._commit(next);
+  }
+
+  _updateStateColor(i, key, value) {
+    const list = (this._config.state_colors || []).map((x) => ({ ...x }));
+    if (!list[i]) return;
+    if (value === "" || value == null) delete list[i][key];
+    else list[i][key] = value;
+    this._commit({ ...this._config, state_colors: list });
   }
 
   _addOption() {

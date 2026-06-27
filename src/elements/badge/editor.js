@@ -19,6 +19,10 @@ const VARIANT_OPTIONS = [
 ];
 
 class MateriaBadgeEditor extends SmartEditorBase {
+  _sectionsSignature() {
+    return this._config?.entity ? "entity" : "none";
+  }
+
   get _sections() {
     const hasEntity = !!this._config?.entity;
 

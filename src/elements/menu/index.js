@@ -108,6 +108,21 @@ class MateriaMenu extends ActionMixin(LitElement) {
     }
   }
 
+  /** Find the state_colors entry matching the current state (string or list). */
+  _matchStateColor(state) {
+    const sc = this.config.state_colors;
+    const list = Array.isArray(sc)
+      ? sc
+      : Object.entries(sc).map(([s, v]) =>
+          typeof v === "string" ? { state: s, color: v } : { state: s, ...v }
+        );
+    return list.find((e) =>
+      Array.isArray(e.state)
+        ? e.state.map(String).includes(String(state))
+        : String(e.state) === String(state)
+    );
+  }
+
   render() {
     if (!this.hass || !this.config) return html``;
     const stateObj = this.hass.states[this.config.entity];
@@ -119,8 +134,13 @@ class MateriaMenu extends ActionMixin(LitElement) {
       ? this._resolvedName
       : (this.config.name || stateObj?.attributes?.friendly_name || "");
 
-    const bg = this._resolvedColor || this.config.color;
-    const fg = this._resolvedColorOn || this.config.color_on;
+    let bg = this._resolvedColor || this.config.color;
+    let fg = this._resolvedColorOn || this.config.color_on;
+    const sc = this.config.state_colors ? this._matchStateColor(currentValue) : null;
+    if (sc) {
+      if (sc.color) bg = sc.color;
+      if (sc.color_on) fg = sc.color_on;
+    }
     const triggerStyle = !unavailable && (bg || fg)
       ? `${bg ? `background-color:${bg};` : ""}${fg ? `color:${fg};` : ""}`
       : "";
