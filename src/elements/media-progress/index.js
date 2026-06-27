@@ -39,7 +39,7 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
   /* ---- live position ---- */
   _position() {
     const s = this.hass?.states[this.config.entity];
-    if (!s) return { pos: 0, dur: 0, playing: false };
+    if (!s) return { pos: 0, dur: 0, playing: false, live: false };
     const dur = Number(s.attributes.media_duration) || 0;
     let pos = Number(s.attributes.media_position) || 0;
     const playing = s.state === "playing";
@@ -47,8 +47,21 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     if (playing && updated) {
       pos += (Date.now() - new Date(updated).getTime()) / 1000;
     }
+
+    // Live-stream latch: radio reports a short, rolling media_duration that
+    // resets — letting the fill sweep to the end then snap back (a visible
+    // hitch). Once a still-playing stream runs past its duration, treat it as
+    // live and keep the bar full + flowing instead of sawtoothing.
+    const key = `${this.config.entity}|${s.attributes.media_content_id ?? s.attributes.media_title ?? ""}`;
+    if (key !== this._latchKey) {
+      this._latchKey = key;
+      this._live = false;
+    }
+    if (!playing) this._live = false;
+    else if (dur > 0 && pos >= dur - 0.25) this._live = true;
+
     if (dur) pos = Math.min(pos, dur);
-    return { pos: Math.max(0, pos), dur, playing };
+    return { pos: Math.max(0, pos), dur, playing, live: this._live };
   }
 
   _fmt(sec) {
@@ -134,9 +147,9 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     if (!this.hass || !this.config) return html``;
     const stateObj = this.hass.states[this.config.entity];
     const unavailable = this._isUnavailable(stateObj);
-    const { pos, dur, playing } = this._position();
+    const { pos, dur, playing, live } = this._position();
     const w = this._w || 300;
-    const frac = dur > 0 ? Math.min(1, pos / dur) : 0;
+    const frac = live ? 1 : dur > 0 ? Math.min(1, pos / dur) : 0;
     const playedX = frac * w;
     const showTimes = this.config.show_times !== false;
     const color = this._resolvedColor || this.config.color;
@@ -155,7 +168,9 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
               <g clip-path="url(#${this._cid})">
                 <path class="wave ${playing ? "playing" : ""}" d=${this._fullWave(w)}></path>
               </g>
-              <rect class="thumb" x=${playedX - 2} y=${MID - 10} width="4" height="20" rx="2"></rect>
+              ${live
+                ? nothing
+                : html`<rect class="thumb" x=${playedX - 2} y=${MID - 10} width="4" height="20" rx="2"></rect>`}
             </svg>
           </div>
           ${showTimes

@@ -103,7 +103,7 @@ export class MateriaCardEditor extends SmartEditorBase {
         fields: [
           { name: "color", label: "Active background", color: true, template: true, selector: { text: {} } },
           { name: "color_on", label: "Active text / icon", color: true, template: true, selector: { text: {} } },
-          { name: "show_state", selector: { boolean: {} } },
+          { name: "show_state", template: true, selector: { boolean: {} } },
           { name: "show_last_changed", label: "Show last changed", selector: { boolean: {} } },
           { name: "subtitle_inline", label: "Subtitle inline with state", selector: { boolean: {} } },
           ...(hasSlider ? [{ name: "show_slider", selector: { boolean: {} } }] : []),

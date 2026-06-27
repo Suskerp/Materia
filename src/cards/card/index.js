@@ -96,6 +96,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
     _resolvedIcon: { state: true },
     _resolvedName: { state: true },
     _resolvedSubtitle: { state: true },
+    _resolvedShowState: { state: true },
   };
 
   /* ---- Editor plumbing ------------------------------------------ */
@@ -343,8 +344,24 @@ export class MateriaCard extends ActionMixin(LitElement) {
     return this._capitalize(raw);
   }
 
+  /**
+   * Whether the state line should be shown. `show_state` may be a boolean or a
+   * Jinja2 template — a template that renders to false/off/none/no/0/hide/empty
+   * hides the state (handy for "only show state when on", etc.).
+   */
+  get _showState() {
+    const v = this.config.show_state;
+    if (v === false) return false;
+    if (this._isTemplate(v)) {
+      if (this._resolvedShowState === undefined) return true;
+      const s = String(this._resolvedShowState).trim().toLowerCase();
+      return !["false", "off", "none", "no", "0", "hide", ""].includes(s);
+    }
+    return true;
+  }
+
   get _stateDisplay() {
-    const showState = this.config.show_state !== false;
+    const showState = this._showState;
     let text = showState ? this._baseStateDisplay() : "";
     if (this.config.show_last_changed) {
       const rel = this._relativeLastChanged();
@@ -401,6 +418,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
     this._resolveField("icon", "_resolvedIcon");
     this._resolveField("name", "_resolvedName");
     this._resolveField("subtitle", "_resolvedSubtitle");
+    this._resolveField("show_state", "_resolvedShowState");
   }
 
   disconnectedCallback() {

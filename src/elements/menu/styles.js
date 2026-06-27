@@ -124,23 +124,32 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
 
   .dropdown {
     position: relative;
-    background: var(--ha-card-background, var(--card-background-color));
     color: var(--primary-text-color);
     padding: 8px;
     margin: 2px 0;
   }
 
   /* Opaque backdrop so cards below never show through, even when the theme's
-     surface colors are translucent. rgb(from …) strips any alpha. The visible
-     tint / state color paints over it. */
+     card/surface colors carry alpha. Layer the (possibly translucent) card
+     color over the opaque page background — no reliance on relative-color
+     syntax, which some webviews don't support. The visible tint / state color
+     paints over it. */
   .dropdown::before {
     content: "";
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: var(--card-background-color, #1c1c1c);
-    background: rgb(from var(--ha-card-background, var(--card-background-color, #1c1c1c)) r g b);
     z-index: -1;
+    background:
+      linear-gradient(
+        var(--ha-card-background, var(--card-background-color, #1c1c1c)),
+        var(--ha-card-background, var(--card-background-color, #1c1c1c))
+      ),
+      linear-gradient(
+        var(--primary-background-color, var(--lovelace-background, #1c1c1c)),
+        var(--primary-background-color, var(--lovelace-background, #1c1c1c))
+      ),
+      var(--primary-background-color, #1c1c1c);
   }
 
   .below .dropdown {
