@@ -108,7 +108,9 @@ class MateriaMenu extends ActionMixin(LitElement) {
       // still-visible panel for the ~250ms transition.
       clearTimeout(this._zTimer);
       if (this._open) {
-        this.style.zIndex = "9";
+        // High enough to clear sibling cards AND a swipe/carousel card's
+        // pagination dots (Swiper's pagination sits at z-index 10).
+        this.style.zIndex = "100";
       } else {
         this._zTimer = setTimeout(() => {
           this.style.zIndex = "";
