@@ -141,9 +141,15 @@ class MateriaMenu extends ActionMixin(LitElement) {
       if (sc.color) bg = sc.color;
       if (sc.color_on) fg = sc.color_on;
     }
-    const triggerStyle = !unavailable && (bg || fg)
+    const colored = !unavailable && (bg || fg);
+    const triggerStyle = colored
       ? `${bg ? `background-color:${bg};` : ""}${fg ? `color:${fg};` : ""}`
       : "";
+    // The dropdown panel matches the trigger; the selected item becomes a
+    // tint of the active text color.
+    const panelStyle = colored && fg
+      ? `${triggerStyle}--menu-selected-bg:color-mix(in srgb, ${fg} 22%, transparent);--menu-selected-fg:${fg};`
+      : triggerStyle;
 
     return html`
       <ha-card>
@@ -162,7 +168,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
           </div>
         </div>
         <div class="dropdown-wrapper ${this._open ? "open" : ""} ${this.config.position === "above" ? "above" : "below"}">
-          <div class="dropdown">
+          <div class="dropdown" style=${panelStyle}>
             ${options.map((opt) => html`
               <div
                 class="menu-item ${opt.value === currentValue ? "selected" : ""}"

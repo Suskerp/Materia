@@ -141,7 +141,7 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     cursor: pointer;
     font-size: 14px;
     font-weight: 400;
-    color: var(--primary-text-color);
+    color: inherit;
     position: relative;
     overflow: hidden;
     border-radius: 16px;
@@ -167,8 +167,8 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
   }
 
   .menu-item.selected {
-    background: var(--md-sys-color-tertiary, var(--md-sys-color-secondary));
-    color: var(--md-sys-color-on-tertiary, var(--md-sys-color-on-secondary));
+    background: var(--menu-selected-bg, var(--md-sys-color-tertiary, var(--md-sys-color-secondary)));
+    color: var(--menu-selected-fg, var(--md-sys-color-on-tertiary, var(--md-sys-color-on-secondary)));
     font-weight: 500;
     border-radius: 12px;
   }

@@ -159,16 +159,16 @@ class MateriaMenuEditor extends SmartEditorBase {
         (it, i) => html`
           <div class="option-card">
             <div class="option-header">
-              <span>${it.state || `State ${i + 1}`}</span>
+              <span>${this._stateLabel(it.state) || `State ${i + 1}`}</span>
               <ha-icon-button @click=${() => this._removeStateColor(i)}>
                 <ha-icon icon="mdi:delete"></ha-icon>
               </ha-icon-button>
             </div>
             <div class="option-body">
               <ha-textfield
-                label="State"
-                .value=${it.state || ""}
-                @change=${(e) => this._updateStateColor(i, "state", e.target.value)}
+                label="State (comma-separated for multiple)"
+                .value=${this._stateLabel(it.state)}
+                @change=${(e) => this._updateStateColor(i, "state", this._parseStateInput(e.target.value))}
               ></ha-textfield>
               <materia-color-picker
                 label="Background"
@@ -185,6 +185,16 @@ class MateriaMenuEditor extends SmartEditorBase {
         `
       )}
     `;
+  }
+
+  _stateLabel(state) {
+    return Array.isArray(state) ? state.join(", ") : (state || "");
+  }
+
+  _parseStateInput(value) {
+    const v = (value || "").trim();
+    if (v.includes(",")) return v.split(",").map((s) => s.trim()).filter(Boolean);
+    return v;
   }
 
   _addStateColor() {

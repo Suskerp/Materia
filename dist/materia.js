@@ -1990,7 +1990,7 @@ const Vt=2;
     cursor: pointer;
     font-size: 14px;
     font-weight: 400;
-    color: var(--primary-text-color);
+    color: inherit;
     position: relative;
     overflow: hidden;
     border-radius: 16px;
@@ -2016,8 +2016,8 @@ const Vt=2;
   }
 
   .menu-item.selected {
-    background: var(--md-sys-color-tertiary, var(--md-sys-color-secondary));
-    color: var(--md-sys-color-on-tertiary, var(--md-sys-color-on-secondary));
+    background: var(--menu-selected-bg, var(--md-sys-color-tertiary, var(--md-sys-color-secondary)));
+    color: var(--menu-selected-fg, var(--md-sys-color-on-tertiary, var(--md-sys-color-on-secondary)));
     font-weight: 500;
     border-radius: 12px;
   }
@@ -2125,16 +2125,16 @@ const Vt=2;
       ${t.map((t,e)=>I`
           <div class="option-card">
             <div class="option-header">
-              <span>${t.state||`State ${e+1}`}</span>
+              <span>${this._stateLabel(t.state)||`State ${e+1}`}</span>
               <ha-icon-button @click=${()=>this._removeStateColor(e)}>
                 <ha-icon icon="mdi:delete"></ha-icon>
               </ha-icon-button>
             </div>
             <div class="option-body">
               <ha-textfield
-                label="State"
-                .value=${t.state||""}
-                @change=${t=>this._updateStateColor(e,"state",t.target.value)}
+                label="State (comma-separated for multiple)"
+                .value=${this._stateLabel(t.state)}
+                @change=${t=>this._updateStateColor(e,"state",this._parseStateInput(t.target.value))}
               ></ha-textfield>
               <materia-color-picker
                 label="Background"
@@ -2149,9 +2149,9 @@ const Vt=2;
             </div>
           </div>
         `)}
-    `}_addStateColor(){const t=[...this._config.state_colors||[],{}];this._commit({...this._config,state_colors:t})}_removeStateColor(t){const e=[...this._config.state_colors||[]];e.splice(t,1);const i={...this._config};e.length?i.state_colors=e:delete i.state_colors,this._commit(i)}_updateStateColor(t,e,i){const o=(this._config.state_colors||[]).map(t=>({...t}));o[t]&&(""===i||null==i?delete o[t][e]:o[t][e]=i,this._commit({...this._config,state_colors:o}))}_addOption(){const t=[...this._config.options||[],{label:"",value:"",icon:""}];this._expanded=t.length-1,this._commit({...this._config,options:t})}_removeOption(t){const e=[...this._config.options||[]];e.splice(t,1),this._expanded===t&&(this._expanded=null),this._commit({...this._config,options:e})}_moveOption(t,e){const i=[...this._config.options||[]],o=t+e;o<0||o>=i.length||([i[t],i[o]]=[i[o],i[t]],this._expanded===t&&(this._expanded=o),this._commit({...this._config,options:i}))}_updateOptionForm(t,e){const i=[...this._config.options||[]];i[t]={...i[t],...e},this._commit({...this._config,options:i})}_toggleExpand(t){this._expanded=this._expanded===t?null:t}}customElements.define("materia-menu-editor",be);class ye extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0},_open:{state:!0},_optimisticValue:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0}};static styles=fe;static getConfigElement(){return document.createElement("materia-menu-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("input_select.")||t.startsWith("select."))||"";return{entity:e}}setConfig(t){this.config={position:"below",...t},this._open=!1}get _resolvedOptions(){if(this.config.options?.length)return this.config.options;const t=this.hass?.states[this.config.entity],e=this.config.entity?.split(".")[0];return"input_select"!==e&&"select"!==e||!t?.attributes?.options?[]:t.attributes.options.map(t=>({label:this._capitalize(t),value:t}))}get _currentValue(){return null!=this._optimisticValue?this._optimisticValue:this.hass?.states[this.config.entity]?.state??""}_toggle(){this._open=!this._open}_selectOption(t){const e=t.value;this._optimisticValue=e,this._open=!1;const i=this.config.entity?.split(".")[0];"input_select"!==i&&"select"!==i||this.hass.callService(i,"select_option",{entity_id:this.config.entity,option:e}),clearTimeout(this._optimisticTimer),this._optimisticTimer=setTimeout(()=>{this._optimisticValue=null},1e4)}connectedCallback(){super.connectedCallback(),this._outsideClickHandler=t=>{if(!this._open||!this.shadowRoot)return;const e=t.composedPath?.()?.[0];e&&!this.shadowRoot.contains(e)&&(this._open=!1)},document.addEventListener("click",this._outsideClickHandler)}disconnectedCallback(){super.disconnectedCallback(),document.removeEventListener("click",this._outsideClickHandler),clearTimeout(this._optimisticTimer)}updated(t){if(t.has("hass")&&this.hass&&(this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"),this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn")),t.has("hass")&&null!=this._optimisticValue){const t=this.hass?.states[this.config.entity]?.state;t===this._optimisticValue&&(this._optimisticValue=null,clearTimeout(this._optimisticTimer))}}_matchStateColor(t){const e=this.config.state_colors,i=Array.isArray(e)?e:Object.entries(e).map(([t,e])=>"string"==typeof e?{state:t,color:e}:{state:t,...e});return i.find(e=>Array.isArray(e.state)?e.state.map(String).includes(String(t)):String(e.state)===String(t))}render(){if(!this.hass||!this.config)return I``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=this._resolvedOptions,o=this._currentValue,n=i.find(t=>t.value===o)?.label||this._capitalize(o),s=this._isTemplate(this.config.name)?this._resolvedName:this.config.name||t?.attributes?.friendly_name||"";let a=this._resolvedColor||this.config.color,r=this._resolvedColorOn||this.config.color_on;const c=this.config.state_colors?this._matchStateColor(o):null;c&&(c.color&&(a=c.color),c.color_on&&(r=c.color_on));const l=e||!a&&!r?"":`${a?`background-color:${a};`:""}${r?`color:${r};`:""}`;return I`
+    `}_stateLabel(t){return Array.isArray(t)?t.join(", "):t||""}_parseStateInput(t){const e=(t||"").trim();return e.includes(",")?e.split(",").map(t=>t.trim()).filter(Boolean):e}_addStateColor(){const t=[...this._config.state_colors||[],{}];this._commit({...this._config,state_colors:t})}_removeStateColor(t){const e=[...this._config.state_colors||[]];e.splice(t,1);const i={...this._config};e.length?i.state_colors=e:delete i.state_colors,this._commit(i)}_updateStateColor(t,e,i){const o=(this._config.state_colors||[]).map(t=>({...t}));o[t]&&(""===i||null==i?delete o[t][e]:o[t][e]=i,this._commit({...this._config,state_colors:o}))}_addOption(){const t=[...this._config.options||[],{label:"",value:"",icon:""}];this._expanded=t.length-1,this._commit({...this._config,options:t})}_removeOption(t){const e=[...this._config.options||[]];e.splice(t,1),this._expanded===t&&(this._expanded=null),this._commit({...this._config,options:e})}_moveOption(t,e){const i=[...this._config.options||[]],o=t+e;o<0||o>=i.length||([i[t],i[o]]=[i[o],i[t]],this._expanded===t&&(this._expanded=o),this._commit({...this._config,options:i}))}_updateOptionForm(t,e){const i=[...this._config.options||[]];i[t]={...i[t],...e},this._commit({...this._config,options:i})}_toggleExpand(t){this._expanded=this._expanded===t?null:t}}customElements.define("materia-menu-editor",be);class ye extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0},_open:{state:!0},_optimisticValue:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0}};static styles=fe;static getConfigElement(){return document.createElement("materia-menu-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("input_select.")||t.startsWith("select."))||"";return{entity:e}}setConfig(t){this.config={position:"below",...t},this._open=!1}get _resolvedOptions(){if(this.config.options?.length)return this.config.options;const t=this.hass?.states[this.config.entity],e=this.config.entity?.split(".")[0];return"input_select"!==e&&"select"!==e||!t?.attributes?.options?[]:t.attributes.options.map(t=>({label:this._capitalize(t),value:t}))}get _currentValue(){return null!=this._optimisticValue?this._optimisticValue:this.hass?.states[this.config.entity]?.state??""}_toggle(){this._open=!this._open}_selectOption(t){const e=t.value;this._optimisticValue=e,this._open=!1;const i=this.config.entity?.split(".")[0];"input_select"!==i&&"select"!==i||this.hass.callService(i,"select_option",{entity_id:this.config.entity,option:e}),clearTimeout(this._optimisticTimer),this._optimisticTimer=setTimeout(()=>{this._optimisticValue=null},1e4)}connectedCallback(){super.connectedCallback(),this._outsideClickHandler=t=>{if(!this._open||!this.shadowRoot)return;const e=t.composedPath?.()?.[0];e&&!this.shadowRoot.contains(e)&&(this._open=!1)},document.addEventListener("click",this._outsideClickHandler)}disconnectedCallback(){super.disconnectedCallback(),document.removeEventListener("click",this._outsideClickHandler),clearTimeout(this._optimisticTimer)}updated(t){if(t.has("hass")&&this.hass&&(this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"),this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn")),t.has("hass")&&null!=this._optimisticValue){const t=this.hass?.states[this.config.entity]?.state;t===this._optimisticValue&&(this._optimisticValue=null,clearTimeout(this._optimisticTimer))}}_matchStateColor(t){const e=this.config.state_colors,i=Array.isArray(e)?e:Object.entries(e).map(([t,e])=>"string"==typeof e?{state:t,color:e}:{state:t,...e});return i.find(e=>Array.isArray(e.state)?e.state.map(String).includes(String(t)):String(e.state)===String(t))}render(){if(!this.hass||!this.config)return I``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=this._resolvedOptions,o=this._currentValue,n=i.find(t=>t.value===o)?.label||this._capitalize(o),s=this._isTemplate(this.config.name)?this._resolvedName:this.config.name||t?.attributes?.friendly_name||"";let a=this._resolvedColor||this.config.color,r=this._resolvedColorOn||this.config.color_on;const c=this.config.state_colors?this._matchStateColor(o):null;c&&(c.color&&(a=c.color),c.color_on&&(r=c.color_on));const l=!e&&(a||r),d=l?`${a?`background-color:${a};`:""}${r?`color:${r};`:""}`:"",h=l&&r?`${d}--menu-selected-bg:color-mix(in srgb, ${r} 22%, transparent);--menu-selected-fg:${r};`:d;return I`
       <ha-card>
-        <div class="trigger ${e?"unavailable":""} ${this._open?"above"===this.config.position?"open-above":"open-below":""}" style=${l} @click=${this._toggle}>
+        <div class="trigger ${e?"unavailable":""} ${this._open?"above"===this.config.position?"open-above":"open-below":""}" style=${d} @click=${this._toggle}>
           ${this.config.icon?I`
             <div class="icon-container">
               <ha-icon .icon=${this._isTemplate(this.config.icon)?this._resolvedIcon:this.config.icon}></ha-icon>
@@ -2166,7 +2166,7 @@ const Vt=2;
           </div>
         </div>
         <div class="dropdown-wrapper ${this._open?"open":""} ${"above"===this.config.position?"above":"below"}">
-          <div class="dropdown">
+          <div class="dropdown" style=${h}>
             ${i.map(t=>I`
               <div
                 class="menu-item ${t.value===o?"selected":""}"
