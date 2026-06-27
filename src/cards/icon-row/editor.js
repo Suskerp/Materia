@@ -1,6 +1,7 @@
 import { html, css } from "lit";
-import { computeLabel } from "../../utils/editor-helpers.js";
+import { ref } from "lit/directives/ref.js";
 import { SmartEditorBase, isTemplate } from "../../utils/smart-editor.js";
+import "../../elements/icon-button/editor.js";
 
 class MateriaIconRowEditor extends SmartEditorBase {
   static properties = {
@@ -76,34 +77,6 @@ class MateriaIconRowEditor extends SmartEditorBase {
     ];
   }
 
-  _buttonSchema(btn) {
-    const iconIsTemplate = isTemplate(btn?.icon);
-    return [
-      iconIsTemplate
-        ? { name: "icon", required: true, selector: { template: {} } }
-        : { name: "icon", required: true, selector: { icon: {} }, context: { icon_entity: "entity" } },
-      {
-        name: "variant",
-        selector: { select: { options: [
-          { value: "standard", label: "Standard" },
-          { value: "outlined", label: "Outlined" },
-          { value: "filled", label: "Filled" },
-          { value: "filled-tonal", label: "Filled Tonal" },
-        ] } },
-      },
-      {
-        name: "size",
-        selector: { select: { options: [
-          { value: "default", label: "Default (48px)" },
-          { value: "large", label: "Large (56px)" },
-        ] } },
-      },
-      { name: "entity", selector: { entity: {} } },
-      { name: "disabled", selector: { template: {} } },
-      { name: "tap_action", label: "Action", selector: { ui_action: {} } },
-    ];
-  }
-
   _renderExtra() {
     const buttons = this._config.buttons || [];
     return html`
@@ -129,13 +102,19 @@ class MateriaIconRowEditor extends SmartEditorBase {
             ${this._expandedButton === i
               ? html`
                   <div class="button-body">
-                    <ha-form
+                    <materia-icon-button-editor
                       .hass=${this.hass}
-                      .data=${btn}
-                      .schema=${this._buttonSchema(btn)}
-                      .computeLabel=${computeLabel}
-                      @value-changed=${(e) => this._buttonChanged(i, e.detail.value)}
-                    ></ha-form>
+                      ${ref((el) => {
+                        if (el && el.__materiaIdx !== i) {
+                          el.__materiaIdx = i;
+                          el.setConfig(btn);
+                        }
+                      })}
+                      @config-changed=${(e) => {
+                        e.stopPropagation();
+                        this._buttonChanged(i, e.detail.config);
+                      }}
+                    ></materia-icon-button-editor>
                   </div>
                 `
               : ""}
@@ -162,9 +141,9 @@ class MateriaIconRowEditor extends SmartEditorBase {
     this._commit({ ...this._config, buttons });
   }
 
-  _buttonChanged(i, value) {
+  _buttonChanged(i, config) {
     const buttons = [...(this._config.buttons || [])];
-    buttons[i] = { ...buttons[i], ...value };
+    buttons[i] = config;
     this._commit({ ...this._config, buttons });
   }
 }
