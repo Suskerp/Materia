@@ -61,6 +61,11 @@ class MateriaButton extends ActionMixin(LitElement) {
   }
 
   updated(changedProps) {
+    // Reflect `wide` whenever config changes — not just in setConfig, since
+    // icon-row sets the `.config` property directly (bypassing setConfig).
+    if (changedProps.has("config")) {
+      this.toggleAttribute("wide", !!this.config?.wide);
+    }
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("icon", "_resolvedIcon");
       this._resolveField("label", "_resolvedLabel");
