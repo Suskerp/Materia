@@ -151,10 +151,13 @@ class MateriaMenu extends ActionMixin(LitElement) {
       ? `${bg ? `background-color:${bg};` : ""}${fg ? `color:${fg};` : ""}`
       : "";
     // The dropdown panel matches the trigger; the selected item becomes a
-    // tint of the active text color.
-    const panelStyle = colored && fg
-      ? `${triggerStyle}--menu-selected-bg:color-mix(in srgb, ${fg} 22%, transparent);--menu-selected-fg:${fg};`
-      : triggerStyle;
+    // tint of the active text color. Feed the panel color into --_surf so the
+    // opaque-stacking backdrop builds from THIS color (not the default surface).
+    const panelStyle =
+      `${bg ? `--_surf:${bg};` : ""}` +
+      (colored && fg
+        ? `${triggerStyle}--menu-selected-bg:color-mix(in srgb, ${fg} 22%, transparent);--menu-selected-fg:${fg};`
+        : triggerStyle);
 
     return html`
       <ha-card>

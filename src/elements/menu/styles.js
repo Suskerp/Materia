@@ -115,6 +115,16 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     pointer-events: auto;
   }
 
+  /* Gap sits between the trigger and the panel — above it when the dropdown
+     opens below, below it when it opens above. */
+  .dropdown-wrapper.below.open {
+    margin-top: 2px;
+  }
+
+  .dropdown-wrapper.above.open {
+    margin-bottom: 2px;
+  }
+
   .dropdown {
     /* Opaque menu surface. Some themes define the surface token with alpha
        (glassy look); stacking the SAME color over itself composites its alpha
@@ -133,9 +143,6 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
       var(--_surf);
     color: var(--primary-text-color);
     padding: 8px;
-    margin: 2px 0;
-    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
-                0px 2px 6px 2px rgba(0, 0, 0, 0.15);
   }
 
   .below .dropdown {
