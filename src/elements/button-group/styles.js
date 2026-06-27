@@ -8,8 +8,8 @@ export const PRESETS = {
   "climate-heat": { active: "var(--md-sys-cust-color-climate-heat-container)",      onActive: "var(--md-sys-cust-color-on-climate-heat)" },
   "climate-cool": { active: "var(--md-sys-cust-color-climate-cool-container)",      onActive: "var(--md-sys-cust-color-on-climate-cool)" },
   "climate-auto": { active: "var(--md-sys-cust-color-climate-auto-container)",      onActive: "var(--md-sys-cust-color-on-climate-auto)" },
-  light:          { active: "var(--md-sys-cust-color-light-container)",             onActive: "var(--md-sys-cust-color-on-light)" },
-  device:         { active: "var(--md-sys-cust-color-device-container)",            onActive: "var(--md-sys-cust-color-on-device)" },
+  light:          { active: "var(--md-sys-cust-color-light)",                       onActive: "var(--md-sys-cust-color-on-light)" },
+  device:         { active: "var(--md-sys-cust-color-device)",                      onActive: "var(--md-sys-cust-color-on-device)" },
 };
 
 export const SIZES = {
