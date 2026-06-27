@@ -96,7 +96,11 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
 
   updated() {
     const playing = this.hass?.states[this.config.entity]?.state === "playing";
-    if (playing) this._startLoop();
+    // The rAF loop exists only to advance the played position smoothly. When
+    // the position is frozen (live stream latched at its rolling end), there's
+    // nothing to advance — running it just re-renders 60×/sec and hitches the
+    // CSS wave flow. Stop it; CSS keeps the wave moving on its own.
+    if (playing && !this._live) this._startLoop();
     else this._stopLoop();
     if (this.hass) this._resolveField("color", "_resolvedColor");
   }
@@ -168,9 +172,7 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
               <g clip-path="url(#${this._cid})">
                 <path class="wave ${playing ? "playing" : ""}" d=${this._fullWave(w)}></path>
               </g>
-              ${live
-                ? nothing
-                : html`<rect class="thumb" x=${playedX - 2} y=${MID - 10} width="4" height="20" rx="2"></rect>`}
+              <rect class="thumb" x=${playedX - 2} y=${MID - 10} width="4" height="20" rx="2"></rect>
             </svg>
           </div>
           ${showTimes
