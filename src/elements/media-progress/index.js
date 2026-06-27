@@ -120,11 +120,17 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     this._raf = null;
   }
 
-  /** Full-width wave path, memoized by width (only regenerated on resize). */
+  /**
+   * Full-width wave path, memoized by width (only regenerated on resize).
+   * Extends one wavelength past BOTH edges: the CSS flow animation translates
+   * the path left by WL, so without the extra wavelength on the right the end
+   * of the bar would briefly go undrawn each cycle (a flicker/hitch that's only
+   * visible once progress reaches the end and the clip no longer hides it).
+   */
   _fullWave(w) {
     if (this._waveW !== w) {
       this._waveW = w;
-      this._wavePathCache = this._wavePath(-WL, w);
+      this._wavePathCache = this._wavePath(-WL, w + WL);
     }
     return this._wavePathCache;
   }
