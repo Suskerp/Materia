@@ -2408,29 +2408,29 @@ const Vt=2;
 
   .wrap {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    gap: 2px;
     padding: 8px 4px;
+  }
+
+  .bar {
+    position: relative;
+    width: 100%;
+    height: 28px;
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  .times {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 4px;
   }
 
   .time {
     font-size: 13px;
     color: var(--secondary-text-color);
     font-variant-numeric: tabular-nums;
-    min-width: 38px;
-    flex-shrink: 0;
-  }
-  .time.right {
-    text-align: right;
-  }
-
-  .bar {
-    flex: 1;
-    position: relative;
-    height: 28px;
-    cursor: pointer;
-    touch-action: none;
-    min-width: 0;
   }
 
   svg {
@@ -2452,10 +2452,13 @@ const Vt=2;
     stroke-width: 4;
     stroke-linecap: round;
     fill: none;
+    /* Animation is always defined; pausing freezes it in place (no snap-back). */
+    animation: mp-flow 0.9s linear infinite;
+    animation-play-state: paused;
   }
 
   .wave.playing {
-    animation: mp-flow 0.9s linear infinite;
+    animation-play-state: running;
   }
 
   @keyframes mp-flow {
@@ -2472,10 +2475,9 @@ const Vt=2;
     opacity: 0.5;
     pointer-events: none;
   }
-`;customElements.define("materia-media-progress-editor",class extends kt{_formData(){return{show_times:!0,seekable:!0,...this._config}}get _sections(){return[{title:"Content",icon:"mdi:card-text-outline",fields:[{name:"entity",required:!0,selector:{entity:{domain:"media_player"}}},{name:"show_times",selector:{boolean:{}}},{name:"seekable",selector:{boolean:{}}}]},{title:"Appearance",icon:"mdi:palette-outline",fields:[{name:"color",label:"Wave color",color:!0,template:!0,selector:{text:{}}}]}]}});let ke=0;class Ae extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0},_w:{state:!0},_resolvedColor:{state:!0}};static styles=Ce;static getConfigElement(){return document.createElement("materia-media-progress-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("media_player."))||"";return{entity:e}}setConfig(t){if(!t.entity)throw new Error("entity is required");this.config=t,this._cid??="mp-clip-"+ ++ke}_position(){const t=this.hass?.states[this.config.entity];if(!t)return{pos:0,dur:0,playing:!1};const e=Number(t.attributes.media_duration)||0;let i=Number(t.attributes.media_position)||0;const o="playing"===t.state,s=t.attributes.media_position_updated_at;return o&&s&&(i+=(Date.now()-new Date(s).getTime())/1e3),e&&(i=Math.min(i,e)),{pos:Math.max(0,i),dur:e,playing:o}}_fmt(t){t=Math.max(0,Math.round(t));const e=Math.floor(t/3600),i=Math.floor(t%3600/60),o=t%60,s=t=>String(t).padStart(2,"0");return e>0?`${e}:${s(i)}:${s(o)}`:`${i}:${s(o)}`}_wavePath(t,e){let i="";for(let o=t;o<=e;o+=2){const t=14-3*Math.sin(2*Math.PI*o/32);i+=`${i?" L":"M"} ${o.toFixed(1)} ${t.toFixed(1)}`}return i||"M 0 14"}firstUpdated(){const t=this.shadowRoot?.querySelector(".bar");t&&(this._w=t.clientWidth,this._ro=new ResizeObserver(t=>{this._w=t[0].contentRect.width}),this._ro.observe(t))}updated(){"playing"===this.hass?.states[this.config.entity]?.state?this._startLoop():this._stopLoop(),this.hass&&this._resolveField("color","_resolvedColor")}_startLoop(){if(this._raf)return;const t=()=>{this._raf=requestAnimationFrame(t),this.requestUpdate()};this._raf=requestAnimationFrame(t)}_stopLoop(){this._raf&&cancelAnimationFrame(this._raf),this._raf=null}_fullWave(t){return this._waveW!==t&&(this._waveW=t,this._wavePathCache=this._wavePath(-32,t)),this._wavePathCache}disconnectedCallback(){super.disconnectedCallback(),this._stopLoop(),this._ro?.disconnect()}_seek(t){if(!1===this.config.seekable)return;const{dur:e}=this._position();if(!e)return;const i=t.currentTarget.getBoundingClientRect(),o=Math.max(0,Math.min(1,(t.clientX-i.left)/i.width));this.hass.callService("media_player","media_seek",{entity_id:this.config.entity,seek_position:o*e})}render(){if(!this.hass||!this.config)return q``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),{pos:i,dur:o,playing:s}=this._position(),n=this._w||300,a=(o>0?Math.min(1,i/o):0)*n,r=!1!==this.config.show_times,c=this._resolvedColor||this.config.color;return q`
+`;customElements.define("materia-media-progress-editor",class extends kt{_formData(){return{show_times:!0,seekable:!0,...this._config}}get _sections(){return[{title:"Content",icon:"mdi:card-text-outline",fields:[{name:"entity",required:!0,selector:{entity:{domain:"media_player"}}},{name:"show_times",selector:{boolean:{}}},{name:"seekable",selector:{boolean:{}}}]},{title:"Appearance",icon:"mdi:palette-outline",fields:[{name:"color",label:"Wave color",color:!0,template:!0,selector:{text:{}}}]}]}});let ke=0;class Ae extends(dt(at)){static properties={hass:{attribute:!1},config:{state:!0},_w:{state:!0},_resolvedColor:{state:!0}};static styles=Ce;static getConfigElement(){return document.createElement("materia-media-progress-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("media_player."))||"";return{entity:e}}setConfig(t){if(!t.entity)throw new Error("entity is required");this.config=t,this._cid??="mp-clip-"+ ++ke}_position(){const t=this.hass?.states[this.config.entity];if(!t)return{pos:0,dur:0,playing:!1};const e=Number(t.attributes.media_duration)||0;let i=Number(t.attributes.media_position)||0;const o="playing"===t.state,s=t.attributes.media_position_updated_at;return o&&s&&(i+=(Date.now()-new Date(s).getTime())/1e3),e&&(i=Math.min(i,e)),{pos:Math.max(0,i),dur:e,playing:o}}_fmt(t){t=Math.max(0,Math.round(t));const e=Math.floor(t/3600),i=Math.floor(t%3600/60),o=t%60,s=t=>String(t).padStart(2,"0");return e>0?`${e}:${s(i)}:${s(o)}`:`${i}:${s(o)}`}_wavePath(t,e){let i="";for(let o=t;o<=e;o+=2){const t=14-2*Math.sin(2*Math.PI*o/32);i+=`${i?" L":"M"} ${o.toFixed(1)} ${t.toFixed(1)}`}return i||"M 0 14"}firstUpdated(){const t=this.shadowRoot?.querySelector(".bar");t&&(this._w=t.clientWidth,this._ro=new ResizeObserver(t=>{this._w=t[0].contentRect.width}),this._ro.observe(t))}updated(){"playing"===this.hass?.states[this.config.entity]?.state?this._startLoop():this._stopLoop(),this.hass&&this._resolveField("color","_resolvedColor")}_startLoop(){if(this._raf)return;const t=()=>{this._raf=requestAnimationFrame(t),this.requestUpdate()};this._raf=requestAnimationFrame(t)}_stopLoop(){this._raf&&cancelAnimationFrame(this._raf),this._raf=null}_fullWave(t){return this._waveW!==t&&(this._waveW=t,this._wavePathCache=this._wavePath(-32,t)),this._wavePathCache}disconnectedCallback(){super.disconnectedCallback(),this._stopLoop(),this._ro?.disconnect()}_seek(t){if(!1===this.config.seekable)return;const{dur:e}=this._position();if(!e)return;const i=t.currentTarget.getBoundingClientRect(),o=Math.max(0,Math.min(1,(t.clientX-i.left)/i.width));this.hass.callService("media_player","media_seek",{entity_id:this.config.entity,seek_position:o*e})}render(){if(!this.hass||!this.config)return q``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),{pos:i,dur:o,playing:s}=this._position(),n=this._w||300,a=(o>0?Math.min(1,i/o):0)*n,r=!1!==this.config.show_times,c=this._resolvedColor||this.config.color;return q`
       <ha-card>
         <div class="wrap ${e?"unavailable":""}" style=${c?`--mp-color:${c};`:""}>
-          ${r?q`<span class="time">${this._fmt(i)}</span>`:H}
           <div class="bar" @pointerdown=${this._seek}>
             <svg width="100%" height=${28}>
               <defs>
@@ -2490,7 +2492,12 @@ const Vt=2;
               <rect class="thumb" x=${a-2} y=${4} width="4" height="20" rx="2"></rect>
             </svg>
           </div>
-          ${r?q`<span class="time right">${this._fmt(o)}</span>`:H}
+          ${r?q`
+                <div class="times">
+                  <span class="time">${this._fmt(i)}</span>
+                  <span class="time">${this._fmt(o)}</span>
+                </div>
+              `:H}
         </div>
       </ha-card>
     `}getCardSize(){return 1}}customElements.define("materia-media-progress",Ae),window.customCards=window.customCards||[],window.customCards.push({type:"materia-media-progress",name:"Materia Media Progress",description:"Wavy (M3 expressive) media seek bar with elapsed/duration and tap-to-seek.",preview:!0});const Se=n`

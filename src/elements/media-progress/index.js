@@ -5,7 +5,7 @@ import "./editor.js";
 
 const H = 28;
 const MID = 14;
-const AMP = 3; // center-to-peak amplitude (M3 spec ≈ flat: amp/wavelength ~0.1)
+const AMP = 2; // center-to-peak amplitude (kept low / flat per M3 spec)
 const WL = 32; // wavelength (must match the CSS mp-flow keyframe translateX)
 const STEP = 2;
 
@@ -144,7 +144,6 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     return html`
       <ha-card>
         <div class="wrap ${unavailable ? "unavailable" : ""}" style=${color ? `--mp-color:${color};` : ""}>
-          ${showTimes ? html`<span class="time">${this._fmt(pos)}</span>` : nothing}
           <div class="bar" @pointerdown=${this._seek}>
             <svg width="100%" height=${H}>
               <defs>
@@ -159,7 +158,14 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
               <rect class="thumb" x=${playedX - 2} y=${MID - 10} width="4" height="20" rx="2"></rect>
             </svg>
           </div>
-          ${showTimes ? html`<span class="time right">${this._fmt(dur)}</span>` : nothing}
+          ${showTimes
+            ? html`
+                <div class="times">
+                  <span class="time">${this._fmt(pos)}</span>
+                  <span class="time">${this._fmt(dur)}</span>
+                </div>
+              `
+            : nothing}
         </div>
       </ha-card>
     `;

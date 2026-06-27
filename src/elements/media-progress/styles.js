@@ -13,29 +13,29 @@ export const styles = css`
 
   .wrap {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    gap: 2px;
     padding: 8px 4px;
+  }
+
+  .bar {
+    position: relative;
+    width: 100%;
+    height: 28px;
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  .times {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 4px;
   }
 
   .time {
     font-size: 13px;
     color: var(--secondary-text-color);
     font-variant-numeric: tabular-nums;
-    min-width: 38px;
-    flex-shrink: 0;
-  }
-  .time.right {
-    text-align: right;
-  }
-
-  .bar {
-    flex: 1;
-    position: relative;
-    height: 28px;
-    cursor: pointer;
-    touch-action: none;
-    min-width: 0;
   }
 
   svg {
@@ -57,10 +57,13 @@ export const styles = css`
     stroke-width: 4;
     stroke-linecap: round;
     fill: none;
+    /* Animation is always defined; pausing freezes it in place (no snap-back). */
+    animation: mp-flow 0.9s linear infinite;
+    animation-play-state: paused;
   }
 
   .wave.playing {
-    animation: mp-flow 0.9s linear infinite;
+    animation-play-state: running;
   }
 
   @keyframes mp-flow {
