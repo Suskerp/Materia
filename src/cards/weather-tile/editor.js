@@ -29,7 +29,6 @@ class MateriaWeatherTileEditor extends SmartEditorBase {
           { name: "show_minmax", label: "Show min / max", selector: { boolean: {} } },
           { name: "high_entity", label: "High sensor (optional)", selector: { entity: { domain: "sensor" } } },
           { name: "low_entity", label: "Low sensor (optional)", selector: { entity: { domain: "sensor" } } },
-          { name: "minmax_color", label: "Min / max color", color: true, template: true, selector: { text: {} } },
         ],
       },
       {
@@ -47,6 +46,7 @@ class MateriaWeatherTileEditor extends SmartEditorBase {
           },
           { name: "color", label: "Background", color: true, template: true, selector: { text: {} } },
           { name: "color_on", label: "Text / temperature", color: true, template: true, selector: { text: {} } },
+          { name: "minmax_color", label: "Min / max color", color: true, template: true, selector: { text: {} } },
         ],
       },
       {

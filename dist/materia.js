@@ -1188,7 +1188,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
   .blob {
     position: relative;
     width: 100%;
-    aspect-ratio: 1 / 0.78;
+    aspect-ratio: 1 / 0.64;
     box-sizing: border-box;
     container-type: inline-size;
     overflow: hidden;
@@ -1201,19 +1201,19 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     border-radius: 9999px;
     /* Tilt the whole pill diagonally (Pixel-widget style). --wt-tilt is set
        per-config; scale keeps the rotated stadium inside its cell. */
-    transform: rotate(var(--wt-tilt, -16deg)) scale(0.86);
+    transform: rotate(var(--wt-tilt, -26deg)) scale(0.8);
   }
 
   /* Content counter-rotates so the temperature / icon stay upright. */
   .readout {
     position: absolute;
-    top: 21%;
-    right: 17%;
+    top: 19%;
+    right: 16%;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     gap: 0.5cqi;
-    transform: rotate(calc(-1 * var(--wt-tilt, -16deg)));
+    transform: rotate(calc(-1 * var(--wt-tilt, -26deg)));
   }
 
   .temp {
@@ -1238,7 +1238,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     bottom: 16%;
     width: 27cqi;
     height: 27cqi;
-    transform: rotate(calc(-1 * var(--wt-tilt, -16deg)));
+    transform: rotate(calc(-1 * var(--wt-tilt, -26deg)));
   }
 
   .wx-mono {
@@ -1247,14 +1247,14 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
     bottom: 16%;
     --mdc-icon-size: 27cqi;
     display: flex;
-    transform: rotate(calc(-1 * var(--wt-tilt, -16deg)));
+    transform: rotate(calc(-1 * var(--wt-tilt, -26deg)));
   }
 
   .blob.unavailable {
     opacity: 0.5;
     pointer-events: none;
   }
-`];customElements.define("materia-weather-tile-editor",class extends Et{_formData(){return{show_minmax:!0,tilt:"right",...this._config}}get _sections(){return[{title:"Content",icon:"mdi:card-text-outline",fields:[{name:"entity",required:!0,selector:{entity:{domain:"weather"}}},{name:"temperature_entity",label:"Temperature sensor (optional)",selector:{entity:{domain:"sensor",device_class:"temperature"}}},{name:"icon",label:"Custom icon (overrides the colored glyph)",template:!0,selector:{icon:{}},context:{icon_entity:"entity"}}]},{title:"Min / Max",icon:"mdi:thermometer-lines",fields:[{name:"show_minmax",label:"Show min / max",selector:{boolean:{}}},{name:"high_entity",label:"High sensor (optional)",selector:{entity:{domain:"sensor"}}},{name:"low_entity",label:"Low sensor (optional)",selector:{entity:{domain:"sensor"}}},{name:"minmax_color",label:"Min / max color",color:!0,template:!0,selector:{text:{}}}]},{title:"Appearance",icon:"mdi:palette-outline",fields:[{name:"tilt",label:"Pill tilt",selector:{select:{mode:"dropdown",options:[{value:"right",label:"Diagonal ↗ (bottom-left to top-right)"},{value:"left",label:"Diagonal ↘ (top-left to bottom-right)"},{value:"none",label:"Flat"}]}}},{name:"color",label:"Background",color:!0,template:!0,selector:{text:{}}},{name:"color_on",label:"Text / temperature",color:!0,template:!0,selector:{text:{}}}]},{title:"Actions",icon:"mdi:gesture-tap",fields:[{name:"tap_action",selector:{ui_action:{default_action:"more-info"}}}]}]}});class ie extends(ut(lt)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedMinmaxColor:{state:!0},_forecast:{state:!0}};static styles=ee;static getConfigElement(){return document.createElement("materia-weather-tile-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("weather."))||"";return{entity:e,show_minmax:!0}}setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={...t},this._fcEntity=void 0}updated(t){t.has("hass")&&this.hass&&(this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("minmax_color","_resolvedMinmaxColor"),this._subscribeForecast())}disconnectedCallback(){super.disconnectedCallback(),this._unsubForecast()}_subscribeForecast(){const t=this.config?.entity;if(!this.hass||!t||this._fcEntity===t)return;this._unsubForecast(),this._fcEntity=t,this._forecast=[];const e=this.hass.connection.subscribeMessage(t=>{this._forecast=t?.forecast||[]},{type:"weather/subscribe_forecast",forecast_type:"daily",entity_id:t});this._fcUnsub=e,e.catch(()=>{})}_unsubForecast(){this._fcUnsub&&(this._fcUnsub.then(t=>t&&t()).catch(()=>{}),this._fcUnsub=null)}_num(t){const e=Number(t);return Number.isFinite(e)?Math.round(e):null}render(){if(!this.hass||!this.config)return I``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=t?.state??"";let o=t?.attributes?.temperature,s=t?.attributes?.temperature_unit||"°";if(this.config.temperature_entity){const t=this.hass.states[this.config.temperature_entity];t&&(o=t.state,s=t.attributes?.unit_of_measurement||s)}const n=null!=this._num(o)?`${this._num(o)}${s}`:"—";let a=this.config.low_entity?this.hass.states[this.config.low_entity]?.state:null,r=this.config.high_entity?this.hass.states[this.config.high_entity]?.state:null;const c=this._forecast?.[0]||t?.attributes?.forecast?.[0];null==a&&null!=c?.templow&&(a=c.templow),null==r&&null!=c?.temperature&&(r=c.temperature);const l=this.config.show_minmax&&(null!=this._num(a)||null!=this._num(r)),d=this._isTemplate(this.config.color)?this._resolvedColor:this.config.color,h=this._isTemplate(this.config.color_on)?this._resolvedColorOn:this.config.color_on,p=this._isTemplate(this.config.minmax_color)?this._resolvedMinmaxColor:this.config.minmax_color,u=`--wt-tilt:${{right:"-16deg",left:"16deg",none:"0deg"}[this.config.tilt]??"-16deg"};${d?`--wt-bg:${d};`:""}${h?`--wt-fg:${h};`:""}`+(p?`--wt-minmax:${p};--wt-minmax-opacity:1;`:""),m=this.config.icon;return I`
+`];customElements.define("materia-weather-tile-editor",class extends Et{_formData(){return{show_minmax:!0,tilt:"right",...this._config}}get _sections(){return[{title:"Content",icon:"mdi:card-text-outline",fields:[{name:"entity",required:!0,selector:{entity:{domain:"weather"}}},{name:"temperature_entity",label:"Temperature sensor (optional)",selector:{entity:{domain:"sensor",device_class:"temperature"}}},{name:"icon",label:"Custom icon (overrides the colored glyph)",template:!0,selector:{icon:{}},context:{icon_entity:"entity"}}]},{title:"Min / Max",icon:"mdi:thermometer-lines",fields:[{name:"show_minmax",label:"Show min / max",selector:{boolean:{}}},{name:"high_entity",label:"High sensor (optional)",selector:{entity:{domain:"sensor"}}},{name:"low_entity",label:"Low sensor (optional)",selector:{entity:{domain:"sensor"}}}]},{title:"Appearance",icon:"mdi:palette-outline",fields:[{name:"tilt",label:"Pill tilt",selector:{select:{mode:"dropdown",options:[{value:"right",label:"Diagonal ↗ (bottom-left to top-right)"},{value:"left",label:"Diagonal ↘ (top-left to bottom-right)"},{value:"none",label:"Flat"}]}}},{name:"color",label:"Background",color:!0,template:!0,selector:{text:{}}},{name:"color_on",label:"Text / temperature",color:!0,template:!0,selector:{text:{}}},{name:"minmax_color",label:"Min / max color",color:!0,template:!0,selector:{text:{}}}]},{title:"Actions",icon:"mdi:gesture-tap",fields:[{name:"tap_action",selector:{ui_action:{default_action:"more-info"}}}]}]}});class ie extends(ut(lt)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedMinmaxColor:{state:!0},_forecast:{state:!0}};static styles=ee;static getConfigElement(){return document.createElement("materia-weather-tile-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("weather."))||"";return{entity:e,show_minmax:!0}}setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={...t},this._fcEntity=void 0}updated(t){t.has("hass")&&this.hass&&(this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("minmax_color","_resolvedMinmaxColor"),this._subscribeForecast())}disconnectedCallback(){super.disconnectedCallback(),this._unsubForecast()}_subscribeForecast(){const t=this.config?.entity;if(!this.hass||!t||this._fcEntity===t)return;this._unsubForecast(),this._fcEntity=t,this._forecast=[];const e=this.hass.connection.subscribeMessage(t=>{this._forecast=t?.forecast||[]},{type:"weather/subscribe_forecast",forecast_type:"daily",entity_id:t});this._fcUnsub=e,e.catch(()=>{})}_unsubForecast(){this._fcUnsub&&(this._fcUnsub.then(t=>t&&t()).catch(()=>{}),this._fcUnsub=null)}_num(t){const e=Number(t);return Number.isFinite(e)?Math.round(e):null}render(){if(!this.hass||!this.config)return I``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=t?.state??"";let o=t?.attributes?.temperature,s=t?.attributes?.temperature_unit||"°";if(this.config.temperature_entity){const t=this.hass.states[this.config.temperature_entity];t&&(o=t.state,s=t.attributes?.unit_of_measurement||s)}const n=null!=this._num(o)?`${this._num(o)}${s}`:"—";let a=this.config.low_entity?this.hass.states[this.config.low_entity]?.state:null,r=this.config.high_entity?this.hass.states[this.config.high_entity]?.state:null;const c=this._forecast?.[0]||t?.attributes?.forecast?.[0];null==a&&null!=c?.templow&&(a=c.templow),null==r&&null!=c?.temperature&&(r=c.temperature);const l=this.config.show_minmax&&(null!=this._num(a)||null!=this._num(r)),d=this._isTemplate(this.config.color)?this._resolvedColor:this.config.color,h=this._isTemplate(this.config.color_on)?this._resolvedColorOn:this.config.color_on,p=this._isTemplate(this.config.minmax_color)?this._resolvedMinmaxColor:this.config.minmax_color,u=`--wt-tilt:${{right:"-26deg",left:"26deg",none:"0deg"}[this.config.tilt]??"-26deg"};${d?`--wt-bg:${d};`:""}${h?`--wt-fg:${h};`:""}`+(p?`--wt-minmax:${p};--wt-minmax-opacity:1;`:""),m=this.config.icon;return I`
       <ha-card>
         <div
           class="blob ${e?"unavailable":""}"

@@ -109,7 +109,7 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     const mm = this._isTemplate(this.config.minmax_color) ? this._resolvedMinmaxColor : this.config.minmax_color;
     // Diagonal tilt: "right" rises to the top-right (default), "left" the other
     // way, "none" sits flat.
-    const tilt = { right: "-16deg", left: "16deg", none: "0deg" }[this.config.tilt] ?? "-16deg";
+    const tilt = { right: "-26deg", left: "26deg", none: "0deg" }[this.config.tilt] ?? "-26deg";
     const style =
       `--wt-tilt:${tilt};` +
       `${bg ? `--wt-bg:${bg};` : ""}${fg ? `--wt-fg:${fg};` : ""}` +

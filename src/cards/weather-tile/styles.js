@@ -14,7 +14,7 @@ export const styles = [hostStyles, haCardReset, css`
   .blob {
     position: relative;
     width: 100%;
-    aspect-ratio: 1 / 0.78;
+    aspect-ratio: 1 / 0.64;
     box-sizing: border-box;
     container-type: inline-size;
     overflow: hidden;
@@ -27,19 +27,19 @@ export const styles = [hostStyles, haCardReset, css`
     border-radius: 9999px;
     /* Tilt the whole pill diagonally (Pixel-widget style). --wt-tilt is set
        per-config; scale keeps the rotated stadium inside its cell. */
-    transform: rotate(var(--wt-tilt, -16deg)) scale(0.86);
+    transform: rotate(var(--wt-tilt, -26deg)) scale(0.8);
   }
 
   /* Content counter-rotates so the temperature / icon stay upright. */
   .readout {
     position: absolute;
-    top: 21%;
-    right: 17%;
+    top: 19%;
+    right: 16%;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     gap: 0.5cqi;
-    transform: rotate(calc(-1 * var(--wt-tilt, -16deg)));
+    transform: rotate(calc(-1 * var(--wt-tilt, -26deg)));
   }
 
   .temp {
@@ -64,7 +64,7 @@ export const styles = [hostStyles, haCardReset, css`
     bottom: 16%;
     width: 27cqi;
     height: 27cqi;
-    transform: rotate(calc(-1 * var(--wt-tilt, -16deg)));
+    transform: rotate(calc(-1 * var(--wt-tilt, -26deg)));
   }
 
   .wx-mono {
@@ -73,7 +73,7 @@ export const styles = [hostStyles, haCardReset, css`
     bottom: 16%;
     --mdc-icon-size: 27cqi;
     display: flex;
-    transform: rotate(calc(-1 * var(--wt-tilt, -16deg)));
+    transform: rotate(calc(-1 * var(--wt-tilt, -26deg)));
   }
 
   .blob.unavailable {
