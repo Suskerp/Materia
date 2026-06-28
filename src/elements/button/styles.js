@@ -68,6 +68,14 @@ export const styles = [
     .shape-round  { border-radius: calc(var(--mb-h) / 2); }
     .shape-square { border-radius: var(--mb-rsq, 16px); }
 
+    /* ---- connected (split-button): round outer edge, small inner edge ---- */
+    .connected-leading {
+      border-radius: calc(var(--mb-h) / 2) var(--mb-rsq, 16px) var(--mb-rsq, 16px) calc(var(--mb-h) / 2);
+    }
+    .connected-trailing {
+      border-radius: var(--mb-rsq, 16px) calc(var(--mb-h) / 2) calc(var(--mb-h) / 2) var(--mb-rsq, 16px);
+    }
+
     /* ---- variants ---- */
     .variant-filled {
       background: var(--md-sys-color-primary);

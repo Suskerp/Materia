@@ -137,7 +137,7 @@ class MateriaButton extends ActionMixin(LitElement) {
 
     return html`
       <button
-        class="btn variant-${variant} ${sizeClass} shape-${shape} ${iconOnly ? "icon-only" : ""} ${disabled ? "disabled" : ""} ${unavailable ? "unavailable" : ""}"
+        class="btn variant-${variant} ${sizeClass} shape-${shape} ${this.config.connected ? `connected-${this.config.connected}` : ""} ${iconOnly ? "icon-only" : ""} ${disabled ? "disabled" : ""} ${unavailable ? "unavailable" : ""}"
         style=${sizeStyle}
         @click=${this._handleTap}
       >

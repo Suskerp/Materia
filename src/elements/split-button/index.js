@@ -1,24 +1,19 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import "../button/index.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
-/** M3 size scale: container height, inner corner radius, font, icon, leading padding. */
-const SIZES = {
-  xs: { h: 32, inner: 4, font: 14, icon: 20, pad: 12 },
-  s: { h: 40, inner: 8, font: 14, icon: 20, pad: 16 },
-  m: { h: 56, inner: 8, font: 16, icon: 24, pad: 24 },
-  l: { h: 96, inner: 16, font: 24, icon: 32, pad: 48 },
-  xl: { h: 136, inner: 20, font: 32, icon: 40, pad: 64 },
-};
+/** Container heights / inner-corner / trailing-icon per size — matched to materia-button. */
+const HEIGHTS = { xs: 32, s: 40, m: 56, l: 96, xl: 136, default: 48, large: 56 };
+const INNER = { xs: 12, s: 12, m: 16, l: 28, xl: 28, default: 14, large: 16 };
+const TICON = { xs: 20, s: 20, m: 24, l: 32, xl: 40, default: 24, large: 24 };
 
 class MateriaSplitButton extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
     _open: { state: true },
-    _resolvedIcon: { state: true },
-    _resolvedLabel: { state: true },
   };
 
   static styles = styles;
@@ -60,17 +55,6 @@ class MateriaSplitButton extends ActionMixin(LitElement) {
     document.removeEventListener("click", this._outsideClick);
   }
 
-  updated(changed) {
-    if (changed.has("hass") && this.hass) {
-      this._resolveField("icon", "_resolvedIcon");
-      this._resolveField("label", "_resolvedLabel");
-    }
-  }
-
-  _leadingTap() {
-    this._handleAction(this.config.tap_action || { action: "more-info" });
-  }
-
   _toggle(e) {
     e.stopPropagation();
     this._open = !this._open;
@@ -84,25 +68,28 @@ class MateriaSplitButton extends ActionMixin(LitElement) {
 
   render() {
     if (!this.config) return html``;
-    const sz = SIZES[this.config.size] || SIZES.s;
     const variant = this.config.variant || "tonal";
-    const icon = this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon;
-    const label = this._isTemplate(this.config.label) ? this._resolvedLabel : this.config.label;
+    const size = this.config.size || "s";
+    const h = HEIGHTS[size] || 40;
+    const inner = INNER[size] ?? 12;
+    const ticon = TICON[size] ?? 20;
     const options = this.config.options || [];
 
+    // The leading button is a full materia-button — it inherits ALL button
+    // behaviour (templated icon/label, tap_action_map, active_state,
+    // morph_on_active, disabled, …). `connected` squares its inner edge.
+    const { options: _o, type: _t, ...leading } = this.config;
+    const leadingConfig = { ...leading, connected: "leading" };
+
     const vars =
-      `--sb-h:${sz.h}px;--sb-inner:${sz.inner}px;--sb-font:${sz.font}px;` +
-      `--sb-icon:${sz.icon}px;--sb-pad:${sz.pad}px;` +
+      `--sb-h:${h}px;--sb-inner:${inner}px;--sb-ticon:${ticon}px;` +
       `${this.config.color ? `--sb-bg:${this.config.color};` : ""}` +
       `${this.config.color_on ? `--sb-fg:${this.config.color_on};` : ""}`;
 
     return html`
       <div class="wrap" style=${vars}>
         <div class="split ${variant}">
-          <button class="leading" @click=${this._leadingTap} aria-label=${label || "action"}>
-            ${icon ? html`<ha-icon .icon=${icon}></ha-icon>` : ""}
-            ${label ? html`<span class="label">${label}</span>` : ""}
-          </button>
+          <materia-button class="leading" .hass=${this.hass} .config=${leadingConfig}></materia-button>
           <button
             class="trailing ${this._open ? "open" : ""}"
             @click=${this._toggle}

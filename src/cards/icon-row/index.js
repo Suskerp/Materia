@@ -1,7 +1,10 @@
 import { LitElement, html, css } from "lit";
 import { hostStyles } from "../../styles/card-styles.js";
 import "../../elements/button/index.js";
+import "../../elements/split-button/index.js";
 import "./editor.js";
+
+const SPLIT_TYPES = new Set(["split", "split-button", "materia-split-button"]);
 
 class MateriaIconRow extends LitElement {
   static properties = {
@@ -56,12 +59,19 @@ class MateriaIconRow extends LitElement {
 
     return html`
       <div class="row" style="gap: ${gap}px; padding: ${padding}px 0;">
-        ${this.config.buttons.map(btn => html`
-          <materia-button
-            .hass=${this.hass}
-            .config=${{ variant: "filled", size: "default", ...btn }}
-          ></materia-button>
-        `)}
+        ${this.config.buttons.map((btn) => {
+          const isSplit =
+            SPLIT_TYPES.has(btn.type) || (Array.isArray(btn.options) && btn.options.length > 0);
+          return isSplit
+            ? html`<materia-split-button
+                .hass=${this.hass}
+                .config=${{ variant: "filled", size: "default", ...btn }}
+              ></materia-split-button>`
+            : html`<materia-button
+                .hass=${this.hass}
+                .config=${{ variant: "filled", size: "default", ...btn }}
+              ></materia-button>`;
+        })}
       </div>
     `;
   }
