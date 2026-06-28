@@ -219,7 +219,7 @@ humidity_entity: sensor.outdoor_humidity
 
 #### `materia-weather-tile`
 
-A large, blobby weather widget inspired by the Pixel weather widget -- a big temperature, an optional small min/max subscript, and a **colored** condition icon. Uses the M3 **pill** shape ([Material 3 shape](https://m3.material.io/styles/shape)) and defaults to the same surface color as `materia-clock`, so the two read as a matching set. The condition icons are drawn with the harmonized `--md-sys-cust-color-weather-*` colors (see [Custom Colors](#custom-colors)).
+A large, diagonally-tilted weather tile inspired by the Pixel weather widget -- a big temperature, an optional small min/max subscript, and a **colored** condition icon. Uses the M3 **pill** shape ([Material 3 shape](https://m3.material.io/styles/shape)) and defaults to the same surface color as `materia-clock`, so the two read as a matching set. The condition icons are drawn with the harmonized `--md-sys-cust-color-weather-*` colors (see [Custom Colors](#custom-colors)). The tilt/size/position layout is fixed; only the entity, min/max, mirror, and colors are configurable.
 
 ```yaml
 type: custom:materia-weather-tile
@@ -235,9 +235,11 @@ show_minmax: true
 | `show_minmax` | boolean | `true` | Show today's min/max as a small subscript (from `high_entity`/`low_entity`, else the weather entity's daily forecast) |
 | `high_entity` | string | | High-temperature sensor override |
 | `low_entity` | string | | Low-temperature sensor override |
+| `mirror` | boolean | `false` | Mirror the layout (temperature left, icon right) |
 | `icon` | string | colored glyph | Override with a monochrome HA icon instead of the colored glyph. *Templatable* |
 | `color` | string | `surface-container-high` | Blob background. *Color picker / templatable* |
-| `color_on` | string | `on-surface` | Temperature / text color. *Color picker / templatable* |
+| `color_on` | string | `primary` | Temperature / text color. *Color picker / templatable* |
+| `minmax_color` | string | text color | Min/max subscript color. *Color picker / templatable* |
 | `tap_action` | object | `{ action: "more-info" }` | Tap action |
 
 ---

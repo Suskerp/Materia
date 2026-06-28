@@ -1,6 +1,6 @@
 import { LitElement, html, svg } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { coloredWeatherIcon, WEATHER_CONDITIONS } from "./icons.js";
+import { coloredWeatherIcon } from "./icons.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -12,7 +12,6 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     _resolvedColorOn: { state: true },
     _resolvedMinmaxColor: { state: true },
     _forecast: { state: true },
-    _cycleIndex: { state: true },
   };
 
   static styles = styles;
@@ -39,34 +38,11 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
       this._resolveField("minmax_color", "_resolvedMinmaxColor");
       this._subscribeForecast();
     }
-    this._syncCycle();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     this._unsubForecast();
-    this._stopCycle();
-  }
-
-  /** Start/stop the alignment-preview icon cycle based on config. */
-  _syncCycle() {
-    if (this.config?.cycle_icons) {
-      if (!this._cycleTimer) {
-        this._cycleIndex ??= 0;
-        this._cycleTimer = setInterval(() => {
-          this._cycleIndex = (this._cycleIndex + 1) % WEATHER_CONDITIONS.length;
-        }, 1500);
-      }
-    } else {
-      this._stopCycle();
-    }
-  }
-
-  _stopCycle() {
-    if (this._cycleTimer) {
-      clearInterval(this._cycleTimer);
-      this._cycleTimer = null;
-    }
   }
 
   /** Subscribe to the entity's daily forecast (modern HA no longer exposes it
@@ -104,10 +80,7 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
 
     const stateObj = this.hass.states[this.config.entity];
     const unavailable = this._isUnavailable(stateObj);
-    // Alignment-preview cycle overrides the live condition.
-    const condition = this.config.cycle_icons
-      ? WEATHER_CONDITIONS[(this._cycleIndex ?? 0) % WEATHER_CONDITIONS.length]
-      : stateObj?.state ?? "";
+    const condition = stateObj?.state ?? "";
 
     // Current temperature — sensor override, else the weather entity.
     let temp = stateObj?.attributes?.temperature;
@@ -136,15 +109,15 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     const tiltDeg =
       typeof this.config.tilt === "number"
         ? this.config.tilt
-        : ({ right: -26, left: 26, none: 0 }[this.config.tilt] ?? -26);
-    const iconSize = this.config.icon_size ?? 27;
-    const textSize = this.config.text_size ?? 24;
-    const width = this.config.width ?? 100;
-    const ratio = (this.config.height ?? 64) / 100;
-    const iconX = this.config.icon_x ?? 16;
-    const iconY = this.config.icon_y ?? 20;
-    const tempX = this.config.temp_x ?? 16;
-    const tempY = this.config.temp_y ?? 17;
+        : ({ right: -45, left: 45, none: 0 }[this.config.tilt] ?? -45);
+    const iconSize = this.config.icon_size ?? 50;
+    const textSize = this.config.text_size ?? 30;
+    const width = this.config.width ?? 115;
+    const ratio = (this.config.height ?? 85) / 100;
+    const iconX = this.config.icon_x ?? 6;
+    const iconY = this.config.icon_y ?? 15;
+    const tempX = this.config.temp_x ?? 12;
+    const tempY = this.config.temp_y ?? 15;
     const style =
       `--wt-tilt:${tiltDeg}deg;--wt-icon-size:${iconSize}cqi;--wt-temp-size:${textSize}cqi;` +
       `--wt-width:${width}%;--wt-ratio:${ratio};` +
@@ -152,14 +125,13 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
       `${bg ? `--wt-bg:${bg};` : ""}${fg ? `--wt-fg:${fg};` : ""}` +
       `${mm ? `--wt-minmax:${mm};--wt-minmax-opacity:1;` : ""}`;
 
-    // Colored Pixel-style glyph unless an explicit icon is configured (the
-    // cycle preview always shows the colored glyphs).
-    const customIcon = this.config.cycle_icons ? null : this.config.icon;
+    // Colored Pixel-style glyph unless an explicit icon is configured.
+    const customIcon = this.config.icon;
 
     return html`
       <ha-card>
         <div
-          class="blob ${unavailable ? "unavailable" : ""} ${tiltDeg > 0 ? "flip" : ""}"
+          class="blob ${unavailable ? "unavailable" : ""} ${this.config.mirror ? "flip" : ""}"
           style=${style}
           @click=${() => this._handleAction(this.config.tap_action || { action: "more-info" })}
         >
