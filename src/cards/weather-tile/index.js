@@ -113,13 +113,13 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     // Mirror flips the tilt to the opposite diagonal (e.g. -45 → +45) so the
     // mirrored content (temp left, icon right) still follows the pill's slope.
     if (this.config.mirror) tiltDeg = -tiltDeg;
-    const iconSize = this.config.icon_size ?? 50;
+    const iconSize = this.config.icon_size ?? 53;
     const textSize = this.config.text_size ?? 30;
     const width = this.config.width ?? 115;
     const ratio = (this.config.height ?? 85) / 100;
-    const iconX = this.config.icon_x ?? 6;
-    const iconY = this.config.icon_y ?? 15;
-    const tempX = this.config.temp_x ?? 12;
+    const iconX = this.config.icon_x ?? 5;
+    const iconY = this.config.icon_y ?? 10;
+    const tempX = this.config.temp_x ?? 10;
     const tempY = this.config.temp_y ?? 15;
     const style =
       `--wt-tilt:${tiltDeg}deg;--wt-icon-size:${iconSize}cqi;--wt-temp-size:${textSize}cqi;` +
