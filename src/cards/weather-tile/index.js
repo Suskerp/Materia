@@ -84,15 +84,12 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
 
     // Current temperature — sensor override, else the weather entity.
     let temp = stateObj?.attributes?.temperature;
-    let unit = stateObj?.attributes?.temperature_unit || "°";
     if (this.config.temperature_entity) {
       const t = this.hass.states[this.config.temperature_entity];
-      if (t) {
-        temp = t.state;
-        unit = t.attributes?.unit_of_measurement || unit;
-      }
+      if (t) temp = t.state;
     }
-    const tempStr = this._num(temp) != null ? `${this._num(temp)}${unit}` : "—";
+    // Just the degree symbol — no unit letter (28° not 28°C).
+    const tempStr = this._num(temp) != null ? `${this._num(temp)}°` : "—";
 
     // Optional min/max — explicit sensors override today's forecast.
     let low = this.config.low_entity ? this.hass.states[this.config.low_entity]?.state : null;
@@ -116,9 +113,14 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     const iconSize = this.config.icon_size ?? 27;
     const width = this.config.width ?? 100;
     const ratio = (this.config.height ?? 64) / 100;
+    const iconX = this.config.icon_x ?? 16;
+    const iconY = this.config.icon_y ?? 20;
+    const tempX = this.config.temp_x ?? 16;
+    const tempY = this.config.temp_y ?? 17;
     const style =
       `--wt-tilt:${tiltDeg}deg;--wt-icon-size:${iconSize}cqi;` +
       `--wt-width:${width}%;--wt-ratio:${ratio};` +
+      `--wt-icon-x:${iconX}%;--wt-icon-y:${iconY}%;--wt-temp-x:${tempX}%;--wt-temp-y:${tempY}%;` +
       `${bg ? `--wt-bg:${bg};` : ""}${fg ? `--wt-fg:${fg};` : ""}` +
       `${mm ? `--wt-minmax:${mm};--wt-minmax-opacity:1;` : ""}`;
 

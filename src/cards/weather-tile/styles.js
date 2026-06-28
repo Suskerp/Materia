@@ -34,8 +34,8 @@ export const styles = [hostStyles, haCardReset, css`
   /* Content counter-rotates so the temperature / icon stay upright. */
   .readout {
     position: absolute;
-    top: 17%;
-    right: 16%;
+    top: var(--wt-temp-y, 17%);
+    right: var(--wt-temp-x, 16%);
     z-index: 1; /* temperature sits in front of the icon */
     display: flex;
     flex-direction: column;
@@ -62,8 +62,8 @@ export const styles = [hostStyles, haCardReset, css`
 
   .wx {
     position: absolute;
-    left: 16%;
-    bottom: 20%;
+    left: var(--wt-icon-x, 16%);
+    bottom: var(--wt-icon-y, 20%);
     z-index: 0;
     width: var(--wt-icon-size, 27cqi);
     height: var(--wt-icon-size, 27cqi);
@@ -72,8 +72,8 @@ export const styles = [hostStyles, haCardReset, css`
 
   .wx-mono {
     position: absolute;
-    left: 16%;
-    bottom: 20%;
+    left: var(--wt-icon-x, 16%);
+    bottom: var(--wt-icon-y, 20%);
     z-index: 0;
     --mdc-icon-size: var(--wt-icon-size, 27cqi);
     display: flex;
@@ -84,14 +84,14 @@ export const styles = [hostStyles, haCardReset, css`
      temperature and icon follow the opposite diagonal. */
   .blob.flip .readout {
     right: auto;
-    left: 16%;
+    left: var(--wt-temp-x, 16%);
     align-items: flex-start;
   }
 
   .blob.flip .wx,
   .blob.flip .wx-mono {
     left: auto;
-    right: 15%;
+    right: var(--wt-icon-x, 16%);
   }
 
   .blob.unavailable {

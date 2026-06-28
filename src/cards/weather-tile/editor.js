@@ -2,7 +2,18 @@ import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaWeatherTileEditor extends SmartEditorBase {
   _formData() {
-    return { show_minmax: true, tilt: -26, icon_size: 27, width: 100, height: 64, ...this._config };
+    return {
+      show_minmax: true,
+      tilt: -26,
+      icon_size: 27,
+      width: 100,
+      height: 64,
+      temp_x: 16,
+      temp_y: 17,
+      icon_x: 16,
+      icon_y: 20,
+      ...this._config,
+    };
   }
 
   get _sections() {
@@ -39,6 +50,10 @@ class MateriaWeatherTileEditor extends SmartEditorBase {
           { name: "width", label: "Width (% of cell)", selector: { number: { min: 40, max: 100, step: 1, mode: "slider" } } },
           { name: "height", label: "Height (% of width)", selector: { number: { min: 40, max: 100, step: 1, mode: "slider" } } },
           { name: "icon_size", label: "Weather icon size", selector: { number: { min: 14, max: 46, step: 1, mode: "slider" } } },
+          { name: "temp_x", label: "Temperature X (% from edge)", selector: { number: { min: 0, max: 60, step: 1, mode: "slider" } } },
+          { name: "temp_y", label: "Temperature Y (% from top)", selector: { number: { min: 0, max: 70, step: 1, mode: "slider" } } },
+          { name: "icon_x", label: "Icon X (% from edge)", selector: { number: { min: 0, max: 70, step: 1, mode: "slider" } } },
+          { name: "icon_y", label: "Icon Y (% from bottom)", selector: { number: { min: 0, max: 70, step: 1, mode: "slider" } } },
           { name: "color", label: "Background", color: true, template: true, selector: { text: {} } },
           { name: "color_on", label: "Text / temperature", color: true, template: true, selector: { text: {} } },
           { name: "minmax_color", label: "Min / max color", color: true, template: true, selector: { text: {} } },
