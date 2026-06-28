@@ -332,7 +332,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
     }
 
     // Default: numeric states get rounded to 2 decimals + unit; otherwise
-    // show the capitalized state text.
+    // show the localized/formatted state text.
     const raw = stateObj.state;
     const num = Number(raw);
     if (raw !== "" && raw != null && !Number.isNaN(num)) {
@@ -341,7 +341,12 @@ export class MateriaCard extends ActionMixin(LitElement) {
       if (unit) return unit === "%" ? `${rounded}%` : `${rounded} ${unit}`;
       return `${rounded}`;
     }
-    return this._capitalize(raw);
+    // Prefer HA's localized formatting (handles device-class states, enums,
+    // translations); fall back to a tidy capitalized label with no underscores.
+    if (this.hass.formatEntityState) {
+      return this.hass.formatEntityState(stateObj);
+    }
+    return this._capitalize(String(raw).replace(/[_-]/g, " "));
   }
 
   /**
