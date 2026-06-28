@@ -125,10 +125,13 @@ class MateriaIconRowEditor extends SmartEditorBase {
         </ha-icon-button>
       </div>
 
-      ${buttons.map(
+      ${sortableList(
+        (from, to) => this._moveButton(from, to),
+        buttons.map(
         (btn, i) => html`
           <div class="button-card">
             <div class="button-header" @click=${() => this._toggleButton(i)}>
+              <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
               <span>${btn.icon && !isTemplate(btn.icon) ? btn.icon : `Button ${i + 1}`}${btn.options?.length ? " · split" : ""}</span>
               <ha-icon-button @click=${(e) => { e.stopPropagation(); this._toggleButton(i); }}>
                 <ha-icon icon=${this._expandedButton === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
@@ -211,8 +214,18 @@ class MateriaIconRowEditor extends SmartEditorBase {
               : ""}
           </div>
         `
+        )
       )}
     `;
+  }
+
+  _moveButton(from, to) {
+    const buttons = [...(this._config.buttons || [])];
+    const [m] = buttons.splice(from, 1);
+    buttons.splice(to, 0, m);
+    // Collapse — the per-button sub-editor caches its index, so keep it simple.
+    this._expandedButton = null;
+    this._commit({ ...this._config, buttons });
   }
 
   _toggleButton(i) {
