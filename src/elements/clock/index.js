@@ -121,6 +121,10 @@ class MateriaClock extends LitElement {
     const hi = Math.max(a1, a2);
     const gapInside = hi - lo;
     let dateAngle = gapInside >= 360 - gapInside ? lo + gapInside / 2 : hi + (360 - gapInside) / 2;
+    // Snap to the midpoint between two adjacent hour marks (…, 15°, 45°, 75°, …)
+    // so the label reads centered between numbers rather than at an arbitrary
+    // angle, and the two flanking markers are the ones it replaces.
+    dateAngle = Math.round((dateAngle - 15) / 30) * 30 + 15;
     dateAngle = ((dateAngle % 360) + 360) % 360;
     const dRad = (dateAngle * Math.PI) / 180;
     // Sit on the same ring as the markers (dots or numerals).

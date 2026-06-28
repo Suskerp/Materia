@@ -1186,22 +1186,23 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
   .blob {
     position: relative;
     width: 100%;
-    aspect-ratio: 1 / 0.82;
+    aspect-ratio: 1 / 0.66;
     box-sizing: border-box;
     container-type: inline-size;
     overflow: hidden;
     cursor: pointer;
     /* Defaults to the SAME surface as the clock face so the two read as a set. */
     background: var(--wt-bg, var(--md-sys-color-surface-container-high, var(--card-background-color)));
-    color: var(--wt-fg, var(--md-sys-color-on-surface, var(--primary-text-color)));
-    /* M3 pill shape (fully rounded). */
-    border-radius: 50%;
+    color: var(--wt-fg, var(--md-sys-color-primary, var(--primary-text-color)));
+    /* M3 pill shape: stadium (flat top/bottom, fully rounded ends) — not an
+       ellipse. The large radius clamps to half the shorter (height) side. */
+    border-radius: 9999px;
   }
 
   .readout {
     position: absolute;
-    top: 15%;
-    right: 12%;
+    top: 21%;
+    right: 17%;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -1209,7 +1210,7 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
   }
 
   .temp {
-    font-size: 26cqi;
+    font-size: 24cqi;
     font-weight: 700;
     line-height: 1;
     letter-spacing: -0.04em;
@@ -1225,17 +1226,17 @@ const w=globalThis,$=t=>t,C=w.trustedTypes,k=C?C.createPolicy("lit-html",{create
 
   .wx {
     position: absolute;
-    left: 11%;
-    bottom: 11%;
-    width: 30cqi;
-    height: 30cqi;
+    left: 15%;
+    bottom: 16%;
+    width: 27cqi;
+    height: 27cqi;
   }
 
   .wx-mono {
     position: absolute;
-    left: 11%;
-    bottom: 11%;
-    --mdc-icon-size: 30cqi;
+    left: 15%;
+    bottom: 16%;
+    --mdc-icon-size: 27cqi;
     display: flex;
   }
 
@@ -2718,12 +2719,12 @@ const ce=2;
   }
 
   .hour {
-    stroke: var(--clock-hand, var(--md-sys-color-on-surface, #222));
+    stroke: var(--clock-hand, var(--md-sys-color-primary, #222));
     stroke-width: var(--clock-hour-w, 5);
   }
 
   .minute {
-    stroke: var(--clock-hand, var(--md-sys-color-on-surface, #222));
+    stroke: var(--clock-hand, var(--md-sys-color-primary, #222));
     stroke-width: var(--clock-minute-w, 3.5);
   }
 
@@ -2733,9 +2734,9 @@ const ce=2;
   }
 
   .pin {
-    fill: var(--clock-hand, var(--md-sys-color-on-surface, #222));
+    fill: var(--clock-hand, var(--md-sys-color-primary, #222));
   }
-`;customElements.define("materia-clock-editor",class extends Et{_formData(){return{hand_width:5,size:10,...this._config}}get _sections(){return[{title:"Clock",icon:"mdi:clock-outline",fields:[{name:"numbers",selector:{select:{mode:"dropdown",options:[{value:"cardinal",label:"Cardinal (12 · 3 · 6 · 9)"},{value:"all",label:"All (1–12)"},{value:"dots",label:"Hour dots"},{value:"none",label:"None"}]}}},{name:"show_seconds",selector:{boolean:{}}},{name:"second_dot",label:"Second hand as rim dot",selector:{boolean:{}}},{name:"smooth",label:"Smooth second hand",selector:{boolean:{}}},{name:"cookie",label:"Cookie face (12-sided)",selector:{boolean:{}}},{name:"digital",label:"Digital readout (HH/MM behind hands)",selector:{boolean:{}}},{name:"date",label:"Show date",selector:{boolean:{}}},{name:"hand_width",label:"Hand thickness",selector:{number:{min:1,max:12,step:.5,mode:"slider"}}},{name:"size",label:"Size (10 = fill)",selector:{number:{min:1,max:10,step:1,mode:"slider"}}}]},{title:"Appearance",icon:"mdi:palette-outline",fields:[{name:"face_color",label:"Face",color:!0,template:!0,selector:{text:{}}},{name:"number_color",label:"Numbers",color:!0,template:!0,selector:{text:{}}},{name:"hand_color",label:"Hands",color:!0,template:!0,selector:{text:{}}},{name:"second_color",label:"Second hand",color:!0,template:!0,selector:{text:{}}}]}]}});customElements.define("materia-clock",class extends lt{static properties={hass:{attribute:!1},config:{state:!0},_t:{state:!0}};static styles=We;static getConfigElement(){return document.createElement("materia-clock-editor")}static getStubConfig(){return{numbers:"cardinal",show_seconds:!0}}setConfig(t){this.config=t||{}}connectedCallback(){super.connectedCallback(),this._start()}disconnectedCallback(){super.disconnectedCallback(),this._stop()}updated(t){t.has("config")&&(this._facePath=null,this._stop(),this._start())}_scallop(){let t="";for(let e=0;e<=240;e++){const i=e/240*Math.PI*2,o=48+1*Math.cos(12*i);t+=`${0===e?"M":"L"}${(50+o*Math.cos(i)).toFixed(2)} ${(50+o*Math.sin(i)).toFixed(2)} `}return t+"Z"}_start(){if(!this._raf&&!this._tick)if(this.config?.smooth){const t=()=>{this._raf=requestAnimationFrame(t),this._t=performance.now()};this._raf=requestAnimationFrame(t)}else this._tick=setInterval(()=>this._t=Date.now(),1e3)}_stop(){this._raf&&cancelAnimationFrame(this._raf),this._tick&&clearInterval(this._tick),this._raf=null,this._tick=null}render(){if(!this.config)return I``;const t=new Date,e=!!this.config.smooth,i=t.getSeconds()+(e?t.getMilliseconds()/1e3:0),o=t.getMinutes()+i/60,s=30*(t.getHours()%12+o/60),n=6*o,a=6*i,r=!1!==this.config.show_seconds,c=!!(this.config.cookie??this.config.squiggle);c&&(this._facePath??=this._scallop());const l=this.config.numbers||"cardinal",d="all"===l?[1,2,3,4,5,6,7,8,9,10,11,12]:"cardinal"===l?[12,3,6,9]:[],h="all"===l?40:34,p="all"===l?9:18,u="dots"===l?[1,2,3,4,5,6,7,8,9,10,11,12]:[],m=!!this.config.digital,_=String(t.getHours()%12||12).padStart(2,"0"),g=String(t.getMinutes()).padStart(2,"0"),f=!!this.config.date,v=`${t.toLocaleDateString(void 0,{weekday:"short"})} ${t.getDate()}`,b=(s%360+360)%360,y=(n%360+360)%360,x=Math.min(b,y),w=Math.max(b,y),$=w-x;let C=$>=360-$?x+$/2:w+(360-$)/2;C=(C%360+360)%360;const k=C*Math.PI/180,A=u.length?41:d.length?h:40,S=(50+A*Math.sin(k)).toFixed(2),E=(50-A*Math.cos(k)).toFixed(2);let T=C;T>90&&T<270&&(T-=180);const z=4.4*v.length/2/A*(180/Math.PI)+(u.length?4:8),F=t=>{if(!f)return!1;const e=(t%12*30%360+360)%360;let i=Math.abs(e-C)%360;return i>180&&(i=360-i),i<z},O=d.filter(t=>!F(t)),M=u.filter(t=>!F(t)),U=!!this.config.second_dot,P=a*Math.PI/180,D=(50+44*Math.sin(P)).toFixed(2),B=(50-44*Math.cos(P)).toFixed(2),R=this.config.hand_width,N=`--clock-size:${["98px","136px","174px","212px","250px","300px","360px","440px","560px","100%"][Math.min(10,Math.max(1,this.config.size??10))-1]};`+(this.config.face_color?`--clock-face:${this.config.face_color};`:"")+(this.config.number_color?`--clock-number:${this.config.number_color};`:"")+(this.config.hand_color?`--clock-hand:${this.config.hand_color};`:"")+(this.config.second_color?`--clock-second:${this.config.second_color};`:"")+(R?`--clock-hour-w:${R};--clock-minute-w:${(.7*R).toFixed(2)};--clock-second-w:${(.3*R).toFixed(2)};`:"");return I`
+`;customElements.define("materia-clock-editor",class extends Et{_formData(){return{hand_width:5,size:10,...this._config}}get _sections(){return[{title:"Clock",icon:"mdi:clock-outline",fields:[{name:"numbers",selector:{select:{mode:"dropdown",options:[{value:"cardinal",label:"Cardinal (12 · 3 · 6 · 9)"},{value:"all",label:"All (1–12)"},{value:"dots",label:"Hour dots"},{value:"none",label:"None"}]}}},{name:"show_seconds",selector:{boolean:{}}},{name:"second_dot",label:"Second hand as rim dot",selector:{boolean:{}}},{name:"smooth",label:"Smooth second hand",selector:{boolean:{}}},{name:"cookie",label:"Cookie face (12-sided)",selector:{boolean:{}}},{name:"digital",label:"Digital readout (HH/MM behind hands)",selector:{boolean:{}}},{name:"date",label:"Show date",selector:{boolean:{}}},{name:"hand_width",label:"Hand thickness",selector:{number:{min:1,max:12,step:.5,mode:"slider"}}},{name:"size",label:"Size (10 = fill)",selector:{number:{min:1,max:10,step:1,mode:"slider"}}}]},{title:"Appearance",icon:"mdi:palette-outline",fields:[{name:"face_color",label:"Face",color:!0,template:!0,selector:{text:{}}},{name:"number_color",label:"Numbers",color:!0,template:!0,selector:{text:{}}},{name:"hand_color",label:"Hands",color:!0,template:!0,selector:{text:{}}},{name:"second_color",label:"Second hand",color:!0,template:!0,selector:{text:{}}}]}]}});customElements.define("materia-clock",class extends lt{static properties={hass:{attribute:!1},config:{state:!0},_t:{state:!0}};static styles=We;static getConfigElement(){return document.createElement("materia-clock-editor")}static getStubConfig(){return{numbers:"cardinal",show_seconds:!0}}setConfig(t){this.config=t||{}}connectedCallback(){super.connectedCallback(),this._start()}disconnectedCallback(){super.disconnectedCallback(),this._stop()}updated(t){t.has("config")&&(this._facePath=null,this._stop(),this._start())}_scallop(){let t="";for(let e=0;e<=240;e++){const i=e/240*Math.PI*2,o=48+1*Math.cos(12*i);t+=`${0===e?"M":"L"}${(50+o*Math.cos(i)).toFixed(2)} ${(50+o*Math.sin(i)).toFixed(2)} `}return t+"Z"}_start(){if(!this._raf&&!this._tick)if(this.config?.smooth){const t=()=>{this._raf=requestAnimationFrame(t),this._t=performance.now()};this._raf=requestAnimationFrame(t)}else this._tick=setInterval(()=>this._t=Date.now(),1e3)}_stop(){this._raf&&cancelAnimationFrame(this._raf),this._tick&&clearInterval(this._tick),this._raf=null,this._tick=null}render(){if(!this.config)return I``;const t=new Date,e=!!this.config.smooth,i=t.getSeconds()+(e?t.getMilliseconds()/1e3:0),o=t.getMinutes()+i/60,s=30*(t.getHours()%12+o/60),n=6*o,a=6*i,r=!1!==this.config.show_seconds,c=!!(this.config.cookie??this.config.squiggle);c&&(this._facePath??=this._scallop());const l=this.config.numbers||"cardinal",d="all"===l?[1,2,3,4,5,6,7,8,9,10,11,12]:"cardinal"===l?[12,3,6,9]:[],h="all"===l?40:34,p="all"===l?9:18,u="dots"===l?[1,2,3,4,5,6,7,8,9,10,11,12]:[],m=!!this.config.digital,_=String(t.getHours()%12||12).padStart(2,"0"),g=String(t.getMinutes()).padStart(2,"0"),f=!!this.config.date,v=`${t.toLocaleDateString(void 0,{weekday:"short"})} ${t.getDate()}`,b=(s%360+360)%360,y=(n%360+360)%360,x=Math.min(b,y),w=Math.max(b,y),$=w-x;let C=$>=360-$?x+$/2:w+(360-$)/2;C=30*Math.round((C-15)/30)+15,C=(C%360+360)%360;const k=C*Math.PI/180,A=u.length?41:d.length?h:40,S=(50+A*Math.sin(k)).toFixed(2),E=(50-A*Math.cos(k)).toFixed(2);let T=C;T>90&&T<270&&(T-=180);const z=4.4*v.length/2/A*(180/Math.PI)+(u.length?4:8),F=t=>{if(!f)return!1;const e=(t%12*30%360+360)%360;let i=Math.abs(e-C)%360;return i>180&&(i=360-i),i<z},O=d.filter(t=>!F(t)),M=u.filter(t=>!F(t)),U=!!this.config.second_dot,P=a*Math.PI/180,D=(50+44*Math.sin(P)).toFixed(2),B=(50-44*Math.cos(P)).toFixed(2),R=this.config.hand_width,N=`--clock-size:${["98px","136px","174px","212px","250px","300px","360px","440px","560px","100%"][Math.min(10,Math.max(1,this.config.size??10))-1]};`+(this.config.face_color?`--clock-face:${this.config.face_color};`:"")+(this.config.number_color?`--clock-number:${this.config.number_color};`:"")+(this.config.hand_color?`--clock-hand:${this.config.hand_color};`:"")+(this.config.second_color?`--clock-second:${this.config.second_color};`:"")+(R?`--clock-hour-w:${R};--clock-minute-w:${(.7*R).toFixed(2)};--clock-second-w:${(.3*R).toFixed(2)};`:"");return I`
       <ha-card style=${N}>
         <svg viewBox="0 0 100 100">
           ${c?H`<path class="face" d=${this._facePath}></path>`:H`<circle class="face" cx="50" cy="50" r="49"></circle>`}

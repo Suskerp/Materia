@@ -12,22 +12,23 @@ export const styles = [hostStyles, haCardReset, css`
   .blob {
     position: relative;
     width: 100%;
-    aspect-ratio: 1 / 0.82;
+    aspect-ratio: 1 / 0.66;
     box-sizing: border-box;
     container-type: inline-size;
     overflow: hidden;
     cursor: pointer;
     /* Defaults to the SAME surface as the clock face so the two read as a set. */
     background: var(--wt-bg, var(--md-sys-color-surface-container-high, var(--card-background-color)));
-    color: var(--wt-fg, var(--md-sys-color-on-surface, var(--primary-text-color)));
-    /* M3 pill shape (fully rounded). */
-    border-radius: 50%;
+    color: var(--wt-fg, var(--md-sys-color-primary, var(--primary-text-color)));
+    /* M3 pill shape: stadium (flat top/bottom, fully rounded ends) — not an
+       ellipse. The large radius clamps to half the shorter (height) side. */
+    border-radius: 9999px;
   }
 
   .readout {
     position: absolute;
-    top: 15%;
-    right: 12%;
+    top: 21%;
+    right: 17%;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -35,7 +36,7 @@ export const styles = [hostStyles, haCardReset, css`
   }
 
   .temp {
-    font-size: 26cqi;
+    font-size: 24cqi;
     font-weight: 700;
     line-height: 1;
     letter-spacing: -0.04em;
@@ -51,17 +52,17 @@ export const styles = [hostStyles, haCardReset, css`
 
   .wx {
     position: absolute;
-    left: 11%;
-    bottom: 11%;
-    width: 30cqi;
-    height: 30cqi;
+    left: 15%;
+    bottom: 16%;
+    width: 27cqi;
+    height: 27cqi;
   }
 
   .wx-mono {
     position: absolute;
-    left: 11%;
-    bottom: 11%;
-    --mdc-icon-size: 30cqi;
+    left: 15%;
+    bottom: 16%;
+    --mdc-icon-size: 27cqi;
     display: flex;
   }
 

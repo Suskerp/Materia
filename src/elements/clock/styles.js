@@ -53,12 +53,12 @@ export const styles = css`
   }
 
   .hour {
-    stroke: var(--clock-hand, var(--md-sys-color-on-surface, #222));
+    stroke: var(--clock-hand, var(--md-sys-color-primary, #222));
     stroke-width: var(--clock-hour-w, 5);
   }
 
   .minute {
-    stroke: var(--clock-hand, var(--md-sys-color-on-surface, #222));
+    stroke: var(--clock-hand, var(--md-sys-color-primary, #222));
     stroke-width: var(--clock-minute-w, 3.5);
   }
 
@@ -68,6 +68,6 @@ export const styles = css`
   }
 
   .pin {
-    fill: var(--clock-hand, var(--md-sys-color-on-surface, #222));
+    fill: var(--clock-hand, var(--md-sys-color-primary, #222));
   }
 `;
