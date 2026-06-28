@@ -57,6 +57,7 @@ class MateriaWeatherTileEditor extends SmartEditorBase {
           { name: "color", label: "Background", color: true, template: true, selector: { text: {} } },
           { name: "color_on", label: "Text / temperature", color: true, template: true, selector: { text: {} } },
           { name: "minmax_color", label: "Min / max color", color: true, template: true, selector: { text: {} } },
+          { name: "cycle_icons", label: "Cycle icons (preview alignment)", selector: { boolean: {} } },
         ],
       },
       {

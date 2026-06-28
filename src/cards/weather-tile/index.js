@@ -1,6 +1,6 @@
 import { LitElement, html, svg } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { coloredWeatherIcon } from "./icons.js";
+import { coloredWeatherIcon, WEATHER_CONDITIONS } from "./icons.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -12,6 +12,7 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     _resolvedColorOn: { state: true },
     _resolvedMinmaxColor: { state: true },
     _forecast: { state: true },
+    _cycleIndex: { state: true },
   };
 
   static styles = styles;
@@ -38,11 +39,34 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
       this._resolveField("minmax_color", "_resolvedMinmaxColor");
       this._subscribeForecast();
     }
+    this._syncCycle();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     this._unsubForecast();
+    this._stopCycle();
+  }
+
+  /** Start/stop the alignment-preview icon cycle based on config. */
+  _syncCycle() {
+    if (this.config?.cycle_icons) {
+      if (!this._cycleTimer) {
+        this._cycleIndex ??= 0;
+        this._cycleTimer = setInterval(() => {
+          this._cycleIndex = (this._cycleIndex + 1) % WEATHER_CONDITIONS.length;
+        }, 1500);
+      }
+    } else {
+      this._stopCycle();
+    }
+  }
+
+  _stopCycle() {
+    if (this._cycleTimer) {
+      clearInterval(this._cycleTimer);
+      this._cycleTimer = null;
+    }
   }
 
   /** Subscribe to the entity's daily forecast (modern HA no longer exposes it
@@ -80,7 +104,10 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
 
     const stateObj = this.hass.states[this.config.entity];
     const unavailable = this._isUnavailable(stateObj);
-    const condition = stateObj?.state ?? "";
+    // Alignment-preview cycle overrides the live condition.
+    const condition = this.config.cycle_icons
+      ? WEATHER_CONDITIONS[(this._cycleIndex ?? 0) % WEATHER_CONDITIONS.length]
+      : stateObj?.state ?? "";
 
     // Current temperature — sensor override, else the weather entity.
     let temp = stateObj?.attributes?.temperature;
@@ -124,8 +151,9 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
       `${bg ? `--wt-bg:${bg};` : ""}${fg ? `--wt-fg:${fg};` : ""}` +
       `${mm ? `--wt-minmax:${mm};--wt-minmax-opacity:1;` : ""}`;
 
-    // Colored Pixel-style glyph unless an explicit icon is configured.
-    const customIcon = this.config.icon;
+    // Colored Pixel-style glyph unless an explicit icon is configured (the
+    // cycle preview always shows the colored glyphs).
+    const customIcon = this.config.cycle_icons ? null : this.config.icon;
 
     return html`
       <ha-card>

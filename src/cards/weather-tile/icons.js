@@ -90,3 +90,6 @@ export function coloredWeatherIcon(condition) {
   const fn = ICONS[condition] || ICONS.cloudy;
   return fn();
 }
+
+/** Every condition key — used by the card's icon-cycle alignment preview. */
+export const WEATHER_CONDITIONS = Object.keys(ICONS);
