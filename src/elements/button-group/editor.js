@@ -1,5 +1,5 @@
 import { html, css } from "lit";
-import { computeLabel } from "../../utils/editor-helpers.js";
+import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 import { PRESETS } from "./styles.js";
 
@@ -130,39 +130,37 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
         </ha-icon-button>
       </div>
 
-      ${(this._config.options || []).map(
-        (opt, i) => html`
-          <div class="option-card">
-            <div class="option-header">
-              <span>${opt.label || opt.value || `Option ${i + 1}`}</span>
-              <ha-icon-button @click=${() => this._moveOption(i, -1)}>
-                <ha-icon icon="mdi:arrow-up"></ha-icon>
-              </ha-icon-button>
-              <ha-icon-button @click=${() => this._moveOption(i, 1)}>
-                <ha-icon icon="mdi:arrow-down"></ha-icon>
-              </ha-icon-button>
-              <ha-icon-button @click=${() => this._toggleExpand(i)}>
-                <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
-              </ha-icon-button>
-              <ha-icon-button @click=${() => this._removeOption(i)}>
-                <ha-icon icon="mdi:delete"></ha-icon>
-              </ha-icon-button>
+      ${sortableList(
+        (from, to) => this._moveOption(from, to),
+        (this._config.options || []).map(
+          (opt, i) => html`
+            <div class="option-card">
+              <div class="option-header">
+                <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
+                <span>${opt.label || opt.value || `Option ${i + 1}`}</span>
+                <ha-icon-button @click=${() => this._toggleExpand(i)}>
+                  <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
+                </ha-icon-button>
+                <ha-icon-button @click=${() => this._removeOption(i)}>
+                  <ha-icon icon="mdi:delete"></ha-icon>
+                </ha-icon-button>
+              </div>
+              ${this._expanded === i
+                ? html`
+                    <div class="option-body">
+                      <ha-form
+                        .hass=${this.hass}
+                        .data=${opt}
+                        .schema=${this._optionSchema}
+                        .computeLabel=${computeLabel}
+                        @value-changed=${(e) => this._updateOptionForm(i, e.detail.value)}
+                      ></ha-form>
+                    </div>
+                  `
+                : ""}
             </div>
-            ${this._expanded === i
-              ? html`
-                  <div class="option-body">
-                    <ha-form
-                      .hass=${this.hass}
-                      .data=${opt}
-                      .schema=${this._optionSchema}
-                      .computeLabel=${computeLabel}
-                      @value-changed=${(e) => this._updateOptionForm(i, e.detail.value)}
-                    ></ha-form>
-                  </div>
-                `
-              : ""}
-          </div>
-        `
+          `
+        )
       )}
     `;
   }
@@ -180,12 +178,11 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
     this._commit({ ...this._config, options });
   }
 
-  _moveOption(index, direction) {
+  _moveOption(from, to) {
     const options = [...(this._config.options || [])];
-    const target = index + direction;
-    if (target < 0 || target >= options.length) return;
-    [options[index], options[target]] = [options[target], options[index]];
-    if (this._expanded === index) this._expanded = target;
+    const [m] = options.splice(from, 1);
+    options.splice(to, 0, m);
+    if (this._expanded === from) this._expanded = to;
     this._commit({ ...this._config, options });
   }
 

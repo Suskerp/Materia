@@ -280,6 +280,15 @@ export class SmartEditorBase extends LitElement {
   static styles = css`
     :host { display: block; }
 
+    /* Drag handle for sortable list rows (see editor-helpers sortableList). */
+    .drag-handle {
+      cursor: grab;
+      opacity: 0.5;
+      --mdc-icon-size: 20px;
+      flex-shrink: 0;
+    }
+    .drag-handle:active { cursor: grabbing; }
+
     ha-expansion-panel {
       display: block;
       margin-bottom: 12px;

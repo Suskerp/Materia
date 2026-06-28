@@ -565,6 +565,8 @@ options:
 | `options` | array | | Menu items `{ icon, label, tap_action }` |
 | `variant` | string | `tonal` | `filled` · `tonal` · `elevated` · `outlined` |
 | `size` | string | `s` | `xs` · `s` · `m` · `l` · `xl` |
+| `menu_position` | string | `down` | Direction the menu opens: `down` · `up` · `left` · `right` |
+| `wide` | boolean | `false` | Leading button grows to fill the row (trailing stays fixed) |
 | `color` / `color_on` | string | variant colors | Override background / text. *Color picker / templatable* |
 
 ---

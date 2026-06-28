@@ -114,8 +114,6 @@ export const styles = [
     /* ---- Menu ---- */
     .menu {
       position: absolute;
-      top: calc(100% + 4px);
-      right: 0;
       min-width: max(180px, 100%);
       box-sizing: border-box;
       padding: 8px;
@@ -135,15 +133,39 @@ export const styles = [
         var(--_surf);
       box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
       opacity: 0;
-      transform: scaleY(0.9);
-      transform-origin: top right;
       pointer-events: none;
       transition: opacity 0.16s ease, transform 0.16s ease;
     }
     .menu.open {
       opacity: 1;
-      transform: scaleY(1);
+      transform: none;
       pointer-events: auto;
+    }
+
+    /* Open direction */
+    .menu.dir-down {
+      top: calc(100% + 4px);
+      right: 0;
+      transform-origin: top right;
+      transform: scaleY(0.9);
+    }
+    .menu.dir-up {
+      bottom: calc(100% + 4px);
+      right: 0;
+      transform-origin: bottom right;
+      transform: scaleY(0.9);
+    }
+    .menu.dir-right {
+      left: calc(100% + 4px);
+      top: 0;
+      transform-origin: left center;
+      transform: scaleX(0.9);
+    }
+    .menu.dir-left {
+      right: calc(100% + 4px);
+      top: 0;
+      transform-origin: right center;
+      transform: scaleX(0.9);
     }
 
     .menu-item {

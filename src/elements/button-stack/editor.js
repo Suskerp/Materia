@@ -1,5 +1,5 @@
 import { html, css } from "lit";
-import { computeLabel } from "../../utils/editor-helpers.js";
+import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, isTemplate } from "../../utils/smart-editor.js";
 
 class MateriaButtonStackEditor extends SmartEditorBase {
@@ -106,39 +106,37 @@ class MateriaButtonStackEditor extends SmartEditorBase {
         </ha-icon-button>
       </div>
 
-      ${options.map(
-        (opt, i) => html`
-          <div class="opt-card">
-            <div class="opt-row">
-              <span>${opt.label || (opt.icon && !isTemplate(opt.icon) ? opt.icon : `Option ${i + 1}`)}</span>
-              <ha-icon-button @click=${() => this._moveOption(i, -1)}>
-                <ha-icon icon="mdi:arrow-up"></ha-icon>
-              </ha-icon-button>
-              <ha-icon-button @click=${() => this._moveOption(i, 1)}>
-                <ha-icon icon="mdi:arrow-down"></ha-icon>
-              </ha-icon-button>
-              <ha-icon-button @click=${() => this._toggleOption(i)}>
-                <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
-              </ha-icon-button>
-              <ha-icon-button @click=${() => this._removeOption(i)}>
-                <ha-icon icon="mdi:delete"></ha-icon>
-              </ha-icon-button>
+      ${sortableList(
+        (from, to) => this._moveOption(from, to),
+        options.map(
+          (opt, i) => html`
+            <div class="opt-card">
+              <div class="opt-row">
+                <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
+                <span>${opt.label || (opt.icon && !isTemplate(opt.icon) ? opt.icon : `Option ${i + 1}`)}</span>
+                <ha-icon-button @click=${() => this._toggleOption(i)}>
+                  <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
+                </ha-icon-button>
+                <ha-icon-button @click=${() => this._removeOption(i)}>
+                  <ha-icon icon="mdi:delete"></ha-icon>
+                </ha-icon-button>
+              </div>
+              ${this._expanded === i
+                ? html`
+                    <div class="opt-body">
+                      <ha-form
+                        .hass=${this.hass}
+                        .data=${opt}
+                        .schema=${this._optionSchema(opt)}
+                        .computeLabel=${computeLabel}
+                        @value-changed=${(e) => this._optionChanged(i, e.detail.value)}
+                      ></ha-form>
+                    </div>
+                  `
+                : ""}
             </div>
-            ${this._expanded === i
-              ? html`
-                  <div class="opt-body">
-                    <ha-form
-                      .hass=${this.hass}
-                      .data=${opt}
-                      .schema=${this._optionSchema(opt)}
-                      .computeLabel=${computeLabel}
-                      @value-changed=${(e) => this._optionChanged(i, e.detail.value)}
-                    ></ha-form>
-                  </div>
-                `
-              : ""}
-          </div>
-        `
+          `
+        )
       )}
     `;
   }
@@ -156,12 +154,11 @@ class MateriaButtonStackEditor extends SmartEditorBase {
     this._commit({ ...this._config, options });
   }
 
-  _moveOption(i, delta) {
+  _moveOption(from, to) {
     const options = [...(this._config.options || [])];
-    const to = i + delta;
-    if (to < 0 || to >= options.length) return;
-    [options[i], options[to]] = [options[to], options[i]];
-    if (this._expanded === i) this._expanded = to;
+    const [m] = options.splice(from, 1);
+    options.splice(to, 0, m);
+    if (this._expanded === from) this._expanded = to;
     this._commit({ ...this._config, options });
   }
 

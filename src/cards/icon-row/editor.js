@@ -1,6 +1,6 @@
 import { html, css } from "lit";
 import { ref } from "lit/directives/ref.js";
-import { computeLabel } from "../../utils/editor-helpers.js";
+import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, isTemplate } from "../../utils/smart-editor.js";
 import "../../elements/button/editor.js";
 
@@ -160,39 +160,51 @@ class MateriaIconRowEditor extends SmartEditorBase {
                         <ha-icon icon="mdi:plus"></ha-icon>
                       </ha-icon-button>
                     </div>
-                    ${(btn.options || []).map(
-                      (opt, j) => html`
-                        <div class="opt-card">
-                          <div class="opt-row">
-                            <span>${opt.label || (opt.icon && !isTemplate(opt.icon) ? opt.icon : `Option ${j + 1}`)}</span>
-                            <ha-icon-button @click=${() => this._moveOption(i, j, -1)}>
-                              <ha-icon icon="mdi:arrow-up"></ha-icon>
-                            </ha-icon-button>
-                            <ha-icon-button @click=${() => this._moveOption(i, j, 1)}>
-                              <ha-icon icon="mdi:arrow-down"></ha-icon>
-                            </ha-icon-button>
-                            <ha-icon-button @click=${() => this._toggleOption(j)}>
-                              <ha-icon icon=${this._expandedOption === j ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
-                            </ha-icon-button>
-                            <ha-icon-button @click=${() => this._removeOption(i, j)}>
-                              <ha-icon icon="mdi:delete"></ha-icon>
-                            </ha-icon-button>
+                    ${btn.options?.length
+                      ? html`<ha-form
+                          .hass=${this.hass}
+                          .data=${{ menu_position: btn.menu_position || "down" }}
+                          .schema=${[{ name: "menu_position", label: "Menu opens", selector: { select: { mode: "dropdown", options: [
+                            { value: "down", label: "Down" },
+                            { value: "up", label: "Up" },
+                            { value: "left", label: "Left" },
+                            { value: "right", label: "Right" },
+                          ] } } }]}
+                          .computeLabel=${computeLabel}
+                          @value-changed=${(e) => this._buttonChanged(i, { ...btn, menu_position: e.detail.value.menu_position })}
+                        ></ha-form>`
+                      : ""}
+                    ${sortableList(
+                      (from, to) => this._moveOption(i, from, to),
+                      (btn.options || []).map(
+                        (opt, j) => html`
+                          <div class="opt-card">
+                            <div class="opt-row">
+                              <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
+                              <span>${opt.label || (opt.icon && !isTemplate(opt.icon) ? opt.icon : `Option ${j + 1}`)}</span>
+                              <ha-icon-button @click=${() => this._toggleOption(j)}>
+                                <ha-icon icon=${this._expandedOption === j ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
+                              </ha-icon-button>
+                              <ha-icon-button @click=${() => this._removeOption(i, j)}>
+                                <ha-icon icon="mdi:delete"></ha-icon>
+                              </ha-icon-button>
+                            </div>
+                            ${this._expandedOption === j
+                              ? html`
+                                  <div class="opt-body">
+                                    <ha-form
+                                      .hass=${this.hass}
+                                      .data=${opt}
+                                      .schema=${this._optionSchema(opt)}
+                                      .computeLabel=${computeLabel}
+                                      @value-changed=${(e) => this._optionChanged(i, j, e.detail.value)}
+                                    ></ha-form>
+                                  </div>
+                                `
+                              : ""}
                           </div>
-                          ${this._expandedOption === j
-                            ? html`
-                                <div class="opt-body">
-                                  <ha-form
-                                    .hass=${this.hass}
-                                    .data=${opt}
-                                    .schema=${this._optionSchema(opt)}
-                                    .computeLabel=${computeLabel}
-                                    @value-changed=${(e) => this._optionChanged(i, j, e.detail.value)}
-                                  ></ha-form>
-                                </div>
-                              `
-                            : ""}
-                        </div>
-                      `
+                        `
+                      )
                     )}
                   </div>
                 `
@@ -263,13 +275,12 @@ class MateriaIconRowEditor extends SmartEditorBase {
     this._withButtonOptions(i, (options) => options.splice(j, 1));
   }
 
-  _moveOption(i, j, delta) {
-    const to = j + delta;
+  _moveOption(i, from, to) {
     this._withButtonOptions(i, (options) => {
-      if (to < 0 || to >= options.length) return;
-      [options[j], options[to]] = [options[to], options[j]];
-      if (this._expandedOption === j) this._expandedOption = to;
+      const [m] = options.splice(from, 1);
+      options.splice(to, 0, m);
     });
+    if (this._expandedOption === from) this._expandedOption = to;
   }
 
   _optionChanged(i, j, value) {
