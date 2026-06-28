@@ -48,8 +48,8 @@ const ICONS = {
   clear: () => sun(12, 12, 7.5),
   "clear-night": () =>
     svg`<path d="M17 14.5 A7 7 0 1 1 10.5 5 A5.5 5.5 0 0 0 17 14.5 Z" fill=${MOON} />`,
-  partlycloudy: () => svg`${sun(15, 8, 5.2)}${cloud(10, 15, 0.85, CLOUD)}`,
-  partly_cloudy: () => svg`${sun(15, 8, 5.2)}${cloud(10, 15, 0.85, CLOUD)}`,
+  partlycloudy: () => svg`${sun(12, 8, 5.2)}${cloud(10, 15, 0.85, CLOUD)}`,
+  partly_cloudy: () => svg`${sun(12, 8, 5.2)}${cloud(10, 15, 0.85, CLOUD)}`,
   cloudy: () => cloud(12, 12, 1.1, CLOUD_DK),
   rainy: () => svg`${cloud(12, 10, 1, CLOUD_DK)}${drops(RAIN, [8, 12, 16], 17)}`,
   pouring: () => svg`${cloud(12, 9.5, 1, CLOUD_DK)}${drops(RAIN, [7, 10, 13, 16], 16.5)}`,
@@ -64,15 +64,13 @@ const ICONS = {
   "lightning-rainy": () =>
     svg`${cloud(12, 9.5, 1, CLOUD_DK)}${drops(RAIN, [8, 16], 17)}<path d="M12 14 l-2 4 h1.8 l-0.8 3.5 4-5.5 h-2 l1.3-2 z" fill=${BOLT} />`,
   windy: () =>
-    svg`<g stroke=${CLOUD_DK} stroke-width="2.2" stroke-linecap="round" fill="none">
-      <path d="M3 8 q4 -3 8 0 t8 0" />
-      <path d="M3 13 q4.5 -3 9 0 t9 0" />
-      <path d="M4 18 q3.5 -2.5 7 0 t7 0" /></g>`,
+    svg`<g stroke=${CLOUD_DK} stroke-width="2" stroke-linecap="round" fill="none">
+      <path d="M4 9 h11 a2.5 2.5 0 1 0-2.5-2.5" />
+      <path d="M4 14 h14 a2.5 2.5 0 1 1-2.5 2.5" /></g>`,
   "windy-variant": () =>
-    svg`<g stroke=${CLOUD_DK} stroke-width="2.2" stroke-linecap="round" fill="none">
-      <path d="M3 8 q4 -3 8 0 t8 0" />
-      <path d="M3 13 q4.5 -3 9 0 t9 0" />
-      <path d="M4 18 q3.5 -2.5 7 0 t7 0" /></g>`,
+    svg`<g stroke=${CLOUD_DK} stroke-width="2" stroke-linecap="round" fill="none">
+      <path d="M4 9 h11 a2.5 2.5 0 1 0-2.5-2.5" />
+      <path d="M4 14 h14 a2.5 2.5 0 1 1-2.5 2.5" /></g>`,
   exceptional: () => cloud(12, 12, 1.1, CLOUD_DK),
 };
 
