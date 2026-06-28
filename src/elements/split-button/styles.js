@@ -8,6 +8,21 @@ export const styles = [
       display: inline-block;
     }
 
+    /* "wide" grows the split button to fill the row; the leading button (also
+       passed wide) flexes while the trailing stays a fixed icon-button width. */
+    :host([wide]) {
+      flex: 1;
+      display: block;
+    }
+    :host([wide]) .wrap {
+      display: block;
+      width: 100%;
+    }
+    :host([wide]) .split {
+      display: flex;
+      width: 100%;
+    }
+
     .wrap {
       position: relative;
       display: inline-block;

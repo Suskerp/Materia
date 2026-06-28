@@ -38,6 +38,13 @@ class MateriaSplitButton extends ActionMixin(LitElement) {
   setConfig(config) {
     this.config = { variant: "tonal", size: "s", ...config };
     this._open = false;
+    this.toggleAttribute("wide", !!config.wide);
+  }
+
+  updated(changed) {
+    // icon-row sets `.config` directly (bypassing setConfig), so reflect `wide`
+    // on every config change too.
+    if (changed.has("config")) this.toggleAttribute("wide", !!this.config?.wide);
   }
 
   connectedCallback() {
