@@ -20,8 +20,8 @@ export const styles = [hostStyles, haCardReset, css`
     /* Defaults to the SAME surface as the clock face so the two read as a set. */
     background: var(--wt-bg, var(--md-sys-color-surface-container-high, var(--card-background-color)));
     color: var(--wt-fg, var(--md-sys-color-on-surface, var(--primary-text-color)));
-    /* Organic Material You "pebble" blob. */
-    border-radius: 47% 53% 45% 55% / 60% 56% 44% 40%;
+    /* M3 pill shape (fully rounded). */
+    border-radius: 50%;
   }
 
   .readout {

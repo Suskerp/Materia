@@ -90,8 +90,9 @@ class MateriaClock extends LitElement {
     const secA = sec * 6;
 
     const showSeconds = this.config.show_seconds !== false;
-    const squiggle = !!this.config.squiggle;
-    if (squiggle) this._facePath ??= this._scallop();
+    // 12-sided "cookie" face (was named `squiggle` — kept as an alias).
+    const cookie = !!(this.config.cookie ?? this.config.squiggle);
+    if (cookie) this._facePath ??= this._scallop();
     const mode = this.config.numbers || "cardinal";
     const nums = mode === "all"
       ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
@@ -165,7 +166,7 @@ class MateriaClock extends LitElement {
     return html`
       <ha-card style=${vars}>
         <svg viewBox="0 0 100 100">
-          ${squiggle
+          ${cookie
             ? svg`<path class="face" d=${this._facePath}></path>`
             : svg`<circle class="face" cx="50" cy="50" r="49"></circle>`}
           ${numsShown.map((n) => {

@@ -10,6 +10,7 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     config: { state: true },
     _resolvedColor: { state: true },
     _resolvedColorOn: { state: true },
+    _forecast: { state: true },
   };
 
   static styles = styles;
@@ -26,12 +27,44 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
   setConfig(config) {
     if (!config.entity) throw new Error("entity is required");
     this.config = { ...config };
+    this._fcEntity = undefined; // (re)subscribe forecast for the (new) entity
   }
 
   updated(changedProps) {
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("color", "_resolvedColor");
       this._resolveField("color_on", "_resolvedColorOn");
+      this._subscribeForecast();
+    }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._unsubForecast();
+  }
+
+  /** Subscribe to the entity's daily forecast (modern HA no longer exposes it
+   *  as an attribute). Guarded so it runs once per entity, not per hass tick. */
+  _subscribeForecast() {
+    const entity = this.config?.entity;
+    if (!this.hass || !entity || this._fcEntity === entity) return;
+    this._unsubForecast();
+    this._fcEntity = entity;
+    this._forecast = [];
+    const p = this.hass.connection.subscribeMessage(
+      (ev) => {
+        this._forecast = ev?.forecast || [];
+      },
+      { type: "weather/subscribe_forecast", forecast_type: "daily", entity_id: entity }
+    );
+    this._fcUnsub = p;
+    p.catch(() => {}); // entity may not support forecasts — fall back gracefully
+  }
+
+  _unsubForecast() {
+    if (this._fcUnsub) {
+      this._fcUnsub.then((u) => u && u()).catch(() => {});
+      this._fcUnsub = null;
     }
   }
 
@@ -62,7 +95,8 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     // Optional min/max — explicit sensors override today's forecast.
     let low = this.config.low_entity ? this.hass.states[this.config.low_entity]?.state : null;
     let high = this.config.high_entity ? this.hass.states[this.config.high_entity]?.state : null;
-    const fc = stateObj?.attributes?.forecast?.[0];
+    // Today's forecast: subscribed daily forecast first, legacy attribute next.
+    const fc = this._forecast?.[0] || stateObj?.attributes?.forecast?.[0];
     if (low == null && fc?.templow != null) low = fc.templow;
     if (high == null && fc?.temperature != null) high = fc.temperature;
     const showMinmax =

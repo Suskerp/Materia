@@ -23,7 +23,7 @@ class MateriaClockEditor extends SmartEditorBase {
           { name: "show_seconds", selector: { boolean: {} } },
           { name: "second_dot", label: "Second hand as rim dot", selector: { boolean: {} } },
           { name: "smooth", label: "Smooth second hand", selector: { boolean: {} } },
-          { name: "squiggle", label: "Squiggly face", selector: { boolean: {} } },
+          { name: "cookie", label: "Cookie face (12-sided)", selector: { boolean: {} } },
           { name: "digital", label: "Digital readout (HH/MM behind hands)", selector: { boolean: {} } },
           { name: "date", label: "Show date", selector: { boolean: {} } },
           { name: "hand_width", label: "Hand thickness", selector: { number: { min: 1, max: 12, step: 0.5, mode: "slider" } } },

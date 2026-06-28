@@ -84,7 +84,13 @@ To use your own colors, edit `src/custom_colors.json` and rebuild, edit the serv
       "warning": "#D9A000",
       "on-warning": "#ffffff",
       "warning-container": "#FEEFCA",
-      "on-warning-container": "#745D00"
+      "on-warning-container": "#745D00",
+      "weather-sun": "#F2B500",
+      "weather-cloud": "#9FA9B7",
+      "weather-cloud-dark": "#6F7A8A",
+      "weather-rain": "#2E86E0",
+      "weather-snow": "#AEB8C4",
+      "weather-moon": "#5961C2"
     }
   },
   "dark": { "colors": { "...": "see src/custom_colors.json" } }
@@ -188,12 +194,14 @@ outdoor_temp_entity: sensor.outdoor_temperature
 
 #### `materia-weather`
 
-A weather card showing temperature, a condition icon, and optional humidity.
+A compact weather pill showing a name, a condition icon, and an inline state line (temperature · condition · humidity).
 
 ```yaml
 type: custom:materia-weather
 entity: weather.home
 name: Weather
+show_temperature: true
+temperature_entity: sensor.outdoor_temperature
 humidity_entity: sensor.outdoor_humidity
 ```
 
@@ -202,8 +210,63 @@ humidity_entity: sensor.outdoor_humidity
 | `entity` | string | **required** | Weather entity ID |
 | `name` | string | temperature | Display name. *Templatable* |
 | `icon` | string | condition icon | Icon override. *Templatable* |
+| `show_temperature` | boolean | `true` | Show the temperature inline on the state line |
+| `temperature_entity` | string | | Temperature sensor (overrides the weather entity's temperature attribute) |
 | `humidity_entity` | string | | Humidity sensor (falls back to the weather entity's humidity attribute) |
 | `tap_action` | object | `{ action: "more-info" }` | Tap action |
+
+---
+
+#### `materia-weather-tile`
+
+A large, blobby weather widget inspired by the Pixel weather widget -- a big temperature, an optional small min/max subscript, and a **colored** condition icon. Uses the M3 **pill** shape ([Material 3 shape](https://m3.material.io/styles/shape)) and defaults to the same surface color as `materia-clock`, so the two read as a matching set. The condition icons are drawn with the harmonized `--md-sys-cust-color-weather-*` colors (see [Custom Colors](#custom-colors)).
+
+```yaml
+type: custom:materia-weather-tile
+entity: weather.home
+temperature_entity: sensor.outdoor_temperature
+show_minmax: true
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `entity` | string | **required** | Weather entity ID |
+| `temperature_entity` | string | | Temperature sensor (overrides the weather entity's temperature attribute) |
+| `show_minmax` | boolean | `true` | Show today's min/max as a small subscript (from `high_entity`/`low_entity`, else the weather entity's daily forecast) |
+| `high_entity` | string | | High-temperature sensor override |
+| `low_entity` | string | | Low-temperature sensor override |
+| `icon` | string | colored glyph | Override with a monochrome HA icon instead of the colored glyph. *Templatable* |
+| `color` | string | `surface-container-high` | Blob background. *Color picker / templatable* |
+| `color_on` | string | `on-surface` | Temperature / text color. *Color picker / templatable* |
+| `tap_action` | object | `{ action: "more-info" }` | Tap action |
+
+---
+
+#### `materia-clock`
+
+A Material You analog clock. Supports the **12-sided cookie** face ([Material 3 shape](https://m3.material.io/styles/shape)), hour numerals or dots, a large faint digital readout, and a date label that drifts into the largest gap between the hands and curves along the rim (Pixel-clock style).
+
+```yaml
+type: custom:materia-clock
+cookie: true
+numbers: dots
+digital: true
+date: true
+second_dot: true
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `cookie` | boolean | `false` | 12-sided cookie face instead of a plain circle |
+| `numbers` | string | `cardinal` | `cardinal` (12·3·6·9), `all` (1-12), `dots` (hour markers), or `none` |
+| `show_seconds` | boolean | `true` | Show the second hand |
+| `second_dot` | boolean | `false` | Render the second indicator as a rim dot instead of a hand |
+| `smooth` | boolean | `false` | Sweeping (smooth) second hand |
+| `digital` | boolean | `false` | Large faint HH/MM readout behind the hands |
+| `date` | boolean | `false` | Date label placed in the largest gap between the hands |
+| `hand_width` | number | `5` | Hand thickness (1-12) |
+| `size` | number | `10` | Size 1-10 (10 = fill the card) |
+| `face_color` / `number_color` / `hand_color` / `second_color` | string | theme | Color overrides. *Color picker / templatable* |
 
 ---
 
