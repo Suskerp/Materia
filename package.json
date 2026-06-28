@@ -1,7 +1,7 @@
 {
   "name": "materia",
   "version": "0.5.3",
-  "description": "Material You card collection for Home Assistant",
+  "description": "Material You / Expressive card collection for Home Assistant",
   "main": "dist/materia.js",
   "scripts": {
     "build": "rollup -c",

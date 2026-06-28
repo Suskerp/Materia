@@ -1,6 +1,6 @@
 # Materia
 
-Material You card collection for Home Assistant.
+Material You / Expressive card collection for Home Assistant.
 
 ## Overview
 
