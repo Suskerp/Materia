@@ -43,7 +43,7 @@ export const styles = [
     .trailing {
       border: none;
       cursor: pointer;
-      width: calc(var(--sb-h) * 1.15);
+      width: var(--sb-h, 40px); /* square → a circle when open (radius = h/2) */
       height: var(--sb-h, 40px);
       display: inline-flex;
       align-items: center;
