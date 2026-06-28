@@ -17,8 +17,17 @@ const MOON = "var(--md-sys-cust-color-weather-moon, #DCE3F7)";
 const FOG = "var(--md-sys-cust-color-weather-cloud-dark, #C7CEDA)";
 
 function sun(cx, cy, r) {
-  // Plain disc — no rays.
-  return svg`<circle cx=${cx} cy=${cy} r=${r} fill=${SUN} />`;
+  // 9-point "cookie" — a 9-lobe scalloped disc (M3 expressive shape).
+  const N = 9, A = r * 0.13, steps = 144;
+  let d = "";
+  for (let i = 0; i <= steps; i++) {
+    const t = (i / steps) * Math.PI * 2;
+    const rr = r + A * Math.cos(N * t);
+    const x = (cx + rr * Math.cos(t)).toFixed(2);
+    const y = (cy + rr * Math.sin(t)).toFixed(2);
+    d += `${i === 0 ? "M" : "L"}${x} ${y} `;
+  }
+  return svg`<path d=${d + "Z"} fill=${SUN} />`;
 }
 
 function cloud(cx, cy, s, fill) {
