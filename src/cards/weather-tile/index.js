@@ -106,10 +106,13 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     const mm = this._isTemplate(this.config.minmax_color) ? this._resolvedMinmaxColor : this.config.minmax_color;
     // Diagonal tilt in degrees (negative = rises to the top-right). Accepts a
     // number (slider) or the legacy right/left/none strings.
-    const tiltDeg =
+    let tiltDeg =
       typeof this.config.tilt === "number"
         ? this.config.tilt
         : ({ right: -45, left: 45, none: 0 }[this.config.tilt] ?? -45);
+    // Mirror flips the tilt to the opposite diagonal (e.g. -45 → +45) so the
+    // mirrored content (temp left, icon right) still follows the pill's slope.
+    if (this.config.mirror) tiltDeg = -tiltDeg;
     const iconSize = this.config.icon_size ?? 50;
     const textSize = this.config.text_size ?? 30;
     const width = this.config.width ?? 115;

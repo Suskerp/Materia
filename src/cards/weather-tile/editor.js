@@ -2,7 +2,7 @@ import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaWeatherTileEditor extends SmartEditorBase {
   _formData() {
-    return { show_minmax: true, mirror: false, ...this._config };
+    return { show_minmax: true, mirror: false, temp_x: 12, temp_y: 15, icon_x: 6, icon_y: 15, ...this._config };
   }
 
   get _sections() {
@@ -36,6 +36,10 @@ class MateriaWeatherTileEditor extends SmartEditorBase {
         icon: "mdi:palette-outline",
         fields: [
           { name: "mirror", label: "Mirror (temperature left, icon right)", selector: { boolean: {} } },
+          { name: "temp_x", label: "Temperature X (% from edge)", selector: { number: { min: 0, max: 60, step: 1, mode: "slider" } } },
+          { name: "temp_y", label: "Temperature Y (% from top)", selector: { number: { min: 0, max: 70, step: 1, mode: "slider" } } },
+          { name: "icon_x", label: "Icon X (% from edge)", selector: { number: { min: 0, max: 70, step: 1, mode: "slider" } } },
+          { name: "icon_y", label: "Icon Y (% from bottom)", selector: { number: { min: 0, max: 70, step: 1, mode: "slider" } } },
           { name: "color", label: "Background", color: true, template: true, selector: { text: {} } },
           { name: "color_on", label: "Text / temperature", color: true, template: true, selector: { text: {} } },
           { name: "minmax_color", label: "Min / max color", color: true, template: true, selector: { text: {} } },
