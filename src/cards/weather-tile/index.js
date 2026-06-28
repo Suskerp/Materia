@@ -114,8 +114,11 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
         ? this.config.tilt
         : ({ right: -26, left: 26, none: 0 }[this.config.tilt] ?? -26);
     const iconSize = this.config.icon_size ?? 27;
+    const width = this.config.width ?? 100;
+    const ratio = (this.config.height ?? 64) / 100;
     const style =
       `--wt-tilt:${tiltDeg}deg;--wt-icon-size:${iconSize}cqi;` +
+      `--wt-width:${width}%;--wt-ratio:${ratio};` +
       `${bg ? `--wt-bg:${bg};` : ""}${fg ? `--wt-fg:${fg};` : ""}` +
       `${mm ? `--wt-minmax:${mm};--wt-minmax-opacity:1;` : ""}`;
 
@@ -130,13 +133,13 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
           @click=${() => this._handleAction(this.config.tap_action || { action: "more-info" })}
         >
           <div class="readout">
-            <div class="temp">${unavailable ? "—" : tempStr}</div>
             ${showMinmax
               ? html`<div class="minmax">
                   ${this._num(high) != null ? html`<span>↑${this._num(high)}°</span>` : ""}
                   ${this._num(low) != null ? html`<span>↓${this._num(low)}°</span>` : ""}
                 </div>`
               : ""}
+            <div class="temp">${unavailable ? "—" : tempStr}</div>
           </div>
           ${customIcon
             ? html`<ha-icon class="wx-mono" .icon=${customIcon}></ha-icon>`

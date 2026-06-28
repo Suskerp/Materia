@@ -13,8 +13,9 @@ export const styles = [hostStyles, haCardReset, css`
 
   .blob {
     position: relative;
-    width: 100%;
-    aspect-ratio: 1 / 0.64;
+    width: var(--wt-width, 100%);
+    margin: 0 auto;
+    aspect-ratio: 1 / var(--wt-ratio, 0.64);
     box-sizing: border-box;
     container-type: inline-size;
     overflow: hidden;
@@ -33,8 +34,9 @@ export const styles = [hostStyles, haCardReset, css`
   /* Content counter-rotates so the temperature / icon stay upright. */
   .readout {
     position: absolute;
-    top: 19%;
+    top: 17%;
     right: 16%;
+    z-index: 1; /* temperature sits in front of the icon */
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -60,8 +62,9 @@ export const styles = [hostStyles, haCardReset, css`
 
   .wx {
     position: absolute;
-    left: 15%;
-    bottom: 16%;
+    left: 16%;
+    bottom: 20%;
+    z-index: 0;
     width: var(--wt-icon-size, 27cqi);
     height: var(--wt-icon-size, 27cqi);
     transform: rotate(calc(-1 * var(--wt-tilt, -26deg)));
@@ -69,8 +72,9 @@ export const styles = [hostStyles, haCardReset, css`
 
   .wx-mono {
     position: absolute;
-    left: 15%;
-    bottom: 16%;
+    left: 16%;
+    bottom: 20%;
+    z-index: 0;
     --mdc-icon-size: var(--wt-icon-size, 27cqi);
     display: flex;
     transform: rotate(calc(-1 * var(--wt-tilt, -26deg)));
