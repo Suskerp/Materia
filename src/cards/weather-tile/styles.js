@@ -36,7 +36,7 @@ export const styles = [hostStyles, haCardReset, css`
     position: absolute;
     top: var(--wt-temp-y, 17%);
     right: var(--wt-temp-x, 16%);
-    z-index: 1; /* temperature sits in front of the icon */
+    z-index: 0; /* icon draws in front of the temperature */
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -64,7 +64,7 @@ export const styles = [hostStyles, haCardReset, css`
     position: absolute;
     left: var(--wt-icon-x, 16%);
     bottom: var(--wt-icon-y, 20%);
-    z-index: 0;
+    z-index: 1;
     width: var(--wt-icon-size, 27cqi);
     height: var(--wt-icon-size, 27cqi);
     transform: rotate(calc(-1 * var(--wt-tilt, -26deg)));
@@ -74,7 +74,7 @@ export const styles = [hostStyles, haCardReset, css`
     position: absolute;
     left: var(--wt-icon-x, 16%);
     bottom: var(--wt-icon-y, 20%);
-    z-index: 0;
+    z-index: 1;
     --mdc-icon-size: var(--wt-icon-size, 27cqi);
     display: flex;
     transform: rotate(calc(-1 * var(--wt-tilt, -26deg)));
