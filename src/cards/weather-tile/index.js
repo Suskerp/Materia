@@ -121,7 +121,12 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     const iconY = this.config.icon_y ?? 10;
     const tempX = this.config.temp_x ?? 10;
     const tempY = this.config.temp_y ?? 15;
+    // Global size 1–10 caps the tile width (10 = fill the cell). Everything
+    // else is in container-query units, so the whole tile scales with it.
+    const sizes = ["120px", "150px", "185px", "225px", "270px", "320px", "380px", "460px", "560px", "none"];
+    const size = Math.min(10, Math.max(1, this.config.size ?? 10));
     const style =
+      `--wt-size:${sizes[size - 1]};` +
       `--wt-tilt:${tiltDeg}deg;--wt-icon-size:${iconSize}cqi;--wt-temp-size:${textSize}cqi;` +
       `--wt-width:${width}%;--wt-ratio:${ratio};` +
       `--wt-icon-x:${iconX}%;--wt-icon-y:${iconY}%;--wt-temp-x:${tempX}%;--wt-temp-y:${tempY}%;` +

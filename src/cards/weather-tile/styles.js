@@ -14,6 +14,7 @@ export const styles = [hostStyles, haCardReset, css`
   .blob {
     position: relative;
     width: var(--wt-width, 100%);
+    max-width: var(--wt-size, none);
     margin: 0 auto;
     aspect-ratio: 1 / var(--wt-ratio, 0.64);
     box-sizing: border-box;
