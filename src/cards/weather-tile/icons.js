@@ -78,6 +78,10 @@ const ICONS = {
     svg`<g stroke=${CLOUD_DK} stroke-width="2" stroke-linecap="round" fill="none">
       <path d="M4 9 h11 a2.5 2.5 0 1 0-2.5-2.5" />
       <path d="M4 14 h14 a2.5 2.5 0 1 1-2.5 2.5" /></g>`,
+  "windy-variant": () =>
+    svg`<g stroke=${CLOUD_DK} stroke-width="2" stroke-linecap="round" fill="none">
+      <path d="M4 9 h11 a2.5 2.5 0 1 0-2.5-2.5" />
+      <path d="M4 14 h14 a2.5 2.5 0 1 1-2.5 2.5" /></g>`,
   exceptional: () => cloud(12, 12, 1.1, CLOUD_DK),
 };
 
