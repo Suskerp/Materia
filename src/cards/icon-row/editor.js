@@ -163,12 +163,12 @@ class MateriaIconRowEditor extends SmartEditorBase {
                     ${btn.options?.length
                       ? html`<ha-form
                           .hass=${this.hass}
-                          .data=${{ menu_position: btn.menu_position || "down" }}
-                          .schema=${[{ name: "menu_position", label: "Menu opens", selector: { select: { mode: "dropdown", options: [
-                            { value: "down", label: "Down" },
-                            { value: "up", label: "Up" },
-                            { value: "left", label: "Left" },
-                            { value: "right", label: "Right" },
+                          .data=${{ menu_position: btn.menu_position || "bottom-right" }}
+                          .schema=${[{ name: "menu_position", label: "Menu alignment", selector: { select: { mode: "dropdown", options: [
+                            { value: "bottom-right", label: "Below · right-aligned" },
+                            { value: "bottom-left", label: "Below · left-aligned" },
+                            { value: "top-right", label: "Above · right-aligned" },
+                            { value: "top-left", label: "Above · left-aligned" },
                           ] } } }]}
                           .computeLabel=${computeLabel}
                           @value-changed=${(e) => this._buttonChanged(i, { ...btn, menu_position: e.detail.value.menu_position })}

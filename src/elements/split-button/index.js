@@ -108,7 +108,7 @@ class MateriaSplitButton extends ActionMixin(LitElement) {
           </button>
         </div>
 
-        <div class="menu dir-${this.config.menu_position || "down"} ${this._open ? "open" : ""}" role="menu">
+        <div class="menu dir-${this.config.menu_position || "bottom-right"} ${this._open ? "open" : ""}" role="menu">
           ${options.map(
             (opt) => html`
               <div class="menu-item" role="menuitem" @click=${(e) => this._selectOption(opt, e)}>

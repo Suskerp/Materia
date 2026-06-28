@@ -4,28 +4,26 @@ import { hostStyles } from "../../styles/card-styles.js";
 export const styles = [
   hostStyles,
   css`
+    /* Match materia-button's host layout (flex, not inline-block) so the split
+       button aligns vertically with regular buttons in a row. */
     :host {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
     }
 
     /* "wide" grows the split button to fill the row; the leading button (also
        passed wide) flexes while the trailing stays a fixed icon-button width. */
     :host([wide]) {
       flex: 1;
-      display: block;
     }
-    :host([wide]) .wrap {
-      display: block;
-      width: 100%;
-    }
+    :host([wide]) .wrap,
     :host([wide]) .split {
-      display: flex;
       width: 100%;
     }
 
     .wrap {
       position: relative;
-      display: inline-block;
+      display: inline-flex;
     }
 
     .split {
@@ -142,30 +140,31 @@ export const styles = [
       pointer-events: auto;
     }
 
-    /* Open direction */
-    .menu.dir-down {
+    /* Menu alignment: opens below or above, anchored to the left or right edge
+       (M3 split-button menu placement). */
+    .menu.dir-bottom-right {
       top: calc(100% + 4px);
       right: 0;
       transform-origin: top right;
       transform: scaleY(0.9);
     }
-    .menu.dir-up {
+    .menu.dir-bottom-left {
+      top: calc(100% + 4px);
+      left: 0;
+      transform-origin: top left;
+      transform: scaleY(0.9);
+    }
+    .menu.dir-top-right {
       bottom: calc(100% + 4px);
       right: 0;
       transform-origin: bottom right;
       transform: scaleY(0.9);
     }
-    .menu.dir-right {
-      left: calc(100% + 4px);
-      top: 0;
-      transform-origin: left center;
-      transform: scaleX(0.9);
-    }
-    .menu.dir-left {
-      right: calc(100% + 4px);
-      top: 0;
-      transform-origin: right center;
-      transform: scaleX(0.9);
+    .menu.dir-top-left {
+      bottom: calc(100% + 4px);
+      left: 0;
+      transform-origin: bottom left;
+      transform: scaleY(0.9);
     }
 
     .menu-item {

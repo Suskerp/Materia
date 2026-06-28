@@ -58,7 +58,7 @@ class MateriaSplitButtonEditor extends SmartEditorBase {
   }
 
   _formData() {
-    return { variant: "tonal", size: "s", menu_position: "down", ...this._config };
+    return { variant: "tonal", size: "s", menu_position: "bottom-right", ...this._config };
   }
 
   get _sections() {
@@ -97,12 +97,12 @@ class MateriaSplitButtonEditor extends SmartEditorBase {
           },
           {
             name: "menu_position",
-            label: "Menu opens",
+            label: "Menu alignment",
             selector: { select: { mode: "dropdown", options: [
-              { value: "down", label: "Down" },
-              { value: "up", label: "Up" },
-              { value: "left", label: "Left" },
-              { value: "right", label: "Right" },
+              { value: "bottom-right", label: "Below · right-aligned" },
+              { value: "bottom-left", label: "Below · left-aligned" },
+              { value: "top-right", label: "Above · right-aligned" },
+              { value: "top-left", label: "Above · left-aligned" },
             ] } },
           },
           { name: "color", label: "Background", color: true, template: true, selector: { text: {} } },
