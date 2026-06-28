@@ -36,7 +36,7 @@ export const ActionMixin = (superClass) =>
       switch (actionConfig.action) {
         case "toggle":
           if (this.config?.entity) {
-            this.hass.callService("homeassistant", "toggle", {
+            this._callService("homeassistant", "toggle", {
               entity_id: this.config.entity,
             });
           }
@@ -47,7 +47,7 @@ export const ActionMixin = (superClass) =>
           const svc = actionConfig.perform_action || actionConfig.service || "";
           const [domain, service] = svc.split(".", 2);
           if (domain && service) {
-            this.hass.callService(
+            this._callService(
               domain,
               service,
               { ...actionConfig.service_data, ...actionConfig.data },
@@ -88,6 +88,17 @@ export const ActionMixin = (superClass) =>
         default:
           break;
       }
+    }
+
+    /**
+     * Call a HA service, swallowing rejections. A failed service call
+     * (entity gone, no permission, offline) otherwise surfaces as an unhandled
+     * promise rejection. Returns the promise for callers that want to await.
+     */
+    _callService(domain, service, data, target) {
+      return this.hass
+        .callService(domain, service, data, target)
+        .catch(() => {});
     }
 
     /** Capitalize first letter of a string. */

@@ -131,7 +131,7 @@ class MateriaClimate extends ActionMixin(LitElement) {
     if (temp == null) return;
     const newTemp = temp + delta;
     this._optimisticTemp = newTemp;
-    this.hass.callService("climate", "set_temperature", {
+    this._callService("climate", "set_temperature", {
       entity_id: this.config.entity,
       temperature: newTemp,
     });
@@ -161,22 +161,10 @@ class MateriaClimate extends ActionMixin(LitElement) {
 
   _handleTap(e) {
     if (e.target.closest(".btn")) return;
-
-    const action = this.config.tap_action ?? { action: "more-info" };
-
-    if (action.action === "more-info") {
-      const ev = new Event("hass-more-info", {
-        bubbles: true,
-        composed: true,
-      });
-      ev.detail = { entityId: this.config.entity };
-      this.dispatchEvent(ev);
-      return;
-    }
-
-    const ev = new Event("hass-action", { bubbles: true, composed: true });
-    ev.detail = { config: this.config, action: "tap" };
-    this.dispatchEvent(ev);
+    // Route through the shared action handler so navigate / call-service /
+    // toggle / fire-dom-event tap_actions actually fire (the old hand-rolled
+    // "hass-action" event wasn't a shape HA consumes).
+    this._handleAction(this.config.tap_action ?? { action: "more-info" });
   }
 
   render() {

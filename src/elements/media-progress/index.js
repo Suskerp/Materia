@@ -173,7 +173,7 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     if (!dur) return;
     const rect = ev.currentTarget.getBoundingClientRect();
     const frac = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
-    this.hass.callService("media_player", "media_seek", {
+    this._callService("media_player", "media_seek", {
       entity_id: this.config.entity,
       seek_position: frac * dur,
     });

@@ -704,11 +704,11 @@ export class MateriaCard extends ActionMixin(LitElement) {
 
       const brightness = Math.round((adjustedPct / 100) * 255);
       if (brightness <= 3 && this.config.slider_turn_off) {
-        this.hass.callService("light", "turn_off", {
+        this._callService("light", "turn_off", {
           entity_id: entityId,
         });
       } else {
-        this.hass.callService("light", "turn_on", {
+        this._callService("light", "turn_on", {
           entity_id: entityId,
           brightness: Math.max(brightness, 1),
         });
@@ -717,7 +717,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
     }
 
     if (this._domain === "cover") {
-      this.hass.callService("cover", "set_cover_position", {
+      this._callService("cover", "set_cover_position", {
         entity_id: entityId,
         position: Math.max(0, Math.min(100, Math.round(pct))),
       });
@@ -738,7 +738,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
     if (this.config.tap_action) {
       this._handleAction(this.config.tap_action);
     } else if (this.config.entity) {
-      this.hass.callService("homeassistant", "toggle", {
+      this._callService("homeassistant", "toggle", {
         entity_id: this.config.entity,
       });
     }

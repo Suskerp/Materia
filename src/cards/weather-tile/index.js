@@ -10,6 +10,7 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     config: { state: true },
     _resolvedColor: { state: true },
     _resolvedColorOn: { state: true },
+    _resolvedMinmaxColor: { state: true },
     _forecast: { state: true },
   };
 
@@ -34,6 +35,7 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("color", "_resolvedColor");
       this._resolveField("color_on", "_resolvedColorOn");
+      this._resolveField("minmax_color", "_resolvedMinmaxColor");
       this._subscribeForecast();
     }
   }
@@ -104,7 +106,14 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
 
     const bg = this._isTemplate(this.config.color) ? this._resolvedColor : this.config.color;
     const fg = this._isTemplate(this.config.color_on) ? this._resolvedColorOn : this.config.color_on;
-    const style = `${bg ? `--wt-bg:${bg};` : ""}${fg ? `--wt-fg:${fg};` : ""}`;
+    const mm = this._isTemplate(this.config.minmax_color) ? this._resolvedMinmaxColor : this.config.minmax_color;
+    // Diagonal tilt: "right" rises to the top-right (default), "left" the other
+    // way, "none" sits flat.
+    const tilt = { right: "-16deg", left: "16deg", none: "0deg" }[this.config.tilt] ?? "-16deg";
+    const style =
+      `--wt-tilt:${tilt};` +
+      `${bg ? `--wt-bg:${bg};` : ""}${fg ? `--wt-fg:${fg};` : ""}` +
+      `${mm ? `--wt-minmax:${mm};--wt-minmax-opacity:1;` : ""}`;
 
     // Colored Pixel-style glyph unless an explicit icon is configured.
     const customIcon = this.config.icon;

@@ -101,7 +101,9 @@ class MateriaRoom extends MateriaCard {
 
     const containerBg = this._getContainerBg();
     const textColor = this._getTextColor();
-    const fillPct = showSlider && isActive ? this._fillPercent : 0;
+    // Mirror materia-card: don't gate on _isActive, or a cover in the transient
+    // opening/closing state snaps the fill to 0 while its position still moves.
+    const fillPct = showSlider ? this._fillPercent : 0;
     const sliderColor = this._domainConfig.sliderColor || this._domainConfig.colorActive;
 
     const icon = this._icon;

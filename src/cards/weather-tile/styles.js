@@ -7,12 +7,14 @@ export const styles = [hostStyles, haCardReset, css`
     border: none;
     box-shadow: none;
     height: 100%;
+    /* Let the tilted pill extend past the card box. */
+    overflow: visible;
   }
 
   .blob {
     position: relative;
     width: 100%;
-    aspect-ratio: 1 / 0.66;
+    aspect-ratio: 1 / 0.78;
     box-sizing: border-box;
     container-type: inline-size;
     overflow: hidden;
@@ -23,8 +25,12 @@ export const styles = [hostStyles, haCardReset, css`
     /* M3 pill shape: stadium (flat top/bottom, fully rounded ends) — not an
        ellipse. The large radius clamps to half the shorter (height) side. */
     border-radius: 9999px;
+    /* Tilt the whole pill diagonally (Pixel-widget style). --wt-tilt is set
+       per-config; scale keeps the rotated stadium inside its cell. */
+    transform: rotate(var(--wt-tilt, -16deg)) scale(0.86);
   }
 
+  /* Content counter-rotates so the temperature / icon stay upright. */
   .readout {
     position: absolute;
     top: 21%;
@@ -32,7 +38,8 @@ export const styles = [hostStyles, haCardReset, css`
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 1.5cqi;
+    gap: 0.5cqi;
+    transform: rotate(calc(-1 * var(--wt-tilt, -16deg)));
   }
 
   .temp {
@@ -44,10 +51,11 @@ export const styles = [hostStyles, haCardReset, css`
 
   .minmax {
     display: flex;
-    gap: 4cqi;
-    font-size: 7cqi;
+    gap: 3.5cqi;
+    font-size: 5.5cqi;
     font-weight: 600;
-    opacity: 0.75;
+    color: var(--wt-minmax, currentColor);
+    opacity: var(--wt-minmax-opacity, 0.75);
   }
 
   .wx {
@@ -56,6 +64,7 @@ export const styles = [hostStyles, haCardReset, css`
     bottom: 16%;
     width: 27cqi;
     height: 27cqi;
+    transform: rotate(calc(-1 * var(--wt-tilt, -16deg)));
   }
 
   .wx-mono {
@@ -64,6 +73,7 @@ export const styles = [hostStyles, haCardReset, css`
     bottom: 16%;
     --mdc-icon-size: 27cqi;
     display: flex;
+    transform: rotate(calc(-1 * var(--wt-tilt, -16deg)));
   }
 
   .blob.unavailable {

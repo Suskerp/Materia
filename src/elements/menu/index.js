@@ -62,7 +62,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
 
     const domain = this.config.entity?.split(".")[0];
     if (domain === "input_select" || domain === "select") {
-      this.hass.callService(domain, "select_option", {
+      this._callService(domain, "select_option", {
         entity_id: this.config.entity,
         option: value,
       });

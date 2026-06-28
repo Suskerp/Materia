@@ -40,6 +40,8 @@ class MateriaPill extends ActionMixin(LitElement) {
     const ranges = this.config.ranges || [];
     if (!ranges.length) return { label: "", color: "" };
     const num = parseFloat(value);
+    // Unavailable/unknown (NaN) must not match an open-ended bucket.
+    if (Number.isNaN(num)) return { label: "", color: "" };
     for (const range of ranges) {
       if (range.max == null || num <= range.max) {
         return { label: range.label, color: range.color };
