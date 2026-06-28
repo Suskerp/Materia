@@ -537,6 +537,38 @@ options:
 
 ---
 
+#### `materia-split-button`
+
+An [M3 Expressive split button](https://m3.material.io/components/split-button) — a leading action button plus a trailing menu button that rotates 180° and morphs its inner corner when opened, revealing a menu of related actions. Outer corners are fully rounded, the inner corner is small (the connected look), with the standard five sizes and four color variants.
+
+```yaml
+type: custom:materia-split-button
+label: Living room
+icon: mdi:lightbulb
+variant: tonal
+size: s
+tap_action: { action: toggle }
+options:
+  - label: 100%
+    icon: mdi:brightness-7
+    tap_action: { action: perform-action, perform_action: light.turn_on, target: { entity_id: light.living_room }, data: { brightness_pct: 100 } }
+  - label: Dim
+    icon: mdi:brightness-5
+    tap_action: { action: perform-action, perform_action: light.turn_on, target: { entity_id: light.living_room }, data: { brightness_pct: 30 } }
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `label` | string | | Leading button label. *Templatable* |
+| `icon` | string | | Leading button icon. *Templatable* |
+| `tap_action` | object | `{ action: "more-info" }` | Leading button action |
+| `options` | array | | Menu items `{ icon, label, tap_action }` |
+| `variant` | string | `tonal` | `filled` · `tonal` · `elevated` · `outlined` |
+| `size` | string | `s` | `xs` · `s` · `m` · `l` · `xl` |
+| `color` / `color_on` | string | variant colors | Override background / text. *Color picker / templatable* |
+
+---
+
 #### `materia-media`
 
 A now-playing card — album art, title and subtitle (all templatable).

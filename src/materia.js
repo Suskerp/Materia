@@ -27,6 +27,7 @@ import "./elements/checkbox/index.js";
 import "./elements/pill/index.js";
 import "./elements/menu/index.js";
 import "./elements/button-stack/index.js";
+import "./elements/split-button/index.js";
 import "./elements/media-progress/index.js";
 import "./elements/media/index.js";
 import "./elements/clock/index.js";
@@ -35,7 +36,7 @@ import "./elements/clock/index.js";
 injectFonts();
 
 // Version info
-const VERSION = "0.5.8";
+const VERSION = "0.5.9";
 console.info(
   `%c MATERIA %c v${VERSION} `,
   "color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;",
