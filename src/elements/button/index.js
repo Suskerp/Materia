@@ -123,10 +123,9 @@ class MateriaButton extends ActionMixin(LitElement) {
     }
     const baseShape = this.config.shape === "square" ? "square" : "round";
     const active = this._isActive(stateObj);
-    const shape =
-      this.config.morph_on_active && active
-        ? baseShape === "round" ? "square" : "round"
-        : baseShape;
+    // M3 spec: a selected/active toggle button morphs toward square; inactive
+    // keeps its base shape. (Don't flip square→round — that's backwards.)
+    const shape = this.config.morph_on_active && active ? "square" : baseShape;
 
     const icon = this._isTemplate(this.config.icon)
       ? (this._resolvedIcon || "")
