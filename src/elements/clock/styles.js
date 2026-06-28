@@ -40,7 +40,7 @@ export const styles = css`
   }
 
   .date {
-    fill: var(--clock-number, var(--md-sys-color-on-surface, #444));
+    fill: var(--clock-number, color-mix(in srgb, var(--md-sys-color-primary, #888) 45%, transparent));
     font-weight: 700;
   }
 

@@ -122,11 +122,23 @@ class MateriaClock extends LitElement {
     let dateAngle = gapInside >= 360 - gapInside ? lo + gapInside / 2 : hi + (360 - gapInside) / 2;
     dateAngle = ((dateAngle % 360) + 360) % 360;
     const dRad = (dateAngle * Math.PI) / 180;
-    const dateX = (50 + 31 * Math.sin(dRad)).toFixed(2);
-    const dateY = (50 - 31 * Math.cos(dRad)).toFixed(2);
+    // Sit on the same ring as the markers (dots or numerals).
+    const markerR = dots.length ? 41 : nums.length ? R : 40;
+    const dateX = (50 + markerR * Math.sin(dRad)).toFixed(2);
+    const dateY = (50 - markerR * Math.cos(dRad)).toFixed(2);
     // Tangent rotation, kept upright (no upside-down text in the lower arc).
     let dateRot = dateAngle;
     if (dateRot > 90 && dateRot < 270) dateRot -= 180;
+    // The date replaces the markers it overlaps.
+    const hideMarker = (n) => {
+      if (!showDate) return false;
+      const ang = ((((n % 12) * 30) % 360) + 360) % 360;
+      let d = Math.abs(ang - dateAngle) % 360;
+      if (d > 180) d = 360 - d;
+      return d < 22;
+    };
+    const numsShown = nums.filter((n) => !hideMarker(n));
+    const dotsShown = dots.filter((n) => !hideMarker(n));
 
     // Optional: render the second indicator as a rim dot instead of a hand.
     const secondDot = !!this.config.second_dot;
@@ -152,13 +164,13 @@ class MateriaClock extends LitElement {
           ${squiggle
             ? svg`<path class="face" d=${this._facePath}></path>`
             : svg`<circle class="face" cx="50" cy="50" r="49"></circle>`}
-          ${nums.map((n) => {
+          ${numsShown.map((n) => {
             const a = ((n % 12) * 30 * Math.PI) / 180;
             const x = 50 + R * Math.sin(a);
             const y = 50 - R * Math.cos(a);
             return svg`<text class="num" x=${x.toFixed(1)} y=${y.toFixed(1)} font-size=${fs} text-anchor="middle" dominant-baseline="central">${n}</text>`;
           })}
-          ${dots.map((n) => {
+          ${dotsShown.map((n) => {
             const a = ((n % 12) * 30 * Math.PI) / 180;
             const x = 50 + 41 * Math.sin(a);
             const y = 50 - 41 * Math.cos(a);
