@@ -45,7 +45,7 @@ export const styles = [hostStyles, haCardReset, css`
   }
 
   .temp {
-    font-size: 24cqi;
+    font-size: var(--wt-temp-size, 24cqi);
     font-weight: 700;
     line-height: 1;
     letter-spacing: -0.04em;

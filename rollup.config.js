@@ -16,8 +16,9 @@ const copyCustomColors = {
 };
 
 /**
- * Deploy straight to the Home Assistant server when the config share is
- * mounted (no-op otherwise, so builds on other machines still work).
+ * Optional direct deploy to a mounted Home Assistant share. OFF by default —
+ * the HACS flow (build → commit → push → HACS update) is the source of truth.
+ * Opt in for local testing with: MATERIA_DEPLOY=1 npm run build
  * Regenerates materia.js.gz too — HA serves the precompressed file when
  * present, so a stale .gz would otherwise mask new code.
  */
@@ -25,6 +26,7 @@ const HA_DIR = "/Volumes/config/www/community/Materia";
 const deployToHA = {
   name: "deploy-to-ha",
   writeBundle() {
+    if (!process.env.MATERIA_DEPLOY) return;
     if (!existsSync(HA_DIR)) return;
     const js = readFileSync("dist/materia.js");
     writeFileSync(`${HA_DIR}/materia.js`, js);

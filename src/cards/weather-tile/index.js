@@ -138,6 +138,7 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
         ? this.config.tilt
         : ({ right: -26, left: 26, none: 0 }[this.config.tilt] ?? -26);
     const iconSize = this.config.icon_size ?? 27;
+    const textSize = this.config.text_size ?? 24;
     const width = this.config.width ?? 100;
     const ratio = (this.config.height ?? 64) / 100;
     const iconX = this.config.icon_x ?? 16;
@@ -145,7 +146,7 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     const tempX = this.config.temp_x ?? 16;
     const tempY = this.config.temp_y ?? 17;
     const style =
-      `--wt-tilt:${tiltDeg}deg;--wt-icon-size:${iconSize}cqi;` +
+      `--wt-tilt:${tiltDeg}deg;--wt-icon-size:${iconSize}cqi;--wt-temp-size:${textSize}cqi;` +
       `--wt-width:${width}%;--wt-ratio:${ratio};` +
       `--wt-icon-x:${iconX}%;--wt-icon-y:${iconY}%;--wt-temp-x:${tempX}%;--wt-temp-y:${tempY}%;` +
       `${bg ? `--wt-bg:${bg};` : ""}${fg ? `--wt-fg:${fg};` : ""}` +
