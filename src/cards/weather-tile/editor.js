@@ -50,7 +50,7 @@ class MateriaWeatherTileEditor extends SmartEditorBase {
           { name: "tilt", label: "Pill tilt (° — negative rises to the right)", selector: { number: { min: -45, max: 45, step: 1, mode: "slider" } } },
           { name: "width", label: "Width (% of cell)", selector: { number: { min: 40, max: 200, step: 1, mode: "slider" } } },
           { name: "height", label: "Height (% of width)", selector: { number: { min: 40, max: 100, step: 1, mode: "slider" } } },
-          { name: "icon_size", label: "Weather icon size", selector: { number: { min: 14, max: 46, step: 1, mode: "slider" } } },
+          { name: "icon_size", label: "Weather icon size", selector: { number: { min: 14, max: 90, step: 1, mode: "slider" } } },
           { name: "text_size", label: "Temperature text size", selector: { number: { min: 12, max: 42, step: 1, mode: "slider" } } },
           { name: "temp_x", label: "Temperature X (% from edge)", selector: { number: { min: 0, max: 60, step: 1, mode: "slider" } } },
           { name: "temp_y", label: "Temperature Y (% from top)", selector: { number: { min: 0, max: 70, step: 1, mode: "slider" } } },

@@ -44,12 +44,12 @@ function flakes(xs, y) {
 }
 
 const ICONS = {
-  sunny: () => sun(12, 12, 5.5),
-  clear: () => sun(12, 12, 5.5),
+  sunny: () => sun(12, 12, 7.5),
+  clear: () => sun(12, 12, 7.5),
   "clear-night": () =>
     svg`<path d="M17 14.5 A7 7 0 1 1 10.5 5 A5.5 5.5 0 0 0 17 14.5 Z" fill=${MOON} />`,
-  partlycloudy: () => svg`${sun(15.5, 8.5, 3.6)}${cloud(10, 15, 0.85, CLOUD)}`,
-  partly_cloudy: () => svg`${sun(15.5, 8.5, 3.6)}${cloud(10, 15, 0.85, CLOUD)}`,
+  partlycloudy: () => svg`${sun(15, 8, 5.2)}${cloud(10, 15, 0.85, CLOUD)}`,
+  partly_cloudy: () => svg`${sun(15, 8, 5.2)}${cloud(10, 15, 0.85, CLOUD)}`,
   cloudy: () => cloud(12, 12, 1.1, CLOUD_DK),
   rainy: () => svg`${cloud(12, 10, 1, CLOUD_DK)}${drops(RAIN, [8, 12, 16], 17)}`,
   pouring: () => svg`${cloud(12, 9.5, 1, CLOUD_DK)}${drops(RAIN, [7, 10, 13, 16], 16.5)}`,
