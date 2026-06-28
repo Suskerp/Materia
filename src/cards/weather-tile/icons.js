@@ -17,15 +17,30 @@ const MOON = "var(--md-sys-cust-color-weather-moon, #DCE3F7)";
 const FOG = "var(--md-sys-cust-color-weather-cloud-dark, #C7CEDA)";
 
 function sun(cx, cy, r) {
-  // 9-point "cookie" — a 9-lobe scalloped disc (M3 expressive shape).
-  const N = 9, A = r * 0.13, steps = 144;
-  let d = "";
-  for (let i = 0; i <= steps; i++) {
-    const t = (i / steps) * Math.PI * 2;
-    const rr = r + A * Math.cos(N * t);
-    const x = (cx + rr * Math.cos(t)).toFixed(2);
-    const y = (cy + rr * Math.sin(t)).toFixed(2);
-    d += `${i === 0 ? "M" : "L"}${x} ${y} `;
+  // 9-point "cookie": a rounded-star polygon (M3 shapes are stars with rounded
+  // corners). Outer/inner radii alternate; a closed Catmull-Rom → cubic Bézier
+  // spline smooths every lobe so the edges are soft, not sharp/faceted.
+  const lobes = 9;
+  const depth = 0.14; // valley depth as a fraction of the radius
+  const n = lobes * 2;
+  const inner = r * (1 - depth);
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const a = (Math.PI * i) / lobes;
+    const rad = i % 2 === 0 ? r : inner;
+    pts.push([cx + rad * Math.cos(a), cy + rad * Math.sin(a)]);
+  }
+  let d = `M${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)} `;
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i - 1 + n) % n];
+    const p1 = pts[i];
+    const p2 = pts[(i + 1) % n];
+    const p3 = pts[(i + 2) % n];
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6;
+    const c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6;
+    const c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += `C${c1x.toFixed(2)} ${c1y.toFixed(2)} ${c2x.toFixed(2)} ${c2y.toFixed(2)} ${p2[0].toFixed(2)} ${p2[1].toFixed(2)} `;
   }
   return svg`<path d=${d + "Z"} fill=${SUN} />`;
 }
