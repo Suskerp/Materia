@@ -17,19 +17,8 @@ const MOON = "var(--md-sys-cust-color-weather-moon, #DCE3F7)";
 const FOG = "var(--md-sys-cust-color-weather-cloud-dark, #C7CEDA)";
 
 function sun(cx, cy, r) {
-  const rays = [
-    [0, -1], [0, 1], [-1, 0], [1, 0],
-    [-0.7, -0.7], [0.7, 0.7], [0.7, -0.7], [-0.7, 0.7],
-  ];
-  return svg`
-    <g stroke=${SUN} stroke-width="1.7" stroke-linecap="round">
-      ${rays.map(
-        ([dx, dy]) => svg`<line
-          x1=${(cx + dx * (r + 1.6)).toFixed(2)} y1=${(cy + dy * (r + 1.6)).toFixed(2)}
-          x2=${(cx + dx * (r + 3.4)).toFixed(2)} y2=${(cy + dy * (r + 3.4)).toFixed(2)} />`
-      )}
-      <circle cx=${cx} cy=${cy} r=${r} fill=${SUN} stroke="none" />
-    </g>`;
+  // Plain disc — no rays.
+  return svg`<circle cx=${cx} cy=${cy} r=${r} fill=${SUN} />`;
 }
 
 function cloud(cx, cy, s, fill) {
