@@ -95,11 +95,44 @@ class MateriaClock extends LitElement {
     const mode = this.config.numbers || "cardinal";
     const nums = mode === "all"
       ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-      : mode === "none"
-      ? []
-      : [12, 3, 6, 9];
+      : mode === "cardinal"
+      ? [12, 3, 6, 9]
+      : [];
     const R = mode === "all" ? 40 : 34;
     const fs = mode === "all" ? 9 : 18;
+
+    // "dots" mode places a marker at each hour instead of numerals.
+    const dots = mode === "dots" ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] : [];
+
+    // Optional large, faint digital readout behind the hands (HH over MM).
+    const digital = !!this.config.digital;
+    const hh = String(now.getHours() % 12 || 12).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+
+    // Optional date label ("Thu 22"), placed in the largest open arc BETWEEN
+    // the hands and curved along the rim — like the Pixel clock, it drifts to
+    // wherever the hands aren't.
+    const showDate = !!this.config.date;
+    const dateStr = `${now.toLocaleDateString(undefined, { weekday: "short" })} ${now.getDate()}`;
+    const a1 = ((hourA % 360) + 360) % 360;
+    const a2 = ((minA % 360) + 360) % 360;
+    const lo = Math.min(a1, a2);
+    const hi = Math.max(a1, a2);
+    const gapInside = hi - lo;
+    let dateAngle = gapInside >= 360 - gapInside ? lo + gapInside / 2 : hi + (360 - gapInside) / 2;
+    dateAngle = ((dateAngle % 360) + 360) % 360;
+    const dRad = (dateAngle * Math.PI) / 180;
+    const dateX = (50 + 31 * Math.sin(dRad)).toFixed(2);
+    const dateY = (50 - 31 * Math.cos(dRad)).toFixed(2);
+    // Tangent rotation, kept upright (no upside-down text in the lower arc).
+    let dateRot = dateAngle;
+    if (dateRot > 90 && dateRot < 270) dateRot -= 180;
+
+    // Optional: render the second indicator as a rim dot instead of a hand.
+    const secondDot = !!this.config.second_dot;
+    const secRad = (secA * Math.PI) / 180;
+    const secDotX = (50 + 44 * Math.sin(secRad)).toFixed(2);
+    const secDotY = (50 - 44 * Math.cos(secRad)).toFixed(2);
 
     const hw = this.config.hand_width;
     // size 1–10 → max-width (10 = fill the card)
@@ -125,10 +158,27 @@ class MateriaClock extends LitElement {
             const y = 50 - R * Math.cos(a);
             return svg`<text class="num" x=${x.toFixed(1)} y=${y.toFixed(1)} font-size=${fs} text-anchor="middle" dominant-baseline="central">${n}</text>`;
           })}
+          ${dots.map((n) => {
+            const a = ((n % 12) * 30 * Math.PI) / 180;
+            const x = 50 + 41 * Math.sin(a);
+            const y = 50 - 41 * Math.cos(a);
+            return svg`<circle class="dot" cx=${x.toFixed(1)} cy=${y.toFixed(1)} r="1.3"></circle>`;
+          })}
+          ${digital
+            ? svg`
+                <text class="digital" x="50" y="40" font-size="30" text-anchor="middle" dominant-baseline="central">${hh}</text>
+                <text class="digital" x="50" y="64" font-size="30" text-anchor="middle" dominant-baseline="central">${mm}</text>
+              `
+            : ""}
+          ${showDate
+            ? svg`<text class="date" x=${dateX} y=${dateY} font-size="8" text-anchor="middle" dominant-baseline="central" transform="rotate(${dateRot.toFixed(1)} ${dateX} ${dateY})">${dateStr}</text>`
+            : ""}
           <line class="hand hour" x1="50" y1="50" x2="50" y2="28" transform="rotate(${hourA.toFixed(2)} 50 50)"></line>
           <line class="hand minute" x1="50" y1="50" x2="50" y2="16" transform="rotate(${minA.toFixed(2)} 50 50)"></line>
           ${showSeconds
-            ? svg`<line class="hand second" x1="50" y1="56" x2="50" y2="13" transform="rotate(${secA.toFixed(2)} 50 50)"></line>`
+            ? secondDot
+              ? svg`<circle class="second-dot" cx=${secDotX} cy=${secDotY} r="3.2"></circle>`
+              : svg`<line class="hand second" x1="50" y1="56" x2="50" y2="13" transform="rotate(${secA.toFixed(2)} 50 50)"></line>`
             : ""}
           <circle class="pin" cx="50" cy="50" r="2.4"></circle>
         </svg>

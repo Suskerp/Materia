@@ -29,6 +29,25 @@ export const styles = css`
     font-weight: 700;
   }
 
+  .dot {
+    fill: var(--clock-number, color-mix(in srgb, var(--md-sys-color-primary, #888) 45%, transparent));
+  }
+
+  .digital {
+    fill: var(--clock-number, color-mix(in srgb, var(--md-sys-color-primary, #888) 26%, transparent));
+    font-weight: 800;
+    letter-spacing: -1px;
+  }
+
+  .date {
+    fill: var(--clock-number, var(--md-sys-color-on-surface, #444));
+    font-weight: 700;
+  }
+
+  .second-dot {
+    fill: var(--clock-second, var(--md-sys-color-error, #d33));
+  }
+
   .hand {
     stroke-linecap: round;
   }

@@ -22,6 +22,15 @@ class MateriaWeatherEditor extends SmartEditorBase {
         ],
       },
       {
+        title: "Large layout",
+        icon: "mdi:weather-partly-cloudy",
+        fields: [
+          { name: "large", label: "Large blobby widget", selector: { boolean: {} } },
+          { name: "color", label: "Background", color: true, template: true, selector: { text: {} } },
+          { name: "color_on", label: "Text / temperature", color: true, template: true, selector: { text: {} } },
+        ],
+      },
+      {
         title: "Sensors",
         icon: "mdi:water-percent",
         fields: [

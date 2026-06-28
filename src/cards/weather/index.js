@@ -35,6 +35,8 @@ class MateriaWeather extends ActionMixin(LitElement) {
     config: { state: true },
     _resolvedIcon: { state: true },
     _resolvedName: { state: true },
+    _resolvedColor: { state: true },
+    _resolvedColorOn: { state: true },
   };
 
   static getConfigElement() {
@@ -57,6 +59,8 @@ class MateriaWeather extends ActionMixin(LitElement) {
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("icon", "_resolvedIcon");
       this._resolveField("name", "_resolvedName");
+      this._resolveField("color", "_resolvedColor");
+      this._resolveField("color_on", "_resolvedColorOn");
     }
   }
 
@@ -108,6 +112,28 @@ class MateriaWeather extends ActionMixin(LitElement) {
       if (humidity != null) parts.push(`${humidity}%`);
     }
     const secondary = parts.join(" \u00B7 ");
+
+    // Large blobby widget \u2014 a big temperature with the colored condition icon.
+    if (this.config.large) {
+      const bigTemp =
+        temp != null && temp !== "" ? `${Math.round(Number(temp))}${tempUnit}` : "\u2014";
+      const bg = this._isTemplate(this.config.color) ? this._resolvedColor : this.config.color;
+      const fg = this._isTemplate(this.config.color_on) ? this._resolvedColorOn : this.config.color_on;
+      const blobStyle =
+        `${bg ? `--wx-bg:${bg};` : ""}${fg ? `--wx-fg:${fg};` : ""}`;
+      return html`
+        <ha-card class="large">
+          <div
+            class="blob ${unavailable ? "unavailable" : ""}"
+            style=${blobStyle}
+            @click=${this._handleTap}
+          >
+            <div class="big-temp">${unavailable ? "\u2014" : bigTemp}</div>
+            <ha-icon class="big-wx" .icon=${icon}></ha-icon>
+          </div>
+        </ha-card>
+      `;
+    }
 
     return html`
       <ha-card>
