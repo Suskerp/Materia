@@ -107,11 +107,15 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     const bg = this._isTemplate(this.config.color) ? this._resolvedColor : this.config.color;
     const fg = this._isTemplate(this.config.color_on) ? this._resolvedColorOn : this.config.color_on;
     const mm = this._isTemplate(this.config.minmax_color) ? this._resolvedMinmaxColor : this.config.minmax_color;
-    // Diagonal tilt: "right" rises to the top-right (default), "left" the other
-    // way, "none" sits flat.
-    const tilt = { right: "-26deg", left: "26deg", none: "0deg" }[this.config.tilt] ?? "-26deg";
+    // Diagonal tilt in degrees (negative = rises to the top-right). Accepts a
+    // number (slider) or the legacy right/left/none strings.
+    const tiltDeg =
+      typeof this.config.tilt === "number"
+        ? this.config.tilt
+        : ({ right: -26, left: 26, none: 0 }[this.config.tilt] ?? -26);
+    const iconSize = this.config.icon_size ?? 27;
     const style =
-      `--wt-tilt:${tilt};` +
+      `--wt-tilt:${tiltDeg}deg;--wt-icon-size:${iconSize}cqi;` +
       `${bg ? `--wt-bg:${bg};` : ""}${fg ? `--wt-fg:${fg};` : ""}` +
       `${mm ? `--wt-minmax:${mm};--wt-minmax-opacity:1;` : ""}`;
 
@@ -121,7 +125,7 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     return html`
       <ha-card>
         <div
-          class="blob ${unavailable ? "unavailable" : ""}"
+          class="blob ${unavailable ? "unavailable" : ""} ${tiltDeg > 0 ? "flip" : ""}"
           style=${style}
           @click=${() => this._handleAction(this.config.tap_action || { action: "more-info" })}
         >

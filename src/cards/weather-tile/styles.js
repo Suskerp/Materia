@@ -62,8 +62,8 @@ export const styles = [hostStyles, haCardReset, css`
     position: absolute;
     left: 15%;
     bottom: 16%;
-    width: 27cqi;
-    height: 27cqi;
+    width: var(--wt-icon-size, 27cqi);
+    height: var(--wt-icon-size, 27cqi);
     transform: rotate(calc(-1 * var(--wt-tilt, -26deg)));
   }
 
@@ -71,9 +71,23 @@ export const styles = [hostStyles, haCardReset, css`
     position: absolute;
     left: 15%;
     bottom: 16%;
-    --mdc-icon-size: 27cqi;
+    --mdc-icon-size: var(--wt-icon-size, 27cqi);
     display: flex;
     transform: rotate(calc(-1 * var(--wt-tilt, -26deg)));
+  }
+
+  /* Positive tilt (top-left → bottom-right): mirror the layout so the
+     temperature and icon follow the opposite diagonal. */
+  .blob.flip .readout {
+    right: auto;
+    left: 16%;
+    align-items: flex-start;
+  }
+
+  .blob.flip .wx,
+  .blob.flip .wx-mono {
+    left: auto;
+    right: 15%;
   }
 
   .blob.unavailable {
