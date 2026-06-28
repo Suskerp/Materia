@@ -28,7 +28,13 @@
       "warning": "#D9A000",
       "on-warning": "#ffffff",
       "warning-container": "#FEEFCA",
-      "on-warning-container": "#745D00"
+      "on-warning-container": "#745D00",
+      "weather-sun": "#F2B500",
+      "weather-cloud": "#9FA9B7",
+      "weather-cloud-dark": "#6F7A8A",
+      "weather-rain": "#2E86E0",
+      "weather-snow": "#AEB8C4",
+      "weather-moon": "#5961C2"
     }
   },
   "dark": {
@@ -60,7 +66,13 @@
       "warning": "#FEE082",
       "on-warning": "#745D00",
       "warning-container": "#33312A",
-      "on-warning-container": "#FEE080"
+      "on-warning-container": "#FEE080",
+      "weather-sun": "#FFC83D",
+      "weather-cloud": "#E6EAF0",
+      "weather-cloud-dark": "#C7CEDA",
+      "weather-rain": "#5FA8F5",
+      "weather-snow": "#FFFFFF",
+      "weather-moon": "#DCE3F7"
     }
   }
 }

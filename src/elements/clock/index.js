@@ -129,13 +129,17 @@ class MateriaClock extends LitElement {
     // Tangent rotation, kept upright (no upside-down text in the lower arc).
     let dateRot = dateAngle;
     if (dateRot > 90 && dateRot < 270) dateRot -= 180;
-    // The date replaces the markers it overlaps.
+    // The date replaces the markers it overlaps. The threshold scales with the
+    // label's actual arc length (longer text / smaller radius → wider) plus a
+    // margin for the marker's own size, so big numerals nearby don't collide.
+    const hideThresh =
+      (((dateStr.length * 4.4) / 2) / markerR) * (180 / Math.PI) + (dots.length ? 4 : 8);
     const hideMarker = (n) => {
       if (!showDate) return false;
       const ang = ((((n % 12) * 30) % 360) + 360) % 360;
       let d = Math.abs(ang - dateAngle) % 360;
       if (d > 180) d = 360 - d;
-      return d < 22;
+      return d < hideThresh;
     };
     const numsShown = nums.filter((n) => !hideMarker(n));
     const dotsShown = dots.filter((n) => !hideMarker(n));
