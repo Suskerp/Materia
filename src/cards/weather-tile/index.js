@@ -149,8 +149,8 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
           <div class="readout">
             ${showMinmax
               ? html`<div class="minmax">
-                  ${this._num(high) != null ? html`<span>↑${this._num(high)}°</span>` : ""}
-                  ${this._num(low) != null ? html`<span>↓${this._num(low)}°</span>` : ""}
+                  <span>↑${this._num(high) != null ? `${this._num(high)}°` : "—"}</span>
+                  <span>↓${this._num(low) != null ? `${this._num(low)}°` : "—"}</span>
                 </div>`
               : ""}
             <div class="temp">${unavailable ? "—" : tempStr}</div>

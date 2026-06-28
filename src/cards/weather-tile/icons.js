@@ -17,18 +17,18 @@ const MOON = "var(--md-sys-cust-color-weather-moon, #DCE3F7)";
 const FOG = "var(--md-sys-cust-color-weather-cloud-dark, #C7CEDA)";
 
 function sun(cx, cy, r) {
-  // 9-point "cookie": a rounded-star polygon (M3 shapes are stars with rounded
-  // corners). Outer/inner radii alternate; a closed Catmull-Rom → cubic Bézier
-  // spline smooths every lobe so the edges are soft, not sharp/faceted.
+  // 9-lobe "cookie": a smooth polar-cosine scallop — r = R + A·cos(9θ) — which
+  // has ROUNDED peaks AND rounded valleys (unlike a rounded-star, whose inner
+  // vertices make sharp notches). Sampled densely and run through a closed
+  // Catmull-Rom → cubic Bézier spline so it's soft at any scale.
   const lobes = 9;
-  const depth = 0.14; // valley depth as a fraction of the radius
-  const n = lobes * 2;
-  const inner = r * (1 - depth);
+  const amp = r * 0.1; // bump depth as a fraction of the radius
+  const n = lobes * 8;
   const pts = [];
   for (let i = 0; i < n; i++) {
-    const a = (Math.PI * i) / lobes;
-    const rad = i % 2 === 0 ? r : inner;
-    pts.push([cx + rad * Math.cos(a), cy + rad * Math.sin(a)]);
+    const t = (i / n) * Math.PI * 2;
+    const rad = r + amp * Math.cos(lobes * t);
+    pts.push([cx + rad * Math.cos(t), cy + rad * Math.sin(t)]);
   }
   let d = `M${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)} `;
   for (let i = 0; i < n; i++) {
