@@ -167,6 +167,17 @@ export const styles = [
       transform: scaleY(0.9);
     }
 
+    /* Auto-clamp: flip the horizontal anchor when the menu would overflow the
+       viewport (keeps it on-screen near an edge). */
+    .menu.clamp-left {
+      left: 0;
+      right: auto;
+    }
+    .menu.clamp-right {
+      right: 0;
+      left: auto;
+    }
+
     .menu-item {
       display: flex;
       align-items: center;

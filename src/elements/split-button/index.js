@@ -45,6 +45,20 @@ class MateriaSplitButton extends ActionMixin(LitElement) {
     // icon-row sets `.config` directly (bypassing setConfig), so reflect `wide`
     // on every config change too.
     if (changed.has("config")) this.toggleAttribute("wide", !!this.config?.wide);
+    if (changed.has("_open") && this._open) {
+      requestAnimationFrame(() => this._clampMenu());
+    }
+  }
+
+  /** Flip the menu's horizontal anchor if it would spill off the viewport. */
+  _clampMenu() {
+    const menu = this.shadowRoot?.querySelector(".menu");
+    if (!menu || !this._open) return;
+    menu.classList.remove("clamp-left", "clamp-right");
+    const rect = menu.getBoundingClientRect();
+    const m = 8;
+    if (rect.left < m) menu.classList.add("clamp-left");
+    else if (rect.right > window.innerWidth - m) menu.classList.add("clamp-right");
   }
 
   connectedCallback() {
