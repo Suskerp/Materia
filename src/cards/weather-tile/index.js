@@ -71,6 +71,9 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
   }
 
   _num(v) {
+    // Missing values must stay null — Number(null)/Number("") are 0, which
+    // would otherwise render a bogus "0°" when the forecast lacks a high/low.
+    if (v == null || v === "" || v === "unknown" || v === "unavailable") return null;
     const n = Number(v);
     return Number.isFinite(n) ? Math.round(n) : null;
   }
