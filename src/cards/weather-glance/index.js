@@ -98,13 +98,15 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
     const a = stateObj?.attributes || {};
     const fc = this._forecast?.[0] || a.forecast?.[0];
     const DEFAULT_ICONS = {
-      minmax: "mdi:thermometer",
-      wind: "mdi:weather-windy",
-      humidity: "mdi:water-outline",
-      uv: "mdi:white-balance-sunny",
-      precipitation: "mdi:weather-pouring",
-      pressure: "mdi:gauge",
-      sensor: "mdi:information-outline",
+      minmax: "m3o:device-thermostat",
+      wind: "m3o:air",
+      humidity: "m3o:humidity-percentage",
+      uv: "m3o:clear-day",
+      precipitation: "m3o:rainy",
+      pressure: "m3o:compress",
+      pollen: "m3o:allergies",
+      aqi: "m3o:airwave",
+      sensor: "m3o:info",
     };
     let text = null;
     let sev = 0;
@@ -161,6 +163,39 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
         sev = Math.abs(p - 1013) >= 25 ? 2 : Math.abs(p - 1013) >= 15 ? 1 : 0;
         break;
       }
+      case "pollen": {
+        // Worst species across the configured pollen sensors (KMI enum levels).
+        const LEVELS = { none: 0, active: 1, green: 1, yellow: 2, orange: 3, red: 4, purple: 5 };
+        const LABELS = ["None", "Low", "Low", "Moderate", "High", "Very high", "Extreme"];
+        const list = entry.entities || this.config.pollen_entities || [];
+        let worst = null;
+        for (const eid of list) {
+          const st = this.hass.states[eid];
+          if (!st || this._isUnavailable(st)) continue;
+          const v = LEVELS[String(st.state).toLowerCase()] ?? this._num(st.state) ?? 0;
+          if (!worst || v > worst.v) {
+            const fn = st.attributes.friendly_name || eid;
+            const words = fn.replace(/pollen/i, "").trim().split(/\s+/);
+            worst = { v, label: words[words.length - 1] || fn };
+          }
+        }
+        if (!worst) return null;
+        text = worst.v === 0
+          ? (this.config.no_pollen_label ?? "No pollen")
+          : `${worst.label} ${LABELS[worst.v + 1] ?? worst.v}`;
+        sev = worst.v;
+        break;
+      }
+      case "aqi": {
+        const eid = entry.entity ?? this.config.aqi_entity;
+        const st = eid ? this.hass.states[eid] : null;
+        if (!st || this._isUnavailable(st)) return null;
+        const n = this._num(st.state);
+        if (n == null) return null;
+        text = `AQI ${n}`;
+        sev = n > 200 ? 4 : n > 150 ? 3 : n > 100 ? 2 : n > 50 ? 1 : 0;
+        break;
+      }
       case "sensor": {
         const st = entry.entity ? this.hass.states[entry.entity] : null;
         if (!st || this._isUnavailable(st)) return null;
@@ -174,14 +209,23 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
     if (entry.severity != null) sev = Number(entry.severity) || 0;
     const icon = entry.icon
       ?? (this.config.show_metric_icons ? DEFAULT_ICONS[entry.type] : null);
-    return { text, sev, icon };
+    return { text, sev, icon, type: entry.type };
   }
 
-  /** All configured metrics resolved, optionally sorted worst-first. */
+  /** All configured metrics resolved, optionally sorted worst-first.
+   *  `priority` (config) lists metric types most-important-first and breaks
+   *  ties between equal severities — e.g. [precipitation, pollen, aqi]. */
   _metricItems(stateObj) {
+    const order = this.config.priority ?? ["precipitation", "pollen", "aqi"];
+    const weight = (t) => {
+      const i = order.indexOf(t);
+      return i === -1 ? 0 : (order.length - i) / (order.length + 1);
+    };
     const entries = (this.config.metrics || []).map((e) => (typeof e === "string" ? { type: e } : e));
     const items = entries.map((e) => this._metricData(e, stateObj)).filter(Boolean);
-    if (this.config.sort_by_severity) items.sort((x, y) => y.sev - x.sev);
+    if (this.config.sort_by_severity) {
+      items.sort((x, y) => (y.sev + weight(y.type)) - (x.sev + weight(x.type)));
+    }
     return items;
   }
 
@@ -226,7 +270,7 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
           <div class="mid">
             ${alert || first
               ? html`<div class="line1">
-                  ${alert ? html`<ha-icon icon="mdi:alert-outline"></ha-icon>` : ""}
+                  ${alert ? html`<ha-icon icon="m3o:warning"></ha-icon>` : ""}
                   ${alert ? html`<span>${alert}</span>` : metricSpan(first)}
                 </div>`
               : ""}
@@ -237,7 +281,7 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
               : ""}
           </div>
           <div class="now">${unavailable || tempNum == null ? "—" : `${tempNum}°`}</div>
-          ${chevron ? html`<ha-icon class="chev" icon="mdi:chevron-right"></ha-icon>` : ""}
+          ${chevron ? html`<ha-icon class="chev" icon="m3o:chevron-right"></ha-icon>` : ""}
         </div>
       </ha-card>
     `;

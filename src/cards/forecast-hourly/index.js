@@ -106,7 +106,7 @@ class MateriaForecastHourly extends ActionMixin(LitElement) {
       <ha-card class="${unavailable ? "unavailable" : ""}">
         ${this.config.show_header !== false
           ? html`<div class="header">
-              <ha-icon icon="mdi:clock-outline"></ha-icon>
+              <ha-icon icon="m3o:schedule"></ha-icon>
               <span>${this.config.name ?? "Hourly forecast"}</span>
             </div>`
           : ""}
