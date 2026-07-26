@@ -261,7 +261,9 @@ class MateriaThermostat extends ActionMixin(LitElement) {
   _setTarget(temp) {
     const { min, max } = this._scale;
     const step = this.config.step ?? 0.5;
-    const clamped = Math.min(max, Math.max(min, Math.round(temp / step) * step));
+    // Round twice: to the step, then to 2 decimals — step math leaks float
+    // noise (17.900000000000002) into the display AND the service call.
+    const clamped = Math.round(Math.min(max, Math.max(min, Math.round(temp / step) * step)) * 100) / 100;
     this._optimisticTemp = clamped;
     clearTimeout(this._optimisticTimer);
     this._optimisticTimer = setTimeout(() => { this._optimisticTemp = null; }, 10000);
@@ -422,10 +424,10 @@ class MateriaThermostat extends ActionMixin(LitElement) {
           <div class="center" @click=${() => this._fireMoreInfo(this.config.entity)}>
             <div class="mode-label">${modeLabel}</div>
             <div class="target">
-              ${target != null ? target : current != null ? current : "—"}<span class="deg">${unit}</span>
+              ${target != null ? Math.round(target * 10) / 10 : current != null ? Math.round(current * 10) / 10 : "—"}<span class="deg">${unit}</span>
             </div>
             ${current != null && this.config.show_current !== false
-              ? html`<div class="current-label">${this.config.current_label ?? "Currently"} ${current}°</div>`
+              ? html`<div class="current-label">${this.config.current_label ?? "Currently"} ${Math.round(current * 10) / 10}°</div>`
               : ""}
           </div>
         </div>
