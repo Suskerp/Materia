@@ -1,5 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { loadCardHelpers } from "../../styles/shared.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -28,6 +29,7 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
     config: { state: true },
     _optimisticTemp: { state: true },
     _dragTemp: { state: true },
+    _openSection: { state: true },
   };
 
   static styles = styles;
@@ -44,6 +46,12 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
   setConfig(config) {
     if (!config.entity) throw new Error("Materia Climate POC: entity is required");
     this.config = { variant: "a", zones: [], ...config };
+    this._extraEls = null;
+    if (this.isConnected) this._createExtraCards();
+  }
+
+  firstUpdated() {
+    this._createExtraCards();
   }
 
   disconnectedCallback() {
@@ -161,6 +169,12 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
   }
 
   updated(changedProps) {
+    if (changedProps.has("hass") && this._extraEls) {
+      // Only the OPEN custom section needs live child updates.
+      const offset = (this._zones.length ? 1 : 0) + (this.config.water_heater ? 1 : 0);
+      const idx = (this._openSection ?? 0) - offset;
+      if (idx >= 0 && this._extraEls[idx]) this._extraEls[idx].forEach((el) => { el.hass = this.hass; });
+    }
     if (changedProps.has("hass") && this._optimisticTemp != null) {
       const actual = this._numRaw(this._entity?.attributes?.temperature);
       if (actual != null && Math.abs(actual - this._optimisticTemp) < 1e-6) {
@@ -305,17 +319,95 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
 
   /* ---- variant B: zones first ---------------------------------------------- */
 
+  /* ---- variant B: wallet-composed sections --------------------------------
+     Summary + setpoint stay FIXED; below them, sections cycle wallet-style
+     (exactly one large). Built-ins: Zones, Water heater. `sections:` config
+     appends arbitrary card sections — that's the composability. */
+
+  async _createExtraCards() {
+    const gen = (this._extraGen = (this._extraGen || 0) + 1);
+    const secs = this.config.sections || [];
+    if (!secs.length) { this._extraEls = []; return; }
+    const helpers = await loadCardHelpers();
+    const els = await Promise.all(
+      secs.map(async (s) =>
+        (await Promise.all(
+          (s.cards || []).map(async (c) => {
+            try {
+              const el = await helpers.createCardElement(c);
+              el.hass = this.hass;
+              return el;
+            } catch {
+              return null;
+            }
+          })
+        )).filter(Boolean)
+      )
+    );
+    if (gen !== this._extraGen) return;
+    this._extraEls = els;
+    this.requestUpdate();
+  }
+
+  _accordionSections() {
+    const zones = this._zones;
+    const calling = zones.filter((z) => z.calling).length;
+    const on = zones.filter((z) => z.on).length;
+    const secs = [];
+    if (zones.length) {
+      secs.push({
+        title: this.config.zones_title ?? "Zones",
+        icon: "mdi:radiator",
+        info: calling ? `${calling} of ${zones.length} heating` : `${on} of ${zones.length} on`,
+        body: html`
+          <div class="seg actions">
+            <button class="mini" @click=${() => this._allZones(false)}>All off</button>
+            <button class="mini" @click=${() => this._allZones(true)}>All on</button>
+          </div>
+          <div class="zones big">${zones.map((z) => this._zoneRow(z))}</div>
+        `,
+      });
+    }
+    const wh = this.config.water_heater ? this.hass.states[this.config.water_heater] : null;
+    if (wh) {
+      const temp = this._numRaw(wh.attributes?.current_temperature);
+      secs.push({
+        title: this.config.water_title ?? "Water heater",
+        icon: "mdi:water-boiler",
+        info: `${this._capitalize(wh.state)}${temp != null ? ` · ${this._fmt(temp)}°` : ""}`,
+        body: this._waterSegment(),
+      });
+    }
+    (this.config.sections || []).forEach((s, i) => {
+      const st = s.info_entity ? this.hass.states[s.info_entity] : null;
+      secs.push({
+        title: s.title ?? `Section ${i + 1}`,
+        icon: s.icon,
+        info: s.info ?? (st ? (this.hass.formatEntityState?.(st) ?? st.state) : ""),
+        body: this._extraEls?.[i]?.length ? html`<div class="acc-cards">${this._extraEls[i]}</div>` : nothing,
+      });
+    });
+    return secs;
+  }
+
+  _openAcc(i) {
+    if (this._openSection === i) return; // wallet invariant: one always large
+    this._openSection = i;
+    this._fireHaptic("light");
+    // Catch-up hass for custom-section children that were dormant.
+    const extraIdx = i - (this._zones.length ? 1 : 0) - (this.config.water_heater ? 1 : 0);
+    if (extraIdx >= 0 && this._extraEls?.[extraIdx]) {
+      this._extraEls[extraIdx].forEach((el) => { el.hass = this.hass; });
+    }
+  }
+
   _variantB() {
     const target = this._target;
     const current = this._current;
+    const open = this._openSection ?? 0;
     return html`
       ${this._summaryLine()}
       <div class="stack hero-zones">
-        <div class="seg actions">
-          <button class="mini" @click=${() => this._allZones(false)}>All off</button>
-          <button class="mini" @click=${() => this._allZones(true)}>All on</button>
-        </div>
-        <div class="seg zones big">${this._zones.map((z) => this._zoneRow(z))}</div>
         <div class="seg setpoint">
           <div class="sp-text">
             <span class="sp-current">${current != null ? `${this._fmt(current)}°` : ""}</span>
@@ -323,7 +415,19 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
           </div>
           ${this._steppers(true)}
         </div>
-        ${this._waterSegment()}
+      </div>
+      <div class="acc">
+        ${this._accordionSections().map((s, i) => html`
+          <div class="acc-sec ${open === i ? "open" : ""}">
+            <div class="acc-bar" @click=${() => this._openAcc(i)}>
+              ${s.icon ? html`<ha-icon class="acc-icon" icon=${s.icon}></ha-icon>` : ""}
+              <span class="acc-title">${s.title}</span>
+              <span class="acc-info">${open === i ? "" : s.info}</span>
+              ${open === i ? "" : html`<ha-icon class="acc-chev" icon="m3of:arrow-drop-down"></ha-icon>`}
+            </div>
+            <div class="acc-body"><div class="acc-inner">${open === i ? s.body : nothing}</div></div>
+          </div>
+        `)}
       </div>
     `;
   }

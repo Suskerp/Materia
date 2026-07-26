@@ -2181,10 +2181,10 @@ const w=globalThis,$=t=>t,k=w.trustedTypes,C=k?k.createPolicy("lit-html",{create
         ${this._header(t,e)}
         <div class="sub hint">${i}</div>
       </div>
-    `}_convertWind(t,e,i){const s={"km/h":1,"m/s":3.6,mph:1.609344,kn:1.852,knots:1.852,"ft/s":1.09728};if(!i||i===e)return{v:t,u:e};const o=t*(s[e]??1);if("bft"===i){let t=[1,5,11,19,28,38,49,61,74,88,102,117].findIndex(t=>o<t);return-1===t&&(t=12),{v:t,u:"Bft"}}return{v:o/(s[i]??1),u:i}}_wind(){const t=this._value("wind_speed");if(null==t)return V;const e=this.config.sensor?this.hass.states[this.config.sensor]?.attributes?.unit_of_measurement??"km/h":this._weatherAttr("wind_speed_unit")??"km/h",{v:i,u:s}=this._convertWind(t,e,this.config.unit);let o=this.config.bearing_entity?this._numRaw(this.hass.states[this.config.bearing_entity]?.state):this._numRaw(this._weatherAttr("wind_bearing"));const n=null!=o?`${this.config.from_label??"From"} ${a=o,["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"][Math.round((a%360+360)%360/22.5)%16]}`:"";var a;const r=((null!=o?(o+180)%360:180)-90)*Math.PI/180,l=this._convertWind(t,e,"km/h").v,c=Math.max(.2,.42-Math.min(l,60)/60*.2);return I`
+    `}_convertWind(t,e,i){const s={"km/h":1,"m/s":3.6,mph:1.609344,kn:1.852,knots:1.852,"ft/s":1.09728};if(!i||i===e)return{v:t,u:e};const o=t*(s[e]??1);if("bft"===i){let t=[1,5,11,19,28,38,49,61,74,88,102,117].findIndex(t=>o<t);return-1===t&&(t=12),{v:t,u:"Bft"}}return{v:o/(s[i]??1),u:i}}_wind(){const t=this._value("wind_speed");if(null==t)return V;const e=this.config.sensor?this.hass.states[this.config.sensor]?.attributes?.unit_of_measurement??"km/h":this._weatherAttr("wind_speed_unit")??"km/h",{v:i,u:s}=this._convertWind(t,e,this.config.unit);let o=this.config.bearing_entity?this._numRaw(this.hass.states[this.config.bearing_entity]?.state):this._numRaw(this._weatherAttr("wind_bearing"));const n=null!=o?`${this.config.from_label??"From"} ${a=o,["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"][Math.round((a%360+360)%360/22.5)%16]}`:"";var a;const r=((null!=o?(o+180)%360:180)-90)*Math.PI/180,l=this._convertWind(t,e,"km/h").v,c=Math.min(l,60)/60,d=Math.max(.2,.42-.2*c);return I`
       <div class="rect-tile clip wind">
         <svg class="blob-bg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <path d=${function(t,e,i,s=Math.PI/2,o=.3){return be(t,e,1.12*i,{vertices:3,rounding:o,rotate:s})}(50,50,46,r,c)} class="blob-fill" />
+          <path d=${function(t,e,i,s=Math.PI/2,o=.3){return be(t,e,1.12*i,{vertices:3,rounding:o,rotate:s})}(50,50,40+8*c,r,d)} class="blob-fill" />
         </svg>
         <div class="overlay">
           ${this._header("mdi:weather-windy",this.config.name??"Wind")}
@@ -2986,7 +2986,98 @@ const w=globalThis,$=t=>t,k=w.trustedTypes,C=k?k.createPolicy("lit-html",{create
     materia-thermostat {
       display: block;
     }
-  `];customElements.define("materia-climate-poc-editor",class extends Tt{_formData(){return{variant:"a",...this._config}}get _sections(){return[{title:"Content",icon:"mdi:card-text-outline",fields:[{name:"variant",label:"Layout variant",selector:{select:{mode:"dropdown",options:[{value:"a",label:"A — dial hero + connected stack"},{value:"b",label:"B — zones first, stepper setpoint"},{value:"c",label:"C — vertical slider + zone chips"}]}}},{name:"entity",required:!0,selector:{entity:{domain:"climate"}}},{name:"water_heater",label:"Water heater (optional)",selector:{entity:{domain:"water_heater"}}}]}]}});class Ne extends(mt(ct)){static properties={hass:{attribute:!1},config:{state:!0},_optimisticTemp:{state:!0},_dragTemp:{state:!0}};static styles=Re;static getConfigElement(){return document.createElement("materia-climate-poc-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("climate."))||"";return{entity:e,variant:"a",zones:[]}}setConfig(t){if(!t.entity)throw new Error("Materia Climate POC: entity is required");this.config={variant:"a",zones:[],...t}}disconnectedCallback(){super.disconnectedCallback(),clearTimeout(this._optimisticTimer),clearTimeout(this._sendTimer)}get _entity(){return this.hass?.states[this.config.entity]}_numRaw(t){if(null==t||""===t||"unknown"===t||"unavailable"===t)return null;const e=Number(t);return Number.isFinite(e)?e:null}get _step(){return this.config.step??this._numRaw(this._entity?.attributes?.target_temp_step)??.5}get _target(){return null!=this._dragTemp?this._dragTemp:null!=this._optimisticTemp?this._optimisticTemp:this._numRaw(this._entity?.attributes?.temperature)}get _current(){return this._numRaw(this._entity?.attributes?.current_temperature)}get _scale(){return{min:this.config.min_temp??this._numRaw(this._entity?.attributes?.min_temp)??7,max:this.config.max_temp??this._numRaw(this._entity?.attributes?.max_temp)??30}}get _boilerActive(){const t=this._entity?.attributes?.hvac_action;if("heating"===t)return!0;if(t&&"idle"!==t)return!1;const e=this._entity?.state,i=this._current,s=this._numRaw(this._entity?.attributes?.temperature);return"off"!==e&&null!=s&&(null==i?"heat"===e:i<s-.2)}_zoneModel(t){const e=this.hass.states[t.entity],i="on"===e?.state,s=i&&this._boilerActive,o=t.temp_entity?this._numRaw(this.hass.states[t.temp_entity]?.state):null;let n=null;return e?.last_changed&&(n=Math.max(0,Math.round((Date.now()-new Date(e.last_changed).getTime())/6e4))),{...t,name:t.name||e?.attributes?.friendly_name||t.entity,on:i,calling:s,temp:o,sinceMin:n}}get _zones(){return(this.config.zones||[]).map(t=>this._zoneModel("string"==typeof t?{entity:t}:t))}_fmt(t){return null==t?"—":Math.round(10*t)/10}_setTarget(t){const{min:e,max:i}=this._scale,s=this._step,o=Math.round(100*Math.min(i,Math.max(e,Math.round(t/s)*s)))/100;this._optimisticTemp=o,clearTimeout(this._optimisticTimer),this._optimisticTimer=setTimeout(()=>{this._optimisticTemp=null},1e4),clearTimeout(this._sendTimer),this._sendTimer=setTimeout(()=>{this._callService("climate","set_temperature",{entity_id:this.config.entity,temperature:o})},400)}_nudge(t){const e=this._target;null!=e&&this._setTarget(e+t)}_toggleZone(t){this._callService("switch",t.on?"turn_off":"turn_on",{entity_id:t.entity}),this._fireHaptic("light")}_allZones(t){for(const e of this._zones)this._callService("switch",t?"turn_on":"turn_off",{entity_id:e.entity})}updated(t){if(t.has("hass")&&null!=this._optimisticTemp){const t=this._numRaw(this._entity?.attributes?.temperature);null!=t&&Math.abs(t-this._optimisticTemp)<1e-6&&(this._optimisticTemp=null,clearTimeout(this._optimisticTimer))}}_steppers(t=!1){const e=t=>{this._nudge(t),this._holdTimer=setTimeout(()=>{this._holdInterval=setInterval(()=>this._nudge(t),220)},550)},i=()=>{clearTimeout(this._holdTimer),clearInterval(this._holdInterval)},s=I`<button class="step" @pointerdown=${()=>e(this._step)} @pointerup=${i} @pointerleave=${i}>
+
+    /* ---- variant B accordion (wallet-composed sections) ---- */
+    .acc {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .acc-sec {
+      background: color-mix(in srgb, var(--ha-card-background, var(--card-background-color)) 72%, var(--md-sys-color-surface, var(--ha-card-background)));
+      border-radius: 999px;
+      overflow: hidden;
+      transition:
+        border-radius var(--md-sys-motion-expressive-default-spatial),
+        background-color var(--md-sys-motion-default-effects);
+    }
+
+    .acc-sec.open {
+      border-radius: 24px;
+      background: var(--ha-card-background, var(--card-background-color));
+    }
+
+    .acc-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .acc-icon {
+      --mdc-icon-size: 20px;
+      opacity: 0.9;
+      flex-shrink: 0;
+    }
+
+    .acc-title {
+      font-size: 14px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .acc-sec.open .acc-title {
+      font-size: 16px;
+    }
+
+    .acc-info {
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0.7;
+      white-space: nowrap;
+    }
+
+    .acc-chev {
+      --mdc-icon-size: 22px;
+      opacity: 0.55;
+      flex-shrink: 0;
+    }
+
+    .acc-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows var(--md-sys-motion-expressive-default-spatial);
+    }
+
+    .acc-sec.open .acc-body {
+      grid-template-rows: 1fr;
+    }
+
+    .acc-inner {
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .acc-inner .zones {
+      padding: 4px 10px 12px;
+    }
+
+    .acc-inner .seg.actions {
+      background: transparent;
+      padding-top: 0;
+    }
+
+    .acc-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 4px 12px 14px;
+    }
+  `];customElements.define("materia-climate-poc-editor",class extends Tt{_formData(){return{variant:"a",...this._config}}get _sections(){return[{title:"Content",icon:"mdi:card-text-outline",fields:[{name:"variant",label:"Layout variant",selector:{select:{mode:"dropdown",options:[{value:"a",label:"A — dial hero + connected stack"},{value:"b",label:"B — zones first, stepper setpoint"},{value:"c",label:"C — vertical slider + zone chips"}]}}},{name:"entity",required:!0,selector:{entity:{domain:"climate"}}},{name:"water_heater",label:"Water heater (optional)",selector:{entity:{domain:"water_heater"}}}]}]}});class Ne extends(mt(ct)){static properties={hass:{attribute:!1},config:{state:!0},_optimisticTemp:{state:!0},_dragTemp:{state:!0},_openSection:{state:!0}};static styles=Re;static getConfigElement(){return document.createElement("materia-climate-poc-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("climate."))||"";return{entity:e,variant:"a",zones:[]}}setConfig(t){if(!t.entity)throw new Error("Materia Climate POC: entity is required");this.config={variant:"a",zones:[],...t},this._extraEls=null,this.isConnected&&this._createExtraCards()}firstUpdated(){this._createExtraCards()}disconnectedCallback(){super.disconnectedCallback(),clearTimeout(this._optimisticTimer),clearTimeout(this._sendTimer)}get _entity(){return this.hass?.states[this.config.entity]}_numRaw(t){if(null==t||""===t||"unknown"===t||"unavailable"===t)return null;const e=Number(t);return Number.isFinite(e)?e:null}get _step(){return this.config.step??this._numRaw(this._entity?.attributes?.target_temp_step)??.5}get _target(){return null!=this._dragTemp?this._dragTemp:null!=this._optimisticTemp?this._optimisticTemp:this._numRaw(this._entity?.attributes?.temperature)}get _current(){return this._numRaw(this._entity?.attributes?.current_temperature)}get _scale(){return{min:this.config.min_temp??this._numRaw(this._entity?.attributes?.min_temp)??7,max:this.config.max_temp??this._numRaw(this._entity?.attributes?.max_temp)??30}}get _boilerActive(){const t=this._entity?.attributes?.hvac_action;if("heating"===t)return!0;if(t&&"idle"!==t)return!1;const e=this._entity?.state,i=this._current,s=this._numRaw(this._entity?.attributes?.temperature);return"off"!==e&&null!=s&&(null==i?"heat"===e:i<s-.2)}_zoneModel(t){const e=this.hass.states[t.entity],i="on"===e?.state,s=i&&this._boilerActive,o=t.temp_entity?this._numRaw(this.hass.states[t.temp_entity]?.state):null;let n=null;return e?.last_changed&&(n=Math.max(0,Math.round((Date.now()-new Date(e.last_changed).getTime())/6e4))),{...t,name:t.name||e?.attributes?.friendly_name||t.entity,on:i,calling:s,temp:o,sinceMin:n}}get _zones(){return(this.config.zones||[]).map(t=>this._zoneModel("string"==typeof t?{entity:t}:t))}_fmt(t){return null==t?"—":Math.round(10*t)/10}_setTarget(t){const{min:e,max:i}=this._scale,s=this._step,o=Math.round(100*Math.min(i,Math.max(e,Math.round(t/s)*s)))/100;this._optimisticTemp=o,clearTimeout(this._optimisticTimer),this._optimisticTimer=setTimeout(()=>{this._optimisticTemp=null},1e4),clearTimeout(this._sendTimer),this._sendTimer=setTimeout(()=>{this._callService("climate","set_temperature",{entity_id:this.config.entity,temperature:o})},400)}_nudge(t){const e=this._target;null!=e&&this._setTarget(e+t)}_toggleZone(t){this._callService("switch",t.on?"turn_off":"turn_on",{entity_id:t.entity}),this._fireHaptic("light")}_allZones(t){for(const e of this._zones)this._callService("switch",t?"turn_on":"turn_off",{entity_id:e.entity})}updated(t){if(t.has("hass")&&this._extraEls){const t=(this._zones.length?1:0)+(this.config.water_heater?1:0),e=(this._openSection??0)-t;e>=0&&this._extraEls[e]&&this._extraEls[e].forEach(t=>{t.hass=this.hass})}if(t.has("hass")&&null!=this._optimisticTemp){const t=this._numRaw(this._entity?.attributes?.temperature);null!=t&&Math.abs(t-this._optimisticTemp)<1e-6&&(this._optimisticTemp=null,clearTimeout(this._optimisticTimer))}}_steppers(t=!1){const e=t=>{this._nudge(t),this._holdTimer=setTimeout(()=>{this._holdInterval=setInterval(()=>this._nudge(t),220)},550)},i=()=>{clearTimeout(this._holdTimer),clearInterval(this._holdInterval)},s=I`<button class="step" @pointerdown=${()=>e(this._step)} @pointerup=${i} @pointerleave=${i}>
       <ha-icon icon="mdi:plus"></ha-icon>
     </button>`,o=I`<button class="step" @pointerdown=${()=>e(-this._step)} @pointerup=${i} @pointerleave=${i}>
       <ha-icon icon="mdi:minus"></ha-icon>
@@ -3029,14 +3120,15 @@ const w=globalThis,$=t=>t,k=w.trustedTypes,C=k?k.createPolicy("lit-html",{create
         <div class="seg zones">${this._zones.map(t=>this._zoneRow(t))}</div>
         ${this._waterSegment()}
       </div>
-    `}_variantB(){const t=this._target,e=this._current;return I`
+    `}async _createExtraCards(){const t=this._extraGen=(this._extraGen||0)+1,e=this.config.sections||[];if(!e.length)return void(this._extraEls=[]);const i=await pt(),s=await Promise.all(e.map(async t=>(await Promise.all((t.cards||[]).map(async t=>{try{const e=await i.createCardElement(t);return e.hass=this.hass,e}catch{return null}}))).filter(Boolean)));t===this._extraGen&&(this._extraEls=s,this.requestUpdate())}_accordionSections(){const t=this._zones,e=t.filter(t=>t.calling).length,i=t.filter(t=>t.on).length,s=[];t.length&&s.push({title:this.config.zones_title??"Zones",icon:"mdi:radiator",info:e?`${e} of ${t.length} heating`:`${i} of ${t.length} on`,body:I`
+          <div class="seg actions">
+            <button class="mini" @click=${()=>this._allZones(!1)}>All off</button>
+            <button class="mini" @click=${()=>this._allZones(!0)}>All on</button>
+          </div>
+          <div class="zones big">${t.map(t=>this._zoneRow(t))}</div>
+        `});const o=this.config.water_heater?this.hass.states[this.config.water_heater]:null;if(o){const t=this._numRaw(o.attributes?.current_temperature);s.push({title:this.config.water_title??"Water heater",icon:"mdi:water-boiler",info:`${this._capitalize(o.state)}${null!=t?` · ${this._fmt(t)}°`:""}`,body:this._waterSegment()})}return(this.config.sections||[]).forEach((t,e)=>{const i=t.info_entity?this.hass.states[t.info_entity]:null;s.push({title:t.title??`Section ${e+1}`,icon:t.icon,info:t.info??(i?this.hass.formatEntityState?.(i)??i.state:""),body:this._extraEls?.[e]?.length?I`<div class="acc-cards">${this._extraEls[e]}</div>`:V})}),s}_openAcc(t){if(this._openSection===t)return;this._openSection=t,this._fireHaptic("light");const e=t-(this._zones.length?1:0)-(this.config.water_heater?1:0);e>=0&&this._extraEls?.[e]&&this._extraEls[e].forEach(t=>{t.hass=this.hass})}_variantB(){const t=this._target,e=this._current,i=this._openSection??0;return I`
       ${this._summaryLine()}
       <div class="stack hero-zones">
-        <div class="seg actions">
-          <button class="mini" @click=${()=>this._allZones(!1)}>All off</button>
-          <button class="mini" @click=${()=>this._allZones(!0)}>All on</button>
-        </div>
-        <div class="seg zones big">${this._zones.map(t=>this._zoneRow(t))}</div>
         <div class="seg setpoint">
           <div class="sp-text">
             <span class="sp-current">${null!=e?`${this._fmt(e)}°`:""}</span>
@@ -3044,7 +3136,19 @@ const w=globalThis,$=t=>t,k=w.trustedTypes,C=k?k.createPolicy("lit-html",{create
           </div>
           ${this._steppers(!0)}
         </div>
-        ${this._waterSegment()}
+      </div>
+      <div class="acc">
+        ${this._accordionSections().map((t,e)=>I`
+          <div class="acc-sec ${i===e?"open":""}">
+            <div class="acc-bar" @click=${()=>this._openAcc(e)}>
+              ${t.icon?I`<ha-icon class="acc-icon" icon=${t.icon}></ha-icon>`:""}
+              <span class="acc-title">${t.title}</span>
+              <span class="acc-info">${i===e?"":t.info}</span>
+              ${i===e?"":I`<ha-icon class="acc-chev" icon="m3of:arrow-drop-down"></ha-icon>`}
+            </div>
+            <div class="acc-body"><div class="acc-inner">${i===e?t.body:V}</div></div>
+          </div>
+        `)}
       </div>
     `}_sliderPointerDown(t){if(null!=t.button&&0!==t.button)return;const e=t.currentTarget;this._slDrag={startY:t.clientY,engaged:!1,pointerId:t.pointerId,handle:e}}_sliderPointerMove(t){const e=this._slDrag;if(!e)return;const i=t.clientY-e.startY;if(!e.engaged){if(Math.abs(i)<6)return;e.engaged=!0,e.handle.setPointerCapture(e.pointerId)}const s=this.renderRoot.querySelector(".sl-track").getBoundingClientRect(),o=Math.min(1,Math.max(0,1-(t.clientY-s.top)/s.height)),{min:n,max:a}=this._scale,r=n+o*(a-n),l=this._step;this._dragTemp=Math.round(Math.round(r/l)*l*100)/100}_sliderPointerUp(t){const e=this._slDrag;this._slDrag=null,e?.engaged&&(e.handle.releasePointerCapture?.(e.pointerId),null!=this._dragTemp&&(this._setTarget(this._dragTemp),this._dragTemp=null))}_variantC(){const{min:t,max:e}=this._scale,i=this._target,s=this._current,o=null!=i?Math.min(1,Math.max(0,(i-t)/(e-t))):0,n=null!=this._dragTemp;return I`
       <div class="sl-hero ${this._boilerActive?"hot":""}">
@@ -5399,4 +5503,4 @@ const ri=2;
           <circle class="pin" cx="50" cy="50" r="2.4"></circle>
         </svg>
       </ha-card>
-    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const t=document.createElement("style");t.id="materia-fonts",t.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(t)}();console.info("%c MATERIA %c v0.5.101 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");
+    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const t=document.createElement("style");t.id="materia-fonts",t.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(t)}();console.info("%c MATERIA %c v0.5.102 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");

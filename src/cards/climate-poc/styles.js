@@ -427,5 +427,96 @@ export const styles = [
     materia-thermostat {
       display: block;
     }
+
+    /* ---- variant B accordion (wallet-composed sections) ---- */
+    .acc {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .acc-sec {
+      background: color-mix(in srgb, var(--ha-card-background, var(--card-background-color)) 72%, var(--md-sys-color-surface, var(--ha-card-background)));
+      border-radius: 999px;
+      overflow: hidden;
+      transition:
+        border-radius var(--md-sys-motion-expressive-default-spatial),
+        background-color var(--md-sys-motion-default-effects);
+    }
+
+    .acc-sec.open {
+      border-radius: 24px;
+      background: var(--ha-card-background, var(--card-background-color));
+    }
+
+    .acc-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .acc-icon {
+      --mdc-icon-size: 20px;
+      opacity: 0.9;
+      flex-shrink: 0;
+    }
+
+    .acc-title {
+      font-size: 14px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .acc-sec.open .acc-title {
+      font-size: 16px;
+    }
+
+    .acc-info {
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0.7;
+      white-space: nowrap;
+    }
+
+    .acc-chev {
+      --mdc-icon-size: 22px;
+      opacity: 0.55;
+      flex-shrink: 0;
+    }
+
+    .acc-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows var(--md-sys-motion-expressive-default-spatial);
+    }
+
+    .acc-sec.open .acc-body {
+      grid-template-rows: 1fr;
+    }
+
+    .acc-inner {
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .acc-inner .zones {
+      padding: 4px 10px 12px;
+    }
+
+    .acc-inner .seg.actions {
+      background: transparent;
+      padding-top: 0;
+    }
+
+    .acc-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 4px 12px 14px;
+    }
   `,
 ];

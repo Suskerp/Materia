@@ -244,11 +244,15 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     const flowDeg = bearing != null ? (bearing + 180) % 360 : 180; // default: point down
     const rotate = ((flowDeg - 90) * Math.PI) / 180; // compass → SVG angle (0=N=up)
     const kmh = this._convertWind(speed, srcUnit, "km/h").v;
-    const rounding = Math.max(0.2, 0.42 - (Math.min(kmh, 60) / 60) * 0.2);
+    const strength = Math.min(kmh, 60) / 60;
+    const rounding = Math.max(0.2, 0.42 - strength * 0.2);
+    // Mass scales with strength too: calm breeze = small soft blob, strong
+    // wind = a bigger, sharper arrowhead (bounded so the text always fits).
+    const radius = 40 + strength * 8;
     return html`
       <div class="rect-tile clip wind">
         <svg class="blob-bg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <path d=${windBlobPath(50, 50, 46, rotate, rounding)} class="blob-fill" />
+          <path d=${windBlobPath(50, 50, radius, rotate, rounding)} class="blob-fill" />
         </svg>
         <div class="overlay">
           ${this._header("mdi:weather-windy", this.config.name ?? "Wind")}
