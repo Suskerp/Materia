@@ -210,12 +210,14 @@ export const styles = [
       --mdc-icon-size: clamp(24px, 8cqi, 28px);
     }
 
+    /* Inner corners scale with the button (8dp reads as a hairline at these
+       heights) — the notched seam is what makes it READ as a connected group. */
     .nudge.vertical .seg.plus {
-      border-radius: 999px 999px 8px 8px;
+      border-radius: 999px 999px clamp(10px, 4cqi, 16px) clamp(10px, 4cqi, 16px);
     }
 
     .nudge.vertical .seg.minus {
-      border-radius: 8px 8px 999px 999px;
+      border-radius: clamp(10px, 4cqi, 16px) clamp(10px, 4cqi, 16px) 999px 999px;
     }
 
     .nudge.vertical .seg:active {

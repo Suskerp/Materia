@@ -243,13 +243,15 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
         title: this.config.zones_title ?? "Zones",
         icon: this.config.zone_icon ?? "mdi:radiator",
         info: calling ? `${calling} of ${zones.length} heating` : `${on} of ${zones.length} on`,
-        body: html`
+        // Actions live IN the bar while open — a centered button band between
+        // bar and ladder read as an orphan strip of dead space.
+        actions: html`
           <div class="acc-actions">
             <button class="mini" @click=${() => this._allZones(false)}>All off</button>
             <button class="mini" @click=${() => this._allZones(true)}>All on</button>
           </div>
-          <div class="zones">${zones.map((z) => this._zoneRow(z))}</div>
         `,
+        body: html`<div class="zones">${zones.map((z) => this._zoneRow(z))}</div>`,
       });
     }
     const wh = this.config.water_heater ? this.hass.states[this.config.water_heater] : null;
@@ -313,8 +315,9 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
               <div class="acc-bar" @click=${() => this._openAcc(i)}>
                 ${s.icon ? html`<ha-icon class="acc-icon" icon=${s.icon}></ha-icon>` : ""}
                 <span class="acc-title">${s.title}</span>
-                <span class="acc-info">${open === i ? "" : s.info}</span>
-                ${open === i ? nothing : html`<ha-icon class="acc-chev" icon="mdi:chevron-down"></ha-icon>`}
+                ${open === i
+                  ? s.actions ?? nothing
+                  : html`<span class="acc-info">${s.info}</span><ha-icon class="acc-chev" icon="mdi:chevron-down"></ha-icon>`}
               </div>
               <div class="acc-body"><div class="acc-inner">${open === i ? s.body : nothing}</div></div>
             </div>

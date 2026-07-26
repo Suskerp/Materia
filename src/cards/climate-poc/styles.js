@@ -223,6 +223,12 @@ export const styles = [
       -webkit-tap-highlight-color: transparent;
     }
 
+    /* Open: the bar hands its bottom padding to the body so header and
+       content sit on the group's seam rhythm, not a double gap. */
+    .acc-sec.open .acc-bar {
+      padding-bottom: 8px;
+    }
+
     .acc-icon {
       --mdc-icon-size: 20px;
       opacity: 0.9;
@@ -268,15 +274,17 @@ export const styles = [
       min-height: 0;
     }
 
+    /* Ladder inset: 4px container + 14px row padding ≈ the bar's 18px icon
+       inset, so bar icon and row icons share a left edge. */
     .acc-inner .zones {
-      padding: 0 10px 12px;
+      padding: 0 4px 8px;
     }
 
+    /* All off/on — right side of the OPEN bar, no orphan band. */
     .acc-actions {
       display: flex;
-      gap: 8px;
-      justify-content: center;
-      padding: 0 10px 6px;
+      gap: 6px;
+      flex-shrink: 0;
     }
 
     .mini {
@@ -286,7 +294,7 @@ export const styles = [
       font-family: inherit;
       font-size: 13px;
       font-weight: 600;
-      padding: 8px 18px;
+      padding: 7px 14px;
       border-radius: 999px;
       cursor: pointer;
       transition: background-color var(--md-sys-motion-fast-effects);
