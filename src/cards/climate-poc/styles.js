@@ -148,10 +148,11 @@ export const styles = [
         background-color var(--md-sys-motion-fast-effects);
     }
 
-    /* Selected colors sync with the active hvac mode (heat orange, cool blue,
-       auto primary, off secondary) — set as vars on the card. */
+    /* Selected = the spec pair (SwitchTokens: Primary/OnPrimary). The row's
+       container tone already tells the heating story — coloring the switch
+       too doubles the accent. */
     .z-switch.on {
-      background: var(--poc-mode-accent, var(--md-sys-color-primary));
+      background: var(--md-sys-color-primary);
       border-color: transparent;
     }
 
@@ -159,7 +160,7 @@ export const styles = [
       left: 19px;
       width: 20px; /* spec 24/32 — the thumb GROWS when selected */
       height: 20px;
-      background: var(--poc-mode-container, var(--md-sys-color-on-primary, #fff));
+      background: var(--md-sys-color-on-primary, #fff);
     }
 
     /* Pressed: thumb swells toward the spec's 28/32 pressed size. */
