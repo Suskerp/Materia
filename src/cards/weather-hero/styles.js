@@ -52,9 +52,11 @@ export const styles = [
 
     .temp-value,
     .temp-deg {
+      font-family: var(--materia-font-display, inherit);
       font-size: clamp(72px, 38cqi, 150px);
-      font-weight: 400;
+      font-weight: 300; /* display voice: big-but-LIGHT */
       letter-spacing: normal;
+      font-variant-numeric: tabular-nums;
     }
 
     .temp-deg {

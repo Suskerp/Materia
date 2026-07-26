@@ -55,6 +55,7 @@ export const styles = [
     }
 
     .s-title {
+      font-family: var(--materia-font-display, inherit);
       font-size: 14px;
       font-weight: 600;
       flex: 1;

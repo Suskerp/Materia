@@ -104,12 +104,14 @@ export const styles = [
     }
 
     .target {
+      font-family: var(--materia-font-display, inherit);
       font-size: clamp(44px, 22cqi, 72px);
-      font-weight: 700;
+      font-weight: 600; /* Outfit carries scale without the 700 shout */
       line-height: 1;
       letter-spacing: -0.02em;
       display: flex;
       align-items: flex-start;
+      font-variant-numeric: tabular-nums;
     }
 
     .target .deg {

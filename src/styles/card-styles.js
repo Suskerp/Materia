@@ -24,6 +24,8 @@ export const hostStyles = css`
   :host {
     display: block;
     font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
+    /* The DISPLAY voice — hero numerals & titles only, one shout per card. */
+    --materia-font-display: "Outfit", "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
   }
 `;
 

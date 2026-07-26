@@ -120,10 +120,12 @@ export const styles = [
     }
 
     .big {
+      font-family: var(--materia-font-display, inherit);
       font-size: clamp(28px, 24cqi, 52px);
       font-weight: 700;
       line-height: 1.05;
       letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
     }
 
     .big.small-big {

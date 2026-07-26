@@ -106,9 +106,11 @@ export const styles = [
     /* Big-but-medium: the numeral earns presence through SIZE alone — bold
        at this scale wins on too many contrast axes at once and shouts. */
     .now {
+      font-family: var(--materia-font-display, inherit);
       font-size: 26px;
       font-weight: 500;
       flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
     }
 
     /* Match the materia-card chevron exactly. */

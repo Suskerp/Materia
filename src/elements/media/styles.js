@@ -32,6 +32,7 @@ export const styles = css`
   }
 
   .title {
+    font-family: var(--materia-font-display, inherit);
     font-size: 16px;
     font-weight: 600;
     text-align: center;

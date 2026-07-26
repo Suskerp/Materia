@@ -26,6 +26,7 @@ export const styles = css`
 
   .num {
     fill: var(--clock-number, color-mix(in srgb, var(--md-sys-color-primary, #888) 45%, transparent));
+    font-family: var(--materia-font-display, inherit);
     font-weight: 700;
   }
 
@@ -35,12 +36,15 @@ export const styles = css`
 
   .digital {
     fill: var(--clock-number, color-mix(in srgb, var(--md-sys-color-primary, #888) 26%, transparent));
+    font-family: var(--materia-font-display, inherit);
     font-weight: 800;
     letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
   }
 
   .date {
     fill: var(--clock-number, color-mix(in srgb, var(--md-sys-color-primary, #888) 45%, transparent));
+    font-family: var(--materia-font-display, inherit);
     font-weight: 700;
   }
 
