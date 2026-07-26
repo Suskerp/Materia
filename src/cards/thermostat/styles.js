@@ -154,9 +154,14 @@ export const styles = [
       gap: 3px;
     }
 
+    /* Roughly half the dial height each — a real column, not chips. */
     .nudge.vertical .seg {
-      width: clamp(52px, 17cqi, 68px);
-      height: clamp(64px, 20cqi, 92px);
+      width: clamp(64px, 22cqi, 88px);
+      height: clamp(92px, 32cqi, 136px);
+    }
+
+    .nudge.vertical .seg ha-icon {
+      --mdc-icon-size: clamp(26px, 9cqi, 32px);
     }
 
     .nudge.vertical .seg.plus {
