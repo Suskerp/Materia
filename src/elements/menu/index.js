@@ -255,14 +255,31 @@ class MateriaMenu extends ActionMixin(LitElement) {
   }
 
   /** Copy the menu's resolved CSS custom properties onto the body-level host. */
+  /** Only the vars the dropdown styles actually reference — enumerating the
+   *  FULL computed-style list (thousands of entries in a themed frontend) and
+   *  copying every custom property took 50-200ms per open on tablets. */
+  static PORTAL_VARS = [
+    "--card-background-color",
+    "--divider-color",
+    "--ha-card-background",
+    "--md-sys-color-on-secondary",
+    "--md-sys-color-on-tertiary",
+    "--md-sys-color-on-tertiary-container",
+    "--md-sys-color-outline-variant",
+    "--md-sys-color-secondary",
+    "--md-sys-color-surface-container-high",
+    "--md-sys-color-tertiary",
+    "--md-sys-color-tertiary-container",
+    "--primary-text-color",
+  ];
+
   _syncThemeVars() {
     if (!this._portal) return;
     const cs = getComputedStyle(this);
-    for (let i = 0; i < cs.length; i++) {
-      const prop = cs[i];
-      if (prop.charCodeAt(0) === 45 && prop.charCodeAt(1) === 45) {
-        this._portal.style.setProperty(prop, cs.getPropertyValue(prop));
-      }
+    for (const prop of MateriaMenu.PORTAL_VARS) {
+      const v = cs.getPropertyValue(prop);
+      if (v) this._portal.style.setProperty(prop, v);
+      else this._portal.style.removeProperty(prop);
     }
   }
 
@@ -312,6 +329,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
     this._closing = false;
     clearTimeout(this._portalTimer);
     this._ensurePortal();
+    this._portal.style.display = "";
     this._syncThemeVars();
     this._positionPortal();
     this._renderPortal();
@@ -325,7 +343,9 @@ class MateriaMenu extends ActionMixin(LitElement) {
     this._detachReposition();
     clearTimeout(this._portalTimer);
     this._portalTimer = setTimeout(() => {
-      this._removePortal();
+      // Keep the portal ALIVE (hidden) — rebuilding the shadow root and
+      // re-adopting stylesheets on every open made menus feel sluggish.
+      if (this._portal) this._portal.style.display = "none";
       this._closing = false;
     }, 170);
   }
