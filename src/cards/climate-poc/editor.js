@@ -117,7 +117,7 @@ class MateriaClimatePocEditor extends SmartEditorBase {
   /* Sections manager appended to the normal editor. */
   _renderExtra() {
     return html`
-      <ha-expansion-panel outlined .header=${"Extra sections"} .secondary=${"Wallet sections or menus below Zones/Water heater"} .expanded=${true}>
+      <ha-expansion-panel outlined .header=${"Sections"} .secondary=${"Wallet sections and menus below the mode group"} .expanded=${true}>
         <ha-icon slot="leading-icon" icon="mdi:wallet-outline"></ha-icon>
         <div style="padding:12px;">
           ${this._secs.map((s, i) => html`
@@ -173,6 +173,7 @@ class MateriaClimatePocEditor extends SmartEditorBase {
     };
     return html`
       ${this._sel("Entity (select / input_select / water_heater)", { entity: {} }, s.entity, (v) => this._patchSec(i, { entity: v }))}
+      ${this._sel("Substate (secondary line — supports templates)", { template: {} }, s.substate, (v) => this._patchSec(i, { substate: v }))}
       <div style="font-weight:600;font-size:13px;margin:6px 0 8px;">Manual options (override the entity's)</div>
       ${opts.map((o, oi) => html`
         <div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:8px;">
@@ -208,7 +209,9 @@ class MateriaClimatePocEditor extends SmartEditorBase {
       this._patchCards(i, next);
     };
     return html`
-      ${this._sel("Info entity (closed-bar status text)", { entity: {} }, s.info_entity, (v) => this._patchSec(i, { info_entity: v }))}
+      ${this._sel("Info (closed-bar text — supports templates)", { template: {} }, s.info, (v) => this._patchSec(i, { info: v }))}
+      ${this._sel("…or info from an entity's state", { entity: {} }, s.info_entity, (v) => this._patchSec(i, { info_entity: v }))}
+      ${this._sel("Bar actions (YAML: [{label, icon, tap_action}])", { object: {} }, s.actions, (v) => this._patchSec(i, { actions: v }))}
       <div style="font-weight:600;font-size:13px;margin:6px 0 8px;">Cards</div>
       ${cards.map((c, ci) => html`
         <div style=${ROW} @click=${() => { this._cardIdx = ci; }}>
@@ -223,6 +226,7 @@ class MateriaClimatePocEditor extends SmartEditorBase {
       ${this._huiReady
         ? html`<hui-card-picker
             .hass=${this.hass}
+            .lovelace=${this.lovelace}
             @config-changed=${(e) => { e.stopPropagation(); this._patchCards(i, [...cards, e.detail.config]); }}
           ></hui-card-picker>`
         : html`<div style="opacity:.7;font-size:12px;margin-top:8px;">Card picker unavailable — add cards via the YAML editor.</div>`}
@@ -242,6 +246,7 @@ class MateriaClimatePocEditor extends SmartEditorBase {
       ${customElements.get("hui-card-element-editor")
         ? html`<hui-card-element-editor
             .hass=${this.hass}
+            .lovelace=${this.lovelace}
             .value=${card}
             @config-changed=${(e) => {
               e.stopPropagation();
@@ -263,14 +268,7 @@ class MateriaClimatePocEditor extends SmartEditorBase {
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: "climate" } } },
-          { name: "water_heater", label: "Water heater (optional)", selector: { entity: { domain: "water_heater" } } },
-          {
-            name: "zones",
-            label: "Zone valves",
-            helper: "Per-zone names, icons and temp sensors: zones: [{entity, name, icon, temp_entity}] in YAML.",
-            selector: { entity: { domain: "switch", multiple: true } },
-          },
-          { name: "zone_icon", label: "Zone icon (e.g. mdi:heating-coil for underfloor)", selector: { icon: {} } },
+          { name: "reserve_height", label: "Keep the height of the tallest section (no reflow when cycling)", selector: { boolean: {} } },
         ],
       },
       {
@@ -289,19 +287,6 @@ class MateriaClimatePocEditor extends SmartEditorBase {
             { value: "always", label: "Always (whenever the mode is on)" },
             { value: "never", label: "Never" },
           ] } } },
-        ],
-      },
-      {
-        title: "Built-in sections",
-        icon: "mdi:radiator",
-        fields: [
-          { name: "water", label: "Water heater style", selector: { select: { mode: "dropdown", options: [
-            { value: "menu", label: "Menu (tap opens operation modes)" },
-            { value: "section", label: "Wallet section" },
-          ] } } },
-          { name: "reserve_height", label: "Keep the height of the tallest section (no reflow when cycling)", selector: { boolean: {} } },
-          { name: "zones_title", label: "Zones section title", selector: { text: {} } },
-          { name: "water_title", label: "Water heater section title", selector: { text: {} } },
         ],
       },
     ];

@@ -9,15 +9,15 @@ import "./editor.js";
  * connected segment, and below them a WALLET-style accordion (exactly one
  * section open, muted bars morph large on tap).
  *
- * MODULAR: every section is chrome around NESTED CARDS, and each section is
- * style "section" (wallet accordion, any cards inside) or "menu" (compact
- * row opening a materia-menu). Built-ins are the recommended defaults
- * synthesized from zones:/water_heater: — Zones is one materia-switch per
- * valve. `sections:` appends your own; the card also works with NO sections
- * at all (dial + modes only).
+ * MODULAR: everything below the mode group comes from `sections:` — no
+ * built-ins. Each section is style "section" (wallet accordion around any
+ * nested cards) or "menu" (compact row opening a materia-menu from an
+ * entity's options or manual options). Sections take `info` (text or Jinja
+ * template) and `actions: [{label, icon?, tap_action}]` chips for the open
+ * bar. The card also works with no sections at all (dial + modes only).
  *
  * (Variants B "zones first" and C "vertical slider" were compared and
- * retired; a stray `variant:` key in old configs is ignored.)
+ * retired; stray legacy keys like `variant:`/`zones:` are ignored.)
  */
 // The palette the dial speaks — mode buttons, zone switches and other accents
 // all sync to the active hvac mode.
@@ -44,12 +44,12 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
 
   static getStubConfig(hass) {
     const entity = Object.keys(hass?.states || {}).find((e) => e.startsWith("climate.")) || "";
-    return { entity, zones: [] };
+    return { entity };
   }
 
   setConfig(config) {
     if (!config.entity) throw new Error("Materia Climate POC: entity is required");
-    this.config = { zones: [], ...config };
+    this.config = { ...config };
     this._extraEls = null;
     if (this.isConnected) this._createExtraCards();
   }
@@ -71,49 +71,6 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
 
   get _entity() {
     return this.hass?.states[this.config.entity];
-  }
-
-  _numRaw(v) {
-    if (v == null || v === "" || v === "unknown" || v === "unavailable") return null;
-    const n = Number(v);
-    return Number.isFinite(n) ? n : null;
-  }
-
-  get _current() {
-    return this._numRaw(this._entity?.attributes?.current_temperature);
-  }
-
-  /** Boiler is actively producing heat (reported or inferred). */
-  get _boilerActive() {
-    const a = this._entity?.attributes?.hvac_action;
-    if (a === "heating") return true;
-    if (a && a !== "idle") return false;
-    const mode = this._entity?.state;
-    const cur = this._current;
-    const tgt = this._numRaw(this._entity?.attributes?.temperature);
-    if (mode === "off" || tgt == null) return false;
-    if (cur == null) return mode === "heat";
-    return cur < tgt - 0.2;
-  }
-
-  /** Lite zone model — only what the section bar needs (counts + all off/on).
-   *  The rows themselves are nested materia-switch cards. */
-  get _zones() {
-    return (this.config.zones || []).map((z) => {
-      const entity = typeof z === "string" ? z : z.entity;
-      const on = this.hass.states[entity]?.state === "on";
-      return { entity, on, calling: on && this._boilerActive };
-    });
-  }
-
-  _fmt(v) {
-    return v == null ? "—" : Math.round(v * 10) / 10;
-  }
-
-  _allZones(onOff) {
-    for (const z of this._zones) {
-      this._callService("switch", onOff ? "turn_on" : "turn_off", { entity_id: z.entity });
-    }
   }
 
   /* ---- fragments ------------------------------------------------------------ */
@@ -148,63 +105,18 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
   }
 
   /* ---- wallet accordion: EVERY section is chrome around nested cards -------
-     Built-in Zones and Water heater are just synthesized section configs (the
-     recommended defaults from zones:/water_heater:); user `sections:` append
-     with the same shape — fill them with whatever cards you like. */
-
-  /** Every section: { style: "section" | "menu", title, icon, ... }.
-   *  style "section" = wallet accordion seg around nested cards;
-   *  style "menu"    = compact seg whose tap opens a materia-menu (from an
-   *  entity's options or manual `options:`). Built-ins are synthesized. */
+     No built-ins: `sections:` is the whole story. Each section:
+       { style: "section" | "menu", title, icon,
+         cards: [...]                     (section style)
+         entity, options?, substate?      (menu style)
+         info | info_entity, actions: [{label, icon?, tap_action}] } */
   get _sectionConfigs() {
-    const secs = [];
-    if (this.config.zones?.length) {
-      const heatBg = "var(--md-sys-cust-color-climate-heat-container, var(--md-sys-color-primary-container))";
-      const heatInk = "var(--md-sys-cust-color-climate-heat-accent, var(--md-sys-color-on-primary-container))";
-      secs.push({
-        _builtin: "zones",
-        style: "section",
-        title: this.config.zones_title ?? "Zones",
-        icon: this.config.zone_icon ?? "mdi:radiator",
-        // The recommended default: one materia-switch per zone, escalating to
-        // the heat container while its valve is open and the boiler burns.
-        cards: this.config.zones.map((z) => {
-          const zc = typeof z === "string" ? { entity: z } : z;
-          const heating = `is_state('${zc.entity}', 'on') and state_attr('${this.config.entity}', 'hvac_action') == 'heating'`;
-          return {
-            type: "custom:materia-switch",
-            entity: zc.entity,
-            name: zc.name,
-            icon: zc.icon ?? this.config.zone_icon,
-            flat: true,
-            secondary:
-              `{% if ${heating} %}Heating · open {{ relative_time(states.${zc.entity}.last_changed) }}` +
-              `{% elif is_state('${zc.entity}', 'on') %}At temperature{% else %}Off{% endif %}` +
-              (zc.temp_entity
-                ? `{% if states('${zc.temp_entity}') not in ['unknown', 'unavailable'] %} · {{ states('${zc.temp_entity}') | round(1) }}°{% endif %}`
-                : ""),
-            color: `{% if ${heating} %}${heatBg}{% endif %}`,
-            color_on: `{% if ${heating} %}${heatInk}{% endif %}`,
-          };
-        }),
-      });
-    }
-    if (this.config.water_heater) {
-      secs.push({
-        _builtin: "water",
-        style: (this.config.water ?? "menu") === "section" ? "section" : "menu",
-        title: this.config.water_title ?? "Water heater",
-        icon: "mdi:water-boiler",
-        entity: this.config.water_heater,
-      });
-    }
-    for (const s of this.config.sections || []) secs.push({ style: "section", ...s });
-    return secs;
+    return (this.config.sections || []).map((s) => ({ style: "section", ...s }));
   }
 
   /** materia-menu config for a menu-style section (also the nested card when
    *  a menu entity sits inside a wallet section). */
-  _menuCardConfig(s, live = false) {
+  _menuCardConfig(s) {
     const cfg = {
       type: "custom:materia-menu",
       entity: s.entity,
@@ -213,10 +125,8 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
       menu_variant: "expressive",
     };
     if (s.options?.length) cfg.options = s.options;
-    if (live && s._builtin === "water") {
-      const temp = this._numRaw(this.hass.states[s.entity]?.attributes?.current_temperature);
-      if (temp != null) cfg.substate = `${this._fmt(temp)}°`;
-    }
+    if (s.substate != null) cfg.substate = s.substate;
+    if (s.state_colors) cfg.state_colors = s.state_colors;
     return cfg;
   }
 
@@ -249,32 +159,35 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
 
   _accordionSections() {
     return this._sectionConfigs.map((s, i) => {
+      // info: literal text, Jinja template (live via render_template), or the
+      // formatted state of info_entity.
       let info = "";
-      let actions = null;
-      if (s._builtin === "zones") {
-        const zones = this._zones;
-        const calling = zones.filter((z) => z.calling).length;
-        const on = zones.filter((z) => z.on).length;
-        info = calling ? `${calling} of ${zones.length} heating` : `${on} of ${zones.length} on`;
-        // Actions live IN the bar while open — a centered button band between
-        // bar and ladder read as an orphan strip of dead space.
-        actions = html`
-          <div class="acc-actions">
-            <button class="mini" @click=${() => this._allZones(false)}>All off</button>
-            <button class="mini" @click=${() => this._allZones(true)}>All on</button>
-          </div>
-        `;
-      } else if (s._builtin === "water") {
-        const wh = this.hass.states[this.config.water_heater];
-        const temp = this._numRaw(wh?.attributes?.current_temperature);
-        info = wh ? `${this._capitalize(wh.state)}${temp != null ? ` · ${this._fmt(temp)}°` : ""}` : "";
-      } else {
-        const st = s.info_entity ? this.hass.states[s.info_entity] : null;
-        info = s.info ?? (st ? (this.hass.formatEntityState?.(st) ?? st.state) : "");
+      if (s.info != null) {
+        if (this._isTemplate(s.info)) {
+          this._resolveTemplateValue(`secInfo${i}`, s.info);
+          info = this._tplResults?.[`secInfo${i}`] ?? "";
+        } else {
+          info = s.info;
+        }
+      } else if (s.info_entity) {
+        const st = this.hass.states[s.info_entity];
+        info = st ? (this.hass.formatEntityState?.(st) ?? st.state) : "";
       }
+      // Actions live IN the bar while open — chips like "All off"/"All on".
+      const actions = s.actions?.length
+        ? html`
+          <div class="acc-actions">
+            ${s.actions.map((a) => html`
+              <button class="mini" @click=${(e) => { e.stopPropagation(); this._handleAction(a.tap_action); }}>
+                ${a.icon ? html`<ha-icon icon=${a.icon} style="--mdc-icon-size:15px;"></ha-icon>` : ""}${a.label ?? ""}
+              </button>
+            `)}
+          </div>
+        `
+        : null;
       return {
         style: s.style,
-        menuConfig: s.style === "menu" ? this._menuCardConfig(s, true) : null,
+        menuConfig: s.style === "menu" ? this._menuCardConfig(s) : null,
         title: s.title ?? `Section ${i + 1}`,
         icon: s.icon,
         info,
