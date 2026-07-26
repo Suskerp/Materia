@@ -105,7 +105,7 @@ export const styles = [
        the materia-card rows around it. */
     .now {
       font-size: 24px;
-      font-weight: 400;
+      font-weight: 700;
       flex-shrink: 0;
     }
 

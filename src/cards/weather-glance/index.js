@@ -264,7 +264,9 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
     const alert = this._isTemplate(this.config.alert) ? this._resolvedAlert : this.config.alert;
     const items = this._metricItems(stateObj);
     const first = alert ? null : items[0];
-    const rest = alert ? items : items.slice(1);
+    // Cap the subtitle metrics — with severity sort on, the worst N survive.
+    const cap = this.config.max_metrics ?? Infinity;
+    const rest = (alert ? items : items.slice(1)).slice(0, cap);
 
     const bg = this._isTemplate(this.config.color) ? this._resolvedColor : this.config.color;
     const fg = this._isTemplate(this.config.color_on) ? this._resolvedColorOn : this.config.color_on;
