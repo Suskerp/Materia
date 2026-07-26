@@ -139,8 +139,12 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
 
             // M3 Expressive icon-toggle morph: selected buttons go SQUARE
             // (rounded-square) instead of pill when active_shape: square.
+            // Must be visibly SQUARER than the inactive inner corners, or the
+            // morph is invisible at large sizes.
             const squareActive = this.config.active_shape === "square";
-            const activeR = squareActive ? Math.max(innerCorner, Math.round(height * 0.25)) : outerR;
+            const activeR = squareActive
+              ? Math.min(innerCorner, Math.max(6, Math.round(height * 0.18)))
+              : outerR;
             let radius;
             if (multiSelect) {
               if (isActive) {

@@ -50,6 +50,7 @@ export const styles = [
       padding: 0 16px;
       transition:
         border-radius var(--md-sys-motion-expressive-fast-spatial),
+        flex-grow var(--md-sys-motion-expressive-fast-spatial),
         background-color var(--md-sys-motion-fast-effects),
         color var(--md-sys-motion-fast-effects);
       font-family: inherit;
@@ -101,6 +102,12 @@ export const styles = [
         border-radius var(--md-sys-motion-expressive-fast-spatial),
         background-color var(--md-sys-motion-fast-effects),
         color var(--md-sys-motion-fast-effects);
+    }
+
+    /* M3 Expressive connected group: the SELECTED button grows while its
+       neighbors compress — the shape+size morph, not just a color swap. */
+    .group:not(.multi) button.active {
+      flex-grow: 1.4;
     }
 
     button ha-icon {

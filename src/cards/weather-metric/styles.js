@@ -292,11 +292,14 @@ export const styles = [
     /* Sun arc — an in-flow band between header and times, so the fill stays
        behind the hump only and the times sit on the plain card background. */
     .rect-tile.sun {
-      justify-content: space-between;
+      justify-content: center;
+      gap: clamp(6px, 3cqi, 10px);
     }
 
     .sun-arc {
-      width: 92%;
+      /* Small enough that header + arc + times fit the SQUARE tile — the
+         arc was pushing the tile taller than its siblings. */
+      width: 62%;
       height: auto;
       display: block;
     }
@@ -314,8 +317,8 @@ export const styles = [
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      gap: 3px;
-      font-size: clamp(13px, 6cqi, 16px);
+      gap: 2px;
+      font-size: clamp(12px, 5cqi, 15px);
       font-weight: 600;
     }
 

@@ -35,8 +35,8 @@ export const styles = [
     }
 
     .glyph {
-      width: clamp(32px, 10cqi, 42px);
-      height: clamp(32px, 10cqi, 42px);
+      width: 36px;
+      height: 36px;
       flex-shrink: 0;
     }
 
@@ -52,7 +52,7 @@ export const styles = [
       display: flex;
       align-items: center;
       gap: 7px;
-      font-size: clamp(14px, 4cqi, 16px);
+      font-size: 13px;
       font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
@@ -60,7 +60,7 @@ export const styles = [
     }
 
     .line1 ha-icon {
-      --mdc-icon-size: clamp(16px, 5cqi, 20px);
+      --mdc-icon-size: 16px;
       flex-shrink: 0;
     }
 
@@ -68,9 +68,9 @@ export const styles = [
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: clamp(12px, 3.6cqi, 14px);
-      font-weight: 500;
-      opacity: 0.78;
+      font-size: 12px;
+      font-weight: normal;
+      opacity: 0.7;
       white-space: nowrap;
       overflow: hidden;
     }
@@ -82,7 +82,7 @@ export const styles = [
     }
 
     .m ha-icon {
-      --mdc-icon-size: clamp(14px, 4.5cqi, 17px);
+      --mdc-icon-size: 14px;
       opacity: 0.85;
     }
 
@@ -93,16 +93,17 @@ export const styles = [
     /* Quieter numerals — the pill should sit at the same visual volume as
        the materia-card rows around it. */
     .now {
-      font-size: clamp(22px, 7cqi, 30px);
+      font-size: 24px;
       font-weight: 400;
       flex-shrink: 0;
     }
 
+    /* Match the materia-card chevron exactly. */
     .chev {
-      --mdc-icon-size: clamp(20px, 6cqi, 26px);
-      opacity: 0.55;
+      --mdc-icon-size: 20px;
+      opacity: 0.5;
       flex-shrink: 0;
-      margin: 0 -6px 0 -4px;
+      margin: 0 -4px 0 0;
     }
   `,
 ];
