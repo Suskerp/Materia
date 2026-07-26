@@ -1,20 +1,18 @@
 import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { roundedPolygonPath } from "../../utils/shapes.js";
+import { materialCookiePath, roundedPolygonPath } from "../../utils/shapes.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
-/* MaterialShapes cutouts for the album art, generated once at module load
-   (100-unit space, scaled to objectBoundingBox in the clipPath).
-   DELIBERATE deviation from the canonical star params (inner .8): the art is
-   the content, so valleys are shallower (.87 cookies / .84 sunny) and the
-   radius fills the box — the silhouette still reads, but crops ~a third less
-   of the artwork. */
+/* Canonical MaterialShapes cutouts for the album art, generated once at
+   module load (100-unit space, scaled to objectBoundingBox in the clipPath). */
 const ART_CLIPS = {
-  cookie12: roundedPolygonPath(50, 50, 50, { vertices: 12, innerRadius: 0.87, rounding: 0.5, rotate: -Math.PI / 2 }),
-  cookie9: roundedPolygonPath(50, 50, 50, { vertices: 9, innerRadius: 0.87, rounding: 0.5, rotate: -Math.PI / 2 }),
-  cookie7: roundedPolygonPath(50, 50, 50, { vertices: 7, innerRadius: 0.87, rounding: 0.5, rotate: -Math.PI / 2 }),
-  sunny: roundedPolygonPath(50, 50, 50, { vertices: 8, innerRadius: 0.84, rounding: 0.15, rotate: -Math.PI / 2 }),
+  // Official MaterialShapes only, canonical params (star, inner .8):
+  // cookies use rounding .5, sunny uses .15 (androidx MaterialShapes.kt).
+  cookie12: materialCookiePath(50, 50, 49, 12),
+  cookie9: materialCookiePath(50, 50, 49, 9),
+  cookie7: materialCookiePath(50, 50, 49, 7),
+  sunny: roundedPolygonPath(50, 50, 49, { vertices: 8, innerRadius: 0.8, rounding: 0.15, rotate: -Math.PI / 2 }),
 };
 
 class MateriaMedia extends ActionMixin(LitElement) {
