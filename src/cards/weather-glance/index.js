@@ -41,12 +41,12 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
 
   static getStubConfig(hass) {
     const entity = Object.keys(hass?.states || {}).find((e) => e.startsWith("weather.")) || "";
-    return { entity, metrics: ["condition", "minmax"] };
+    return { entity, metrics: ["minmax"] };
   }
 
   setConfig(config) {
     if (!config.entity) throw new Error("entity is required");
-    this.config = { metrics: ["condition", "minmax"], ...config };
+    this.config = { metrics: ["minmax"], ...config };
     this._fcEntity = undefined;
   }
 
@@ -228,22 +228,21 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
     return { text, sev, icon, type: entry.type };
   }
 
-  /** All configured metrics resolved. The FIRST configured metric is the
-   *  title line and never moves; severity sorting (with the configurable
-   *  `priority` tie-break, e.g. [precipitation, pollen, aqi]) only orders
-   *  the subtitle metrics. */
+  /** Subtitle metrics: everything configured EXCEPT condition (which always
+   *  owns the title line), severity-sorted with the configurable `priority`
+   *  tie-break (e.g. [precipitation, pollen, aqi]). */
   _metricItems(stateObj) {
     const order = this.config.priority ?? ["precipitation", "pollen", "aqi"];
     const weight = (t) => {
       const i = order.indexOf(t);
       return i === -1 ? 0 : (order.length - i) / (order.length + 1);
     };
-    const entries = (this.config.metrics || []).map((e) => (typeof e === "string" ? { type: e } : e));
+    const entries = (this.config.metrics || [])
+      .map((e) => (typeof e === "string" ? { type: e } : e))
+      .filter((e) => e.type !== "condition"); // condition is the title, always
     const items = entries.map((e) => this._metricData(e, stateObj)).filter(Boolean);
-    if (this.config.sort_by_severity && items.length > 2) {
-      const [first, ...rest] = items;
-      rest.sort((x, y) => (y.sev + weight(y.type)) - (x.sev + weight(x.type)));
-      return [first, ...rest];
+    if (this.config.sort_by_severity) {
+      items.sort((x, y) => (y.sev + weight(y.type)) - (x.sev + weight(x.type)));
     }
     return items;
   }
@@ -263,11 +262,11 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
 
     // Alert template (e.g. a warning sensor) takes over line 1 when non-empty.
     const alert = this._isTemplate(this.config.alert) ? this._resolvedAlert : this.config.alert;
-    const items = this._metricItems(stateObj);
-    const first = alert ? null : items[0];
-    // Cap the subtitle metrics — with severity sort on, the worst N survive.
+    // Title is ALWAYS the condition (alert overrides); everything else is
+    // secondary and lives on the subtitle line.
+    const first = alert ? null : this._metricData({ type: "condition" }, stateObj);
     const cap = this.config.max_metrics ?? Infinity;
-    const rest = (alert ? items : items.slice(1)).slice(0, cap);
+    const rest = this._metricItems(stateObj).slice(0, cap);
 
     const bg = this._isTemplate(this.config.color) ? this._resolvedColor : this.config.color;
     const fg = this._isTemplate(this.config.color_on) ? this._resolvedColorOn : this.config.color_on;

@@ -3,7 +3,6 @@ import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 const METRIC_OPTIONS = [
-  { value: "condition", label: "Condition" },
   { value: "minmax", label: "High / low" },
   { value: "wind", label: "Wind" },
   { value: "humidity", label: "Humidity" },
@@ -16,7 +15,7 @@ const METRIC_OPTIONS = [
 
 class MateriaWeatherGlanceEditor extends SmartEditorBase {
   _formData() {
-    return { metrics: ["condition", "minmax"], ...this._config };
+    return { metrics: ["minmax"], ...this._config };
   }
 
   get _sections() {
@@ -27,7 +26,7 @@ class MateriaWeatherGlanceEditor extends SmartEditorBase {
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: "weather" } } },
           { name: "temperature_entity", label: "Real temperature sensor (optional)", selector: { entity: { domain: "sensor", device_class: "temperature" } } },
-          { name: "metrics", label: "Metric lines (first = top line)", selector: { select: { multiple: true, mode: "list", options: METRIC_OPTIONS } } },
+          { name: "metrics", label: "Subtitle metrics (condition always owns the top line)", selector: { select: { multiple: true, mode: "list", options: METRIC_OPTIONS } } },
           { name: "sort_by_severity", label: "Sort metrics worst-first", selector: { boolean: {} } },
           { name: "max_metrics", label: "Max metrics on the subtitle line", selector: { number: { min: 1, max: 8, step: 1, mode: "box" } } },
           { name: "show_metric_icons", label: "Show metric icons", selector: { boolean: {} } },
