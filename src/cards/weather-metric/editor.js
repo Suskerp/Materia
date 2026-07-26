@@ -73,7 +73,10 @@ class MateriaWeatherMetricEditor extends SmartEditorBase {
       );
     }
     if (m === "sun") {
-      extras.fields.push({ name: "sun_entity", label: "Sun entity", selector: { entity: { domain: "sun" } } });
+      extras.fields.push(
+        { name: "sun_entity", label: "Sun entity", selector: { entity: { domain: "sun" } } },
+        { name: "moon_entity", label: "Moon phase sensor (built-in Moon integration)", selector: { entity: { domain: "sensor" } } },
+      );
     }
     if (m === "pollen") {
       extras.fields.push(

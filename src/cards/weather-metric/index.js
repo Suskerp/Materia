@@ -1,6 +1,6 @@
 import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { cookiePath, arrowPath, materialCookiePath, arcPath } from "../../utils/shapes.js";
+import { cookiePath, arrowPath, moonPath, materialCookiePath, arcPath } from "../../utils/shapes.js";
 import { coloredWeatherIcon } from "../weather-tile/icons.js";
 import { styles } from "./styles.js";
 import "./editor.js";
@@ -247,7 +247,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     return html`
       <div class="rect-tile clip wind">
         <svg class="blob-bg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <path d=${arrowPath(50, 50, 44, rotate)} class="blob-fill" />
+          <path d=${arrowPath(50, 50, 36, rotate)} class="blob-fill" />
         </svg>
         <div class="overlay">
           ${this._header("mdi:weather-windy", this.config.name ?? "Wind")}
@@ -422,6 +422,11 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
   }
 
   /* ---- Sunrise & sunset: sun arc ------------------------------------------ */
+  /* ---- Sun: the full DAY & NIGHT cycle, midnight → midnight ---------------
+     Sun hump above the horizon between sunrise and sunset, night troughs
+     below; the marker rides the curve at the current time — the sun cookie by
+     day, the MOON (with its real phase from moon_entity, e.g. sensor.moon
+     from HA's built-in Moon integration) by night. */
   _sun() {
     const sunEntity = this.hass.states[this.config.sun_entity ?? "sun.sun"];
     if (!sunEntity) return nothing;
@@ -430,38 +435,57 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     if (!rising || !setting) return nothing;
     const locale = this.hass?.locale?.language || navigator.language || "en";
     const fmt = (iso) => new Date(iso).toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" });
-    // Sun position along the hump: fraction of daylight elapsed (only
-    // meaningful while the sun is up; clamp otherwise).
-    const rise = new Date(rising).getTime();
-    const set = new Date(setting).getTime();
-    const now = Date.now();
-    let frac = 0.5;
-    if (set < rise) {
-      // Daytime: next_setting is today, next_rising is tomorrow.
-      const dayLen = 24 * 3600 * 1000 - (rise - set);
-      frac = Math.min(1, Math.max(0, 1 - (set - now) / dayLen));
-    } else {
-      frac = now < rise ? 0 : 1; // night
-    }
-    const t = frac;
-    // WIDE, FLAT hump (viewBox 100×38): fills the card width while header +
-    // arc + times still fit the square tile. The sun sits ON the Bézier
-    // (2,32) → ctrl (50,-4) → (98,32), so evaluate the same curve.
-    const x = (1 - t) * (1 - t) * 2 + 2 * t * (1 - t) * 50 + t * t * 98;
-    const y = (1 - t) * (1 - t) * 32 + 2 * t * (1 - t) * -4 + t * t * 32;
+    // Local time-of-day in hours — next_* events carry (≈) today's times.
+    const hourOf = (d) => d.getHours() + d.getMinutes() / 60;
+    const riseH = hourOf(new Date(rising));
+    const setH = hourOf(new Date(setting));
+    const nowH = hourOf(new Date());
+    const dayLen = (setH - riseH + 24) % 24 || 12;
+    const nightLen = 24 - dayLen;
+    const HZN = 24, AD = 17, AN = 9;
+    const x = (h) => (h / 24) * 100;
+    // Curve height at hour h: day = tall half-sine above the horizon,
+    // night = shallow half-sine below (phase continues across midnight).
+    const yAt = (h) => {
+      const sinceRise = (h - riseH + 24) % 24;
+      if (sinceRise <= dayLen) return HZN - AD * Math.sin((Math.PI * sinceRise) / dayLen);
+      return HZN + AN * Math.sin((Math.PI * (sinceRise - dayLen)) / nightLen);
+    };
+    const seg = (from, to) => {
+      const p = [];
+      for (let h = from; h < to; h += 0.25) p.push(`${x(h).toFixed(2)} ${yAt(h).toFixed(2)}`);
+      p.push(`${x(to).toFixed(2)} ${yAt(to).toFixed(2)}`);
+      return p.join(" L");
+    };
+    const dayPath = `M${x(riseH).toFixed(2)} ${HZN} L${seg(riseH, setH)} Z`;
+    const nightBefore = riseH > 0.01 ? `M0 ${HZN} L${seg(0, riseH)} Z` : "";
+    const nightAfter = setH < 23.99 ? `M${x(setH).toFixed(2)} ${HZN} L${seg(setH, 24)} L100 ${HZN} Z` : "";
+    const dayNow = (nowH - riseH + 24) % 24 <= dayLen;
+    const mx = x(nowH);
+    const my = yAt(nowH);
+    // Moon phase → lit-region geometry.
+    const PHASES = { new_moon: 0, waxing_crescent: 0.125, first_quarter: 0.25, waxing_gibbous: 0.375, full_moon: 0.5, waning_gibbous: 0.625, last_quarter: 0.75, waning_crescent: 0.875 };
+    const moonSt = this.config.moon_entity ? this.hass.states[this.config.moon_entity] : null;
+    const phase = moonSt && moonSt.state in PHASES ? PHASES[moonSt.state] : 0.5;
     return html`
       <div class="rect-tile sun">
         ${this._header("mdi:weather-sunset", this.config.name ?? "Sunrise & sunset")}
-        <svg class="sun-arc" viewBox="0 0 100 38">
-          <path d="M2 32 Q 50 -4 98 32 Z" class="arc-fill" />
-          <line x1="0" y1="32" x2="100" y2="32" class="horizon" />
-          ${frac > 0 && frac < 1
-            ? svg`<path d=${cookiePath(x, y, 5.5, 9, 0.6)} fill="var(--md-sys-cust-color-weather-sun, #FFC83D)" />`
-            : ""}
+        <svg class="sun-arc cycle" viewBox="0 0 100 40">
+          <path d=${dayPath} class="arc-fill" />
+          ${nightBefore ? svg`<path d=${nightBefore} class="arc-night" />` : ""}
+          ${nightAfter ? svg`<path d=${nightAfter} class="arc-night" />` : ""}
+          <line x1="0" y1=${HZN} x2="100" y2=${HZN} class="horizon" />
+          ${dayNow
+            ? svg`<path d=${cookiePath(mx, my, 5.5, 9, 0.6)} fill="var(--md-sys-cust-color-weather-sun, #FFC83D)" />`
+            : svg`
+                <circle cx=${mx.toFixed(2)} cy=${my.toFixed(2)} r="4.6" class="moon-dark" />
+                ${moonPath(mx, my, 4.6, phase) ? svg`<path d=${moonPath(mx, my, 4.6, phase)} class="moon-lit" />` : ""}
+              `}
         </svg>
         <div class="sun-times">
           <div><ha-icon icon="mdi:weather-sunset-up"></ha-icon> ${fmt(rising)}</div>
           <div><ha-icon icon="mdi:weather-sunset-down"></ha-icon> ${fmt(setting)}</div>
+          ${moonSt ? html`<div class="moon-row"><ha-icon icon="mdi:moon-waning-crescent"></ha-icon> ${this.hass.formatEntityState?.(moonSt) ?? moonSt.state}</div>` : ""}
         </div>
       </div>
     `;

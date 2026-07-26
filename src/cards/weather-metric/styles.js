@@ -328,6 +328,23 @@ export const styles = [
       stroke-width: 0.8;
     }
 
+    /* Night troughs + the phased moon marker. */
+    .arc-night {
+      fill: color-mix(in srgb, var(--md-sys-cust-color-weather-rain, #5fa8f5) 18%, transparent);
+    }
+
+    .moon-dark {
+      fill: color-mix(in srgb, currentColor 22%, transparent);
+    }
+
+    .moon-lit {
+      fill: color-mix(in srgb, currentColor 85%, transparent);
+    }
+
+    .moon-row ha-icon {
+      opacity: 0.8;
+    }
+
     .sun-times {
       display: flex;
       flex-direction: column;

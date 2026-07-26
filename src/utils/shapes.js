@@ -152,10 +152,11 @@ export function arrowPath(cx, cy, r, rotate = 0) {
     { x: 0.499, y: -0.16, r: 0.215 }, // apex
     { x: 1.225, y: 1.06, r: 0.211 },  // base right
   ];
-  // Rotate FIRST, fillet in raw units, then center + scale by the TRUE curve
-  // bounds. Vertex bounds won't do: the outline pulls inward from each vertex
-  // by rEff/sin(half) − rEff, which is LARGEST at the sharp apex — vertex-box
-  // centering always leaves the apex side with extra empty margin.
+  // Rotate FIRST, fillet in raw units, then place the shape's AREA CENTROID
+  // at (cx, cy) and scale so its farthest outline point sits at distance r —
+  // optical centering for a round tile. (Bounding-box centering LOOKS wrong
+  // here: the mass sits toward the round base, so the box's center isn't the
+  // visual center.)
   const cosR = Math.cos(rotate);
   const sinR = Math.sin(rotate);
   const segs = filletSegments(raw.map((p) => ({
@@ -163,11 +164,34 @@ export function arrowPath(cx, cy, r, rotate = 0) {
     y: p.x * sinR + p.y * cosR,
     r: p.r,
   })));
-  const b = segmentsBounds(segs);
-  const cx0 = (b.minX + b.maxX) / 2;
-  const cy0 = (b.minY + b.maxY) / 2;
-  const s = (2 * r) / Math.max(b.maxX - b.minX, b.maxY - b.minY);
-  const t = (p) => [cx + (p[0] - cx0) * s, cy + (p[1] - cy0) * s];
+  // Dense outline samples in path order → shoelace area centroid.
+  const pts = [];
+  for (const sg of segs) {
+    const a1 = Math.atan2(sg.T1[1] - sg.C[1], sg.T1[0] - sg.C[0]);
+    const a2 = Math.atan2(sg.T2[1] - sg.C[1], sg.T2[0] - sg.C[0]);
+    let delta = a2 - a1;
+    if (sg.sweep === 1) { while (delta < 0) delta += Math.PI * 2; }
+    else { while (delta > 0) delta -= Math.PI * 2; }
+    for (let i = 0; i <= 16; i++) {
+      const a = a1 + (delta * i) / 16;
+      pts.push([sg.C[0] + sg.rEff * Math.cos(a), sg.C[1] + sg.rEff * Math.sin(a)]);
+    }
+  }
+  let A = 0, gx = 0, gy = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const [x1, y1] = pts[i];
+    const [x2, y2] = pts[(i + 1) % pts.length];
+    const w = x1 * y2 - x2 * y1;
+    A += w;
+    gx += (x1 + x2) * w;
+    gy += (y1 + y2) * w;
+  }
+  A /= 2;
+  gx /= 6 * A;
+  gy /= 6 * A;
+  const maxDist = Math.max(...pts.map(([x, y]) => Math.hypot(x - gx, y - gy)));
+  const s = r / maxDist;
+  const t = (p) => [cx + (p[0] - gx) * s, cy + (p[1] - gy) * s];
   return segmentsToPath(segs.map((sg) => ({
     T1: t(sg.T1),
     T2: t(sg.T2),
@@ -187,4 +211,20 @@ export function arcPath(cx, cy, r, startDeg, endDeg) {
   const [x2, y2] = toXY(endDeg);
   const large = Math.abs(endDeg - startDeg) > 180 ? 1 : 0;
   return `M${x1.toFixed(2)} ${y1.toFixed(2)} A${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
+}
+
+/** Lit region of the moon at cycle position p ∈ [0,1) (0 = new, .5 = full).
+ *  Outer rim on the lit side + elliptical terminator; "" at new moon. */
+export function moonPath(cx, cy, r, p) {
+  const cos = Math.cos(2 * Math.PI * p);
+  if (p < 0.02 || p > 0.98) return ""; // new moon — nothing lit
+  const rx = Math.max(0.01, Math.abs(cos) * r).toFixed(2);
+  const top = `${cx} ${cy - r}`;
+  const bot = `${cx} ${cy + r}`;
+  if (p <= 0.5) {
+    // Waxing: lit on the right; terminator bulges right (crescent) or left (gibbous).
+    return `M${top} A${r} ${r} 0 0 1 ${bot} A${rx} ${r} 0 0 ${cos > 0 ? 1 : 0} ${top} Z`;
+  }
+  // Waning: mirror image.
+  return `M${top} A${r} ${r} 0 0 0 ${bot} A${rx} ${r} 0 0 ${cos > 0 ? 0 : 1} ${top} Z`;
 }
