@@ -272,8 +272,19 @@ class MateriaMenu extends ActionMixin(LitElement) {
     if (!trigger) return;
     const r = trigger.getBoundingClientRect();
     const host = this._portal;
-    host.style.left = `${r.left}px`;
-    host.style.width = `${r.width}px`;
+    if (this.config.menu_variant === "expressive") {
+      // Spec menus size to their content and anchor to the trigger's end edge
+      // (like the ⋮ overflow menu) — not a full-width dropdown.
+      host.style.left = "auto";
+      host.style.right = `${Math.max(8, window.innerWidth - r.right)}px`;
+      host.style.width = "auto";
+      host.style.maxWidth = "min(320px, calc(100vw - 24px))";
+    } else {
+      host.style.right = "auto";
+      host.style.maxWidth = "";
+      host.style.left = `${r.left}px`;
+      host.style.width = `${r.width}px`;
+    }
     if (this._pos === "above") {
       host.style.top = "auto";
       host.style.bottom = `${window.innerHeight - r.top + 2}px`;

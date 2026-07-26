@@ -174,6 +174,11 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     --_surf: var(--md-sys-color-secondary-container, #e8def8);
     color: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
     padding: 10px 8px;
+    min-width: 200px;
+    /* Clearly lifted off the page — M3 level-2 shadow pair. */
+    box-shadow:
+      0 4px 8px 3px rgba(0, 0, 0, 0.15),
+      0 1px 3px rgba(0, 0, 0, 0.3);
   }
 
   .below .dropdown.expressive,
