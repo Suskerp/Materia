@@ -17,7 +17,10 @@ export const styles = [
        radius, padding and height all morph on the expressive spatial spring
        (the wallet-card "jump"). */
     .section {
-      background: var(--mw-bg, var(--ha-card-background, var(--card-background-color)));
+      /* Collapsed bars sit slightly muted (tint washed toward the surface);
+         the OPEN section is the full-strength color moment — M3E emphasis:
+         the hero gets the color, resting elements stay quieter. */
+      background: color-mix(in srgb, var(--mw-bg, var(--ha-card-background, var(--card-background-color))) 72%, var(--md-sys-color-surface, var(--ha-card-background)));
       color: var(--mw-fg, var(--md-sys-color-on-surface, var(--primary-text-color)));
       border-radius: 999px;
       overflow: hidden;
@@ -28,6 +31,7 @@ export const styles = [
 
     .section.open {
       border-radius: 28px;
+      background: var(--mw-bg, var(--ha-card-background, var(--card-background-color)));
     }
 
     .bar {
