@@ -600,9 +600,16 @@ export class MateriaCard extends ActionMixin(LitElement) {
     if (this._startX == null) return;
 
     // iOS workaround: ignore spurious pointercancel within 150ms of drag start
+    // — but arm a fallback so a REAL cancel (no pointerup ever follows) still
+    // releases the drag and the page scroll-lock.
     if (ev.type === "pointercancel" && this._dragStartTime) {
-      if (Date.now() - this._dragStartTime < 150) return;
+      if (Date.now() - this._dragStartTime < 150) {
+        clearTimeout(this._graceTimer);
+        this._graceTimer = setTimeout(() => this._cleanupSlider(), 400);
+        return;
+      }
     }
+    clearTimeout(this._graceTimer);
 
     if (this._dragging) {
       const pct = this._pctFromPointer(ev);
@@ -626,6 +633,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
   }
 
   _cleanupSlider() {
+    clearTimeout(this._graceTimer);
     this._abortSlider();
     this._startX = null;
     this._dragging = false;

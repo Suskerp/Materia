@@ -40,6 +40,11 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     }
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    this._resubOnConnect();
+  }
+
   disconnectedCallback() {
     super.disconnectedCallback();
     this._unsubForecast();
@@ -47,6 +52,10 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
 
   /** Subscribe to the entity's daily forecast (modern HA no longer exposes it
    *  as an attribute). Guarded so it runs once per entity, not per hass tick. */
+  _resubOnConnect() {
+    this._subscribeForecast();
+  }
+
   _subscribeForecast() {
     const entity = this.config?.entity;
     if (!this.hass || !entity || this._fcEntity === entity) return;
@@ -68,6 +77,9 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
       this._fcUnsub.then((u) => u && u()).catch(() => {});
       this._fcUnsub = null;
     }
+    // Allow re-subscribe after re-attach — HA re-parents cards on view edits
+    // and re-layouts; a stale guard left forecasts permanently frozen.
+    this._fcEntity = undefined;
   }
 
   _num(v) {
@@ -94,9 +106,15 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     // Just the degree symbol — no unit letter (28° not 28°C).
     const tempStr = this._num(temp) != null ? `${this._num(temp)}°` : "—";
 
-    // Optional min/max — explicit sensors override today's forecast.
-    let low = this.config.low_entity ? this.hass.states[this.config.low_entity]?.state : null;
-    let high = this.config.high_entity ? this.hass.states[this.config.high_entity]?.state : null;
+    // Optional min/max — explicit sensors override today's forecast, but an
+    // UNAVAILABLE sensor must fall through (its state is the string
+    // "unavailable", not null, which used to block the forecast fallback).
+    const readSensor = (id) => {
+      const s = id ? this.hass.states[id] : null;
+      return s && !this._isUnavailable(s) ? s.state : null;
+    };
+    let low = readSensor(this.config.low_entity);
+    let high = readSensor(this.config.high_entity);
     // Today's forecast: subscribed daily forecast first, legacy attribute next.
     const fc = this._forecast?.[0] || stateObj?.attributes?.forecast?.[0];
     if (low == null && fc?.templow != null) low = fc.templow;

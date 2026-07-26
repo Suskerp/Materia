@@ -45,6 +45,11 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
     }
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    this._subscribeForecast(); // re-subscribe after re-attach
+  }
+
   disconnectedCallback() {
     super.disconnectedCallback();
     this._unsubForecast();
@@ -55,8 +60,9 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
     if (!this.hass || !entity || this._fcEntity === entity) return;
     this._unsubForecast();
     this._fcEntity = entity;
-    this._forecast = [];
+    this._forecast = null;
     this._hourly = [];
+    this._hourlyByDay = new Map();
     const daily = this.hass.connection.subscribeMessage(
       (ev) => {
         this._forecast = ev?.forecast || [];
@@ -71,6 +77,18 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
       const hourly = this.hass.connection.subscribeMessage(
         (ev) => {
           this._hourly = ev?.forecast || [];
+          // Bucket ONCE per push (not per pill per render) using the HA
+          // instance's timezone — browser-local toDateString misassigns
+          // hours for any viewer in a different timezone.
+          const map = new Map();
+          for (const h of this._hourly) {
+            const key = this._dayKey(h.datetime);
+            if (!key) continue;
+            const arr = map.get(key) || [];
+            if (arr.length < 24) arr.push(h);
+            map.set(key, arr);
+          }
+          this._hourlyByDay = map;
         },
         { type: "weather/subscribe_forecast", forecast_type: "hourly", entity_id: entity }
       );
@@ -84,15 +102,29 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
       p.then((u) => u && u()).catch(() => {});
     }
     this._fcUnsubs = null;
+    // Allow re-subscribe after re-attach — a stale guard froze forecasts.
+    this._fcEntity = undefined;
   }
 
-  /** Hourly entries falling on the same local calendar day as `day`. */
+  /** Calendar-day key (YYYY-MM-DD) in the HA instance's timezone. */
+  _dayKey(datetime) {
+    const tz = this.hass?.config?.time_zone;
+    if (!this._dayFmt || this._dayFmtTz !== tz) {
+      this._dayFmtTz = tz;
+      try {
+        this._dayFmt = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" });
+      } catch {
+        this._dayFmt = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" });
+      }
+    }
+    const d = new Date(datetime);
+    return Number.isNaN(d.getTime()) ? "" : this._dayFmt.format(d);
+  }
+
+  /** Hourly entries falling on the same calendar day (HA timezone) as `day`. */
   _hoursFor(day) {
-    if (!day?.datetime || !this._hourly?.length) return [];
-    const target = new Date(day.datetime).toDateString();
-    return this._hourly
-      .filter((h) => new Date(h.datetime).toDateString() === target)
-      .slice(0, 24);
+    if (!day?.datetime || !this._hourlyByDay?.size) return [];
+    return this._hourlyByDay.get(this._dayKey(day.datetime)) || [];
   }
 
   _num(v) {
@@ -105,7 +137,7 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
     const d = new Date(datetime);
     if (Number.isNaN(d.getTime())) return "";
     const today = new Date();
-    if (index === 0 && d.toDateString() === today.toDateString()) {
+    if (index === 0 && this._dayKey(datetime) === this._dayKey(today)) {
       return this.config.today_label ?? "Today";
     }
     const locale = this.hass?.locale?.language || navigator.language || "en";
@@ -162,7 +194,9 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
 
     const stateObj = this.hass.states[this.config.entity];
     const unavailable = this._isUnavailable(stateObj);
-    const days = (this._forecast || stateObj?.attributes?.forecast || [])
+    // ?.length — the subscribed array starts empty, and an empty array is
+    // truthy, which used to permanently mask the legacy attribute fallback.
+    const days = (this._forecast?.length ? this._forecast : stateObj?.attributes?.forecast || [])
       .slice(0, this.config.days ?? 10);
     if (!days.length) return html``;
 

@@ -221,6 +221,12 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     }
   }
 
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    clearTimeout(this._optimisticTimer);
+    for (const t of Object.values(this._optEntityTimers || {})) clearTimeout(t);
+  }
+
   updated(changedProps) {
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("color_active", "_resolvedColorActive");

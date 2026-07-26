@@ -59,9 +59,18 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
     }
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    this._resubOnConnect();
+  }
+
   disconnectedCallback() {
     super.disconnectedCallback();
     this._unsubForecast();
+  }
+
+  _resubOnConnect() {
+    this._subscribeForecast();
   }
 
   _subscribeForecast() {
@@ -83,6 +92,9 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
       this._fcUnsub.then((u) => u && u()).catch(() => {});
       this._fcUnsub = null;
     }
+    // Allow re-subscribe after re-attach — HA re-parents cards on view edits
+    // and re-layouts; a stale guard left forecasts permanently frozen.
+    this._fcEntity = undefined;
   }
 
   _num(v) {

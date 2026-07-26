@@ -30,8 +30,6 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     hass: { attribute: false },
     config: { state: true },
     _optimisticTemp: { state: true },
-    _phase: { state: true },
-    _amp: { state: true },
   };
 
   static styles = styles;
@@ -60,6 +58,8 @@ class MateriaThermostat extends ActionMixin(LitElement) {
   disconnectedCallback() {
     super.disconnectedCallback();
     this._stopLoop();
+    clearTimeout(this._optimisticTimer);
+    clearTimeout(this._sendTimer); // never fire set_temperature after teardown
   }
 
   get _entity() {
@@ -146,6 +146,14 @@ class MateriaThermostat extends ActionMixin(LitElement) {
       this._amp = settled ? targetAmp : nextAmp;
       if (this._amp > 0.005 || targetAmp > 0) {
         this._phase += action === "cooling" ? 0.045 : traveling ? -0.045 : -0.012;
+        // Mutate the wave path directly — _phase/_amp are deliberately NOT
+        // reactive; re-rendering the whole card (and its button-group child)
+        // at 60fps was pure waste. Geometry is stashed by render().
+        const g = this._waveGeom;
+        if (g) {
+          const path = this.renderRoot?.querySelector("path.wave-seg");
+          if (path) path.setAttribute("d", this._wavePath(g.start, g.end, g.r));
+        }
         this._raf = requestAnimationFrame(tick);
       } else {
         this._raf = null; // wave gone — sleep until an update wakes us
@@ -168,12 +176,40 @@ class MateriaThermostat extends ActionMixin(LitElement) {
       // Reconcile optimistic target.
       if (this._optimisticTemp != null) {
         const actual = this._numRaw(this._entity?.attributes?.temperature);
-        if (actual === this._optimisticTemp) {
+        if (actual != null && Math.abs(actual - this._optimisticTemp) < 1e-6) {
           this._optimisticTemp = null;
           clearTimeout(this._optimisticTimer);
         }
       }
     }
+  }
+
+  /** Memoized config for the embedded mode button-group — a fresh object per
+   *  render would force a child re-render on every parent update. */
+  _modeGroupConfig(modes, accent, accentOn) {
+    const key = `${this.config.entity}|${modes.join()}|${accent}|${accentOn}|${this.config.mode_size ?? "l"}`;
+    if (this._mgKey !== key) {
+      this._mgKey = key;
+      this._mgConfig = {
+        entity: this.config.entity,
+        size: this.config.mode_size ?? "l",
+        variant: "tonal",
+        active_shape: "square", // M3 Expressive: selected toggles morph square
+        color_active: accent,
+        color_on_active: accentOn,
+        options: modes.map((m) => ({
+          icon: MODE_META[m].icon,
+          value: m,
+          tap_action: {
+            action: "perform-action",
+            perform_action: "climate.set_hvac_mode",
+            data: { hvac_mode: m },
+            target: { entity_id: this.config.entity },
+          },
+        })),
+      };
+    }
+    return this._mgConfig;
   }
 
   /* ---- Geometry ----------------------------------------------------------- */
@@ -259,13 +295,6 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     e.currentTarget.releasePointerCapture?.(e.pointerId);
   }
 
-  _setMode(mode) {
-    this._callService("climate", "set_hvac_mode", {
-      entity_id: this.config.entity,
-      hvac_mode: mode,
-    });
-  }
-
   /* ---- Render --------------------------------------------------------------- */
   render() {
     if (!this.hass || !this.config) return html``;
@@ -317,8 +346,16 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     const modes = (this.config.hvac_modes ?? stateObj.attributes.hvac_modes ?? [])
       .filter((m) => MODE_META[m]);
 
+    // Stash wave geometry for the rAF loop (which mutates the path directly).
+    this._waveGeom = active && waveEnd != null && waveEnd > waveStart + 0.5
+      ? { start: waveStart, end: waveEnd, r: R }
+      : null;
+
     return html`
-      <ha-card class="${unavailable ? "unavailable" : ""}">
+      <ha-card
+        class="${unavailable ? "unavailable" : ""}"
+        style="--th-container:${accentOn};--th-on-container:${accent};"
+      >
         <div class="dial-wrap">
           <svg
             class="dial"
@@ -347,7 +384,7 @@ class MateriaThermostat extends ActionMixin(LitElement) {
               ? svg`<path d=${this._arcPath(DIAL_START, solidEnd, R)} class="sweep" style="stroke:${accent}" />`
               : ""}
             ${active && waveEnd != null && waveEnd > waveStart + 0.5
-              ? svg`<path d=${this._wavePath(waveStart, waveEnd, R)} class="sweep" style="stroke:${accent}" />`
+              ? svg`<path d=${this._wavePath(waveStart, waveEnd, R)} class="sweep wave-seg" style="stroke:${accent}" />`
               : ""}
             ${active && curDeg != null
               ? svg`<circle
@@ -381,25 +418,7 @@ class MateriaThermostat extends ActionMixin(LitElement) {
         ${this.config.show_modes !== false && modes.length
           ? html`<materia-button-group
               .hass=${this.hass}
-              .config=${{
-                entity: this.config.entity,
-                size: this.config.mode_size ?? "l",
-                variant: "tonal",
-                active_shape: "square", // M3 Expressive: selected toggles morph square
-
-                color_active: accent,
-                color_on_active: accentOn,
-                options: modes.map((m) => ({
-                  icon: MODE_META[m].icon,
-                  value: m,
-                  tap_action: {
-                    action: "perform-action",
-                    perform_action: "climate.set_hvac_mode",
-                    data: { hvac_mode: m },
-                    target: { entity_id: this.config.entity },
-                  },
-                })),
-              }}
+              .config=${this._modeGroupConfig(modes, accent, accentOn)}
             ></materia-button-group>`
           : ""}
       </ha-card>

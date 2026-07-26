@@ -34,13 +34,39 @@ export const ActionMixin = (superClass) =>
       this._fireHaptic("light");
 
       switch (actionConfig.action) {
-        case "toggle":
-          if (this.config?.entity) {
-            this._callService("homeassistant", "toggle", {
-              entity_id: this.config.entity,
-            });
+        case "toggle": {
+          // homeassistant.toggle only forwards to <domain>.toggle — locks,
+          // scenes, vacuums, buttons and covers have no toggle service, so
+          // route those domains explicitly (mirrors ha-frontend toggleEntity).
+          const eid = this.config?.entity;
+          if (!eid) break;
+          const domain = eid.split(".")[0];
+          const state = String(this.hass?.states[eid]?.state ?? "");
+          switch (domain) {
+            case "lock":
+              this._callService("lock", state === "locked" ? "unlock" : "lock", { entity_id: eid });
+              break;
+            case "cover":
+              this._callService("cover", ["closed", "closing"].includes(state) ? "open_cover" : "close_cover", { entity_id: eid });
+              break;
+            case "valve":
+              this._callService("valve", ["closed", "closing"].includes(state) ? "open_valve" : "close_valve", { entity_id: eid });
+              break;
+            case "scene":
+              this._callService("scene", "turn_on", { entity_id: eid });
+              break;
+            case "button":
+            case "input_button":
+              this._callService(domain, "press", { entity_id: eid });
+              break;
+            case "vacuum":
+              this._callService("vacuum", ["docked", "idle", "paused"].includes(state) ? "start" : "return_to_base", { entity_id: eid });
+              break;
+            default:
+              this._callService("homeassistant", "toggle", { entity_id: eid });
           }
           break;
+        }
 
         case "perform-action":
         case "call-service": {
@@ -57,12 +83,15 @@ export const ActionMixin = (superClass) =>
           break;
         }
 
-        case "navigate":
-          history.pushState(null, "", actionConfig.navigation_path);
-          this.dispatchEvent(
-            new Event("location-changed", { bubbles: true, composed: true })
-          );
+        case "navigate": {
+          if (!actionConfig.navigation_path) break; // would push literal "undefined"
+          const replace = !!actionConfig.navigation_replace;
+          history[replace ? "replaceState" : "pushState"](null, "", actionConfig.navigation_path);
+          const ev = new Event("location-changed", { bubbles: true, composed: true });
+          ev.detail = { replace };
+          this.dispatchEvent(ev);
           break;
+        }
 
         case "more-info":
           this.dispatchEvent(
@@ -91,14 +120,18 @@ export const ActionMixin = (superClass) =>
     }
 
     /**
-     * Call a HA service, swallowing rejections. A failed service call
-     * (entity gone, no permission, offline) otherwise surfaces as an unhandled
-     * promise rejection. Returns the promise for callers that want to await.
+     * Call a HA service. Failures are caught (no unhandled rejections) but
+     * surfaced as a HA toast — a silently-reverting optimistic state
+     * otherwise looks like the card is broken.
      */
     _callService(domain, service, data, target) {
       return this.hass
         .callService(domain, service, data, target)
-        .catch(() => {});
+        .catch((err) => {
+          const ev = new Event("hass-notification", { bubbles: true, composed: true });
+          ev.detail = { message: err?.message || `Failed: ${domain}.${service}` };
+          this.dispatchEvent(ev);
+        });
     }
 
     /** Capitalize first letter of a string. */

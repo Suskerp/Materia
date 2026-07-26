@@ -50,9 +50,18 @@ class MateriaWeatherHero extends ActionMixin(LitElement) {
     }
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    this._resubOnConnect();
+  }
+
   disconnectedCallback() {
     super.disconnectedCallback();
     this._unsubForecast();
+  }
+
+  _resubOnConnect() {
+    this._subscribeForecast();
   }
 
   _subscribeForecast() {
@@ -76,6 +85,9 @@ class MateriaWeatherHero extends ActionMixin(LitElement) {
       this._fcUnsub.then((u) => u && u()).catch(() => {});
       this._fcUnsub = null;
     }
+    // Allow re-subscribe after re-attach — HA re-parents cards on view edits
+    // and re-layouts; a stale guard left forecasts permanently frozen.
+    this._fcEntity = undefined;
   }
 
   _num(v) {
@@ -112,9 +124,14 @@ class MateriaWeatherHero extends ActionMixin(LitElement) {
     }
     const feelsNum = this._num(feels);
 
-    // Night/Day from today's forecast (explicit sensors override).
-    let low = this.config.low_entity ? this.hass.states[this.config.low_entity]?.state : null;
-    let high = this.config.high_entity ? this.hass.states[this.config.high_entity]?.state : null;
+    // Night/Day from today's forecast (explicit sensors override; unavailable
+    // sensors fall through to the forecast).
+    const readSensor = (id) => {
+      const s = id ? this.hass.states[id] : null;
+      return s && !this._isUnavailable(s) ? s.state : null;
+    };
+    let low = readSensor(this.config.low_entity);
+    let high = readSensor(this.config.high_entity);
     const fc = this._forecast?.[0] || stateObj?.attributes?.forecast?.[0];
     if (low == null && fc?.templow != null) low = fc.templow;
     if (high == null && fc?.temperature != null) high = fc.temperature;

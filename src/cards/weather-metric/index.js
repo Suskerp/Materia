@@ -78,16 +78,28 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("color", "_resolvedColor");
       this._resolveField("color_on", "_resolvedColorOn");
-      // Precipitation without an explicit sensor reads today's forecast.
+      // Precipitation without an explicit sensor reads today's forecast;
+      // any other metric must NOT hold a forecast subscription open.
       if (this.config.metric === "precipitation" && !this.config.sensor) {
         this._subscribeForecast();
+      } else {
+        this._unsubForecast();
       }
     }
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._resubOnConnect();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     this._unsubForecast();
+  }
+
+  _resubOnConnect() {
+    if (this.config?.metric === "precipitation" && !this.config.sensor) this._subscribeForecast();
   }
 
   _subscribeForecast() {
@@ -109,6 +121,9 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
       this._fcUnsub.then((u) => u && u()).catch(() => {});
       this._fcUnsub = null;
     }
+    // Allow re-subscribe after re-attach — HA re-parents cards on view edits
+    // and re-layouts; a stale guard left forecasts permanently frozen.
+    this._fcEntity = undefined;
   }
 
   _numRaw(v) {

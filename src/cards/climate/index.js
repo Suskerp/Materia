@@ -129,7 +129,11 @@ class MateriaClimate extends ActionMixin(LitElement) {
   _adjustTemp(delta) {
     const temp = this._targetTemp;
     if (temp == null) return;
-    const newTemp = temp + delta;
+    const step = this.config.step ?? 0.5;
+    // Round to the step and clamp — raw float math sends 20.700000000000003.
+    const min = Number(this._entity?.attributes?.min_temp ?? 7);
+    const max = Number(this._entity?.attributes?.max_temp ?? 35);
+    const newTemp = Math.min(max, Math.max(min, Math.round((Number(temp) + delta) / step) * step));
     this._optimisticTemp = newTemp;
     this._callService("climate", "set_temperature", {
       entity_id: this.config.entity,
@@ -146,8 +150,8 @@ class MateriaClimate extends ActionMixin(LitElement) {
       this._resolveField("name", "_resolvedName");
     }
     if (changedProps.has("hass") && this._optimisticTemp != null) {
-      const actual = this._entity?.attributes?.temperature;
-      if (actual === this._optimisticTemp) {
+      const actual = Number(this._entity?.attributes?.temperature);
+      if (Number.isFinite(actual) && Math.abs(actual - this._optimisticTemp) < 1e-6) {
         this._optimisticTemp = null;
         clearTimeout(this._optimisticTimer);
       }
