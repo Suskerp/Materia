@@ -31,6 +31,17 @@ export const styles = [
       inset: 0;
       width: 100%;
       height: 100%;
+      /* The svg itself is inert — only the hit-ring interacts, so swipes and
+         scrolls starting over the card body pass through (swipe-card etc). */
+      pointer-events: none;
+    }
+
+    .hit-ring {
+      fill: none;
+      stroke: transparent;
+      stroke-width: 16;
+      stroke-linecap: round;
+      pointer-events: stroke;
       touch-action: none;
       cursor: pointer;
     }

@@ -368,14 +368,18 @@ class MateriaThermostat extends ActionMixin(LitElement) {
         style="--th-container:${accentMeta.container};--th-on-container:${accentMeta.onContainer};"
       >
         <div class="dial-wrap">
-          <svg
-            class="dial"
-            viewBox="0 0 100 100"
-            @pointerdown=${this._dialPointer}
-            @pointermove=${this._dialPointer}
-            @pointerup=${this._endDialDrag}
-            @pointercancel=${this._endDialDrag}
-          >
+          <svg class="dial" viewBox="0 0 100 100">
+            <!-- Invisible wide stroke along the track: the ONLY interactive
+                 zone. Swipes/scrolls starting elsewhere on the card pass
+                 through untouched (e.g. to a surrounding swipe-card). -->
+            <path
+              d=${this._arcPath(DIAL_START, DIAL_START + DIAL_SWEEP, R)}
+              class="hit-ring"
+              @pointerdown=${this._dialPointer}
+              @pointermove=${this._dialPointer}
+              @pointerup=${this._endDialDrag}
+              @pointercancel=${this._endDialDrag}
+            />
             ${(() => {
               // Gray track only covers the REMAINDER (past the furthest knob),
               // M3-slider style, with a small gap — never under the sweep.
