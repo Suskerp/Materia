@@ -136,8 +136,9 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
    *  (a scallop, not a smooth sine). Two viewBox-widths (0..200) so the CSS
    *  drift of -50% (an integer number of periods) loops seamlessly. */
   _scallopWave(y) {
-    const period = 12.5;
-    const amp = 5;
+    // 12 bumps over the double-width path — pointy cusps but calm, not busy.
+    const period = 200 / 12;
+    const amp = 3.2;
     let d = `M0 ${y + amp} `;
     for (let x = 0; x < 200; x += period) {
       d += `Q ${x + period / 2} ${y - amp} ${x + period} ${y + amp} `;

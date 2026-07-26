@@ -385,6 +385,8 @@ class MateriaThermostat extends ActionMixin(LitElement) {
                 entity: this.config.entity,
                 size: this.config.mode_size ?? "l",
                 variant: "tonal",
+                active_shape: "square", // M3 Expressive: selected toggles morph square
+
                 color_active: accent,
                 color_on_active: accentOn,
                 options: modes.map((m) => ({

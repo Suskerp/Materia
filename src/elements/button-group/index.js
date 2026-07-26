@@ -137,10 +137,14 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
             const isFirst = i === 0;
             const isLast = i === options.length - 1;
 
+            // M3 Expressive icon-toggle morph: selected buttons go SQUARE
+            // (rounded-square) instead of pill when active_shape: square.
+            const squareActive = this.config.active_shape === "square";
+            const activeR = squareActive ? Math.max(innerCorner, Math.round(height * 0.25)) : outerR;
             let radius;
             if (multiSelect) {
               if (isActive) {
-                radius = `${outerR}px`;
+                radius = `${activeR}px`;
               } else {
                 const cols = columns || options.length;
                 const row = Math.floor(i / cols);
@@ -157,8 +161,8 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
                 radius = `${tl}px ${tr}px ${br}px ${bl}px`;
               }
             } else {
-              const ir = isActive ? `${outerR}px` : `${innerCorner}px`;
-              const or = `${outerR}px`;
+              const ir = isActive ? `${activeR}px` : `${innerCorner}px`;
+              const or = isActive && squareActive ? `${activeR}px` : `${outerR}px`;
               if (options.length === 1) {
                 radius = or;
               } else if (isFirst) {
