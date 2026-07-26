@@ -151,6 +151,36 @@ export const styles = [
       line-height: 1.4;
     }
 
+    /* Precipitation: left-aligned value/subtitle, rainy glyph bottom-right. */
+    .rect-tile.precip {
+      align-items: flex-start;
+      text-align: left;
+      justify-content: space-between;
+    }
+
+    .rect-tile.precip .header {
+      justify-content: flex-start;
+    }
+
+    .precip-bottom {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      width: 100%;
+      gap: 8px;
+    }
+
+    .precip-bottom .sub {
+      max-width: 62%;
+      line-height: 1.35;
+    }
+
+    .precip-glyph {
+      width: clamp(38px, 16cqi, 54px);
+      height: clamp(38px, 16cqi, 54px);
+      flex-shrink: 0;
+    }
+
     /* Wind: expressive blob as a tinted layer INSIDE the card backdrop. */
     .blob-bg {
       position: absolute;

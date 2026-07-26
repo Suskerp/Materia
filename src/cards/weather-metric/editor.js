@@ -66,7 +66,10 @@ class MateriaWeatherMetricEditor extends SmartEditorBase {
       );
     }
     if (m === "precipitation") {
-      extras.fields.push({ name: "none_label", label: '"None expected" label', selector: { text: {} } });
+      extras.fields.push(
+        { name: "total_label", label: "Subtitle when raining", selector: { text: {} } },
+        { name: "none_label", label: '"None expected" label', selector: { text: {} } },
+      );
     }
     if (m === "sun") {
       extras.fields.push({ name: "sun_entity", label: "Sun entity", selector: { entity: { domain: "sun" } } });

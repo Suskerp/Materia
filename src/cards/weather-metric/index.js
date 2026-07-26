@@ -1,6 +1,7 @@
 import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { cookiePath, windBlobPath, materialCookiePath, arcPath } from "../../utils/shapes.js";
+import { coloredWeatherIcon } from "../weather-tile/icons.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -129,6 +130,19 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
 
   _weatherAttr(name) {
     return this.hass.states[this.config.entity]?.attributes?.[name];
+  }
+
+  /** Pixel-style water surface: upward arc bumps with pointy cusps between
+   *  (a scallop, not a smooth sine). Two viewBox-widths (0..200) so the CSS
+   *  drift of -50% (an integer number of periods) loops seamlessly. */
+  _scallopWave(y) {
+    const period = 12.5;
+    const amp = 5;
+    let d = `M0 ${y + amp} `;
+    for (let x = 0; x < 200; x += period) {
+      d += `Q ${x + period / 2} ${y - amp} ${x + period} ${y + amp} `;
+    }
+    return d + `V100 H0 Z`;
   }
 
   render() {
@@ -340,23 +354,18 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     if (amount == null) return nothing;
     const unit = this.config.unit ?? this._weatherAttr("precipitation_unit") ?? "mm";
     const none = this.config.none_label ?? "No precipitation expected";
-    // Rain-fill visual: same drifting wave as humidity, height scaled by the
-    // expected amount (caps at ~15 mm — anything above is "a lot").
-    const level = amount > 0 ? Math.min(0.6, 0.1 + (amount / 15) * 0.5) : 0;
-    const y = 100 - level * 78;
-    let wavePath = `M0 ${y + 4} Q 12.5 ${y - 4} 25 ${y + 4} `;
-    for (let x = 50; x <= 200; x += 25) wavePath += `T ${x} ${y + 4} `;
-    wavePath += `V100 H0 Z`;
+    // Pixel layout: left-aligned value + subtitle, rainy glyph bottom-right.
+    const subtitle = amount > 0 ? (this.config.total_label ?? "Total rain for the day") : none;
     return html`
-      <div class="rect-tile clip">
-        ${amount > 0
-          ? svg`<svg class="wave" viewBox="0 0 200 100" preserveAspectRatio="none">
-              <path d=${wavePath} class="wave-fill" />
-            </svg>`
-          : ""}
+      <div class="rect-tile precip">
         ${this._header("mdi:weather-pouring", this.config.name ?? "Precipitation")}
         <div class="big">${amount}<span class="unit"> ${unit}</span></div>
-        ${amount === 0 ? html`<div class="sub">${none}</div>` : ""}
+        <div class="precip-bottom">
+          <div class="sub">${subtitle}</div>
+          ${amount > 0
+            ? svg`<svg class="precip-glyph" viewBox="0 0 24 24">${coloredWeatherIcon("rainy")}</svg>`
+            : ""}
+        </div>
       </div>
     `;
   }
@@ -374,11 +383,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
       : this._numRaw(this._weatherAttr("dew_point"));
     const level = Math.min(1, Math.max(0, hum / 100));
     const y = 100 - level * 78; // wave crest height inside the tile
-    // Two viewBox-widths of repeating wave; CSS drifts it left by exactly one
-    // width (an integer number of 25-unit periods) for a seamless slow loop.
-    let wave = `M0 ${y + 4} Q 12.5 ${y - 4} 25 ${y + 4} `;
-    for (let x = 50; x <= 200; x += 25) wave += `T ${x} ${y + 4} `;
-    wave += `V100 H0 Z`;
+    const wave = this._scallopWave(y);
     return html`
       <div class="rect-tile clip">
         <svg class="wave" viewBox="0 0 200 100" preserveAspectRatio="none">
