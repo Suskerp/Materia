@@ -198,9 +198,9 @@ export const styles = [
          card surface — mix in some on-color. Dark mode reads fine as-is, so
          light-dark() keeps it untouched where supported (the mixed fill is
          the fallback for engines without light-dark). */
-      fill: var(--wm-shape, color-mix(in srgb, var(--md-sys-color-on-secondary-container, #444) 12%, var(--md-sys-color-secondary-container, #e0e0e8)));
+      fill: var(--wm-shape, color-mix(in srgb, var(--md-sys-color-on-secondary-container, #444) 22%, var(--md-sys-color-secondary-container, #e0e0e8)));
       fill: var(--wm-shape, light-dark(
-        color-mix(in srgb, var(--md-sys-color-on-secondary-container, #444) 12%, var(--md-sys-color-secondary-container, #e0e0e8)),
+        color-mix(in srgb, var(--md-sys-color-on-secondary-container, #444) 22%, var(--md-sys-color-secondary-container, #e0e0e8)),
         var(--md-sys-color-secondary-container, #333a44)
       ));
     }
