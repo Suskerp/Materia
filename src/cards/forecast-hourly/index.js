@@ -72,12 +72,18 @@ class MateriaForecastHourly extends ActionMixin(LitElement) {
     const row = e.currentTarget;
     this._dragStartX = e.clientX;
     this._dragStartScroll = row.scrollLeft;
-    row.setPointerCapture(e.pointerId);
+    this._captured = false;
+    this._dragPointerId = e.pointerId;
   }
 
   _onPointerMove(e) {
     if (this._dragStartX == null) return;
-    e.currentTarget.scrollLeft = this._dragStartScroll - (e.clientX - this._dragStartX);
+    const dx = e.clientX - this._dragStartX;
+    if (!this._captured && Math.abs(dx) > 4) {
+      this._captured = true;
+      e.currentTarget.setPointerCapture(this._dragPointerId);
+    }
+    if (this._captured) e.currentTarget.scrollLeft = this._dragStartScroll - dx;
   }
 
   _onPointerUp(e) {

@@ -139,9 +139,13 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     if (body === nothing) return html``; // no data → tile no-shows
     const bg = this._isTemplate(this.config.color) ? this._resolvedColor : this.config.color;
     const fg = this._isTemplate(this.config.color_on) ? this._resolvedColorOn : this.config.color_on;
+    // Global size 1–10 caps the tile width (10 = fill the cell), matching the
+    // weather-tile's scale so mixed grids line up.
+    const sizes = ["120px", "150px", "185px", "225px", "270px", "320px", "380px", "460px", "560px", "none"];
+    const size = Math.min(10, Math.max(1, this.config.size ?? 4));
     return html`
       <ha-card
-        style="${bg ? `--wm-color:${bg};` : ""}${fg ? `--wm-color-on:${fg};` : ""}"
+        style="--wm-size:${sizes[size - 1]};${bg ? `--wm-color:${bg};` : ""}${fg ? `--wm-color-on:${fg};` : ""}"
         @click=${() => this._handleAction(this.config.tap_action || (this.config.sensor || this.config.entity ? { action: "more-info", entity: this.config.sensor || this.config.entity } : undefined))}
       >
         ${body}
@@ -151,6 +155,18 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
 
   _header(icon, title) {
     return html`<div class="header"><ha-icon icon=${icon}></ha-icon><span>${title}</span></div>`;
+  }
+
+  /** Rendered when the metric is MISconfigured (no source at all) — a silent
+   *  blank card would just look broken. A configured-but-unavailable source
+   *  still hides the tile. */
+  _hint(icon, title, msg) {
+    return html`
+      <div class="rect-tile">
+        ${this._header(icon, title)}
+        <div class="sub hint">${msg}</div>
+      </div>
+    `;
   }
 
   /* ---- Wind: soft rounded-triangle blob --------------------------------- */
@@ -163,9 +179,9 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
       : this._numRaw(this._weatherAttr("wind_bearing"));
     const from = bearing != null ? `${this.config.from_label ?? "From"} ${compass(bearing)}` : "";
     return html`
-      <div class="shape-tile">
-        <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <path d=${windBlobPath(50, 52, 46)} class="shape-fill" />
+      <div class="rect-tile clip wind">
+        <svg class="blob-bg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+          <path d=${windBlobPath(50, 50, 46)} class="blob-fill" />
         </svg>
         <div class="overlay">
           ${this._header("mdi:weather-windy", this.config.name ?? "Wind")}
@@ -181,19 +197,20 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     const uv = this._value("uv_index");
     if (uv == null) return nothing;
     const level = UV_LEVELS.find((l) => uv <= l.max);
-    // Scale dots hug the inside of the cookie on a lower arc.
+    // Scale dots along the lower inside of the cookie (Pixel-style): faint
+    // markers left→right, the active level enlarged and fully opaque.
     const dots = UV_LEVELS.map((l, i) => {
-      const ang = (150 + i * 60) * (Math.PI / 180); // 150°..390° around the bottom
-      const x = 50 + 36 * Math.cos(ang);
-      const y = 52 + 36 * Math.sin(ang);
+      const ang = ((160 - i * 35) * Math.PI) / 180; // 160°..20° across the bottom
+      const x = 50 + 33 * Math.cos(ang);
+      const y = 52 + 33 * Math.sin(ang);
       const active = l === level;
-      return svg`<circle cx=${x} cy=${y} r=${active ? 5 : 3}
-        fill=${l.color} opacity=${active ? 1 : 0.35} />`;
+      return svg`<circle cx=${x} cy=${y} r=${active ? 4.5 : 2.6}
+        fill=${l.color} opacity=${active ? 1 : 0.3} />`;
     });
     return html`
       <div class="shape-tile">
         <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <path d=${cookiePath(50, 52, 44, 12, 4)} class="shape-fill" />
+          <path d=${cookiePath(50, 52, 45, 12, 2.6)} class="shape-fill" />
           ${dots}
         </svg>
         <div class="overlay">
@@ -208,7 +225,11 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
   /* ---- Visibility: subtle scalloped circle ------------------------------ */
   _visibility() {
     const vis = this._value("visibility");
-    if (vis == null) return nothing;
+    if (vis == null) {
+      return this.config.sensor
+        ? nothing
+        : this._hint("mdi:eye-outline", this.config.name ?? "Visibility", "Weather entity has no visibility — add a sensor");
+    }
     const unit = this.config.unit ?? this._weatherAttr("visibility_unit") ?? "km";
     return html`
       <div class="shape-tile">
@@ -231,19 +252,22 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     const min = this.config.min ?? (unit === "hPa" ? 950 : 28);
     const max = this.config.max ?? (unit === "hPa" ? 1050 : 31);
     const frac = Math.min(1, Math.max(0, (p - min) / (max - min)));
-    // 270° sweep starting at 225° (7:30) like a classic gauge.
+    // 270° sweep starting at 7:30, ring thin and INSET from the circle edge
+    // (Pixel style) rather than hugging it.
     const start = -135;
     const end = start + 270 * frac;
+    const locale = this.hass?.locale?.language || navigator.language || "en";
+    const value = unit === "hPa" ? Math.round(p).toLocaleString(locale) : p;
     return html`
       <div class="shape-tile">
         <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <circle cx="50" cy="52" r="44" class="shape-fill-c" />
-          <path d=${arcPath(50, 52, 40, -135, 135)} class="gauge-track" />
-          ${frac > 0.01 ? svg`<path d=${arcPath(50, 52, 40, start, end)} class="gauge-fill" />` : ""}
+          <circle cx="50" cy="52" r="45" class="shape-fill-c" />
+          <path d=${arcPath(50, 52, 37.5, -135, 135)} class="gauge-track thin" />
+          ${frac > 0.01 ? svg`<path d=${arcPath(50, 52, 37.5, start, end)} class="gauge-fill thin" />` : ""}
         </svg>
         <div class="overlay">
           ${this._header("mdi:gauge", this.config.name ?? "Pressure")}
-          <div class="big small-big">${unit === "hPa" ? Math.round(p) : p}</div>
+          <div class="big small-big">${value}</div>
           <div class="sub">${unit}</div>
         </div>
       </div>
@@ -253,9 +277,14 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
   /* ---- AQI: rect tile with color band bar -------------------------------- */
   _aqi() {
     const aqi = this._value("air_quality_index");
-    if (aqi == null) return nothing;
+    if (aqi == null) {
+      return this.config.sensor
+        ? nothing
+        : this._hint("mdi:waves", this.config.name ?? "Air quality", "Point this tile at an AQI sensor");
+    }
     const band = AQI_BANDS.find((b) => aqi <= b.max);
-    const frac = Math.min(1, aqi / 300);
+    // Clamp so the marker never hangs off the bar's rounded ends.
+    const frac = Math.min(0.96, Math.max(0.04, aqi / 300));
     return html`
       <div class="rect-tile">
         ${this._header("mdi:waves", this.config.name ?? "Air quality")}
@@ -294,7 +323,11 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
   /* ---- Humidity: wave fill + dew point chip ------------------------------ */
   _humidity() {
     const hum = this._value("humidity");
-    if (hum == null) return nothing;
+    if (hum == null) {
+      return this.config.sensor
+        ? nothing
+        : this._hint("mdi:water-outline", this.config.name ?? "Humidity", "Weather entity has no humidity — add a sensor");
+    }
     const dew = this.config.dew_entity
       ? this._numRaw(this.hass.states[this.config.dew_entity]?.state)
       : this._numRaw(this._weatherAttr("dew_point"));
@@ -338,19 +371,20 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
       frac = now < rise ? 0 : 1; // night
     }
     const t = frac;
-    // Quadratic hump y = 4h·t(1-t), h=34 → x=8..92
-    const x = 8 + t * 84;
-    const y = 78 - 4 * 34 * t * (1 - t) * 0.68;
+    // The hump is the quadratic Bézier (4,48) → ctrl (50,-4) → (96,48); the
+    // sun must sit ON it, so evaluate the same curve rather than approximating.
+    const x = (1 - t) * (1 - t) * 4 + 2 * t * (1 - t) * 50 + t * t * 96;
+    const y = (1 - t) * (1 - t) * 48 + 2 * t * (1 - t) * -4 + t * t * 48;
     return html`
-      <div class="rect-tile clip">
-        <svg class="sun-arc" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <path d="M0 100 L0 78 Q 50 8 100 78 L100 100 Z" class="arc-fill" />
-          <line x1="0" y1="78" x2="100" y2="78" class="horizon" />
+      <div class="rect-tile sun">
+        ${this._header("mdi:weather-sunset", this.config.name ?? "Sunrise & sunset")}
+        <svg class="sun-arc" viewBox="0 0 100 58">
+          <path d="M4 48 Q 50 -4 96 48 Z" class="arc-fill" />
+          <line x1="0" y1="48" x2="100" y2="48" class="horizon" />
           ${frac > 0 && frac < 1
             ? svg`<path d=${cookiePath(x, y, 6, 9, 0.7)} fill="var(--md-sys-cust-color-weather-sun, #FFC83D)" />`
             : ""}
         </svg>
-        ${this._header("mdi:weather-sunset", this.config.name ?? "Sunrise & sunset")}
         <div class="sun-times">
           <div><ha-icon icon="mdi:weather-sunset-up"></ha-icon> ${fmt(rising)}</div>
           <div><ha-icon icon="mdi:weather-sunset-down"></ha-icon> ${fmt(setting)}</div>
@@ -370,7 +404,12 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
       const v = eid ? this._numRaw(this.hass.states[eid]?.state) : null;
       return { ...k, value: v };
     }).filter((k) => k.value != null);
-    if (!kinds.length) return nothing;
+    if (!kinds.length) {
+      const configured = this.config.grass_entity || this.config.tree_entity || this.config.weed_entity;
+      return configured
+        ? nothing
+        : this._hint("mdi:flower-pollen-outline", this.config.name ?? "Pollen", "Add grass / tree / weed pollen sensors");
+    }
     const max = this.config.max ?? 4;
     return html`
       <div class="rect-tile pollen">

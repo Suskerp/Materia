@@ -121,13 +121,18 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
     this._dragStartX = e.clientX;
     this._dragStartScroll = row.scrollLeft;
     this._didDrag = false;
-    row.setPointerCapture(e.pointerId);
+    this._dragPointerId = e.pointerId;
+    // Do NOT capture here — capturing on pointerdown retargets the eventual
+    // click to the row, which would swallow the pill taps.
   }
 
   _onPointerMove(e) {
     if (this._dragStartX == null) return;
     const dx = e.clientX - this._dragStartX;
-    if (Math.abs(dx) > 4) this._didDrag = true;
+    if (!this._didDrag && Math.abs(dx) > 4) {
+      this._didDrag = true;
+      e.currentTarget.setPointerCapture(this._dragPointerId);
+    }
     if (this._didDrag) e.currentTarget.scrollLeft = this._dragStartScroll - dx;
   }
 

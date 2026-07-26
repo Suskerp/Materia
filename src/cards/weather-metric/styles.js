@@ -30,13 +30,16 @@ export const styles = [
       --mdc-icon-size: clamp(14px, 7cqi, 18px);
     }
 
-    /* ---- Shape tiles (wind / uv / visibility / pressure) ---- */
+    /* ---- Shape tiles (uv / visibility / pressure) ---- */
     .shape-tile {
       container-type: inline-size;
       position: relative;
       aspect-ratio: 1;
       display: grid;
       place-items: center;
+      max-width: var(--wm-size, 225px);
+      margin-inline: auto;
+      width: 100%;
     }
 
     .shape {
@@ -62,7 +65,7 @@ export const styles = [
     }
 
     .big {
-      font-size: clamp(26px, 19cqi, 48px);
+      font-size: clamp(28px, 24cqi, 52px);
       font-weight: 700;
       line-height: 1.05;
       letter-spacing: -0.02em;
@@ -100,11 +103,17 @@ export const styles = [
       transition: d var(--md-sys-motion-default-effects);
     }
 
+    /* Pressure ring: thinner and inset from the circle edge (Pixel style). */
+    .gauge-track.thin,
+    .gauge-fill.thin {
+      stroke-width: 4.5;
+    }
+
     .gauge-fill.green {
       stroke: var(--wm-accent, #7bc96a);
     }
 
-    /* ---- Rect tiles (aqi / precipitation / humidity / sun / pollen) ---- */
+    /* ---- Rect tiles (wind / aqi / precipitation / humidity / sun / pollen) ---- */
     .rect-tile {
       container-type: inline-size;
       position: relative;
@@ -114,12 +123,15 @@ export const styles = [
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: clamp(6px, 3cqi, 12px);
+      gap: clamp(6px, 4cqi, 14px);
       color: var(--wm-color-on, var(--md-sys-color-on-surface, var(--primary-text-color)));
       aspect-ratio: 1;
       justify-content: center;
       text-align: center;
       box-sizing: border-box;
+      max-width: var(--wm-size, 225px);
+      margin-inline: auto;
+      width: 100%;
     }
 
     .rect-tile.clip {
@@ -130,6 +142,29 @@ export const styles = [
       aspect-ratio: auto;
       border-radius: 999px;
       padding: clamp(14px, 4cqi, 22px) clamp(16px, 6cqi, 28px);
+      max-width: calc(var(--wm-size, 225px) * 2 + 16px);
+    }
+
+    .sub.hint {
+      opacity: 0.6;
+      max-width: 85%;
+      line-height: 1.4;
+    }
+
+    /* Wind: expressive blob as a tinted layer INSIDE the card backdrop. */
+    .blob-bg {
+      position: absolute;
+      inset: 7%;
+      width: 86%;
+      height: 86%;
+    }
+
+    .blob-fill {
+      fill: var(--wm-shape, color-mix(in srgb, var(--md-sys-color-on-surface, #444) 8%, transparent));
+    }
+
+    .rect-tile .overlay {
+      position: relative;
     }
 
     /* AQI bar */
@@ -200,16 +235,20 @@ export const styles = [
       font-size: 13px;
     }
 
-    /* Sun arc */
+    /* Sun arc — an in-flow band between header and times, so the fill stays
+       behind the hump only and the times sit on the plain card background. */
+    .rect-tile.sun {
+      justify-content: space-between;
+    }
+
     .sun-arc {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
+      width: 92%;
+      height: auto;
+      display: block;
     }
 
     .arc-fill {
-      fill: color-mix(in srgb, var(--md-sys-cust-color-weather-sun, #ffc83d) 22%, transparent);
+      fill: color-mix(in srgb, var(--md-sys-cust-color-weather-sun, #ffc83d) 26%, transparent);
     }
 
     .horizon {
@@ -218,13 +257,12 @@ export const styles = [
     }
 
     .sun-times {
-      position: relative;
       display: flex;
       flex-direction: column;
+      align-items: flex-start;
       gap: 3px;
       font-size: clamp(13px, 6cqi, 16px);
       font-weight: 600;
-      margin-top: auto;
     }
 
     .sun-times div {

@@ -30,10 +30,11 @@ export function cookiePath(cx, cy, r, lobes = 12, amp = r * 0.1, rotate = 0) {
   return d + "Z";
 }
 
-/** Soft rounded-triangle blob (Pixel wind tile): 3 lobes, deep amplitude,
- *  rotated so one soft point faces up. */
+/** Soft rounded-triangle blob (Pixel wind tile): 3 lobes with a SHALLOW
+ *  amplitude — deep lobes read as a trefoil/molar, ~13% reads as a soft
+ *  triangle. Rotated so one point faces down (like the Pixel tile). */
 export function windBlobPath(cx, cy, r) {
-  return cookiePath(cx, cy, r * 0.92, 3, r * 0.22, Math.PI / 2);
+  return cookiePath(cx, cy, r * 0.95, 3, r * 0.13, Math.PI / 2);
 }
 
 /** SVG arc path (for gauges), angles in degrees, 0° = 12 o'clock, clockwise. */
