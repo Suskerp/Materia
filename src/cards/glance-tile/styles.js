@@ -177,6 +177,21 @@ export const styles = [
       width: 100%;
     }
 
+    .rect-tile.clip {
+      overflow: hidden;
+    }
+
+    .fill-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .rect-tile .overlay {
+      max-width: 100%;
+    }
+
     .rect-tile.left {
       align-items: flex-start;
       text-align: left;

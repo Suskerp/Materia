@@ -1,6 +1,6 @@
 import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { materialCookiePath, roundedPolygonPath } from "../../utils/shapes.js";
+import { roundedPolygonPath } from "../../utils/shapes.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -15,17 +15,14 @@ const SCALE = {
 
 const ACTIVE_STATES = ["on", "open", "running", "playing", "heat", "heating", "home", "true", "active"];
 
-// Unique clip-path ids — tiles can repeat in a grid.
-let uid = 0;
-
 /**
  * Expressive view-only sensor tile (materia-glance-tile): the weather-metric look
  * for ANY entity. One entity per card; the visualization is picked from the
  * device class (override with `variant`):
  *
- *   percent      — a 12-lobe cookie that FILLS bottom-up with the value
- *                  (humidity, battery, valve position, any 0–100%). Battery
- *                  fill turns orange/red as it drains.
+ *   percent      — the square tile FILLS bottom-up with the value (humidity,
+ *                  battery, valve position, any 0–100%); humidity gets a
+ *                  gently drifting liquid surface, battery drains green→red.
  *   temperature  — value + a vertical thermometer pill, colored along a
  *                  cool→comfort→warm scale (min/max configurable).
  *   power        — value + equalizer bars that light up with load (max
@@ -59,11 +56,6 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
   setConfig(config) {
     if (!config.entity) throw new Error("Materia Glance Tile: entity is required");
     this.config = { ...config };
-  }
-
-  constructor() {
-    super();
-    this._uid = ++uid;
   }
 
   updated(changedProps) {
@@ -163,8 +155,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     let fill = null;
     if (dc === "battery") fill = frac > 0.4 ? SCALE.green : frac > 0.15 ? SCALE.orange : SCALE.red;
     else if (dc === "humidity" || dc === "moisture") fill = SCALE.blue;
-    const cookie = materialCookiePath(50, 52, 45, 12);
-    const y = 97 - frac * 90; // cookie spans y ≈ 7..97
+    const y = 100 - frac * 100; // square tile: the fill level maps edge to edge
     // Liquid surface. Water-like values (humidity/moisture) get a gentle wave
     // that drifts almost imperceptibly; everything else (battery…) stays a
     // still soft dome. Deliberately calmer than the weather tile's scallops.
@@ -183,16 +174,11 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     }
     const icon = dc === "battery" ? "mdi:battery" : "mdi:water-percent";
     return html`
-      <div class="shape-tile">
-        <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <defs>
-            <clipPath id="ms-clip-${this._uid}"><path d=${cookie} /></clipPath>
-          </defs>
-          <path d=${cookie} class="shape-fill" />
+      <div class="rect-tile clip">
+        <svg class="fill-bg" viewBox="0 0 100 100" preserveAspectRatio="none">
           ${frac > 0.005
             ? svg`<path d=${surface}
-                class="level-fill ${liquid ? "drift" : ""}" style=${fill ? `fill:${fill}` : ""}
-                clip-path="url(#ms-clip-${this._uid})" />`
+                class="level-fill ${liquid ? "drift" : ""}" style=${fill ? `fill:${fill}` : ""} />`
             : ""}
         </svg>
         <div class="overlay">
