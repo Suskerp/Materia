@@ -59,21 +59,20 @@ export const styles = [
       stroke-width: 1.4;
     }
 
+    /* Handle: a SOLID accent circle with the cookie as negative space inside
+       (two layers — not a ring around a disc around a cookie). */
     .thumb {
+      stroke: none;
+    }
+
+    .thumb-cookie {
       fill: var(--md-sys-color-surface, #fff);
-      stroke-width: 2.5;
     }
 
     /* Off: setpoint still visible, just quiet. */
     .thumb.muted {
-      stroke: var(--md-sys-color-on-surface-variant, #888);
-      stroke-width: 2;
-      opacity: 0.7;
-    }
-
-    .thumb-cookie-muted {
       fill: var(--md-sys-color-on-surface-variant, #888);
-      opacity: 0.7;
+      opacity: 0.8;
     }
 
     .center {
