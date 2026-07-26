@@ -167,6 +167,37 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     border-radius: 16px 16px 8px 8px;
   }
 
+  /* M3 expressive menu: container-toned panel, 28px corners all around,
+     roomy medium-weight rows with trailing icons. Colors override via
+     menu_color / menu_color_on. */
+  .dropdown.expressive {
+    --_surf: var(--md-sys-color-secondary-container, #e8def8);
+    color: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
+    padding: 10px 8px;
+  }
+
+  .below .dropdown.expressive,
+  .above .dropdown.expressive {
+    border-radius: 28px;
+  }
+
+  .dropdown.expressive .menu-item {
+    min-height: 60px;
+    padding: 0 20px;
+    font-size: 15px;
+    font-weight: 500;
+    gap: 16px;
+  }
+
+  .dropdown.expressive .menu-item ha-icon {
+    --mdc-icon-size: 22px;
+    opacity: 0.9;
+  }
+
+  .dropdown.expressive .menu-item.selected {
+    border-radius: 20px;
+  }
+
   .menu-item {
     display: flex;
     align-items: center;

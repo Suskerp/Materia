@@ -30,7 +30,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
   }
 
   setConfig(config) {
-    this.config = { position: "below", ...config };
+    this.config = { position: "auto", ...config };
     this._open = false;
   }
 
@@ -45,12 +45,41 @@ class MateriaMenu extends ActionMixin(LitElement) {
       }));
     }
     if (domain === "water_heater" && stateObj?.attributes?.operation_list) {
+      const ICONS = {
+        eco: "mdi:leaf",
+        performance: "mdi:speedometer",
+        electric: "mdi:lightning-bolt",
+        gas: "mdi:fire",
+        heat_pump: "mdi:heat-pump-outline",
+        high_demand: "mdi:water-plus",
+        off: "mdi:power",
+      };
       return stateObj.attributes.operation_list.map((opt) => ({
         label: this._capitalize(opt),
         value: opt,
+        icon: ICONS[opt],
       }));
     }
     return [];
+  }
+
+  /** Effective open direction. position: "auto" (default) measures the
+   *  viewport at open time — below if the menu fits (or below has more room),
+   *  above otherwise. Explicit "below"/"above" always win. */
+  get _pos() {
+    if (this.config.position === "above" || this.config.position === "below") {
+      return this.config.position;
+    }
+    return this._effPos ?? "below";
+  }
+
+  _computeEffPos() {
+    const trigger = this.shadowRoot?.querySelector(".trigger");
+    if (!trigger) return "below";
+    const r = trigger.getBoundingClientRect();
+    const est = Math.min(this._resolvedOptions.length * 56 + 20, Math.min(600, window.innerHeight * 0.7));
+    const spaceBelow = window.innerHeight - r.bottom;
+    return spaceBelow >= est + 8 || spaceBelow >= r.top ? "below" : "above";
   }
 
   get _currentValue() {
@@ -75,6 +104,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
   }
 
   _toggle() {
+    if (!this._open) this._effPos = this._computeEffPos();
     this._open = !this._open;
   }
 
@@ -244,7 +274,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
     const host = this._portal;
     host.style.left = `${r.left}px`;
     host.style.width = `${r.width}px`;
-    if (this.config.position === "above") {
+    if (this._pos === "above") {
       host.style.top = "auto";
       host.style.bottom = `${window.innerHeight - r.top + 2}px`;
     } else {
@@ -298,17 +328,24 @@ class MateriaMenu extends ActionMixin(LitElement) {
     if (!this.hass || !this.config) return html``;
     const { panelStyle, currentValue } = this._colors();
     const options = this._resolvedOptions;
-    const pos = this.config.position === "above" ? "above" : "below";
+    const pos = this._pos;
+    // Expressive variant (M3 expressive menu): container-toned panel, 28px
+    // corners, roomy rows, label first with a TRAILING icon.
+    const expressive = this.config.menu_variant === "expressive";
+    const customPanel = expressive
+      ? `${this.config.menu_color ? `--_surf:${this.config.menu_color};` : ""}${this.config.menu_color_on ? `color:${this.config.menu_color_on};` : ""}`
+      : "";
     return html`
       <div class="portal-panel ${pos} ${this._closing ? "closing" : ""}">
-        <div class="dropdown" style=${panelStyle}>
+        <div class="dropdown ${expressive ? "expressive" : ""}" style=${panelStyle + customPanel}>
           ${options.map((opt) => html`
             <div
               class="menu-item ${opt.value === currentValue ? "selected" : ""}"
               @click=${(e) => { e.stopPropagation(); this._selectOption(opt); }}
             >
-              ${opt.icon ? html`<ha-icon .icon=${opt.icon}></ha-icon>` : ""}
-              <span class="item-text">${opt.label || opt.value}</span>
+              ${expressive
+                ? html`<span class="item-text">${opt.label || opt.value}</span>${opt.icon ? html`<ha-icon .icon=${opt.icon}></ha-icon>` : ""}`
+                : html`${opt.icon ? html`<ha-icon .icon=${opt.icon}></ha-icon>` : ""}<span class="item-text">${opt.label || opt.value}</span>`}
             </div>
           `)}
         </div>
@@ -332,7 +369,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
 
     return html`
       <ha-card>
-        <div class="trigger ${unavailable ? "unavailable" : ""} ${this._open ? (this.config.position === "above" ? "open-above" : "open-below") : ""}" style=${triggerStyle} @click=${this._toggle}>
+        <div class="trigger ${unavailable ? "unavailable" : ""} ${this._open ? (this._pos === "above" ? "open-above" : "open-below") : ""}" style=${triggerStyle} @click=${this._toggle}>
           ${this.config.icon ? html`
             <div class="icon-container">
               <ha-icon .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon}></ha-icon>

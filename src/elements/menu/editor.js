@@ -74,6 +74,7 @@ class MateriaMenuEditor extends SmartEditorBase {
           {
             name: "position",
             selector: { select: { mode: "dropdown", options: [
+              { value: "auto", label: "Auto (flips to fit the viewport)" },
               { value: "below", label: "Below" },
               { value: "above", label: "Above" },
             ] } },
@@ -100,6 +101,12 @@ class MateriaMenuEditor extends SmartEditorBase {
         fields: [
           { name: "color", label: "Background", color: true, template: true, selector: { text: {} } },
           { name: "color_on", label: "Text / icon", color: true, template: true, selector: { text: {} } },
+          { name: "menu_variant", label: "Menu style", selector: { select: { mode: "dropdown", options: [
+            { value: "surface", label: "Surface (classic)" },
+            { value: "expressive", label: "Expressive (container tone, trailing icons)" },
+          ] } } },
+          { name: "menu_color", label: "Menu panel color (expressive)", color: true, selector: { text: {} } },
+          { name: "menu_color_on", label: "Menu text color (expressive)", color: true, selector: { text: {} } },
         ],
       },
     ];

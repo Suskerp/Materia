@@ -201,9 +201,10 @@ export const styles = [
     }
 
     /* Water heater as a menu segment: the seg provides the group silhouette,
-       the embedded materia-menu goes transparent inside it. */
+       the embedded materia-menu goes transparent inside it. NO extra padding —
+       the trigger's own 18px inset already matches the accordion bars. */
     .stack > .seg.water-menu {
-      padding: 2px 6px;
+      padding: 0;
     }
 
     .seg.water-menu materia-menu {

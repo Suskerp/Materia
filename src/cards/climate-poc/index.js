@@ -310,7 +310,7 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
             icon: "mdi:water-boiler",
             name: this.config.water_title ?? "Water heater",
             substate: temp != null ? `${this._fmt(temp)}°` : "",
-            position: "below",
+            menu_variant: "expressive",
           }}
         ></materia-menu>
       </div>
