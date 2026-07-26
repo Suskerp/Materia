@@ -71,6 +71,9 @@ export const styles = [
     ha-card {
       border-radius: 24px;
       padding: 12px 14px;
+      /* haCardReset clears the background — restore the surface so the strip
+         reads as a card like its neighbors, not floating glyphs. */
+      background: var(--ha-card-background, var(--card-background-color));
     }
 
     .header {
