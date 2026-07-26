@@ -1,5 +1,6 @@
 import { LitElement, html, svg } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { materialCookiePath } from "../../utils/shapes.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -402,9 +403,15 @@ class MateriaThermostat extends ActionMixin(LitElement) {
                   r="3.4" class="current-knob" style="fill:${accent}" />`
               : ""}
             ${active
-              ? svg`<circle cx=${tx} cy=${ty} r="5" class="thumb" style="stroke:${accent}" />`
+              ? svg`<g>
+                  <circle cx=${tx} cy=${ty} r="5.5" class="thumb" style="stroke:${accent}" />
+                  <path d=${materialCookiePath(tx, ty, 2.7, 12)} fill=${accent} />
+                </g>`
               : tgtDeg != null
-                ? svg`<circle cx=${tx} cy=${ty} r="4" class="thumb muted" />`
+                ? svg`<g>
+                    <circle cx=${tx} cy=${ty} r="4.5" class="thumb muted" />
+                    <path d=${materialCookiePath(tx, ty, 2.1, 12)} class="thumb-cookie-muted" />
+                  </g>`
                 : ""}
           </svg>
           <div class="center" @click=${() => this._fireMoreInfo(this.config.entity)}>

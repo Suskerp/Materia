@@ -71,6 +71,11 @@ export const styles = [
       opacity: 0.7;
     }
 
+    .thumb-cookie-muted {
+      fill: var(--md-sys-color-on-surface-variant, #888);
+      opacity: 0.7;
+    }
+
     .center {
       position: relative;
       display: flex;
