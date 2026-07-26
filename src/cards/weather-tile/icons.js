@@ -14,7 +14,10 @@ export function moonPhaseFrac(hass, entity) {
     last_quarter: 0.75,
     waning_crescent: 0.875,
   };
-  const st = hass?.states?.[entity ?? "sensor.moon"];
+  // Default: modern Moon integration id first, then the legacy one.
+  const st = entity
+    ? hass?.states?.[entity]
+    : hass?.states?.["sensor.moon_phase"] ?? hass?.states?.["sensor.moon"];
   return st && st.state in PHASES ? PHASES[st.state] : null;
 }
 
