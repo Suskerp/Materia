@@ -44,6 +44,12 @@ class MateriaMenu extends ActionMixin(LitElement) {
         value: opt,
       }));
     }
+    if (domain === "water_heater" && stateObj?.attributes?.operation_list) {
+      return stateObj.attributes.operation_list.map((opt) => ({
+        label: this._capitalize(opt),
+        value: opt,
+      }));
+    }
     return [];
   }
 
@@ -82,6 +88,11 @@ class MateriaMenu extends ActionMixin(LitElement) {
       this._callService(domain, "select_option", {
         entity_id: this.config.entity,
         option: value,
+      });
+    } else if (domain === "water_heater") {
+      this._callService("water_heater", "set_operation_mode", {
+        entity_id: this.config.entity,
+        operation_mode: value,
       });
     }
 

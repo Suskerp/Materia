@@ -149,8 +149,10 @@ export const styles = [
         background-color var(--md-sys-motion-fast-effects);
     }
 
+    /* Selected colors sync with the active hvac mode (heat orange, cool blue,
+       auto primary, off secondary) — set as vars on the card. */
     .z-switch.on {
-      background: var(--md-sys-color-primary);
+      background: var(--poc-mode-accent, var(--md-sys-color-primary));
       border-color: transparent;
     }
 
@@ -158,7 +160,7 @@ export const styles = [
       left: 19px;
       width: 20px; /* spec 24/32 — the thumb GROWS when selected */
       height: 20px;
-      background: var(--md-sys-color-on-primary, #fff);
+      background: var(--poc-mode-container, var(--md-sys-color-on-primary, #fff));
     }
 
     /* Pressed: thumb swells toward the spec's 28/32 pressed size. */
@@ -196,6 +198,23 @@ export const styles = [
 
     materia-thermostat {
       display: block;
+    }
+
+    /* Water heater as a menu segment: the seg provides the group silhouette,
+       the embedded materia-menu goes transparent inside it. */
+    .stack > .seg.water-menu {
+      padding: 2px 6px;
+    }
+
+    .seg.water-menu materia-menu {
+      --ha-card-background: transparent;
+      display: block;
+    }
+
+    /* reserve_height: the stack gets a JS-measured min-height (tallest
+       section); the open section absorbs the reserved space. */
+    .stack.reserve > .seg.acc-sec.open {
+      flex: 1 0 auto;
     }
 
     /* ---- wallet accordion INSIDE the connected stack ------------------------

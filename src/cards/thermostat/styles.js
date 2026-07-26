@@ -193,11 +193,14 @@ export const styles = [
 
     /* Vertical column (steppers: side) — MUST come after the generic .nudge
        rules: equal specificity means source order decides the cascade. */
+    /* Button-group look (not split-button): a VISIBLE gap and near-pill
+       segments — each button fully round on its outer end, generously rounded
+       on the seam side. */
     .nudge.vertical {
       flex-direction: column;
       margin: 0;
       width: auto;
-      gap: 2px;
+      gap: 6px;
     }
 
     .nudge.vertical .seg {
@@ -210,14 +213,12 @@ export const styles = [
       --mdc-icon-size: clamp(24px, 8cqi, 28px);
     }
 
-    /* Inner corners scale with the button (8dp reads as a hairline at these
-       heights) — the notched seam is what makes it READ as a connected group. */
     .nudge.vertical .seg.plus {
-      border-radius: 999px 999px clamp(10px, 4cqi, 16px) clamp(10px, 4cqi, 16px);
+      border-radius: 999px 999px clamp(18px, 9cqi, 28px) clamp(18px, 9cqi, 28px);
     }
 
     .nudge.vertical .seg.minus {
-      border-radius: clamp(10px, 4cqi, 16px) clamp(10px, 4cqi, 16px) 999px 999px;
+      border-radius: clamp(18px, 9cqi, 28px) clamp(18px, 9cqi, 28px) 999px 999px;
     }
 
     .nudge.vertical .seg:active {

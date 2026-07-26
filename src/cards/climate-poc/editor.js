@@ -45,6 +45,11 @@ class MateriaClimatePocEditor extends SmartEditorBase {
         icon: "mdi:wallet-outline",
         secondary: "Zones and Water heater appear automatically",
         fields: [
+          { name: "water", label: "Water heater style", selector: { select: { mode: "dropdown", options: [
+            { value: "menu", label: "Menu (tap opens operation modes)" },
+            { value: "section", label: "Wallet section" },
+          ] } } },
+          { name: "reserve_height", label: "Keep the height of the tallest section (no reflow when cycling)", selector: { boolean: {} } },
           { name: "zones_title", label: "Zones section title", selector: { text: {} } },
           { name: "water_title", label: "Water heater section title", selector: { text: {} } },
           {

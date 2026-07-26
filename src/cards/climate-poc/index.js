@@ -18,6 +18,16 @@ import "./editor.js";
  * (Variants B "zones first" and C "vertical slider" were compared and
  * retired; a stray `variant:` key in old configs is ignored.)
  */
+// The palette the dial speaks — mode buttons, zone switches and other accents
+// all sync to the active hvac mode.
+const MODE_COLORS = {
+  heat: ["var(--md-sys-cust-color-climate-heat-accent, #a14614)", "var(--md-sys-cust-color-climate-heat-container, #ffeee9)"],
+  cool: ["var(--md-sys-cust-color-climate-cool-accent, #327ea7)", "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)"],
+  auto: ["var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-primary-container))"],
+  heat_cool: ["var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-primary-container))"],
+  off: ["var(--md-sys-color-secondary)", "var(--md-sys-color-on-secondary)"],
+};
+
 class MateriaClimatePoc extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
@@ -50,10 +60,11 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
   updated(changedProps) {
     if (changedProps.has("hass") && this._extraEls) {
       // Only the OPEN custom section needs live child updates.
-      const offset = (this._zones.length ? 1 : 0) + (this.config.water_heater ? 1 : 0);
+      const offset = (this._zones.length ? 1 : 0) + (this._waterInAcc ? 1 : 0);
       const idx = (this._openSection ?? 0) - offset;
       if (idx >= 0 && this._extraEls[idx]) this._extraEls[idx].forEach((el) => { el.hass = this.hass; });
     }
+    this._reserveHeight();
   }
 
   /* ---- model --------------------------------------------------------------- */
@@ -156,14 +167,6 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
   _modeGroup() {
     const modes = (this._entity?.attributes?.hvac_modes || []).filter((m) => ["heat", "auto", "off", "cool", "heat_cool"].includes(m));
     if (!modes.length) return nothing;
-    // Same palette the dial speaks — active mode button matches the sweep.
-    const MODE_COLORS = {
-      heat: ["var(--md-sys-cust-color-climate-heat-accent, #a14614)", "var(--md-sys-cust-color-climate-heat-container, #ffeee9)"],
-      cool: ["var(--md-sys-cust-color-climate-cool-accent, #327ea7)", "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)"],
-      auto: ["var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-primary-container))"],
-      heat_cool: ["var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-primary-container))"],
-      off: ["var(--md-sys-color-secondary)", "var(--md-sys-color-on-secondary)"],
-    };
     const [act, on] = MODE_COLORS[this._entity?.state] ?? MODE_COLORS.off;
     return html`
       <materia-button-group
@@ -254,7 +257,7 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
         body: html`<div class="zones">${zones.map((z) => this._zoneRow(z))}</div>`,
       });
     }
-    const wh = this.config.water_heater ? this.hass.states[this.config.water_heater] : null;
+    const wh = this._waterInAcc ? this.hass.states[this.config.water_heater] : null;
     if (wh) {
       const temp = this._numRaw(wh.attributes?.current_temperature);
       secs.push({
@@ -276,15 +279,62 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
     return secs;
   }
 
+  /** Water heater in the accordion (wallet section) vs a menu seg. */
+  get _waterInAcc() {
+    return !!this.config.water_heater && (this.config.water ?? "menu") === "section";
+  }
+
   _openAcc(i) {
     if (this._openSection === i) return; // wallet invariant: one always large
     this._openSection = i;
     this._fireHaptic("light");
     // Catch-up hass for custom-section children that were dormant.
-    const extraIdx = i - (this._zones.length ? 1 : 0) - (this.config.water_heater ? 1 : 0);
+    const extraIdx = i - (this._zones.length ? 1 : 0) - (this._waterInAcc ? 1 : 0);
     if (extraIdx >= 0 && this._extraEls?.[extraIdx]) {
       this._extraEls[extraIdx].forEach((el) => { el.hass = this.hass; });
     }
+  }
+
+  /** Menu mode: the water heater is a compact segment whose tap opens the
+   *  operation-mode menu (materia-menu speaks water_heater natively). */
+  _waterMenuSeg() {
+    const wh = this.hass.states[this.config.water_heater];
+    if (!wh) return nothing;
+    const temp = this._numRaw(wh.attributes?.current_temperature);
+    return html`
+      <div class="seg water-menu">
+        <materia-menu
+          .hass=${this.hass}
+          .config=${{
+            entity: this.config.water_heater,
+            icon: "mdi:water-boiler",
+            name: this.config.water_title ?? "Water heater",
+            substate: temp != null ? `${this._fmt(temp)}°` : "",
+            position: "below",
+          }}
+        ></materia-menu>
+      </div>
+    `;
+  }
+
+  /** reserve_height: keep the card as tall as its TALLEST section, so
+   *  cycling the wallet never reflows the dashboard below. Opt-in. */
+  _reserveHeight() {
+    const stack = this.renderRoot?.querySelector(".stack");
+    if (!stack) return;
+    if (!this.config.reserve_height) {
+      stack.style.minHeight = "";
+      return;
+    }
+    requestAnimationFrame(() => {
+      const inners = [...stack.querySelectorAll(".acc-inner")];
+      if (!inners.length) return;
+      const openInner = stack.querySelector(".acc-sec.open .acc-inner");
+      stack.style.minHeight = "";
+      const base = stack.offsetHeight - (openInner?.offsetHeight || 0);
+      const maxInner = Math.max(...inners.map((el) => el.scrollHeight));
+      stack.style.minHeight = `${base + maxInner}px`;
+    });
   }
 
   render() {
@@ -292,10 +342,12 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
     if (!this._entity) return html`<ha-card class="poc">Unknown entity: ${this.config.entity}</ha-card>`;
     const open = this._openSection ?? 0;
     const secs = this._accordionSections();
+    // Accents (zone switches etc.) sync to the active mode's palette.
+    const [modeAccent, modeContainer] = MODE_COLORS[this._entity.state] ?? MODE_COLORS.off;
     // The accordion sections LIVE IN the connected stack (2px seams, group
     // silhouette): closed bars are compact segments, the open one grows tall.
     return html`
-      <ha-card class="poc">
+      <ha-card class="poc" style="--poc-mode-accent:${modeAccent};--poc-mode-container:${modeContainer};">
         <materia-thermostat
           .hass=${this.hass}
           .config=${{
@@ -308,7 +360,7 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
             ...(this.config.max_temp != null ? { max_temp: this.config.max_temp } : {}),
           }}
         ></materia-thermostat>
-        <div class="stack">
+        <div class="stack ${this.config.reserve_height ? "reserve" : ""}">
           <div class="seg">${this._modeGroup()}</div>
           ${secs.map((s, i) => html`
             <div class="seg acc-sec ${open === i ? "open" : ""}">
@@ -319,9 +371,10 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
                   ? s.actions ?? nothing
                   : html`<span class="acc-info">${s.info}</span><ha-icon class="acc-chev" icon="mdi:chevron-down"></ha-icon>`}
               </div>
-              <div class="acc-body"><div class="acc-inner">${open === i ? s.body : nothing}</div></div>
+              <div class="acc-body"><div class="acc-inner">${s.body}</div></div>
             </div>
           `)}
+          ${!this._waterInAcc && this.config.water_heater ? this._waterMenuSeg() : nothing}
         </div>
       </ha-card>
     `;

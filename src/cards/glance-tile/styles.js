@@ -39,35 +39,6 @@ export const styles = [
       flex-shrink: 0;
     }
 
-    /* ---- shape tiles (percent / binary) ---- */
-    .shape-tile {
-      container-type: inline-size;
-      position: relative;
-      aspect-ratio: 1;
-      display: grid;
-      place-items: center;
-      max-width: var(--ms-size, 225px);
-      margin-inline: auto;
-      width: 100%;
-    }
-
-    .shape {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    .shape-fill {
-      fill: var(--ms-color, var(--ha-card-background, var(--card-background-color)));
-      transition: fill var(--md-sys-motion-default-effects);
-    }
-
-    /* Active binary: the star carries a clear accent tint. */
-    .shape-fill.on {
-      fill: var(--ms-color, color-mix(in srgb, var(--md-sys-color-primary, #6750a4) 16%, var(--md-sys-color-secondary-container, var(--ha-card-background))));
-    }
-
     /* Always a translucent wash — the level should tint the card, not bury it. */
     .level-fill {
       fill: color-mix(in srgb, var(--ms-accent, var(--md-sys-color-primary, #6750a4)) 30%, transparent);
@@ -119,12 +90,34 @@ export const styles = [
       max-width: 78%;
     }
 
-    .state-icon {
-      --mdc-icon-size: clamp(26px, 13cqi, 38px);
+    /* Binary: state word + a corner star glyph (precip-glyph pattern) —
+       muted at rest, colored and slowly turning while active. */
+    .binary-bottom {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      width: 100%;
+      gap: 8px;
     }
 
-    .shape-tile.active .state-icon {
-      color: var(--md-sys-color-primary, currentColor);
+    .binary-bottom .sub {
+      max-width: 62%;
+      line-height: 1.35;
+    }
+
+    .binary-star {
+      width: clamp(36px, 17cqi, 52px);
+      height: clamp(36px, 17cqi, 52px);
+      flex-shrink: 0;
+    }
+
+    .binary-star path {
+      fill: color-mix(in srgb, currentColor 14%, transparent);
+      transition: fill var(--md-sys-motion-default-effects);
+    }
+
+    .rect-tile.binary.active .binary-star path {
+      fill: color-mix(in srgb, var(--ms-accent, var(--md-sys-color-primary, #6750a4)) 55%, transparent);
     }
 
     .big {

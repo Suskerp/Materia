@@ -272,21 +272,20 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     `;
   }
 
-  /* ---- binary: sunny star spins while active ------------------------------- */
+  /* ---- binary: square tile; the sunny star is a corner glyph that takes
+     color and slowly turns while the entity is active ----------------------- */
   _binary() {
     const active = ACTIVE_STATES.includes(this._stateObj.state);
-    const sunny = roundedPolygonPath(50, 52, 45, { vertices: 8, innerRadius: 0.8, rounding: 0.15, rotate: -Math.PI / 2 });
+    const sunny = roundedPolygonPath(50, 50, 46, { vertices: 8, innerRadius: 0.8, rounding: 0.15, rotate: -Math.PI / 2 });
     return html`
-      <div class="shape-tile ${active ? "active" : ""}">
-        <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          ${active
-            ? svg`<g class="spin"><path d=${sunny} class="shape-fill on" /></g>`
-            : svg`<circle cx="50" cy="52" r="43" class="shape-fill" />`}
-        </svg>
-        <div class="overlay">
-          ${this._header("mdi:power")}
-          <ha-icon class="state-icon" icon=${this._icon("mdi:power")}></ha-icon>
-          <div class="sub">${this._fmtState()}</div>
+      <div class="rect-tile left binary ${active ? "active" : ""}">
+        ${this._header("mdi:power")}
+        <div class="big small-big">${this._fmtState()}</div>
+        <div class="binary-bottom">
+          ${this.config.label ? html`<div class="sub">${this.config.label}</div>` : html`<span></span>`}
+          <svg class="binary-star" viewBox="0 0 100 100">
+            <g class=${active ? "spin" : ""}><path d=${sunny} /></g>
+          </svg>
         </div>
       </div>
     `;
