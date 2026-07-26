@@ -21,6 +21,8 @@ class MateriaSwitch extends ActionMixin(LitElement) {
     _resolvedSecondary: { state: true },
     _resolvedColor: { state: true },
     _resolvedColorOn: { state: true },
+    _resolvedSwitchColor: { state: true },
+    _resolvedSwitchColorOn: { state: true },
   };
 
   static styles = styles;
@@ -46,6 +48,8 @@ class MateriaSwitch extends ActionMixin(LitElement) {
       this._resolveField("secondary", "_resolvedSecondary");
       this._resolveField("color", "_resolvedColor");
       this._resolveField("color_on", "_resolvedColorOn");
+      this._resolveField("switch_color", "_resolvedSwitchColor");
+      this._resolveField("switch_color_on", "_resolvedSwitchColorOn");
     }
   }
 
@@ -75,6 +79,9 @@ class MateriaSwitch extends ActionMixin(LitElement) {
       : (this.hass.formatEntityState?.(st) ?? st.state);
     const bg = this._isTemplate(this.config.color) ? (this._resolvedColor || "").trim() : this.config.color;
     const fg = this._isTemplate(this.config.color_on) ? (this._resolvedColorOn || "").trim() : this.config.color_on;
+    // Switch-only colors (selected track / thumb) — the row stays neutral.
+    const track = this._isTemplate(this.config.switch_color) ? (this._resolvedSwitchColor || "").trim() : this.config.switch_color;
+    const thumb = this._isTemplate(this.config.switch_color_on) ? (this._resolvedSwitchColorOn || "").trim() : this.config.switch_color_on;
     return html`
       <ha-card
         class="row ${on ? "on" : "off"} ${bg ? "colored" : ""} ${this.config.flat ? "flat" : ""} ${unavailable ? "unavailable" : ""}"
@@ -86,7 +93,8 @@ class MateriaSwitch extends ActionMixin(LitElement) {
           <span class="r-name">${name}</span>
           ${secondary ? html`<span class="r-sub">${secondary}</span>` : ""}
         </div>
-        <div class="m3-switch ${on ? "on" : ""}"><i></i></div>
+        <div class="m3-switch ${on ? "on" : ""}"
+          style="${track ? `--ms-track:${track};` : ""}${thumb ? `--ms-thumb:${thumb};` : ""}"><i></i></div>
       </ha-card>
     `;
   }

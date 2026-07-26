@@ -111,17 +111,21 @@ export const styles = [
         background-color var(--md-sys-motion-fast-effects);
     }
 
-    /* Selected = the spec pair (SwitchTokens: Primary/OnPrimary). */
+    /* Selected = the spec pair (SwitchTokens: Primary/OnPrimary) by default;
+       switch_color / switch_color_on override track / thumb (templatable). */
     .m3-switch.on {
-      background: var(--md-sys-color-primary);
+      background: var(--ms-track, var(--md-sys-color-primary));
       border-color: transparent;
+      transition:
+        background-color var(--md-sys-motion-fast-effects),
+        border-color var(--md-sys-motion-fast-effects);
     }
 
     .m3-switch.on i {
       left: 19px;
       width: 20px; /* spec 24/32 — the thumb GROWS when selected */
       height: 20px;
-      background: var(--md-sys-color-on-primary, #fff);
+      background: var(--ms-thumb, var(--md-sys-color-on-primary, #fff));
     }
 
     /* Pressed: thumb swells toward the spec's 28/32 pressed size. */
