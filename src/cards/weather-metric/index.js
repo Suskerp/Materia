@@ -170,10 +170,28 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
   }
 
   /* ---- Wind: soft rounded-triangle blob --------------------------------- */
+
+  /** Convert wind speed between units (via km/h); "bft" maps to Beaufort. */
+  _convertWind(value, from, to) {
+    const KMH = { "km/h": 1, "m/s": 3.6, mph: 1.609344, kn: 1.852, knots: 1.852, "ft/s": 1.09728 };
+    if (!to || to === from) return { v: value, u: from };
+    const kmh = value * (KMH[from] ?? 1);
+    if (to === "bft") {
+      const upper = [1, 5, 11, 19, 28, 38, 49, 61, 74, 88, 102, 117]; // km/h bounds for Bft 0–11
+      let b = upper.findIndex((t) => kmh < t);
+      if (b === -1) b = 12;
+      return { v: b, u: "Bft" };
+    }
+    return { v: kmh / (KMH[to] ?? 1), u: to };
+  }
+
   _wind() {
     const speed = this._value("wind_speed");
     if (speed == null) return nothing;
-    const unit = this.config.unit ?? this._weatherAttr("wind_speed_unit") ?? "km/h";
+    const srcUnit = this.config.sensor
+      ? this.hass.states[this.config.sensor]?.attributes?.unit_of_measurement ?? "km/h"
+      : this._weatherAttr("wind_speed_unit") ?? "km/h";
+    const { v, u } = this._convertWind(speed, srcUnit, this.config.unit);
     let bearing = this.config.bearing_entity
       ? this._numRaw(this.hass.states[this.config.bearing_entity]?.state)
       : this._numRaw(this._weatherAttr("wind_bearing"));
@@ -185,7 +203,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
         </svg>
         <div class="overlay">
           ${this._header("mdi:weather-windy", this.config.name ?? "Wind")}
-          <div class="big">${Math.round(speed)}<span class="unit">${unit.replace("km/h", " km/h").replace("mph", " mph")}</span></div>
+          <div class="big">${Math.round(v)}<span class="unit"> ${u}</span></div>
           ${from ? html`<div class="sub">${from}</div>` : ""}
         </div>
       </div>
@@ -333,10 +351,14 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
       : this._numRaw(this._weatherAttr("dew_point"));
     const level = Math.min(1, Math.max(0, hum / 100));
     const y = 100 - level * 78; // wave crest height inside the tile
-    const wave = `M0 ${y + 4} Q 12.5 ${y - 4} 25 ${y + 4} T 50 ${y + 4} T 75 ${y + 4} T 100 ${y + 4} V100 H0 Z`;
+    // Two viewBox-widths of repeating wave; CSS drifts it left by exactly one
+    // width (an integer number of 25-unit periods) for a seamless slow loop.
+    let wave = `M0 ${y + 4} Q 12.5 ${y - 4} 25 ${y + 4} `;
+    for (let x = 50; x <= 200; x += 25) wave += `T ${x} ${y + 4} `;
+    wave += `V100 H0 Z`;
     return html`
       <div class="rect-tile clip">
-        <svg class="wave" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <svg class="wave" viewBox="0 0 200 100" preserveAspectRatio="none">
           <path d=${wave} class="wave-fill" />
         </svg>
         ${this._header("mdi:water-outline", this.config.name ?? "Humidity")}

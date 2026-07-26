@@ -42,6 +42,13 @@ class MateriaWeatherMetricEditor extends SmartEditorBase {
     const extras = { title: "Options", icon: "mdi:tune", fields: [] };
     if (m === "wind") {
       extras.fields.push(
+        { name: "unit", label: "Unit (converts from the source)", selector: { select: { mode: "dropdown", options: [
+          { value: "km/h", label: "km/h" },
+          { value: "m/s", label: "m/s" },
+          { value: "mph", label: "mph" },
+          { value: "kn", label: "knots" },
+          { value: "bft", label: "Beaufort" },
+        ] } } },
         { name: "bearing_entity", label: "Bearing sensor (optional)", selector: { entity: { domain: "sensor" } } },
         { name: "from_label", label: '"From" label', selector: { text: {} } },
       );

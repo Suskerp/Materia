@@ -203,12 +203,28 @@ export const styles = [
       box-sizing: border-box;
     }
 
-    /* Humidity wave */
+    /* Humidity wave — the SVG is two tile-widths of repeating wave; drifting
+       it left by exactly half its width (a whole number of periods) loops
+       seamlessly. Slow and linear so it reads as water, not a marquee. */
     .wave {
       position: absolute;
-      inset: 0;
-      width: 100%;
+      top: 0;
+      left: 0;
+      width: 200%;
       height: 100%;
+      animation: wave-drift 14s linear infinite;
+    }
+
+    @keyframes wave-drift {
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .wave {
+        animation: none;
+      }
     }
 
     .wave-fill {
