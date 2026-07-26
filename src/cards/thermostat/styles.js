@@ -167,9 +167,11 @@ export const styles = [
       place-items: center;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
+      /* Effects easing (NO overshoot): a springy radius overshoots past the
+         target on release, pokes through the container's pill clip and reads
+         as bounce+flicker under repeated taps. */
       transition:
-        flex-grow var(--md-sys-motion-expressive-fast-spatial),
-        border-radius var(--md-sys-motion-expressive-fast-spatial),
+        border-radius var(--md-sys-motion-fast-effects),
         background-color var(--md-sys-motion-fast-effects);
     }
 
