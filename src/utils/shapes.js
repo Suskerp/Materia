@@ -221,10 +221,14 @@ export function moonPath(cx, cy, r, p) {
   const rx = Math.max(0.01, Math.abs(cos) * r).toFixed(2);
   const top = `${cx} ${cy - r}`;
   const bot = `${cx} ${cy + r}`;
+  // Sweep semantics with y-down screen coords: bottom→top with sweep 0 passes
+  // the RIGHT side, sweep 1 the LEFT.
   if (p <= 0.5) {
-    // Waxing: lit on the right; terminator bulges right (crescent) or left (gibbous).
-    return `M${top} A${r} ${r} 0 0 1 ${bot} A${rx} ${r} 0 0 ${cos > 0 ? 1 : 0} ${top} Z`;
+    // Waxing: lit right rim; terminator bulges right (crescent, cos>0 → sweep
+    // 0) or left (gibbous → sweep 1).
+    return `M${top} A${r} ${r} 0 0 1 ${bot} A${rx} ${r} 0 0 ${cos > 0 ? 0 : 1} ${top} Z`;
   }
-  // Waning: mirror image.
-  return `M${top} A${r} ${r} 0 0 0 ${bot} A${rx} ${r} 0 0 ${cos > 0 ? 0 : 1} ${top} Z`;
+  // Waning: lit left rim; terminator bulges left (crescent → sweep 1) or
+  // right (gibbous → sweep 0).
+  return `M${top} A${r} ${r} 0 0 0 ${bot} A${rx} ${r} 0 0 ${cos > 0 ? 1 : 0} ${top} Z`;
 }
