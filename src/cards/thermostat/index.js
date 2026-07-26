@@ -15,7 +15,8 @@ const MODE_META = {
   cool: { icon: "mdi:snowflake", color: "var(--md-sys-cust-color-climate-cool-accent, #327ea7)", on: "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)" },
   dry: { icon: "mdi:water-percent", color: "var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", on: "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-on-primary))" },
   fan_only: { icon: "mdi:fan", color: "var(--md-sys-color-secondary)", on: "var(--md-sys-color-on-secondary)" },
-  off: { icon: "mdi:power", color: "var(--md-sys-color-on-surface-variant)", on: "var(--md-sys-color-surface)" },
+  // Soft neutral for off — a filled on-surface-variant pill reads far too harsh.
+  off: { icon: "mdi:power", color: "var(--md-sys-color-surface-variant)", on: "var(--md-sys-color-on-surface-variant)" },
 };
 
 /**
