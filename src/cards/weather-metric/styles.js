@@ -181,7 +181,11 @@ export const styles = [
       flex-shrink: 0;
     }
 
-    /* Wind: expressive blob as a tinted layer INSIDE the card backdrop. */
+    /* Wind: a ROUND card with the expressive triangle blob tinted inside. */
+    .rect-tile.wind {
+      border-radius: 50%;
+    }
+
     .blob-bg {
       position: absolute;
       inset: 7%;
