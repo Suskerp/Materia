@@ -202,12 +202,12 @@ export const styles = [
 
     .nudge.vertical .seg {
       flex: 0 0 auto;
-      width: clamp(64px, 22cqi, 88px);
-      height: clamp(92px, 32cqi, 136px);
+      width: clamp(56px, 18cqi, 74px);
+      height: clamp(76px, 26cqi, 110px);
     }
 
     .nudge.vertical .seg ha-icon {
-      --mdc-icon-size: clamp(26px, 9cqi, 32px);
+      --mdc-icon-size: clamp(24px, 8cqi, 28px);
     }
 
     .nudge.vertical .seg.plus {
