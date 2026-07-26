@@ -62,10 +62,11 @@ export function roundedPolygonPath(cx, cy, R, { vertices, innerRadius = null, ro
   return filletPath(pts);
 }
 
-/** Corner-fillet a closed polygon of {x, y, r} vertices (per-vertex radius) —
- *  the same tangent-arc construction androidx RoundedPolygon uses; concave
- *  corners (cross sign) bow inward. */
-export function filletPath(pts) {
+/** Fillet geometry for a closed polygon of {x, y, r} vertices — the same
+ *  tangent-arc construction androidx RoundedPolygon uses; concave corners
+ *  (cross sign) bow inward. Returns arc segments incl. centers so callers can
+ *  measure true curve bounds. */
+export function filletSegments(pts) {
   const n = pts.length;
   const seg = [];
   for (let i = 0; i < n; i++) {
@@ -87,11 +88,22 @@ export function filletPath(pts) {
     const rEff = d * Math.tan(half); // radius that actually fits after capping
     const T1 = [V.x + uP[0] * d, V.y + uP[1] * d];
     const T2 = [V.x + uN[0] * d, V.y + uN[1] * d];
+    // Arc center: on the wedge bisector, rEff from both edges.
+    const bx = uP[0] + uN[0];
+    const by = uP[1] + uN[1];
+    const bl = Math.hypot(bx, by) || 1;
+    const hyp = rEff / Math.sin(half);
+    const C = [V.x + (bx / bl) * hyp, V.y + (by / bl) * hyp];
     // Arc direction: convex corners bow outward, concave inward.
     // (Verified numerically: with this vertex winding, convex needs sweep 1.)
     const cross = uP[0] * uN[1] - uP[1] * uN[0];
-    seg.push({ T1, T2, rEff, sweep: cross > 0 ? 0 : 1 });
+    seg.push({ T1, T2, C, rEff, sweep: cross > 0 ? 0 : 1 });
   }
+  return seg;
+}
+
+function segmentsToPath(seg) {
+  const n = seg.length;
   let d = `M${seg[0].T1[0].toFixed(2)} ${seg[0].T1[1].toFixed(2)} `;
   for (let i = 0; i < n; i++) {
     const s = seg[i];
@@ -100,6 +112,34 @@ export function filletPath(pts) {
     d += `L${next.T1[0].toFixed(2)} ${next.T1[1].toFixed(2)} `;
   }
   return d + "Z";
+}
+
+/** TRUE bounds of the filleted outline — samples along each arc, so the
+ *  bulges count (tangent points alone under-measure heavily-rounded corners). */
+export function segmentsBounds(seg) {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  const upd = (x, y) => {
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  };
+  for (const s of seg) {
+    const a1 = Math.atan2(s.T1[1] - s.C[1], s.T1[0] - s.C[0]);
+    const a2 = Math.atan2(s.T2[1] - s.C[1], s.T2[0] - s.C[0]);
+    let delta = a2 - a1;
+    if (s.sweep === 1) { while (delta < 0) delta += Math.PI * 2; }
+    else { while (delta > 0) delta -= Math.PI * 2; }
+    for (let i = 0; i <= 16; i++) {
+      const a = a1 + (delta * i) / 16;
+      upd(s.C[0] + s.rEff * Math.cos(a), s.C[1] + s.rEff * Math.sin(a));
+    }
+  }
+  return { minX, minY, maxX, maxY };
+}
+
+export function filletPath(pts) {
+  return segmentsToPath(filletSegments(pts));
 }
 
 /** Canonical MaterialShapes ARROW (MaterialShapes.kt customPolygon points):
@@ -112,25 +152,28 @@ export function arrowPath(cx, cy, r, rotate = 0) {
     { x: 0.499, y: -0.16, r: 0.215 }, // apex
     { x: 1.225, y: 1.06, r: 0.211 },  // base right
   ];
-  // Rotate FIRST, then center + scale by the ROTATED bounds — centering the
-  // unrotated bbox left the shape off-center (and looking squished) at
-  // rotated bearings.
+  // Rotate FIRST, fillet in raw units, then center + scale by the TRUE curve
+  // bounds. Vertex bounds won't do: the outline pulls inward from each vertex
+  // by rEff/sin(half) − rEff, which is LARGEST at the sharp apex — vertex-box
+  // centering always leaves the apex side with extra empty margin.
   const cosR = Math.cos(rotate);
   const sinR = Math.sin(rotate);
-  const rot = raw.map((p) => ({
+  const segs = filletSegments(raw.map((p) => ({
     x: p.x * cosR - p.y * sinR,
     y: p.x * sinR + p.y * cosR,
     r: p.r,
-  }));
-  const xs = rot.map((p) => p.x);
-  const ys = rot.map((p) => p.y);
-  const cx0 = (Math.min(...xs) + Math.max(...xs)) / 2;
-  const cy0 = (Math.min(...ys) + Math.max(...ys)) / 2;
-  const s = (2 * r) / Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
-  return filletPath(rot.map((p) => ({
-    x: cx + (p.x - cx0) * s,
-    y: cy + (p.y - cy0) * s,
-    r: p.r * s,
+  })));
+  const b = segmentsBounds(segs);
+  const cx0 = (b.minX + b.maxX) / 2;
+  const cy0 = (b.minY + b.maxY) / 2;
+  const s = (2 * r) / Math.max(b.maxX - b.minX, b.maxY - b.minY);
+  const t = (p) => [cx + (p[0] - cx0) * s, cy + (p[1] - cy0) * s];
+  return segmentsToPath(segs.map((sg) => ({
+    T1: t(sg.T1),
+    T2: t(sg.T2),
+    C: t(sg.C),
+    rEff: sg.rEff * s,
+    sweep: sg.sweep,
   })));
 }
 
