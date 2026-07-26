@@ -40,7 +40,8 @@ class MateriaWallet extends ActionMixin(LitElement) {
   setConfig(config) {
     if (!config.sections?.length) throw new Error("Materia Wallet: add at least one section");
     this.config = { expanded: 0, ...config };
-    this._open = this.config.expanded === false ? -1 : Number(this.config.expanded) || 0;
+    // Wallet invariant: exactly ONE section is always large.
+    this._open = Math.max(0, Number(this.config.expanded) || 0);
     this._cardEls = null;
     if (this.isConnected) this._createCards();
   }
@@ -94,10 +95,12 @@ class MateriaWallet extends ActionMixin(LitElement) {
   }
 
   _toggle(i) {
-    const wasOpen = this._open === i;
-    this._open = wasOpen ? -1 : i;
+    // One section is ALWAYS open — tapping the open bar does nothing;
+    // you switch focus, you never fully fold the wallet.
+    if (this._open === i) return;
+    this._open = i;
     this._fireHaptic("light");
-    if (!wasOpen && this._cardEls?.[i]) {
+    if (this._cardEls?.[i]) {
       // Catch-up hass for children that were dormant while collapsed.
       this._cardEls[i].forEach((el) => { el.hass = this.hass; });
     }
@@ -117,7 +120,7 @@ class MateriaWallet extends ActionMixin(LitElement) {
                 ${s.icon ? html`<ha-icon class="s-icon" icon=${s.icon}></ha-icon>` : ""}
                 <span class="s-title">${s.title ?? ""}</span>
                 <span class="s-info">${open ? "" : this._info(s)}</span>
-                <ha-icon class="s-chev" icon=${open ? "m3of:arrow-drop-up" : "m3of:arrow-drop-down"}></ha-icon>
+${open ? "" : html`<ha-icon class="s-chev" icon="m3of:arrow-drop-down"></ha-icon>`}
               </div>
               <div class="body">
                 <div class="body-inner">

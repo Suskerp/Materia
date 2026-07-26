@@ -7,7 +7,7 @@ class MateriaWalletEditor extends SmartEditorBase {
         title: "Wallet",
         icon: "mdi:wallet-outline",
         fields: [
-          { name: "expanded", label: "Initially open section (0 = first)", selector: { number: { min: 0, max: 20, step: 1, mode: "box" } } },
+          { name: "expanded", label: "Initially large section (0 = first; one is always large)", selector: { number: { min: 0, max: 20, step: 1, mode: "box" } } },
         ],
       },
     ];
