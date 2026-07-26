@@ -399,24 +399,6 @@ entity: sensor.bathroom_humidity
 
 ---
 
-#### `materia-wallet`
-
-Swipe-card replacement: slim bars that spring open expressively — exactly one section is always large; the rest collapse to labeled pills. Sections hold any cards.
-
-```yaml
-type: custom:materia-wallet
-sections:
-  - title: Climate
-    icon: mdi:thermostat
-    info_entity: climate.home
-    cards: [ ... ]
-  - title: Music
-    icon: mdi:music
-    cards: [ ... ]
-```
-
----
-
 #### `materia-list`
 
 Compact entity list — name left, localized state right.
@@ -773,7 +755,7 @@ entity: media_player.living_room
 
 ### Typography
 
-Figtree is the functional voice everywhere; **Outfit** (variable) is the display voice on hero moments only — clock, weather hero temperature, thermostat target, tile numerals (tabular figures), wallet/panel section titles, media track titles. The weight axis animates: the thermostat numeral thickens while adjusting, section titles ride the open spring, the clock's digital readout breathes across the minute, and the media title beats on track changes. Fraunces italic appears in exactly one place: the clock's date. Swap the display face via `--materia-font-display`.
+Figtree is the functional voice everywhere; **Outfit** (variable) is the display voice on hero moments only — clock, weather hero temperature, thermostat target, tile numerals (tabular figures), panel section titles, media track titles. The weight axis animates: the thermostat numeral thickens while adjusting, section titles ride the open spring, the clock's digital readout breathes across the minute, and the media title beats on track changes. Fraunces italic appears in exactly one place: the clock's date. Swap the display face via `--materia-font-display`.
 
 ### Visual editor
 
