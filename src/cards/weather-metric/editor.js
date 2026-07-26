@@ -36,6 +36,7 @@ class MateriaWeatherMetricEditor extends SmartEditorBase {
             ]
           : []),
         { name: "name", label: "Title", selector: { text: {} } },
+        { name: "icon", label: "Header icon (overrides default)", selector: { icon: {} } },
       ],
     };
 

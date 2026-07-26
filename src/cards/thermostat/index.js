@@ -16,12 +16,12 @@ const DIAL_SWEEP = 270;
 const AUTO_ACCENT = "var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))";
 const AUTO_CONTAINER = "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-primary-container))";
 const MODE_META = {
-  auto: { icon: "m3o:autorenew", color: AUTO_ACCENT, on: AUTO_CONTAINER, container: AUTO_CONTAINER, onContainer: AUTO_ACCENT },
-  heat_cool: { icon: "m3o:autorenew", color: AUTO_ACCENT, on: AUTO_CONTAINER, container: AUTO_CONTAINER, onContainer: AUTO_ACCENT },
-  heat: { icon: "m3o:local-fire-department", color: "var(--md-sys-cust-color-climate-heat-accent, #a14614)", on: "var(--md-sys-cust-color-climate-heat-container, #ffeee9)", container: "var(--md-sys-cust-color-climate-heat-container, #ffeee9)", onContainer: "var(--md-sys-cust-color-climate-heat-accent, #a14614)" },
-  cool: { icon: "m3o:ac-unit", color: "var(--md-sys-cust-color-climate-cool-accent, #327ea7)", on: "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)", container: "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)", onContainer: "var(--md-sys-cust-color-climate-cool-accent, #327ea7)" },
-  dry: { icon: "m3o:water-drop", color: AUTO_ACCENT, on: AUTO_CONTAINER, container: AUTO_CONTAINER, onContainer: AUTO_ACCENT },
-  fan_only: { icon: "m3o:mode-fan", color: "var(--md-sys-color-secondary)", on: "var(--md-sys-color-on-secondary)", container: "var(--md-sys-color-secondary-container)", onContainer: "var(--md-sys-color-on-secondary-container)" },
+  auto: { icon: "mdi:thermostat-auto", color: AUTO_ACCENT, on: AUTO_CONTAINER, container: AUTO_CONTAINER, onContainer: AUTO_ACCENT },
+  heat_cool: { icon: "mdi:thermostat-auto", color: AUTO_ACCENT, on: AUTO_CONTAINER, container: AUTO_CONTAINER, onContainer: AUTO_ACCENT },
+  heat: { icon: "m3o:mode-heat", color: "var(--md-sys-cust-color-climate-heat-accent, #a14614)", on: "var(--md-sys-cust-color-climate-heat-container, #ffeee9)", container: "var(--md-sys-cust-color-climate-heat-container, #ffeee9)", onContainer: "var(--md-sys-cust-color-climate-heat-accent, #a14614)" },
+  cool: { icon: "mdi:snowflake", color: "var(--md-sys-cust-color-climate-cool-accent, #327ea7)", on: "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)", container: "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)", onContainer: "var(--md-sys-cust-color-climate-cool-accent, #327ea7)" },
+  dry: { icon: "mdi:water-percent", color: AUTO_ACCENT, on: AUTO_CONTAINER, container: AUTO_CONTAINER, onContainer: AUTO_ACCENT },
+  fan_only: { icon: "mdi:fan", color: "var(--md-sys-color-secondary)", on: "var(--md-sys-color-on-secondary)", container: "var(--md-sys-color-secondary-container)", onContainer: "var(--md-sys-color-on-secondary-container)" },
   // Soft neutral for off — a filled on-surface-variant pill reads far too harsh.
   off: { icon: "m3o:power-settings-new", color: "var(--md-sys-color-surface-variant)", on: "var(--md-sys-color-on-surface-variant)", container: "var(--md-sys-color-surface-variant)", onContainer: "var(--md-sys-color-on-surface-variant)" },
 };
@@ -415,10 +415,10 @@ class MateriaThermostat extends ActionMixin(LitElement) {
 
         <div class="nudge">
           <button class="seg minus" @click=${() => this._nudge(-(this.config.step ?? 0.5))}>
-            <ha-icon icon="m3o:remove"></ha-icon>
+            <ha-icon icon="mdi:minus"></ha-icon>
           </button>
           <button class="seg plus" @click=${() => this._nudge(this.config.step ?? 0.5)}>
-            <ha-icon icon="m3o:add"></ha-icon>
+            <ha-icon icon="mdi:plus"></ha-icon>
           </button>
         </div>
 

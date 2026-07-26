@@ -18,11 +18,11 @@ export const styles = [
       container-type: inline-size;
       display: flex;
       align-items: center;
-      gap: clamp(12px, 4cqi, 20px);
+      gap: clamp(12px, 3.5cqi, 16px);
       background: var(--wg-bg, var(--ha-card-background, var(--card-background-color)));
       color: var(--wg-fg, var(--md-sys-color-on-surface, var(--primary-text-color)));
       border-radius: 28px; /* match the materia-card family, not a full pill */
-      padding: clamp(12px, 4cqi, 18px) clamp(18px, 6cqi, 28px);
+      padding: clamp(12px, 3.5cqi, 15px) clamp(16px, 5cqi, 22px);
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       transition:
@@ -35,8 +35,8 @@ export const styles = [
     }
 
     .glyph {
-      width: clamp(40px, 13cqi, 56px);
-      height: clamp(40px, 13cqi, 56px);
+      width: clamp(32px, 10cqi, 42px);
+      height: clamp(32px, 10cqi, 42px);
       flex-shrink: 0;
     }
 
@@ -52,7 +52,7 @@ export const styles = [
       display: flex;
       align-items: center;
       gap: 7px;
-      font-size: clamp(14px, 4.5cqi, 17px);
+      font-size: clamp(14px, 4cqi, 16px);
       font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
@@ -68,9 +68,9 @@ export const styles = [
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: clamp(13px, 4cqi, 15px);
+      font-size: clamp(12px, 3.6cqi, 14px);
       font-weight: 500;
-      opacity: 0.85;
+      opacity: 0.78;
       white-space: nowrap;
       overflow: hidden;
     }
@@ -90,9 +90,11 @@ export const styles = [
       opacity: 0.55;
     }
 
+    /* Quieter numerals — the pill should sit at the same visual volume as
+       the materia-card rows around it. */
     .now {
-      font-size: clamp(26px, 9cqi, 38px);
-      font-weight: 500;
+      font-size: clamp(22px, 7cqi, 30px);
+      font-weight: 400;
       flex-shrink: 0;
     }
 

@@ -195,7 +195,8 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
   }
 
   _header(icon, title) {
-    return html`<div class="header"><ha-icon icon=${icon}></ha-icon><span>${title}</span></div>`;
+    // config.icon overrides the per-metric default header icon.
+    return html`<div class="header"><ha-icon icon=${this.config.icon || icon}></ha-icon><span>${title}</span></div>`;
   }
 
   /** Rendered when the metric is MISconfigured (no source at all) — a silent
@@ -243,7 +244,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
           <path d=${windBlobPath(50, 50, 46)} class="blob-fill" />
         </svg>
         <div class="overlay">
-          ${this._header("m3o:air", this.config.name ?? "Wind")}
+          ${this._header("mdi:weather-windy", this.config.name ?? "Wind")}
           <div class="big">${Math.round(v)}<span class="unit"> ${u}</span></div>
           ${from ? html`<div class="sub">${from}</div>` : ""}
         </div>
@@ -273,7 +274,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
           ${dots}
         </svg>
         <div class="overlay">
-          ${this._header("m3o:clear-day", this.config.name ?? "UV index")}
+          ${this._header("mdi:white-balance-sunny", this.config.name ?? "UV index")}
           <div class="big">${Math.round(uv)}</div>
           <div class="sub">${level.label}</div>
         </div>
@@ -287,7 +288,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     if (vis == null) {
       return this.config.sensor
         ? nothing
-        : this._hint("m3o:visibility", this.config.name ?? "Visibility", "Weather entity has no visibility — add a sensor");
+        : this._hint("mdi:eye-outline", this.config.name ?? "Visibility", "Weather entity has no visibility — add a sensor");
     }
     const unit = this.config.unit ?? this._weatherAttr("visibility_unit") ?? "km";
     return html`
@@ -296,7 +297,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
           <path d=${materialCookiePath(50, 52, 44, 12)} class="shape-fill" />
         </svg>
         <div class="overlay">
-          ${this._header("m3o:visibility", this.config.name ?? "Visibility")}
+          ${this._header("mdi:eye-outline", this.config.name ?? "Visibility")}
           <div class="big">${vis}<span class="unit"> ${unit}</span></div>
         </div>
       </div>
@@ -325,7 +326,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
           ${frac > 0.01 ? svg`<path d=${arcPath(50, 52, 37.5, start, end)} class="gauge-fill thin" />` : ""}
         </svg>
         <div class="overlay">
-          ${this._header("m3o:compress", this.config.name ?? "Pressure")}
+          ${this._header("mdi:gauge", this.config.name ?? "Pressure")}
           <div class="big small-big">${value}</div>
           <div class="sub">${unit}</div>
         </div>
@@ -339,14 +340,14 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     if (aqi == null) {
       return this.config.sensor
         ? nothing
-        : this._hint("m3o:airwave", this.config.name ?? "Air quality", "Point this tile at an AQI sensor");
+        : this._hint("mdi:waves", this.config.name ?? "Air quality", "Point this tile at an AQI sensor");
     }
     const band = AQI_BANDS.find((b) => aqi <= b.max);
     // Clamp so the marker never hangs off the bar's rounded ends.
     const frac = Math.min(0.96, Math.max(0.04, aqi / 300));
     return html`
       <div class="rect-tile">
-        ${this._header("m3o:airwave", this.config.name ?? "Air quality")}
+        ${this._header("mdi:waves", this.config.name ?? "Air quality")}
         <div class="big">${Math.round(aqi)}</div>
         <div class="aqi-bar">
           ${AQI_BANDS.slice(0, 5).map((b) => html`<span style="background:${b.color}"></span>`)}
@@ -392,7 +393,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     if (hum == null) {
       return this.config.sensor
         ? nothing
-        : this._hint("m3o:humidity-percentage", this.config.name ?? "Humidity", "Weather entity has no humidity — add a sensor");
+        : this._hint("mdi:water-percent", this.config.name ?? "Humidity", "Weather entity has no humidity — add a sensor");
     }
     const dew = this.config.dew_entity
       ? this._numRaw(this.hass.states[this.config.dew_entity]?.state)
@@ -405,7 +406,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
         <svg class="wave" viewBox="0 0 200 100" preserveAspectRatio="none">
           <path d=${wave} class="wave-fill" />
         </svg>
-        ${this._header("m3o:humidity-percentage", this.config.name ?? "Humidity")}
+        ${this._header("mdi:water-percent", this.config.name ?? "Humidity")}
         <div class="big">${Math.round(hum)}<span class="unit">%</span></div>
         ${dew != null
           ? html`<div class="dew"><span class="dew-chip">${Math.round(dew)}°</span> ${this.config.dew_label ?? "Dew point"}</div>`
@@ -443,7 +444,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     const y = (1 - t) * (1 - t) * 48 + 2 * t * (1 - t) * -4 + t * t * 48;
     return html`
       <div class="rect-tile sun">
-        ${this._header("m3o:wb-twilight", this.config.name ?? "Sunrise & sunset")}
+        ${this._header("mdi:weather-sunset", this.config.name ?? "Sunrise & sunset")}
         <svg class="sun-arc" viewBox="0 0 100 58">
           <path d="M4 48 Q 50 -4 96 48 Z" class="arc-fill" />
           <line x1="0" y1="48" x2="100" y2="48" class="horizon" />
@@ -509,7 +510,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
           const words = fn.replace(/pollen/i, "").trim().split(/\s+/);
           label = words[words.length - 1] || fn;
         }
-        const icon = cfg.icon || st.attributes.icon || "m3o:allergies";
+        const icon = cfg.icon || st.attributes.icon || "mdi:flower-pollen";
         return { label, icon, frac, levelLabel, color };
       })
       .filter(Boolean)
@@ -521,14 +522,14 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
       const configured = (this.config.entities?.length) || this.config.grass_entity || this.config.tree_entity || this.config.weed_entity;
       return configured
         ? nothing
-        : this._hint("m3o:allergies", this.config.name ?? "Pollen", "Add pollen sensors");
+        : this._hint("mdi:flower-pollen", this.config.name ?? "Pollen", "Add pollen sensors");
     }
     // Small variant (Pixel small tile): colored level dot + species + level,
     // as a compact left-aligned list.
     if (this.config.variant === "small") {
       return html`
         <div class="rect-tile pollen-small">
-          ${this._header("m3o:allergies", this.config.name ?? "Pollen")}
+          ${this._header("mdi:flower-pollen", this.config.name ?? "Pollen")}
           <div class="pollen-rows">
             ${kinds.map((k) => html`
               <div class="pollen-row">
@@ -545,7 +546,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     }
     return html`
       <div class="rect-tile pollen">
-        ${this._header("m3o:allergies", this.config.name ?? "Pollen")}
+        ${this._header("mdi:flower-pollen", this.config.name ?? "Pollen")}
         <div class="gauges">
           ${kinds.map((k) => {
             const start = -135;

@@ -110,15 +110,15 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
     const a = stateObj?.attributes || {};
     const fc = this._forecast?.[0] || a.forecast?.[0];
     const DEFAULT_ICONS = {
-      minmax: "m3o:device-thermostat",
-      wind: "m3o:air",
-      humidity: "m3o:humidity-percentage",
-      uv: "m3o:clear-day",
+      minmax: "mdi:thermometer",
+      wind: "mdi:weather-windy",
+      humidity: "mdi:water-percent",
+      uv: "mdi:white-balance-sunny",
       precipitation: "m3o:rainy",
-      pressure: "m3o:compress",
+      pressure: "mdi:gauge",
       pollen: "m3o:allergies",
-      aqi: "m3o:airwave",
-      sensor: "m3o:info",
+      aqi: "mdi:waves",
+      sensor: "mdi:information-outline",
     };
     let text = null;
     let sev = 0;
@@ -288,7 +288,7 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
           <div class="mid">
             ${alert || first
               ? html`<div class="line1">
-                  ${alert ? html`<ha-icon icon="m3o:warning"></ha-icon>` : ""}
+                  ${alert ? html`<ha-icon icon="mdi:alert-outline"></ha-icon>` : ""}
                   ${alert ? html`<span>${alert}</span>` : metricSpan(first)}
                 </div>`
               : ""}
@@ -299,7 +299,7 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
               : ""}
           </div>
           <div class="now">${unavailable || tempNum == null ? "—" : `${tempNum}°`}</div>
-          ${chevron ? html`<ha-icon class="chev" icon="m3o:chevron-right"></ha-icon>` : ""}
+          ${chevron ? html`<ha-icon class="chev" icon="mdi:chevron-right"></ha-icon>` : ""}
         </div>
       </ha-card>
     `;
