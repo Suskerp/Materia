@@ -8,54 +8,8 @@ export const styles = [
   unavailableStyles,
   motionTokens,
   css`
-    ha-card {
-      border-radius: 24px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    /* Nested inside another card (wallet sections etc.): no chrome of our own. */
-    ha-card.flat {
-      background: transparent;
-      box-shadow: none;
-      border: none;
-      padding: 0;
-      border-radius: 0;
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-    }
-
-    .mini {
-      border: 1.5px solid var(--md-sys-color-outline-variant, rgba(0, 0, 0, 0.2));
-      background: transparent;
-      color: inherit;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 600;
-      padding: 7px 14px;
-      border-radius: 999px;
-      cursor: pointer;
-      transition: background-color var(--md-sys-motion-fast-effects);
-    }
-
-    .mini:active {
-      background: color-mix(in srgb, currentColor 10%, transparent);
-    }
-
-    .zones {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    /* Expressive M3: states are container TONES, no strokes. */
-    .zone-row {
+    /* Expressive M3: state is a container TONE, no strokes. */
+    ha-card.row {
       display: flex;
       align-items: center;
       gap: 12px;
@@ -65,37 +19,50 @@ export const styles = [
       -webkit-tap-highlight-color: transparent;
       transition:
         background-color var(--md-sys-motion-fast-effects),
-        border-radius var(--md-sys-motion-expressive-fast-spatial);
+        border-radius var(--md-sys-motion-expressive-fast-spatial),
+        opacity var(--md-sys-motion-fast-effects);
     }
 
-    /* calling for heat — highest emphasis: container fill + accent icon */
-    .zone-row.calling {
-      background: var(--md-sys-cust-color-climate-heat-container, var(--md-sys-color-primary-container));
-      color: var(--md-sys-cust-color-climate-heat-accent, var(--md-sys-color-on-primary-container));
+    ha-card.row.on {
+      background: color-mix(in srgb, var(--md-sys-color-on-surface, #444) 7%, var(--ha-card-background, var(--card-background-color)));
+    }
+
+    ha-card.row.off {
+      background: color-mix(in srgb, var(--md-sys-color-on-surface, #444) 3%, var(--ha-card-background, var(--card-background-color)));
+      opacity: 0.75;
+    }
+
+    /* A colored row (template escalation, e.g. calling for heat) pops its
+       radius a notch, like the ladder's calling state did. */
+    ha-card.row.colored {
       border-radius: 20px;
+      opacity: 1;
     }
 
-    .zone-row.calling .z-icon {
-      color: var(--md-sys-cust-color-climate-heat-accent, var(--md-sys-color-primary));
+    /* Nested inside another card: transparent tones instead of card-on-card. */
+    ha-card.row.flat {
+      box-shadow: none;
+      border: none;
     }
 
-    /* enabled + satisfied — a clear tonal step above the section */
-    .zone-row.idle {
+    ha-card.row.flat.on {
       background: color-mix(in srgb, var(--md-sys-color-on-surface, #444) 7%, transparent);
     }
 
-    /* off — the quietest tone, reduced ink */
-    .zone-row.off {
+    ha-card.row.flat.off {
       background: color-mix(in srgb, var(--md-sys-color-on-surface, #444) 3%, transparent);
-      opacity: 0.7;
     }
 
-    .z-icon {
+    ha-card.row.colored[style*="background"] {
+      background: none; /* inline style wins; keep the class from fighting it */
+    }
+
+    .r-icon {
       --mdc-icon-size: 22px;
       flex-shrink: 0;
     }
 
-    .z-text {
+    .r-text {
       flex: 1;
       min-width: 0;
       display: flex;
@@ -103,18 +70,18 @@ export const styles = [
       line-height: 1.3;
     }
 
-    .z-name {
+    .r-name {
       font-size: 14px;
       font-weight: 600;
     }
 
-    .z-sub {
+    .r-sub {
       font-size: 12px;
       opacity: 0.75;
     }
 
     /* M3 switch, per SwitchTokens.kt (scaled from the 52×32 spec track). */
-    .z-switch {
+    .m3-switch {
       width: 44px;
       height: 26px;
       border-radius: 999px;
@@ -128,7 +95,7 @@ export const styles = [
         border-color var(--md-sys-motion-fast-effects);
     }
 
-    .z-switch i {
+    .m3-switch i {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
@@ -145,12 +112,12 @@ export const styles = [
     }
 
     /* Selected = the spec pair (SwitchTokens: Primary/OnPrimary). */
-    .z-switch.on {
+    .m3-switch.on {
       background: var(--md-sys-color-primary);
       border-color: transparent;
     }
 
-    .z-switch.on i {
+    .m3-switch.on i {
       left: 19px;
       width: 20px; /* spec 24/32 — the thumb GROWS when selected */
       height: 20px;
@@ -158,16 +125,16 @@ export const styles = [
     }
 
     /* Pressed: thumb swells toward the spec's 28/32 pressed size. */
-    .zone-row:active .z-switch i {
+    ha-card.row:active .m3-switch i {
       width: 22px;
       height: 22px;
     }
 
-    .zone-row:active .z-switch:not(.on) i {
+    ha-card.row:active .m3-switch:not(.on) i {
       left: 2px;
     }
 
-    .zone-row:active .z-switch.on i {
+    ha-card.row:active .m3-switch.on i {
       left: 16px;
     }
   `,

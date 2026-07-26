@@ -1,9 +1,260 @@
+import { html, nothing } from "lit";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { loadCardHelpers } from "../../styles/shared.js";
+
+const ROW =
+  "display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;" +
+  "background:var(--md-sys-color-secondary-container, rgba(120,120,128,.14));" +
+  "color:var(--md-sys-color-on-secondary-container, inherit);margin-bottom:6px;cursor:pointer;";
+const ICON_BTN =
+  "border:none;background:transparent;color:inherit;cursor:pointer;padding:4px;" +
+  "display:grid;place-items:center;border-radius:50%;--mdc-icon-size:18px;";
+const ADD_BTN =
+  "border:1.5px solid var(--md-sys-color-outline-variant, rgba(0,0,0,.2));background:transparent;" +
+  "color:inherit;font-family:inherit;font-size:13px;font-weight:600;padding:8px 16px;" +
+  "border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;";
 
 class MateriaClimatePocEditor extends SmartEditorBase {
+  static properties = {
+    _secIdx: { state: true },
+    _cardIdx: { state: true },
+    _huiReady: { state: true },
+  };
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._loadHui();
+  }
+
+  /** Force-load HA's stack editor deps so hui-card-picker and
+   *  hui-card-element-editor are defined. */
+  async _loadHui() {
+    if (customElements.get("hui-card-picker") && customElements.get("hui-card-element-editor")) {
+      this._huiReady = true;
+      return;
+    }
+    try {
+      const helpers = await loadCardHelpers();
+      const stack = await helpers.createCardElement({ type: "vertical-stack", cards: [] });
+      await stack?.constructor?.getConfigElement?.();
+    } catch {
+      /* picker unavailable — the YAML fallback below still works */
+    }
+    this._huiReady = !!customElements.get("hui-card-picker");
+  }
+
   _formData() {
     return { ...this._config };
   }
+
+  /* ---- sections plumbing --------------------------------------------------- */
+
+  get _secs() {
+    return this._config?.sections || [];
+  }
+
+  _setSecs(secs) {
+    const next = { ...this._config };
+    if (secs.length) next.sections = secs;
+    else delete next.sections;
+    this._commit(next);
+  }
+
+  _patchSec(i, patch) {
+    const secs = [...this._secs];
+    const sec = { ...secs[i], ...patch };
+    for (const k of Object.keys(patch)) {
+      if (patch[k] === undefined || patch[k] === "" || patch[k] === null) delete sec[k];
+    }
+    secs[i] = sec;
+    this._setSecs(secs);
+  }
+
+  _moveSec(i, d) {
+    const secs = [...this._secs];
+    const j = i + d;
+    if (j < 0 || j >= secs.length) return;
+    [secs[i], secs[j]] = [secs[j], secs[i]];
+    this._setSecs(secs);
+  }
+
+  _addSec() {
+    const idx = this._secs.length;
+    this._setSecs([...this._secs, { title: "New section", style: "section", cards: [] }]);
+    this._secIdx = idx;
+  }
+
+  _patchCards(i, cards) {
+    this._patchSec(i, { cards });
+  }
+
+  /* ---- views ---------------------------------------------------------------- */
+
+  render() {
+    if (!this.hass || !this._config) return html``;
+    if (this._secIdx != null && this._cardIdx != null) return this._renderCardView();
+    if (this._secIdx != null) return this._renderSectionView();
+    return super.render();
+  }
+
+  _back(label, onClick) {
+    return html`
+      <div style="display:flex;align-items:center;gap:8px;margin:4px 0 14px;">
+        <button style=${ICON_BTN} @click=${onClick}><ha-icon icon="mdi:arrow-left"></ha-icon></button>
+        <span style="font-weight:600;font-size:15px;">${label}</span>
+      </div>
+    `;
+  }
+
+  _sel(label, selector, value, onChange) {
+    return html`
+      <div style="margin-bottom:12px;" @value-changed=${(e) => { e.stopPropagation(); onChange(e.detail.value); }}>
+        <ha-selector .hass=${this.hass} .selector=${selector} .value=${value} .label=${label}></ha-selector>
+      </div>
+    `;
+  }
+
+  /* Sections manager appended to the normal editor. */
+  _renderExtra() {
+    return html`
+      <ha-expansion-panel outlined .header=${"Extra sections"} .secondary=${"Wallet sections or menus below Zones/Water heater"} .expanded=${true}>
+        <ha-icon slot="leading-icon" icon="mdi:wallet-outline"></ha-icon>
+        <div style="padding:12px;">
+          ${this._secs.map((s, i) => html`
+            <div style=${ROW} @click=${() => { this._secIdx = i; }}>
+              <span style="opacity:.6;font-weight:600;">${i + 1}</span>
+              <span style="flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                ${s.title || (s.style === "menu" ? "Menu" : "Section")}
+              </span>
+              <span style="opacity:.6;font-size:12px;">${s.style === "menu" ? "menu" : `${(s.cards || []).length} cards`}</span>
+              <button style=${ICON_BTN} title="Move up" @click=${(e) => { e.stopPropagation(); this._moveSec(i, -1); }}><ha-icon icon="mdi:arrow-up"></ha-icon></button>
+              <button style=${ICON_BTN} title="Move down" @click=${(e) => { e.stopPropagation(); this._moveSec(i, 1); }}><ha-icon icon="mdi:arrow-down"></ha-icon></button>
+              <button style=${ICON_BTN} title="Edit" @click=${(e) => { e.stopPropagation(); this._secIdx = i; }}><ha-icon icon="mdi:pencil"></ha-icon></button>
+              <button style=${ICON_BTN} title="Delete" @click=${(e) => { e.stopPropagation(); this._setSecs(this._secs.filter((_, j) => j !== i)); }}><ha-icon icon="mdi:delete"></ha-icon></button>
+            </div>
+          `)}
+          <button style=${ADD_BTN} @click=${() => this._addSec()}>
+            <ha-icon icon="mdi:plus" style="--mdc-icon-size:16px;"></ha-icon>Add section
+          </button>
+        </div>
+      </ha-expansion-panel>
+    `;
+  }
+
+  _renderSectionView() {
+    const i = this._secIdx;
+    const s = this._secs[i];
+    if (!s) {
+      this._secIdx = null;
+      return html``;
+    }
+    const style = s.style === "menu" ? "menu" : "section";
+    return html`
+      ${this._back(s.title || `Section ${i + 1}`, () => { this._secIdx = null; })}
+      ${this._sel("Title", { text: {} }, s.title, (v) => this._patchSec(i, { title: v }))}
+      ${this._sel("Icon", { icon: {} }, s.icon, (v) => this._patchSec(i, { icon: v }))}
+      ${this._sel("Style", { select: { mode: "dropdown", options: [
+        { value: "section", label: "Wallet section (nested cards)" },
+        { value: "menu", label: "Menu (tap opens options)" },
+      ] } }, style, (v) => this._patchSec(i, { style: v }))}
+      ${style === "menu" ? this._renderMenuFields(i, s) : this._renderSectionCards(i, s)}
+    `;
+  }
+
+  /* Menu style: entity options come free; manual options: label/value/icon. */
+  _renderMenuFields(i, s) {
+    const opts = s.options || [];
+    const patchOpt = (oi, patch) => {
+      const next = opts.map((o, j) => (j === oi ? { ...o, ...patch } : o));
+      for (const k of Object.keys(patch)) {
+        if (patch[k] === "" || patch[k] == null) delete next[oi][k];
+      }
+      this._patchSec(i, { options: next });
+    };
+    return html`
+      ${this._sel("Entity (select / input_select / water_heater)", { entity: {} }, s.entity, (v) => this._patchSec(i, { entity: v }))}
+      <div style="font-weight:600;font-size:13px;margin:6px 0 8px;">Manual options (override the entity's)</div>
+      ${opts.map((o, oi) => html`
+        <div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:8px;">
+          <div style="flex:1;" @value-changed=${(e) => { e.stopPropagation(); patchOpt(oi, { label: e.detail.value }); }}>
+            <ha-selector .hass=${this.hass} .selector=${{ text: {} }} .value=${o.label} .label=${"Label"}></ha-selector>
+          </div>
+          <div style="flex:1;" @value-changed=${(e) => { e.stopPropagation(); patchOpt(oi, { value: e.detail.value }); }}>
+            <ha-selector .hass=${this.hass} .selector=${{ text: {} }} .value=${o.value} .label=${"Value"}></ha-selector>
+          </div>
+          <div style="flex:1;" @value-changed=${(e) => { e.stopPropagation(); patchOpt(oi, { icon: e.detail.value }); }}>
+            <ha-selector .hass=${this.hass} .selector=${{ icon: {} }} .value=${o.icon} .label=${"Icon"}></ha-selector>
+          </div>
+          <button style="${ICON_BTN}margin-top:12px;" title="Remove option"
+            @click=${() => this._patchSec(i, { options: opts.filter((_, j) => j !== oi) })}>
+            <ha-icon icon="mdi:delete"></ha-icon>
+          </button>
+        </div>
+      `)}
+      <button style=${ADD_BTN} @click=${() => this._patchSec(i, { options: [...opts, { label: "", value: "" }] })}>
+        <ha-icon icon="mdi:plus" style="--mdc-icon-size:16px;"></ha-icon>Add option
+      </button>
+    `;
+  }
+
+  /* Section style: cards list + HA's own picker to add. */
+  _renderSectionCards(i, s) {
+    const cards = s.cards || [];
+    const move = (ci, d) => {
+      const j = ci + d;
+      if (j < 0 || j >= cards.length) return;
+      const next = [...cards];
+      [next[ci], next[j]] = [next[j], next[ci]];
+      this._patchCards(i, next);
+    };
+    return html`
+      ${this._sel("Info entity (closed-bar status text)", { entity: {} }, s.info_entity, (v) => this._patchSec(i, { info_entity: v }))}
+      <div style="font-weight:600;font-size:13px;margin:6px 0 8px;">Cards</div>
+      ${cards.map((c, ci) => html`
+        <div style=${ROW} @click=${() => { this._cardIdx = ci; }}>
+          <span style="opacity:.6;font-weight:600;">${ci + 1}</span>
+          <span style="flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.type || "card"}</span>
+          <button style=${ICON_BTN} title="Move up" @click=${(e) => { e.stopPropagation(); move(ci, -1); }}><ha-icon icon="mdi:arrow-up"></ha-icon></button>
+          <button style=${ICON_BTN} title="Move down" @click=${(e) => { e.stopPropagation(); move(ci, 1); }}><ha-icon icon="mdi:arrow-down"></ha-icon></button>
+          <button style=${ICON_BTN} title="Edit" @click=${(e) => { e.stopPropagation(); this._cardIdx = ci; }}><ha-icon icon="mdi:pencil"></ha-icon></button>
+          <button style=${ICON_BTN} title="Delete" @click=${(e) => { e.stopPropagation(); this._patchCards(i, cards.filter((_, j) => j !== ci)); }}><ha-icon icon="mdi:delete"></ha-icon></button>
+        </div>
+      `)}
+      ${this._huiReady
+        ? html`<hui-card-picker
+            .hass=${this.hass}
+            @config-changed=${(e) => { e.stopPropagation(); this._patchCards(i, [...cards, e.detail.config]); }}
+          ></hui-card-picker>`
+        : html`<div style="opacity:.7;font-size:12px;margin-top:8px;">Card picker unavailable — add cards via the YAML editor.</div>`}
+    `;
+  }
+
+  _renderCardView() {
+    const i = this._secIdx;
+    const ci = this._cardIdx;
+    const card = this._secs[i]?.cards?.[ci];
+    if (!card) {
+      this._cardIdx = null;
+      return html``;
+    }
+    return html`
+      ${this._back(card.type || "Card", () => { this._cardIdx = null; })}
+      ${customElements.get("hui-card-element-editor")
+        ? html`<hui-card-element-editor
+            .hass=${this.hass}
+            .value=${card}
+            @config-changed=${(e) => {
+              e.stopPropagation();
+              const cards = [...(this._secs[i].cards || [])];
+              cards[ci] = e.detail.config;
+              this._patchCards(i, cards);
+            }}
+          ></hui-card-element-editor>`
+        : nothing}
+    `;
+  }
+
+  /* ---- the regular field groups --------------------------------------------- */
 
   get _sections() {
     return [
@@ -16,7 +267,7 @@ class MateriaClimatePocEditor extends SmartEditorBase {
           {
             name: "zones",
             label: "Zone valves",
-            helper: "Per-zone names, icons and temp sensors: use zones: [{entity, name, icon, temp_entity}] in YAML.",
+            helper: "Per-zone names, icons and temp sensors: zones: [{entity, name, icon, temp_entity}] in YAML.",
             selector: { entity: { domain: "switch", multiple: true } },
           },
           { name: "zone_icon", label: "Zone icon (e.g. mdi:heating-coil for underfloor)", selector: { icon: {} } },
@@ -41,9 +292,8 @@ class MateriaClimatePocEditor extends SmartEditorBase {
         ],
       },
       {
-        title: "Sections",
-        icon: "mdi:wallet-outline",
-        secondary: "Zones and Water heater appear automatically",
+        title: "Built-in sections",
+        icon: "mdi:radiator",
         fields: [
           { name: "water", label: "Water heater style", selector: { select: { mode: "dropdown", options: [
             { value: "menu", label: "Menu (tap opens operation modes)" },
@@ -52,12 +302,6 @@ class MateriaClimatePocEditor extends SmartEditorBase {
           { name: "reserve_height", label: "Keep the height of the tallest section (no reflow when cycling)", selector: { boolean: {} } },
           { name: "zones_title", label: "Zones section title", selector: { text: {} } },
           { name: "water_title", label: "Water heater section title", selector: { text: {} } },
-          {
-            name: "sections",
-            label: "Extra sections (YAML)",
-            helper: 'Each extra section is {title, icon, info_entity?, cards: [...]} — e.g. a Schedule section with any cards inside.',
-            selector: { object: {} },
-          },
         ],
       },
     ];

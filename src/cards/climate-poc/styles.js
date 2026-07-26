@@ -48,14 +48,14 @@ export const styles = [
       display: block;
     }
 
-    /* Water heater as a menu segment: the seg provides the group silhouette,
-       the embedded materia-menu goes transparent inside it. NO extra padding —
-       the trigger's own 18px inset already matches the accordion bars. */
-    .stack > .seg.water-menu {
+    /* Menu-style section: the seg provides the group silhouette, the embedded
+       materia-menu goes transparent inside it. NO extra padding — the
+       trigger's own 18px inset already matches the accordion bars. */
+    .stack > .seg.menu-seg {
       padding: 0;
     }
 
-    .seg.water-menu materia-menu {
+    .seg.menu-seg materia-menu {
       --ha-card-background: transparent;
       display: block;
     }
