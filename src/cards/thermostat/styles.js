@@ -130,6 +130,36 @@ export const styles = [
       margin-top: calc(-1 * clamp(8px, 4cqi, 20px));
     }
 
+    /* Side-mounted vertical pair: + on top (up = warmer), anchored to the
+       dial's right edge at its vertical center — thumb-zone friendly. */
+    .nudge.vertical {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      flex-direction: column;
+      margin: 0;
+      width: auto;
+    }
+
+    .nudge.vertical .seg {
+      width: clamp(44px, 15cqi, 54px);
+      height: clamp(44px, 15cqi, 52px);
+    }
+
+    .nudge.vertical .seg.plus {
+      border-radius: 999px 999px 8px 8px;
+    }
+
+    .nudge.vertical .seg.minus {
+      border-radius: 8px 8px 999px 999px;
+    }
+
+    .nudge.vertical .seg:active {
+      border-radius: 999px;
+      flex-grow: 1.3;
+    }
+
     /* M3 Expressive connected pair: outer corners pill, inner corners small
        (the connected-group silhouette). Pressing a segment EXPANDS it while
        its neighbor compresses (animated flex-grow) and its shape morphs to a

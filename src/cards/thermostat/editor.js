@@ -18,6 +18,10 @@ class MateriaThermostatEditor extends SmartEditorBase {
           { name: "max_temp", label: "Dial max (default: entity)", selector: { number: { min: 0, max: 60, step: 0.5, mode: "box" } } },
           { name: "show_current", label: "Show current temperature", selector: { boolean: {} } },
           { name: "current_label", label: '"Currently" label', selector: { text: {} } },
+          { name: "steppers", label: "Stepper placement", selector: { select: { mode: "dropdown", options: [
+            { value: "below", label: "Below the dial" },
+            { value: "side", label: "Vertical, beside the dial" },
+          ] } } },
           { name: "wave", label: "Wave animation", selector: { select: { mode: "dropdown", options: [
             { value: "auto", label: "Auto (hvac_action, or inferred from temps)" },
             { value: "always", label: "Always (whenever the mode is on)" },

@@ -283,7 +283,7 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
     return html`
       <materia-thermostat
         .hass=${this.hass}
-        .config=${{ entity: this.config.entity, show_modes: false, wave: this.config.wave ?? "auto" }}
+        .config=${{ entity: this.config.entity, show_modes: false, wave: this.config.wave ?? "auto", steppers: this.config.steppers ?? "side" }}
       ></materia-thermostat>
       <div class="stack">
         <div class="seg">${this._modeGroup()}</div>

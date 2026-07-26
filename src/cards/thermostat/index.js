@@ -439,16 +439,28 @@ class MateriaThermostat extends ActionMixin(LitElement) {
               ? html`<div class="current-label">${this.config.current_label ?? "Currently"} ${Math.round(current * 10) / 10}°</div>`
               : ""}
           </div>
+          ${this.config.steppers === "side"
+            ? html`<div class="nudge vertical">
+                <button class="seg plus" @click=${() => this._nudge(this._step)}>
+                  <ha-icon icon="mdi:plus"></ha-icon>
+                </button>
+                <button class="seg minus" @click=${() => this._nudge(-this._step)}>
+                  <ha-icon icon="mdi:minus"></ha-icon>
+                </button>
+              </div>`
+            : ""}
         </div>
 
-        <div class="nudge">
-          <button class="seg minus" @click=${() => this._nudge(-this._step)}>
-            <ha-icon icon="mdi:minus"></ha-icon>
-          </button>
-          <button class="seg plus" @click=${() => this._nudge(this._step)}>
-            <ha-icon icon="mdi:plus"></ha-icon>
-          </button>
-        </div>
+        ${this.config.steppers === "side"
+          ? ""
+          : html`<div class="nudge">
+              <button class="seg minus" @click=${() => this._nudge(-this._step)}>
+                <ha-icon icon="mdi:minus"></ha-icon>
+              </button>
+              <button class="seg plus" @click=${() => this._nudge(this._step)}>
+                <ha-icon icon="mdi:plus"></ha-icon>
+              </button>
+            </div>`}
 
         ${this.config.show_modes !== false && modes.length
           ? html`<materia-button-group
