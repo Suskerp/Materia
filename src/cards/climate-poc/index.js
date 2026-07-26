@@ -232,12 +232,16 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
     // One wallet section is always open — default to the first non-menu one.
     const firstAcc = secs.findIndex((s) => s.style !== "menu");
     const open = this._openSection ?? firstAcc;
-    // Accents (zone switches etc.) sync to the active mode's palette.
-    const [modeAccent, modeContainer] = MODE_COLORS[this._entity.state] ?? MODE_COLORS.off;
+    // Mode sync via inherited CSS vars: every nested materia-switch picks up
+    // the active mode's pair (strong accent track, light container thumb) —
+    // no per-row templates needed. Mode off → unset → the spec primary pair.
+    const mode = this._entity.state;
+    const sync = mode !== "off" && MODE_COLORS[mode];
+    const [modeAccent, modeContainer] = MODE_COLORS[mode] ?? MODE_COLORS.off;
     // The accordion sections LIVE IN the connected stack (2px seams, group
     // silhouette): closed bars are compact segments, the open one grows tall.
     return html`
-      <ha-card class="poc" style="--poc-mode-accent:${modeAccent};--poc-mode-container:${modeContainer};">
+      <ha-card class="poc" style=${sync ? `--ms-track:${modeAccent};--ms-thumb:${modeContainer};` : ""}>
         <materia-thermostat
           .hass=${this.hass}
           .config=${{
