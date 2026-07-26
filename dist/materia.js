@@ -2632,12 +2632,13 @@ const w=globalThis,$=t=>t,k=w.trustedTypes,C=k?k.createPolicy("lit-html",{create
       transition: d var(--md-sys-motion-default-effects);
     }
 
-    /* Slow rotation while the entity is active — reads as "working", not a
-       spinner. transform-box makes the path rotate around its own center. */
+    /* Barely-there rotation while the entity is active — ambient "working"
+       drift, never a spinner. One lobe-step takes ~19s; you notice it only
+       when you look for it. transform-box rotates around the path's center. */
     .spin {
       transform-box: fill-box;
       transform-origin: center;
-      animation: ms-spin 36s linear infinite;
+      animation: ms-spin 150s linear infinite;
     }
 
     @keyframes ms-spin {
@@ -2646,8 +2647,21 @@ const w=globalThis,$=t=>t,k=w.trustedTypes,C=k?k.createPolicy("lit-html",{create
       }
     }
 
+    /* Liquid drift: slide by exactly one wave period (50 units) to loop.
+       Slow enough to read as water settling, not a marquee. */
+    .level-fill.drift {
+      animation: ms-drift 11s linear infinite;
+    }
+
+    @keyframes ms-drift {
+      to {
+        transform: translateX(50px);
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
-      .spin {
+      .spin,
+      .level-fill.drift {
         animation: none;
       }
     }
@@ -2819,19 +2833,19 @@ const w=globalThis,$=t=>t,k=w.trustedTypes,C=k?k.createPolicy("lit-html",{create
       >
         ${e}
       </ha-card>
-    `}_header(t){return I`<div class="header"><ha-icon icon=${this._icon(t)}></ha-icon><span>${this._name}</span></div>`}_percent(){const t=this._num(this._stateObj.state);if(null==t)return this._plain();const e=Math.min(1,Math.max(0,t/100)),i=this._stateObj.attributes.device_class;let s=null;"battery"===i?s=e>.4?Le:e>.15?Ie:We:"humidity"!==i&&"moisture"!==i||(s=je);const o=ve(50,52,45,12),n=97-90*e,a="battery"===i?"mdi:battery":"mdi:water-percent";return I`
+    `}_header(t){return I`<div class="header"><ha-icon icon=${this._icon(t)}></ha-icon><span>${this._name}</span></div>`}_percent(){const t=this._num(this._stateObj.state);if(null==t)return this._plain();const e=Math.min(1,Math.max(0,t/100)),i=this._stateObj.attributes.device_class;let s=null;"battery"===i?s=e>.4?Le:e>.15?Ie:We:"humidity"!==i&&"moisture"!==i||(s=je);const o=ve(50,52,45,12),n=97-90*e,a="humidity"===i||"moisture"===i;let r;if(a){let t=`M-100 ${n.toFixed(1)}`;for(let e=-100;e<100;e+=25){t+=` Q ${e+12.5} ${(n+(e/25%2==0?-1.6:1.6)).toFixed(1)} ${e+25} ${n.toFixed(1)}`}r=t+" V102 H-100 Z"}else r=`M-2 ${n+2.5} Q 50 ${n-2.5} 102 ${n+2.5} V102 H-2 Z`;const l="battery"===i?"mdi:battery":"mdi:water-percent";return I`
       <div class="shape-tile">
         <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
           <defs>
             <clipPath id="ms-clip-${this._uid}"><path d=${o} /></clipPath>
           </defs>
           <path d=${o} class="shape-fill" />
-          ${e>.005?W`<path d="M-2 ${n+2.5} Q 50 ${n-2.5} 102 ${n+2.5} V102 H-2 Z"
-                class="level-fill" style=${s?`fill:${s}`:""}
+          ${e>.005?W`<path d=${r}
+                class="level-fill ${a?"drift":""}" style=${s?`fill:${s}`:""}
                 clip-path="url(#ms-clip-${this._uid})" />`:""}
         </svg>
         <div class="overlay">
-          ${this._header(a)}
+          ${this._header(l)}
           <div class="big">${Math.round(t)}<span class="unit">%</span></div>
           ${this.config.label?I`<div class="sub">${this.config.label}</div>`:""}
         </div>
@@ -5825,4 +5839,4 @@ const fi=2;
           <circle class="pin" cx="50" cy="50" r="2.4"></circle>
         </svg>
       </ha-card>
-    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const t=document.createElement("style");t.id="materia-fonts",t.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(t)}();console.info("%c MATERIA %c v0.5.104 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");
+    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const t=document.createElement("style");t.id="materia-fonts",t.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(t)}();console.info("%c MATERIA %c v0.5.105 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");

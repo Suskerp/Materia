@@ -73,12 +73,13 @@ export const styles = [
       transition: d var(--md-sys-motion-default-effects);
     }
 
-    /* Slow rotation while the entity is active — reads as "working", not a
-       spinner. transform-box makes the path rotate around its own center. */
+    /* Barely-there rotation while the entity is active — ambient "working"
+       drift, never a spinner. One lobe-step takes ~19s; you notice it only
+       when you look for it. transform-box rotates around the path's center. */
     .spin {
       transform-box: fill-box;
       transform-origin: center;
-      animation: ms-spin 36s linear infinite;
+      animation: ms-spin 150s linear infinite;
     }
 
     @keyframes ms-spin {
@@ -87,8 +88,21 @@ export const styles = [
       }
     }
 
+    /* Liquid drift: slide by exactly one wave period (50 units) to loop.
+       Slow enough to read as water settling, not a marquee. */
+    .level-fill.drift {
+      animation: ms-drift 11s linear infinite;
+    }
+
+    @keyframes ms-drift {
+      to {
+        transform: translateX(50px);
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
-      .spin {
+      .spin,
+      .level-fill.drift {
         animation: none;
       }
     }

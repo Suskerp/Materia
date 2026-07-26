@@ -164,9 +164,23 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     if (dc === "battery") fill = frac > 0.4 ? SCALE.green : frac > 0.15 ? SCALE.orange : SCALE.red;
     else if (dc === "humidity" || dc === "moisture") fill = SCALE.blue;
     const cookie = materialCookiePath(50, 52, 45, 12);
-    // Liquid surface: a single soft dome, eased when the value changes —
-    // deliberately calmer than the weather humidity's drifting scallops.
     const y = 97 - frac * 90; // cookie spans y ≈ 7..97
+    // Liquid surface. Water-like values (humidity/moisture) get a gentle wave
+    // that drifts almost imperceptibly; everything else (battery…) stays a
+    // still soft dome. Deliberately calmer than the weather tile's scallops.
+    const liquid = dc === "humidity" || dc === "moisture";
+    let surface;
+    if (liquid) {
+      // Low sine-ish wave, period 50 — drifting by one period loops seamlessly.
+      let d = `M-100 ${y.toFixed(1)}`;
+      for (let x = -100; x < 100; x += 25) {
+        const dip = (x / 25) % 2 === 0 ? -1.6 : 1.6;
+        d += ` Q ${x + 12.5} ${(y + dip).toFixed(1)} ${x + 25} ${y.toFixed(1)}`;
+      }
+      surface = d + " V102 H-100 Z";
+    } else {
+      surface = `M-2 ${y + 2.5} Q 50 ${y - 2.5} 102 ${y + 2.5} V102 H-2 Z`;
+    }
     const icon = dc === "battery" ? "mdi:battery" : "mdi:water-percent";
     return html`
       <div class="shape-tile">
@@ -176,8 +190,8 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
           </defs>
           <path d=${cookie} class="shape-fill" />
           ${frac > 0.005
-            ? svg`<path d="M-2 ${y + 2.5} Q 50 ${y - 2.5} 102 ${y + 2.5} V102 H-2 Z"
-                class="level-fill" style=${fill ? `fill:${fill}` : ""}
+            ? svg`<path d=${surface}
+                class="level-fill ${liquid ? "drift" : ""}" style=${fill ? `fill:${fill}` : ""}
                 clip-path="url(#ms-clip-${this._uid})" />`
             : ""}
         </svg>
