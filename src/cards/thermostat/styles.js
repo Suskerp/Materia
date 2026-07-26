@@ -126,7 +126,7 @@ export const styles = [
 
     .nudge {
       display: flex;
-      gap: 3px;
+      gap: 2px; /* connected-group spec seam */
       margin-top: calc(-1 * clamp(8px, 4cqi, 20px));
     }
 
@@ -197,7 +197,7 @@ export const styles = [
       flex-direction: column;
       margin: 0;
       width: auto;
-      gap: 3px;
+      gap: 2px;
     }
 
     .nudge.vertical .seg {

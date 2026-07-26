@@ -219,7 +219,7 @@ export const styles = [
     /* ---- steppers (shared) -------------------------------------------------- */
     .steppers {
       display: flex;
-      gap: 3px;
+      gap: 2px; /* connected-group spec seam */
     }
 
     .steppers .step {
