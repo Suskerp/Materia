@@ -13,12 +13,12 @@ function compass(deg) {
 // Severity scale — harmonizable theme tokens (add scale-* entries to
 // custom_colors.json to tint them to the wallpaper) with hex fallbacks.
 const SCALE = {
-  green: "var(--md-sys-cust-color-scale-green, #7BC96A)",
-  yellow: "var(--md-sys-cust-color-scale-yellow, #F7D154)",
-  orange: "var(--md-sys-cust-color-scale-orange, #F58B4C)",
-  red: "var(--md-sys-cust-color-scale-red, #E4574C)",
-  purple: "var(--md-sys-cust-color-scale-purple, #9E5BB7)",
-  maroon: "var(--md-sys-cust-color-scale-maroon, #8A4B4B)",
+  green: "var(--md-sys-cust-color-scale-green, #5E9E50)",
+  yellow: "var(--md-sys-cust-color-scale-yellow, #C7A128)",
+  orange: "var(--md-sys-cust-color-scale-orange, #D9713C)",
+  red: "var(--md-sys-cust-color-scale-red, #C94D42)",
+  purple: "var(--md-sys-cust-color-scale-purple, #8A4DA3)",
+  maroon: "var(--md-sys-cust-color-scale-maroon, #7A4040)",
 };
 
 const UV_LEVELS = [

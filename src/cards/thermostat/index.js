@@ -6,14 +6,16 @@ import "./editor.js";
 const DIAL_START = -135; // degrees, 0 = 12 o'clock
 const DIAL_SWEEP = 270;
 
+// color = the strong accent (sweep/knobs/active mode bg) — per the theme's
+// climate-*-accent tokens; on = readable content color on that accent.
 const MODE_META = {
-  auto: { icon: "mdi:thermostat-auto", color: "var(--md-sys-cust-color-climate-auto, var(--md-sys-color-primary))" },
-  heat_cool: { icon: "mdi:autorenew", color: "var(--md-sys-cust-color-climate-auto, var(--md-sys-color-primary))" },
-  heat: { icon: "mdi:fire", color: "var(--md-sys-cust-color-climate-heat, #ff8a65)" },
-  cool: { icon: "mdi:snowflake", color: "var(--md-sys-cust-color-climate-cool, #64b5f6)" },
-  dry: { icon: "mdi:water-percent", color: "var(--md-sys-cust-color-climate-auto, var(--md-sys-color-primary))" },
-  fan_only: { icon: "mdi:fan", color: "var(--md-sys-color-secondary)" },
-  off: { icon: "mdi:power", color: "var(--md-sys-color-on-surface-variant)" },
+  auto: { icon: "mdi:thermostat-auto", color: "var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", on: "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-on-primary))" },
+  heat_cool: { icon: "mdi:autorenew", color: "var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", on: "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-on-primary))" },
+  heat: { icon: "mdi:fire", color: "var(--md-sys-cust-color-climate-heat-accent, #a14614)", on: "var(--md-sys-cust-color-climate-heat-container, #ffeee9)" },
+  cool: { icon: "mdi:snowflake", color: "var(--md-sys-cust-color-climate-cool-accent, #327ea7)", on: "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)" },
+  dry: { icon: "mdi:water-percent", color: "var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", on: "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-on-primary))" },
+  fan_only: { icon: "mdi:fan", color: "var(--md-sys-color-secondary)", on: "var(--md-sys-color-on-secondary)" },
+  off: { icon: "mdi:power", color: "var(--md-sys-color-on-surface-variant)", on: "var(--md-sys-color-surface)" },
 };
 
 /**
@@ -285,10 +287,12 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     }
 
     // Wave/accent color follows the *action* when running, else the mode.
-    const accent =
-      action === "heating" ? MODE_META.heat.color
-      : action === "cooling" ? MODE_META.cool.color
-      : meta.color;
+    const accentMeta =
+      action === "heating" ? MODE_META.heat
+      : action === "cooling" ? MODE_META.cool
+      : meta;
+    const accent = accentMeta.color;
+    const accentOn = accentMeta.on;
 
     const modeLabel = this.hass.formatEntityState?.(stateObj) ?? mode;
     const unit = this.hass.config?.unit_system?.temperature ?? "°C";
@@ -365,7 +369,7 @@ class MateriaThermostat extends ActionMixin(LitElement) {
                 size: this.config.mode_size ?? "l",
                 variant: "tonal",
                 color_active: accent,
-                color_on_active: "var(--md-sys-color-surface, #fff)",
+                color_on_active: accentOn,
                 options: modes.map((m) => ({
                   icon: MODE_META[m].icon,
                   value: m,

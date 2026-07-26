@@ -34,7 +34,13 @@
       "weather-cloud-dark": "#6F7A8A",
       "weather-rain": "#2E86E0",
       "weather-snow": "#AEB8C4",
-      "weather-moon": "#5961C2"
+      "weather-moon": "#5961C2",
+      "scale-green": "#5E9E50",
+      "scale-yellow": "#C7A128",
+      "scale-orange": "#D9713C",
+      "scale-red": "#C94D42",
+      "scale-purple": "#8A4DA3",
+      "scale-maroon": "#7A4040"
     }
   },
   "dark": {
@@ -72,7 +78,13 @@
       "weather-cloud-dark": "#C7CEDA",
       "weather-rain": "#5FA8F5",
       "weather-snow": "#FFFFFF",
-      "weather-moon": "#DCE3F7"
+      "weather-moon": "#DCE3F7",
+      "scale-green": "#7BC96A",
+      "scale-yellow": "#F7D154",
+      "scale-orange": "#F58B4C",
+      "scale-red": "#E4574C",
+      "scale-purple": "#9E5BB7",
+      "scale-maroon": "#8A4B4B"
     }
   }
 }

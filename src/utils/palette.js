@@ -89,6 +89,17 @@ export const COLOR_GROUPS = [
     ],
   },
   {
+    title: "Severity scale",
+    options: [
+      cust("scale-green", "Scale green", "#5E9E50"),
+      cust("scale-yellow", "Scale yellow", "#C7A128"),
+      cust("scale-orange", "Scale orange", "#D9713C"),
+      cust("scale-red", "Scale red", "#C94D42"),
+      cust("scale-purple", "Scale purple", "#8A4DA3"),
+      cust("scale-maroon", "Scale maroon", "#7A4040"),
+    ],
+  },
+  {
     title: "System (theme)",
     options: [
       sys("primary", "Primary"),
