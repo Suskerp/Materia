@@ -480,7 +480,10 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
         return { label, icon, frac, levelLabel, color };
       })
       .filter(Boolean)
-      .filter((k) => (this.config.hide_inactive ? k.frac > 0 : true));
+      .filter((k) => (this.config.hide_inactive ? k.frac > 0 : true))
+      // Single row: sort by severity and keep only the worst offenders.
+      .sort((a, b) => b.frac - a.frac)
+      .slice(0, this.config.max_shown ?? 4);
     if (!kinds.length) {
       const configured = (this.config.entities?.length) || this.config.grass_entity || this.config.tree_entity || this.config.weed_entity;
       return configured

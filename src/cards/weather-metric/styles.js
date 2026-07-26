@@ -295,14 +295,15 @@ export const styles = [
       --mdc-icon-size: 17px;
     }
 
-    /* Pollen gauges — wraps for integrations with many species (KMI has 7). */
+    /* Pollen gauges — always a single row; the card sorts by severity and
+       shows only the top max_shown species. */
     .gauges {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       justify-content: space-evenly;
       width: 100%;
       gap: 8px;
-      row-gap: 12px;
+      min-width: 0;
     }
 
     .gauge {

@@ -74,6 +74,7 @@ class MateriaWeatherMetricEditor extends SmartEditorBase {
     if (m === "pollen") {
       extras.fields.push(
         { name: "entities", label: "Pollen sensors", selector: { entity: { domain: "sensor", multiple: true } } },
+        { name: "max_shown", label: "Max gauges shown (worst first)", selector: { number: { min: 1, max: 6, step: 1, mode: "slider" } } },
         { name: "hide_inactive", label: "Hide species at 'none'", selector: { boolean: {} } },
         { name: "max", label: "Scale max for numeric sensors (default 4)", selector: { number: { min: 1, max: 10, mode: "box" } } },
       );
