@@ -347,7 +347,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
       ? `${this.config.menu_color ? `--_surf:${this.config.menu_color};` : ""}${this.config.menu_color_on ? `color:${this.config.menu_color_on};` : ""}`
       : "";
     return html`
-      <div class="portal-panel ${pos} ${this._closing ? "closing" : ""}">
+      <div class="portal-panel ${pos} ${expressive ? "exp" : ""} ${this._closing ? "closing" : ""}">
         <div class="dropdown ${expressive ? "expressive" : ""}" style=${panelStyle + customPanel}>
           ${options.map((opt) => html`
             <div

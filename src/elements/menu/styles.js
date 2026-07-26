@@ -179,7 +179,12 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     --menu-selected-fg: var(--md-sys-color-on-tertiary, #fff);
     padding: 10px 8px;
     min-width: 200px;
-    /* Clearly lifted off the page — M3 level-2 shadow pair. */
+  }
+
+  /* Elevation lives on the PANEL, not the dropdown — the panel is the scroll
+     container (overflow-y: auto) and would clip a child's shadow to a rect. */
+  .portal-panel.exp {
+    border-radius: 28px;
     box-shadow:
       0 4px 8px 3px rgba(0, 0, 0, 0.15),
       0 1px 3px rgba(0, 0, 0, 0.3);
