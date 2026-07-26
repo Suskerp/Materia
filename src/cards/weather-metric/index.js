@@ -186,7 +186,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     const size = Math.min(10, Math.max(1, this.config.size ?? 10));
     return html`
       <ha-card
-        style="--wm-size:${sizes[size - 1]};${bg ? `--wm-color:${bg};` : ""}${fg ? `--wm-color-on:${fg};` : ""}"
+        style="--wm-size:${sizes[size - 1]};${bg ? `--wm-color:${bg};` : ""}${fg ? `--wm-color-on:${fg};` : ""}${this.config.shape_color ? `--wm-shape:${this.config.shape_color};` : ""}"
         @click=${() => this._handleAction(this.config.tap_action || (this.config.sensor || this.config.entity ? { action: "more-info", entity: this.config.sensor || this.config.entity } : undefined))}
       >
         ${body}

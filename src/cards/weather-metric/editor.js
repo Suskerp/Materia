@@ -50,6 +50,7 @@ class MateriaWeatherMetricEditor extends SmartEditorBase {
           { value: "kn", label: "knots" },
           { value: "bft", label: "Beaufort" },
         ] } } },
+        { name: "shape_color", label: "Blob color (overrides default)", color: true, selector: { text: {} } },
         { name: "bearing_entity", label: "Bearing sensor (optional)", selector: { entity: { domain: "sensor" } } },
         { name: "from_label", label: '"From" label', selector: { text: {} } },
       );

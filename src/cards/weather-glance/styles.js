@@ -8,10 +8,16 @@ export const styles = [
   unavailableStyles,
   motionTokens,
   css`
+    :host {
+      height: 100%;
+    }
+
     ha-card {
       background: transparent;
       box-shadow: none;
       border: none;
+      height: 100%;
+      display: flex;
     }
 
     .glance {
