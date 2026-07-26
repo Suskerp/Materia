@@ -46,9 +46,9 @@ export const styles = [
 
     materia-thermostat {
       display: block;
-      /* Trim the embedded dial's bottom padding — the panel's own gap is the
-         separation; stacking both read as a hole between hero and stack. */
-      --th-padding: clamp(8px, 4cqi, 18px) clamp(12px, 5cqi, 24px) 2px;
+      /* Trim the embedded dial's padding — halved top edge, the panel's own
+         gap is the hero/stack separation; stacking both read as a hole. */
+      --th-padding: clamp(4px, 2cqi, 9px) clamp(12px, 5cqi, 24px) 2px;
     }
 
     /* Menu-style section: the seg provides the group silhouette, the embedded
@@ -173,7 +173,7 @@ export const styles = [
       display: flex;
       flex-direction: column;
       gap: 8px;
-      padding: 0 12px 14px;
+      padding: 0 12px 8px; /* halved bottom edge of the open section */
     }
   `,
 ];
