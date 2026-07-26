@@ -22,6 +22,8 @@ export const styles = [
 
     .glance {
       container-type: inline-size;
+      flex: 1; /* fill the flexed ha-card — without this the pill shrinks to content */
+      width: 100%;
       min-height: 88px; /* same height as the materia-card family */
       box-sizing: border-box;
       display: flex;
