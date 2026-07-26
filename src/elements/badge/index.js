@@ -112,8 +112,11 @@ class MateriaBadge extends ActionMixin(LitElement) {
     const variant = this.config.variant || "secondary";
     const showState = this.config.show_state;
 
-    let bgColor = this._resolvedColor || this.config.color;
-    let textColor = this._resolvedColorOn || this.config.color_on;
+    // Template colors: use ONLY the resolved value — an empty result means
+    // "no override, use the variant color". Falling back to the raw template
+    // string would leak invalid CSS and kill the variant's color.
+    let bgColor = this._isTemplate(this.config.color) ? (this._resolvedColor || "").trim() : this.config.color;
+    let textColor = this._isTemplate(this.config.color_on) ? (this._resolvedColorOn || "").trim() : this.config.color_on;
 
     const alwaysColoredVariants = ["primary", "tertiary", "error", "primary-container", "secondary-container", "error-container", "device-container"];
 
