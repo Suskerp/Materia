@@ -27,6 +27,10 @@ class MateriaThermostatEditor extends SmartEditorBase {
             { value: "always", label: "Always (whenever the mode is on)" },
             { value: "never", label: "Never" },
           ] } } },
+          { name: "wave_span", label: "Wave span (needs a current temp)", selector: { select: { mode: "dropdown", options: [
+            { value: "between", label: "Between current & target" },
+            { value: "full", label: "The whole filled arc" },
+          ] } } },
         ],
       },
       {

@@ -348,6 +348,12 @@ class MateriaThermostat extends ActionMixin(LitElement) {
       // Equilibrium: the WHOLE filled arc breathes gently.
       waveStart = DIAL_START;
       waveEnd = curDeg != null ? Math.max(curDeg, endDeg) : endDeg;
+    } else if (active && curDeg != null && this.config.wave_span === "full") {
+      // wave_span: full — the entire filled arc is the living line, not just
+      // the current↔target span. The fade envelopes taper both ends, and the
+      // knobs ride on top, so there is no junction to look ragged.
+      waveStart = DIAL_START;
+      waveEnd = Math.max(curDeg, endDeg);
     } else if (active && curDeg != null) {
       solidEnd = Math.min(curDeg, endDeg);
       waveStart = solidEnd;

@@ -249,6 +249,7 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
             ...(this.config.min_temp != null ? { min_temp: this.config.min_temp } : {}),
             ...(this.config.max_temp != null ? { max_temp: this.config.max_temp } : {}),
             ...(this.config.temperature_entity ? { temperature_entity: this.config.temperature_entity } : {}),
+            ...(this.config.wave_span ? { wave_span: this.config.wave_span } : {}),
           }}
         ></materia-thermostat>
         <div class="stack ${this.config.reserve_height ? "reserve" : ""}">
