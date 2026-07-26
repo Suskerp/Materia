@@ -372,9 +372,11 @@ export const styles = [
     .gauge-center {
       position: absolute;
       top: 0;
-      left: 0;
-      right: 0;
-      aspect-ratio: 100 / 86;
+      /* Wider than the ring so longer species names (Mugwort…) can extend
+         over the open space between gauges instead of clipping. */
+      left: -14%;
+      right: -14%;
+      aspect-ratio: 128 / 86;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -389,7 +391,7 @@ export const styles = [
     .gauge-label {
       font-size: clamp(11px, 4.5cqi, 14px);
       font-weight: 600;
-      max-width: 92%;
+      max-width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
