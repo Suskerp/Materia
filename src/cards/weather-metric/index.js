@@ -568,9 +568,11 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
                 </svg>
                 <div class="gauge-center">
                   <ha-icon icon=${k.icon}></ha-icon>
-                  <span class="gauge-label">${k.label}</span>
                 </div>
-                <div class="gauge-sub">${k.levelLabel}</div>
+                <div class="gauge-sub">
+                  <span class="gauge-name">${k.label}</span>
+                  <span>${k.levelLabel}</span>
+                </div>
               </div>
             `;
           })}

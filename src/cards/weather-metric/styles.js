@@ -369,42 +369,41 @@ export const styles = [
       aspect-ratio: 100 / 86;
     }
 
+    /* Pixel layout: ONLY the icon lives inside the ring; species + level sit
+       below the gauge. Text never shares space with the ring, so nothing can
+       clip or collide at any card width. */
     .gauge-center {
       position: absolute;
       top: 0;
-      /* Wider than the ring so longer species names (Mugwort…) can extend
-         over the open space between gauges instead of clipping. */
-      left: -14%;
-      right: -14%;
-      aspect-ratio: 128 / 86;
+      left: 0;
+      right: 0;
+      aspect-ratio: 100 / 86;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 2px;
     }
 
     .gauge-center ha-icon {
-      --mdc-icon-size: clamp(18px, 8cqi, 24px);
-    }
-
-    .gauge-label {
-      font-size: clamp(11px, 4.5cqi, 14px);
-      font-weight: 600;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      --mdc-icon-size: clamp(20px, 9cqi, 28px);
     }
 
     .gauge-sub {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
       font-size: clamp(11px, 4.2cqi, 13px);
       font-weight: 500;
-      opacity: 0.8;
+      opacity: 0.85;
       text-align: center;
       line-height: 1.35;
-      margin-top: 6px;
+      margin-top: 4px;
       padding-bottom: 2px;
+    }
+
+    .gauge-name {
+      font-weight: 600;
+      font-size: clamp(12px, 4.6cqi, 14px);
+      opacity: 1;
     }
 
     /* Pollen small variant: left-aligned dot + species + level list. */
