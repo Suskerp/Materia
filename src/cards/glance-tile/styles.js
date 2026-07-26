@@ -45,13 +45,12 @@ export const styles = [
       transition: d var(--md-sys-motion-default-effects);
     }
 
-    /* Barely-there rotation while the entity is active — ambient "working"
-       drift, never a spinner. One lobe-step takes ~19s; you notice it only
-       when you look for it. transform-box rotates around the path's center. */
+    /* Ambient "working" rotation — the small corner glyph carries a livelier
+       pace than the old full-size star did (one lobe-step ≈ 5.6s). */
     .spin {
       transform-box: fill-box;
       transform-origin: center;
-      animation: ms-spin 150s linear infinite;
+      animation: ms-spin 45s linear infinite;
     }
 
     @keyframes ms-spin {

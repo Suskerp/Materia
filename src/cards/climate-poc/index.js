@@ -5,15 +5,15 @@ import { styles } from "./styles.js";
 import "./editor.js";
 
 /**
- * Climate redesign POC — the chosen layout: the materia-thermostat as hero
- * with the mode group as a connected segment, and below them a WALLET-style
- * accordion cycling between Zones and Water heater (exactly one open, muted
- * pills morph large on tap). `sections:` config appends arbitrary card
- * sections to the accordion — that's the composability.
+ * Climate surface — the materia-thermostat as hero with the mode group as a
+ * connected segment, and below them a WALLET-style accordion (exactly one
+ * section open, muted bars morph large on tap).
  *
- * Zone config: zones: [{ entity, name, temp_entity? }] — on/off valve
- * switches. State ladder derives "calling" from the climate entity actively
- * heating while the valve is open.
+ * MODULAR: every accordion section is chrome around NESTED CARDS. The
+ * built-in Zones (a nested materia-zones card) and Water heater (a nested
+ * materia-menu) are just the recommended defaults synthesized from zones:/
+ * water_heater: config; `sections: [{title, icon, info_entity?, cards}]`
+ * appends sections you fill with whatever.
  *
  * (Variants B "zones first" and C "vertical slider" were compared and
  * retired; a stray `variant:` key in old configs is ignored.)
@@ -59,10 +59,9 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
 
   updated(changedProps) {
     if (changedProps.has("hass") && this._extraEls) {
-      // Only the OPEN custom section needs live child updates.
-      const offset = (this._zones.length ? 1 : 0) + (this._waterInAcc ? 1 : 0);
-      const idx = (this._openSection ?? 0) - offset;
-      if (idx >= 0 && this._extraEls[idx]) this._extraEls[idx].forEach((el) => { el.hass = this.hass; });
+      // Only the OPEN section's nested cards need live updates.
+      const idx = this._openSection ?? 0;
+      this._extraEls[idx]?.forEach((el) => { el.hass = this.hass; });
     }
     this._reserveHeight();
   }
@@ -96,39 +95,18 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
     return cur < tgt - 0.2;
   }
 
-  /** Zone → { name, on, calling, temp, sinceMin } — the 3-state ladder. */
-  _zoneModel(z) {
-    const st = this.hass.states[z.entity];
-    const on = st?.state === "on";
-    const calling = on && this._boilerActive;
-    const temp = z.temp_entity ? this._numRaw(this.hass.states[z.temp_entity]?.state) : null;
-    let sinceMin = null;
-    if (st?.last_changed) {
-      sinceMin = Math.max(0, Math.round((Date.now() - new Date(st.last_changed).getTime()) / 60000));
-    }
-    return {
-      ...z,
-      name: z.name || st?.attributes?.friendly_name || z.entity,
-      on,
-      calling,
-      temp,
-      sinceMin,
-    };
-  }
-
+  /** Lite zone model — only what the section bar needs (counts + all off/on).
+   *  The ladder itself is the nested materia-zones card. */
   get _zones() {
-    return (this.config.zones || []).map((z) =>
-      this._zoneModel(typeof z === "string" ? { entity: z } : z)
-    );
+    return (this.config.zones || []).map((z) => {
+      const entity = typeof z === "string" ? z : z.entity;
+      const on = this.hass.states[entity]?.state === "on";
+      return { entity, on, calling: on && this._boilerActive };
+    });
   }
 
   _fmt(v) {
     return v == null ? "—" : Math.round(v * 10) / 10;
-  }
-
-  _toggleZone(z) {
-    this._callService("switch", z.on ? "turn_off" : "turn_on", { entity_id: z.entity });
-    this._fireHaptic("light");
   }
 
   _allZones(onOff) {
@@ -138,31 +116,6 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
   }
 
   /* ---- fragments ------------------------------------------------------------ */
-
-  /** Zone row — the 3-state ladder from the research: calling (container
-   *  fill + fire), satisfied (subtle fill + radiator), off (outline only). */
-  _zoneRow(z) {
-    const stateClass = z.calling ? "calling" : z.on ? "idle" : "off";
-    // Per-zone icon (or card-wide zone_icon) wins — underfloor heating isn't
-    // a radiator. The row's state styling still carries on/calling/off.
-    const custom = z.icon || this.config.zone_icon;
-    const icon = custom || (z.on ? "mdi:radiator" : "mdi:radiator-off");
-    const secondary = z.calling
-      ? `Heating · open ${z.sinceMin} min`
-      : z.on
-        ? "At temperature"
-        : "Off";
-    return html`
-      <div class="zone-row ${stateClass}" @click=${() => this._toggleZone(z)}>
-        <ha-icon class="z-icon" icon=${icon}></ha-icon>
-        <div class="z-text">
-          <span class="z-name">${z.name}</span>
-          <span class="z-sub">${secondary}${z.temp != null ? ` · ${this._fmt(z.temp)}°` : ""}</span>
-        </div>
-        <div class="z-switch ${z.on ? "on" : ""}"><i></i></div>
-      </div>
-    `;
-  }
 
   _modeGroup() {
     const modes = (this._entity?.attributes?.hvac_modes || []).filter((m) => ["heat", "auto", "off", "cool", "heat_cool"].includes(m));
@@ -193,27 +146,51 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
     `;
   }
 
-  _waterRow() {
-    const wh = this.hass.states[this.config.water_heater];
-    if (!wh) return nothing;
-    const temp = this._numRaw(wh.attributes?.current_temperature);
-    return html`
-      <div class="water-row" @click=${() => this._fireMoreInfo(this.config.water_heater)}>
-        <ha-icon icon="mdi:water-boiler"></ha-icon>
-        <div class="z-text">
-          <span class="z-name">${wh.attributes?.friendly_name ?? "Water heater"}</span>
-          <span class="z-sub">${this._capitalize(wh.state)}${temp != null ? ` · ${this._fmt(temp)}°` : ""}</span>
-        </div>
-        <ha-icon class="chev" icon="mdi:chevron-right"></ha-icon>
-      </div>
-    `;
+  /* ---- wallet accordion: EVERY section is chrome around nested cards -------
+     Built-in Zones and Water heater are just synthesized section configs (the
+     recommended defaults from zones:/water_heater:); user `sections:` append
+     with the same shape — fill them with whatever cards you like. */
+
+  get _waterInAcc() {
+    return !!this.config.water_heater && (this.config.water ?? "menu") === "section";
   }
 
-  /* ---- wallet accordion: Zones / Water heater / custom sections ------------ */
+  get _sectionConfigs() {
+    const secs = [];
+    if (this.config.zones?.length) {
+      secs.push({
+        _builtin: "zones",
+        title: this.config.zones_title ?? "Zones",
+        icon: this.config.zone_icon ?? "mdi:radiator",
+        cards: [{
+          type: "custom:materia-zones",
+          climate: this.config.entity,
+          zones: this.config.zones,
+          zone_icon: this.config.zone_icon,
+          flat: true,
+        }],
+      });
+    }
+    if (this._waterInAcc) {
+      secs.push({
+        _builtin: "water",
+        title: this.config.water_title ?? "Water heater",
+        icon: "mdi:water-boiler",
+        cards: [{
+          type: "custom:materia-menu",
+          entity: this.config.water_heater,
+          icon: "mdi:water-boiler",
+          name: this.config.water_title ?? "Water heater",
+          menu_variant: "expressive",
+        }],
+      });
+    }
+    return [...secs, ...(this.config.sections || [])];
+  }
 
   async _createExtraCards() {
     const gen = (this._extraGen = (this._extraGen || 0) + 1);
-    const secs = this.config.sections || [];
+    const secs = this._sectionConfigs;
     if (!secs.length) { this._extraEls = []; return; }
     const helpers = await loadCardHelpers();
     const els = await Promise.all(
@@ -237,62 +214,46 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
   }
 
   _accordionSections() {
-    const zones = this._zones;
-    const calling = zones.filter((z) => z.calling).length;
-    const on = zones.filter((z) => z.on).length;
-    const secs = [];
-    if (zones.length) {
-      secs.push({
-        title: this.config.zones_title ?? "Zones",
-        icon: this.config.zone_icon ?? "mdi:radiator",
-        info: calling ? `${calling} of ${zones.length} heating` : `${on} of ${zones.length} on`,
+    return this._sectionConfigs.map((s, i) => {
+      let info = "";
+      let actions = null;
+      if (s._builtin === "zones") {
+        const zones = this._zones;
+        const calling = zones.filter((z) => z.calling).length;
+        const on = zones.filter((z) => z.on).length;
+        info = calling ? `${calling} of ${zones.length} heating` : `${on} of ${zones.length} on`;
         // Actions live IN the bar while open — a centered button band between
         // bar and ladder read as an orphan strip of dead space.
-        actions: html`
+        actions = html`
           <div class="acc-actions">
             <button class="mini" @click=${() => this._allZones(false)}>All off</button>
             <button class="mini" @click=${() => this._allZones(true)}>All on</button>
           </div>
-        `,
-        body: html`<div class="zones">${zones.map((z) => this._zoneRow(z))}</div>`,
-      });
-    }
-    const wh = this._waterInAcc ? this.hass.states[this.config.water_heater] : null;
-    if (wh) {
-      const temp = this._numRaw(wh.attributes?.current_temperature);
-      secs.push({
-        title: this.config.water_title ?? "Water heater",
-        icon: "mdi:water-boiler",
-        info: `${this._capitalize(wh.state)}${temp != null ? ` · ${this._fmt(temp)}°` : ""}`,
-        body: this._waterRow(),
-      });
-    }
-    (this.config.sections || []).forEach((s, i) => {
-      const st = s.info_entity ? this.hass.states[s.info_entity] : null;
-      secs.push({
+        `;
+      } else if (s._builtin === "water") {
+        const wh = this.hass.states[this.config.water_heater];
+        const temp = this._numRaw(wh?.attributes?.current_temperature);
+        info = wh ? `${this._capitalize(wh.state)}${temp != null ? ` · ${this._fmt(temp)}°` : ""}` : "";
+      } else {
+        const st = s.info_entity ? this.hass.states[s.info_entity] : null;
+        info = s.info ?? (st ? (this.hass.formatEntityState?.(st) ?? st.state) : "");
+      }
+      return {
         title: s.title ?? `Section ${i + 1}`,
         icon: s.icon,
-        info: s.info ?? (st ? (this.hass.formatEntityState?.(st) ?? st.state) : ""),
+        info,
+        actions,
         body: this._extraEls?.[i]?.length ? html`<div class="acc-cards">${this._extraEls[i]}</div>` : nothing,
-      });
+      };
     });
-    return secs;
-  }
-
-  /** Water heater in the accordion (wallet section) vs a menu seg. */
-  get _waterInAcc() {
-    return !!this.config.water_heater && (this.config.water ?? "menu") === "section";
   }
 
   _openAcc(i) {
     if (this._openSection === i) return; // wallet invariant: one always large
     this._openSection = i;
     this._fireHaptic("light");
-    // Catch-up hass for custom-section children that were dormant.
-    const extraIdx = i - (this._zones.length ? 1 : 0) - (this._waterInAcc ? 1 : 0);
-    if (extraIdx >= 0 && this._extraEls?.[extraIdx]) {
-      this._extraEls[extraIdx].forEach((el) => { el.hass = this.hass; });
-    }
+    // Catch-up hass for section children that were dormant.
+    this._extraEls?.[i]?.forEach((el) => { el.hass = this.hass; });
   }
 
   /** Menu mode: the water heater is a compact segment whose tap opens the
