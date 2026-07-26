@@ -77,7 +77,8 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     const eid = opt.entity;
     const optim = this._optimisticEntities?.[eid];
     const st = this.hass?.states[eid]?.state;
-    if (opt.value != null) {
+    // Empty-string value (editor leftover) means "no expected value".
+    if (opt.value != null && opt.value !== "") {
       const target = String(opt.value).toLowerCase();
       if (optim && optim.value != null) return optim.value === target;
       return String(st ?? "").toLowerCase() === target;
@@ -204,7 +205,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
       // predicted, and reality must win over the prediction.
       const eid = opt.entity;
       const st = String(this.hass?.states[eid]?.state ?? "");
-      const next = opt.value != null
+      const next = opt.value != null && opt.value !== ""
         ? { baseline: st, value: String(opt.value).toLowerCase() }
         : { baseline: st, active: !this._truthy(st) };
       this._optimisticEntities = { ...this._optimisticEntities, [eid]: next };
@@ -225,7 +226,9 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     }
 
     if (opt.tap_action) {
-      this._handleAction(opt.tap_action);
+      // Per-option entity rides along so `action: toggle` (and more-info)
+      // target THIS button's entity, not the group's.
+      this._handleAction(opt.entity ? { entity: opt.entity, ...opt.tap_action } : opt.tap_action);
     } else if (opt.entity) {
       this._fireMoreInfo(opt.entity);
     } else if (this.config.entity) {

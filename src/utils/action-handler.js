@@ -38,7 +38,9 @@ export const ActionMixin = (superClass) =>
           // homeassistant.toggle only forwards to <domain>.toggle — locks,
           // scenes, vacuums, buttons and covers have no toggle service, so
           // route those domains explicitly (mirrors ha-frontend toggleEntity).
-          const eid = this.config?.entity;
+          // actionConfig.entity wins over the card entity so per-option
+          // buttons (button-group/icon-row) toggle THEIR OWN entity.
+          const eid = actionConfig.entity || this.config?.entity;
           if (!eid) break;
           const domain = eid.split(".")[0];
           const state = String(this.hass?.states[eid]?.state ?? "");
