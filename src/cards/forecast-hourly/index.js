@@ -1,6 +1,7 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { hourlyItems } from "./row.js";
+import { moonPhaseFrac } from "../weather-tile/icons.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -133,6 +134,7 @@ class MateriaForecastHourly extends ActionMixin(LitElement) {
             locale,
             showPrecip: this.config.show_precipitation !== false,
             minPrecip: this.config.min_precipitation ?? 10,
+            moonPhase: moonPhaseFrac(this.hass, this.config.moon_entity),
           })}
         </div>
       </ha-card>

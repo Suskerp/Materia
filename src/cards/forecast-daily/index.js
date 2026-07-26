@@ -1,6 +1,6 @@
 import { LitElement, html, svg } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { coloredWeatherIcon } from "../weather-tile/icons.js";
+import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
 import { hourlyItems } from "../forecast-hourly/row.js";
 import { styles } from "./styles.js";
 import "./editor.js";
@@ -236,7 +236,7 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
               >
                 <span class="hi">${hi != null ? `${hi}°` : "—"}</span>
                 <span class="lo">${lo != null ? `${lo}°` : "—"}</span>
-                <svg class="glyph" viewBox="0 0 24 24">${coloredWeatherIcon(day.condition)}</svg>
+                <svg class="glyph" viewBox="0 0 24 24">${coloredWeatherIcon(day.condition, moonPhaseFrac(this.hass, this.config.moon_entity))}</svg>
                 ${showPrecip && precip != null && precip >= minPrecip
                   ? html`<span class="precip">${precip}%</span>`
                   : html`<span class="precip empty"></span>`}
@@ -254,7 +254,7 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
               @pointerup=${this._onPointerUp}
               @pointercancel=${this._onPointerUp}
             >
-              ${open ? hourlyItems(hours, { locale, showPrecip, minPrecip }) : ""}
+              ${open ? hourlyItems(hours, { locale, showPrecip, minPrecip, moonPhase: moonPhaseFrac(this.hass, this.config.moon_entity) }) : ""}
             </div>
           </div>
         </div>

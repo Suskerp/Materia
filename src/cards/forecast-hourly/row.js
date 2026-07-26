@@ -12,7 +12,7 @@ export function numOrNull(v) {
  * Shared hourly item strip: temp, colored glyph, precipitation chance, hour.
  * Used by the standalone hourly card and the daily card's expanded detail.
  */
-export function hourlyItems(hours, { locale = "en", showPrecip = true, minPrecip = 10 } = {}) {
+export function hourlyItems(hours, { locale = "en", showPrecip = true, minPrecip = 10, moonPhase = null } = {}) {
   return hours.map((h) => {
     const temp = numOrNull(h.temperature);
     const precip = numOrNull(h.precipitation_probability);
@@ -23,7 +23,7 @@ export function hourlyItems(hours, { locale = "en", showPrecip = true, minPrecip
     return html`
       <div class="hour">
         <span class="h-temp">${temp != null ? `${temp}°` : "—"}</span>
-        <svg class="h-glyph" viewBox="0 0 24 24">${coloredWeatherIcon(h.condition)}</svg>
+        <svg class="h-glyph" viewBox="0 0 24 24">${coloredWeatherIcon(h.condition, moonPhase)}</svg>
         ${showPrecip && precip != null && precip >= minPrecip
           ? html`<span class="h-precip">${precip}%</span>`
           : html`<span class="h-precip empty"></span>`}

@@ -1,6 +1,6 @@
 import { LitElement, html, svg } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { coloredWeatherIcon } from "../weather-tile/icons.js";
+import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -286,7 +286,7 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
           style="${bg ? `--wg-bg:${bg};` : ""}${fg ? `--wg-fg:${fg};` : ""}"
           @click=${() => this._handleAction(this.config.tap_action || { action: "more-info" })}
         >
-          <svg class="glyph" viewBox="0 0 24 24">${coloredWeatherIcon(condition)}</svg>
+          <svg class="glyph" viewBox="0 0 24 24">${coloredWeatherIcon(condition, moonPhaseFrac(this.hass, this.config.moon_entity))}</svg>
           <div class="mid">
             ${alert || first
               ? html`<div class="line1">

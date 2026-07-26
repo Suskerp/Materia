@@ -12,6 +12,7 @@ class MateriaForecastHourlyEditor extends SmartEditorBase {
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: "weather" } } },
+          { name: "moon_entity", label: "Moon phase sensor (default: sensor.moon)", selector: { entity: { domain: "sensor" } } },
           { name: "name", label: "Header title", selector: { text: {} } },
           { name: "show_header", label: "Show header", selector: { boolean: {} } },
           { name: "hours", label: "Hours shown", selector: { number: { min: 6, max: 48, step: 1, mode: "slider" } } },

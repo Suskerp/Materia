@@ -25,6 +25,7 @@ class MateriaWeatherGlanceEditor extends SmartEditorBase {
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: "weather" } } },
+          { name: "moon_entity", label: "Moon phase sensor (default: sensor.moon)", selector: { entity: { domain: "sensor" } } },
           { name: "temperature_entity", label: "Real temperature sensor (optional)", selector: { entity: { domain: "sensor", device_class: "temperature" } } },
           { name: "metrics", label: "Subtitle metrics (condition always owns the top line)", selector: { select: { multiple: true, mode: "list", options: METRIC_OPTIONS } } },
           { name: "sort_by_severity", label: "Sort metrics worst-first", selector: { boolean: {} } },

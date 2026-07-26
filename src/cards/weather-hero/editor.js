@@ -12,6 +12,7 @@ class MateriaWeatherHeroEditor extends SmartEditorBase {
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: "weather" } } },
+          { name: "moon_entity", label: "Moon phase sensor (default: sensor.moon)", selector: { entity: { domain: "sensor" } } },
           { name: "temperature_entity", label: "Real temperature sensor (optional)", selector: { entity: { domain: "sensor", device_class: "temperature" } } },
           { name: "feels_like_entity", label: "Feels-like sensor (optional)", selector: { entity: { domain: "sensor" } } },
           { name: "show_condition", label: "Show condition text", selector: { boolean: {} } },

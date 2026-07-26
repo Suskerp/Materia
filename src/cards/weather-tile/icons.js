@@ -1,4 +1,22 @@
 import { svg } from "lit";
+import { moonPath } from "../../utils/shapes.js";
+
+/** sensor.moon (HA's built-in Moon integration) → lunar cycle position 0..1.
+ *  Cards default the entity to sensor.moon, so phases light up config-free. */
+export function moonPhaseFrac(hass, entity) {
+  const PHASES = {
+    new_moon: 0,
+    waxing_crescent: 0.125,
+    first_quarter: 0.25,
+    waxing_gibbous: 0.375,
+    full_moon: 0.5,
+    waning_gibbous: 0.625,
+    last_quarter: 0.75,
+    waning_crescent: 0.875,
+  };
+  const st = hass?.states?.[entity ?? "sensor.moon"];
+  return st && st.state in PHASES ? PHASES[st.state] : null;
+}
 
 /**
  * Colored weather glyphs (Pixel-widget style) drawn as inline SVG in a 24×24
@@ -114,8 +132,17 @@ function flakes(xs, y) {
 const ICONS = {
   sunny: (f) => sun(12, 12, 7.5, f.sun),
   clear: (f) => sun(12, 12, 7.5, f.sun),
-  "clear-night": (f) =>
-    svg`<path d="M17 14.5 A7 7 0 1 1 10.5 5 A5.5 5.5 0 0 0 17 14.5 Z" fill=${f.moon} />`,
+  "clear-night": (f, phase) => {
+    // With a moon sensor: the REAL phase (shadowed disc + lit region).
+    // Without: the classic crescent.
+    if (phase == null) {
+      return svg`<path d="M17 14.5 A7 7 0 1 1 10.5 5 A5.5 5.5 0 0 0 17 14.5 Z" fill=${f.moon} />`;
+    }
+    const lit = moonPath(12, 12, 7.2, phase);
+    return svg`
+      <circle cx="12" cy="12" r="7.2" fill="color-mix(in srgb, ${MOON} 22%, transparent)" />
+      ${lit ? svg`<path d=${lit} fill=${f.moon} />` : ""}`;
+  },
   partlycloudy: (f) => svg`${sun(12, 8, 5.2, f.sun)}${cloud(10, 15, 0.85, f.cloud)}`,
   partly_cloudy: (f) => svg`${sun(12, 8, 5.2, f.sun)}${cloud(10, 15, 0.85, f.cloud)}`,
   cloudy: (f) => cloud(12, 12, 1.1, f.cloudDk),
@@ -143,9 +170,10 @@ const ICONS = {
 };
 
 /** Return the colored SVG group for a weather condition (falls back to cloud).
- *  Prepends the shared shading gradients so every glyph is soft-3D. */
-export function coloredWeatherIcon(condition) {
+ *  Prepends the shared shading gradients so every glyph is soft-3D.
+ *  `moonPhase` (0..1, from moonPhaseFrac) phases the clear-night moon. */
+export function coloredWeatherIcon(condition, moonPhase = null) {
   const fn = ICONS[condition] || ICONS.cloudy;
   const uid = ++uidCounter;
-  return svg`${shadeDefs(uid)}${fn(fillsFor(uid))}`;
+  return svg`${shadeDefs(uid)}${fn(fillsFor(uid), moonPhase)}`;
 }

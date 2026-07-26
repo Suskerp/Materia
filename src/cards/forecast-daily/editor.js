@@ -12,6 +12,7 @@ class MateriaForecastDailyEditor extends SmartEditorBase {
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: "weather" } } },
+          { name: "moon_entity", label: "Moon phase sensor (default: sensor.moon)", selector: { entity: { domain: "sensor" } } },
           { name: "days", label: "Days shown", selector: { number: { min: 3, max: 15, step: 1, mode: "slider" } } },
           { name: "show_hourly", label: "Tap a day to expand its hourly detail", selector: { boolean: {} } },
           { name: "show_precipitation", label: "Show precipitation chance", selector: { boolean: {} } },

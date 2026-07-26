@@ -1,6 +1,6 @@
 import { LitElement, html, svg } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { coloredWeatherIcon } from "./icons.js";
+import { coloredWeatherIcon, moonPhaseFrac } from "./icons.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -175,7 +175,7 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
           </div>
           ${customIcon
             ? html`<ha-icon class="wx-mono" .icon=${customIcon}></ha-icon>`
-            : svg`<svg class="wx" viewBox="0 0 24 24">${coloredWeatherIcon(condition)}</svg>`}
+            : svg`<svg class="wx" viewBox="0 0 24 24">${coloredWeatherIcon(condition, moonPhaseFrac(this.hass, this.config.moon_entity))}</svg>`}
         </div>
       </ha-card>
     `;
