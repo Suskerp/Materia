@@ -78,18 +78,22 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     const mode = this._mode;
     if (mode === "off" || this.config.wave === "never") return "";
     if (this.config.wave === "always") return mode === "cool" ? "cooling" : "heating";
+    const isAuto = mode === "auto" || mode === "heat_cool";
+    // Auto at equilibrium "holds": a gentle low-amplitude breathing wave —
+    // the system is alive and watching, not pushing energy either way.
+    const hold = isAuto ? "holding" : "";
     const action = this._action;
     if (action === "heating" || action === "cooling") return action;
     if (action && action !== "idle") return ""; // explicitly off/fan/drying
     const cur = this._current;
     const tgt = this._target;
-    if (tgt == null) return "";
-    if (action === "idle") return ""; // integration says it's resting
+    if (tgt == null) return hold;
+    if (action === "idle") return hold; // integration says it's resting
     // No hvac_action support — infer intent from the temperatures.
-    if (cur == null) return mode === "cool" ? "cooling" : mode === "heat" ? "heating" : "";
-    if ((mode === "heat" || mode === "auto" || mode === "heat_cool") && cur < tgt - 0.2) return "heating";
-    if ((mode === "cool" || mode === "auto" || mode === "heat_cool") && cur > tgt + 0.2) return "cooling";
-    return "";
+    if (cur == null) return mode === "cool" ? "cooling" : mode === "heat" ? "heating" : hold;
+    if ((mode === "heat" || isAuto) && cur < tgt - 0.2) return "heating";
+    if ((mode === "cool" || isAuto) && cur > tgt + 0.2) return "cooling";
+    return hold;
   }
 
   get _mode() {
@@ -115,6 +119,14 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     return Number.isFinite(n) ? n : null;
   }
 
+  /** Dial scale — config override → entity min/max → sane defaults. */
+  get _scale() {
+    return {
+      min: this.config.min_temp ?? this._numRaw(this._entity?.attributes?.min_temp) ?? 7,
+      max: this.config.max_temp ?? this._numRaw(this._entity?.attributes?.max_temp) ?? 35,
+    };
+  }
+
   /* ---- Wave animation loop ------------------------------------------------
      The rAF loop runs only while the wave is visible (active or settling).
      Amplitude eases toward its resting point; phase direction encodes intent:
@@ -124,13 +136,16 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
     const tick = () => {
       const action = this._waveAction;
-      const active = action === "heating" || action === "cooling";
-      const targetAmp = active && !reduced ? 1 : 0;
+      const traveling = action === "heating" || action === "cooling";
+      const holding = action === "holding";
+      // Holding (auto at equilibrium) breathes at ~1/3 amplitude and drifts
+      // slowly; active heat/cool waves travel at full amplitude.
+      const targetAmp = reduced ? 0 : traveling ? 1 : holding ? 0.35 : 0;
       const nextAmp = this._amp + (targetAmp - this._amp) * 0.06;
       const settled = Math.abs(nextAmp - targetAmp) < 0.01;
       this._amp = settled ? targetAmp : nextAmp;
-      if (this._amp > 0.005) {
-        this._phase += action === "cooling" ? 0.045 : -0.045;
+      if (this._amp > 0.005 || targetAmp > 0) {
+        this._phase += action === "cooling" ? 0.045 : traveling ? -0.045 : -0.012;
         this._raf = requestAnimationFrame(tick);
       } else {
         this._raf = null; // wave gone — sleep until an update wakes us
@@ -199,8 +214,7 @@ class MateriaThermostat extends ActionMixin(LitElement) {
 
   /* ---- Interaction --------------------------------------------------------- */
   _setTarget(temp) {
-    const min = this._numRaw(this._entity?.attributes?.min_temp) ?? 7;
-    const max = this._numRaw(this._entity?.attributes?.max_temp) ?? 35;
+    const { min, max } = this._scale;
     const step = this.config.step ?? 0.5;
     const clamped = Math.min(max, Math.max(min, Math.round(temp / step) * step));
     this._optimisticTemp = clamped;
@@ -232,8 +246,7 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     // Only react within the dial's sweep (leave the bottom gap dead).
     if (deg < DIAL_START - 8 || deg > DIAL_START + DIAL_SWEEP + 8) return;
     const frac = Math.min(1, Math.max(0, (deg - DIAL_START) / DIAL_SWEEP));
-    const min = this._numRaw(this._entity?.attributes?.min_temp) ?? 7;
-    const max = this._numRaw(this._entity?.attributes?.max_temp) ?? 35;
+    const { min, max } = this._scale;
     if (e.type === "pointerdown") {
       this._dialDragging = true;
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -260,8 +273,7 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     if (!stateObj) return html``;
     const unavailable = this._isUnavailable(stateObj);
 
-    const min = this._numRaw(stateObj.attributes.min_temp) ?? 7;
-    const max = this._numRaw(stateObj.attributes.max_temp) ?? 35;
+    const { min, max } = this._scale;
     const target = this._target;
     const current = this._current;
     const mode = this._mode;
@@ -278,7 +290,11 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     let solidEnd = null;
     let waveStart = null;
     let waveEnd = null;
-    if (active && curDeg != null) {
+    if (active && action === "holding") {
+      // Equilibrium: the WHOLE filled arc breathes gently.
+      waveStart = DIAL_START;
+      waveEnd = curDeg != null ? Math.max(curDeg, endDeg) : endDeg;
+    } else if (active && curDeg != null) {
       solidEnd = Math.min(curDeg, endDeg);
       waveStart = solidEnd;
       waveEnd = Math.max(curDeg, endDeg);

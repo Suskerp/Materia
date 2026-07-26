@@ -14,6 +14,8 @@ class MateriaThermostatEditor extends SmartEditorBase {
           { name: "entity", required: true, selector: { entity: { domain: "climate" } } },
           { name: "temperature_entity", label: "Current-temp sensor (optional)", selector: { entity: { domain: "sensor", device_class: "temperature" } } },
           { name: "step", label: "Step", selector: { number: { min: 0.1, max: 2, step: 0.1, mode: "box" } } },
+          { name: "min_temp", label: "Dial min (default: entity)", selector: { number: { min: -30, max: 40, step: 0.5, mode: "box" } } },
+          { name: "max_temp", label: "Dial max (default: entity)", selector: { number: { min: 0, max: 60, step: 0.5, mode: "box" } } },
           { name: "show_current", label: "Show current temperature", selector: { boolean: {} } },
           { name: "current_label", label: '"Currently" label', selector: { text: {} } },
           { name: "wave", label: "Wave animation", selector: { select: { mode: "dropdown", options: [

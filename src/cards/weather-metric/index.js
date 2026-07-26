@@ -476,7 +476,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
           const words = fn.replace(/pollen/i, "").trim().split(/\s+/);
           label = words[words.length - 1] || fn;
         }
-        const icon = cfg.icon || st.attributes.icon || "mdi:flower-pollen-outline";
+        const icon = cfg.icon || st.attributes.icon || "m3o:allergies";
         return { label, icon, frac, levelLabel, color };
       })
       .filter(Boolean)
@@ -488,11 +488,31 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
       const configured = (this.config.entities?.length) || this.config.grass_entity || this.config.tree_entity || this.config.weed_entity;
       return configured
         ? nothing
-        : this._hint("mdi:flower-pollen-outline", this.config.name ?? "Pollen", "Add pollen sensors");
+        : this._hint("m3o:allergies", this.config.name ?? "Pollen", "Add pollen sensors");
+    }
+    // Small variant (Pixel small tile): colored level dot + species + level,
+    // as a compact left-aligned list.
+    if (this.config.variant === "small") {
+      return html`
+        <div class="rect-tile pollen-small">
+          ${this._header("m3o:allergies", this.config.name ?? "Pollen")}
+          <div class="pollen-rows">
+            ${kinds.map((k) => html`
+              <div class="pollen-row">
+                <span class="pollen-dot" style="background:${k.color || "var(--wm-accent, #7bc96a)"}"></span>
+                <div class="pollen-text">
+                  <span class="pollen-name">${k.label}</span>
+                  <span class="pollen-level">${k.levelLabel}</span>
+                </div>
+              </div>
+            `)}
+          </div>
+        </div>
+      `;
     }
     return html`
       <div class="rect-tile pollen">
-        ${this._header("mdi:flower-pollen-outline", this.config.name ?? "Pollen")}
+        ${this._header("m3o:allergies", this.config.name ?? "Pollen")}
         <div class="gauges">
           ${kinds.map((k) => {
             const start = -135;
@@ -518,7 +538,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
   }
 
   getGridOptions() {
-    const wide = this.config?.metric === "pollen";
+    const wide = this.config?.metric === "pollen" && this.config?.variant !== "small";
     return { columns: wide ? 8 : 4, rows: "auto", min_columns: wide ? 6 : 3 };
   }
 

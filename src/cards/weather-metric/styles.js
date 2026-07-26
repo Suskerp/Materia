@@ -349,5 +349,52 @@ export const styles = [
       line-height: 1.35;
       margin-top: -6px;
     }
+
+    /* Pollen small variant: left-aligned dot + species + level list. */
+    .rect-tile.pollen-small {
+      align-items: flex-start;
+      justify-content: flex-start;
+      text-align: left;
+      gap: clamp(10px, 6cqi, 18px);
+    }
+
+    .rect-tile.pollen-small .header {
+      justify-content: flex-start;
+    }
+
+    .pollen-rows {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(8px, 4cqi, 14px);
+    }
+
+    .pollen-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pollen-dot {
+      width: clamp(18px, 9cqi, 26px);
+      height: clamp(18px, 9cqi, 26px);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .pollen-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+    }
+
+    .pollen-name {
+      font-size: clamp(14px, 6.5cqi, 18px);
+      font-weight: 600;
+    }
+
+    .pollen-level {
+      font-size: clamp(12px, 5.5cqi, 15px);
+      opacity: 0.7;
+    }
   `,
 ];
