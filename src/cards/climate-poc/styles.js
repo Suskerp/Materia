@@ -252,6 +252,30 @@ export const styles = [
       background: color-mix(in srgb, currentColor 12%, var(--md-sys-cust-color-climate-heat-container, var(--md-sys-color-secondary-container)));
     }
 
+    /* Vertical connected pair: + on top (up = warmer), − below. Pressing a
+       segment expands it downward/upward against its sibling. */
+    .steppers.vertical {
+      flex-direction: column;
+    }
+
+    .steppers.vertical .step {
+      width: 56px;
+      height: 46px;
+    }
+
+    .steppers.vertical .step:first-child {
+      border-radius: 999px 999px 8px 8px;
+    }
+
+    .steppers.vertical .step:last-child {
+      border-radius: 8px 8px 999px 999px;
+    }
+
+    .steppers.vertical .step:active {
+      border-radius: 999px;
+      flex-grow: 1.3;
+    }
+
     /* ---- variant C: vertical slider ----------------------------------------- */
     .sl-hero {
       display: flex;

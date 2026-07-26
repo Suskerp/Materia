@@ -172,8 +172,9 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
 
   /* ---- shared fragments --------------------------------------------------- */
 
-  /** Stepper pair — the universal fine control (48px targets, hold repeats). */
-  _steppers() {
+  /** Stepper pair — the universal fine control (48px targets, hold repeats).
+   *  Vertical puts + on TOP: up = warmer, the strongest stepper metaphor. */
+  _steppers(vertical = false) {
     const start = (d) => {
       this._nudge(d);
       this._holdTimer = setTimeout(() => {
@@ -184,14 +185,15 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
       clearTimeout(this._holdTimer);
       clearInterval(this._holdInterval);
     };
+    const plus = html`<button class="step" @pointerdown=${() => start(this._step)} @pointerup=${stop} @pointerleave=${stop}>
+      <ha-icon icon="mdi:plus"></ha-icon>
+    </button>`;
+    const minus = html`<button class="step" @pointerdown=${() => start(-this._step)} @pointerup=${stop} @pointerleave=${stop}>
+      <ha-icon icon="mdi:minus"></ha-icon>
+    </button>`;
     return html`
-      <div class="steppers">
-        <button class="step" @pointerdown=${() => start(-this._step)} @pointerup=${stop} @pointerleave=${stop}>
-          <ha-icon icon="mdi:minus"></ha-icon>
-        </button>
-        <button class="step" @pointerdown=${() => start(this._step)} @pointerup=${stop} @pointerleave=${stop}>
-          <ha-icon icon="mdi:plus"></ha-icon>
-        </button>
+      <div class="steppers ${vertical ? "vertical" : ""}">
+        ${vertical ? plus : minus}${vertical ? minus : plus}
       </div>
     `;
   }
@@ -309,7 +311,7 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
             <span class="sp-current">${current != null ? `${this._fmt(current)}°` : ""}</span>
             <span class="sp-label">Set to ${this._fmt(target)}°</span>
           </div>
-          ${this._steppers()}
+          ${this._steppers(true)}
         </div>
         ${this._waterSegment()}
       </div>
