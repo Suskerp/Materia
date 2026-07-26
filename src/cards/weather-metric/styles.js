@@ -311,10 +311,12 @@ export const styles = [
 
     .sun-arc {
       /* Wide and FLAT (viewBox 100×38) — fills the card without pushing the
-         square tile taller. */
+         square tile taller. overflow visible: near sunrise/sunset the sun
+         cookie's radius extends past the viewBox edge and would clip. */
       width: 94%;
       height: auto;
       display: block;
+      overflow: visible;
     }
 
     .arc-fill {
