@@ -54,6 +54,11 @@ export const styles = [
       opacity: 0.7;
     }
 
+    .current-knob {
+      stroke: var(--md-sys-color-surface, #fff);
+      stroke-width: 1.4;
+    }
+
     .thumb {
       fill: var(--md-sys-color-surface, #fff);
       stroke-width: 2.5;

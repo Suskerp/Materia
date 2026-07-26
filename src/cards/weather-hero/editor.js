@@ -15,6 +15,7 @@ class MateriaWeatherHeroEditor extends SmartEditorBase {
           { name: "temperature_entity", label: "Real temperature sensor (optional)", selector: { entity: { domain: "sensor", device_class: "temperature" } } },
           { name: "feels_like_entity", label: "Feels-like sensor (optional)", selector: { entity: { domain: "sensor" } } },
           { name: "show_condition", label: "Show condition text", selector: { boolean: {} } },
+          { name: "show_icon", label: "Show condition glyph", selector: { boolean: {} } },
           { name: "show_feels_like", label: "Show feels-like", selector: { boolean: {} } },
         ],
       },

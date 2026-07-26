@@ -27,44 +27,52 @@ export const styles = [
     }
 
     .condition {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       font-size: clamp(18px, 7cqi, 26px);
       font-weight: 500;
       opacity: 0.95;
     }
 
+    .cond-glyph {
+      width: clamp(22px, 8cqi, 30px);
+      height: clamp(22px, 8cqi, 30px);
+    }
+
+    /* Pixel-style numerals: big but LIGHT — the heavy 700 weight and tight
+       tracking read as "off" next to the reference. */
     .temp {
       display: flex;
       align-items: flex-start;
       justify-content: center;
       line-height: 0.95;
-      margin: 2px 0 4px;
+      margin: 4px 0 6px;
     }
 
-    .temp-value {
-      font-size: clamp(64px, 34cqi, 132px);
-      font-weight: 700;
-      letter-spacing: -0.02em;
+    .temp-value,
+    .temp-deg {
+      font-size: clamp(72px, 38cqi, 150px);
+      font-weight: 400;
+      letter-spacing: normal;
     }
 
-    .temp-unit {
-      font-size: clamp(20px, 9cqi, 36px);
-      font-weight: 600;
-      margin-top: clamp(6px, 3cqi, 14px);
-      opacity: 0.9;
+    .temp-deg {
+      opacity: 0.95;
     }
 
     .feels {
-      font-size: clamp(15px, 5.5cqi, 20px);
+      font-size: clamp(16px, 6cqi, 22px);
       font-weight: 500;
-      opacity: 0.9;
+      opacity: 0.92;
     }
 
     .minmax {
       display: flex;
       gap: 7px;
-      margin-top: 3px;
-      font-size: clamp(13px, 4.5cqi, 16px);
-      font-weight: 700;
+      margin-top: 4px;
+      font-size: clamp(14px, 5cqi, 18px);
+      font-weight: 600;
     }
 
     .minmax .sep {

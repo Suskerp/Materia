@@ -1,5 +1,6 @@
-import { LitElement, html } from "lit";
+import { LitElement, html, svg } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { coloredWeatherIcon } from "../weather-tile/icons.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -102,7 +103,6 @@ class MateriaWeatherHero extends ActionMixin(LitElement) {
       if (t && !this._isUnavailable(t)) temp = t.state;
     }
     const tempNum = this._num(temp);
-    const unit = this.config.unit ?? stateObj?.attributes?.temperature_unit ?? "°C";
 
     // Feels like — sensor override, else apparent_temperature. Hidden if absent.
     let feels = stateObj?.attributes?.apparent_temperature;
@@ -135,11 +135,15 @@ class MateriaWeatherHero extends ActionMixin(LitElement) {
           @click=${() => this._handleAction(this.config.tap_action || { action: "more-info" })}
         >
           ${this.config.show_condition !== false
-            ? html`<div class="condition">${unavailable ? "—" : conditionLabel}</div>`
+            ? html`<div class="condition">
+                ${this.config.show_icon !== false && !unavailable
+                  ? svg`<svg class="cond-glyph" viewBox="0 0 24 24">${coloredWeatherIcon(condition)}</svg>`
+                  : ""}
+                <span>${unavailable ? "—" : conditionLabel}</span>
+              </div>`
             : ""}
           <div class="temp">
-            <span class="temp-value">${unavailable || tempNum == null ? "—" : tempNum}</span>
-            <span class="temp-unit">${unit}</span>
+            <span class="temp-value">${unavailable || tempNum == null ? "—" : tempNum}</span><span class="temp-deg">°</span>
           </div>
           ${this.config.show_feels_like !== false && feelsNum != null && !unavailable
             ? html`<div class="feels">${this.config.feels_like_label ?? "Feels like"} ${feelsNum}°</div>`

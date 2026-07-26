@@ -170,17 +170,16 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     return [50 + rr * Math.cos(rad), 50 + rr * Math.sin(rad)];
   }
 
-  /** Wavy polyline from the dial start to `endDeg`. The wave fades in over
-   *  the first 20° so it grows out of the anchor smoothly, and fades near
-   *  the thumb so the handle sits on a calm section. */
-  _wavePath(endDeg, r) {
+  /** Wavy polyline between two dial angles. The wave fades in/out over ~20°
+   *  at each end so it grows smoothly out of the knobs it connects. */
+  _wavePath(startDeg, endDeg, r) {
     const amp = 3.2 * this._amp;
     const pts = [];
     const step = 2;
-    for (let a = DIAL_START; a <= endDeg; a += step) {
-      const s = a - DIAL_START;
-      const fadeIn = Math.min(1, s / 25);
-      const fadeOut = Math.min(1, (endDeg - a) / 25);
+    for (let a = startDeg; a <= endDeg; a += step) {
+      const s = a - startDeg;
+      const fadeIn = Math.min(1, s / 20);
+      const fadeOut = Math.min(1, (endDeg - a) / 20);
       const w = amp * fadeIn * fadeOut * Math.sin(s / 7 + this._phase);
       pts.push(this._pointAt(a, r, w));
     }
@@ -271,6 +270,19 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     const endDeg = active ? this._angleFor(target, min, max) : DIAL_START;
     const [tx, ty] = this._pointAt(endDeg, R);
     const curDeg = current != null ? this._angleFor(current, min, max) : null;
+    // Sweep layout: solid accent → current knob → wavy segment → target knob
+    // → gray remainder. Without a current temp, the whole sweep waves.
+    let solidEnd = null;
+    let waveStart = null;
+    let waveEnd = null;
+    if (active && curDeg != null) {
+      solidEnd = Math.min(curDeg, endDeg);
+      waveStart = solidEnd;
+      waveEnd = Math.max(curDeg, endDeg);
+    } else if (active) {
+      waveStart = DIAL_START;
+      waveEnd = endDeg;
+    }
 
     // Wave/accent color follows the *action* when running, else the mode.
     const accent =
@@ -295,14 +307,31 @@ class MateriaThermostat extends ActionMixin(LitElement) {
             @pointerup=${this._endDialDrag}
             @pointercancel=${this._endDialDrag}
           >
-            <path d=${this._arcPath(DIAL_START, DIAL_START + DIAL_SWEEP, R)} class="track" />
-            ${curDeg != null
+            ${(() => {
+              // Gray track only covers the REMAINDER (past the furthest knob),
+              // M3-slider style, with a small gap — never under the sweep.
+              const end = DIAL_START + DIAL_SWEEP;
+              const furthest = active ? Math.max(endDeg, curDeg ?? endDeg) : DIAL_START;
+              const from = active ? Math.min(furthest + 8, end) : DIAL_START;
+              return from < end - 0.5
+                ? svg`<path d=${this._arcPath(from, end, R)} class="track" />`
+                : "";
+            })()}
+            ${!active && curDeg != null
               ? svg`<circle
                   cx=${this._pointAt(curDeg, R)[0]} cy=${this._pointAt(curDeg, R)[1]}
                   r="1.6" class="current-dot" />`
               : ""}
-            ${active
-              ? svg`<path d=${this._wavePath(endDeg, R)} class="sweep" style="stroke:${accent}" />`
+            ${active && solidEnd != null && solidEnd > DIAL_START + 0.5
+              ? svg`<path d=${this._arcPath(DIAL_START, solidEnd, R)} class="sweep" style="stroke:${accent}" />`
+              : ""}
+            ${active && waveEnd != null && waveEnd > waveStart + 0.5
+              ? svg`<path d=${this._wavePath(waveStart, waveEnd, R)} class="sweep" style="stroke:${accent}" />`
+              : ""}
+            ${active && curDeg != null
+              ? svg`<circle
+                  cx=${this._pointAt(curDeg, R)[0]} cy=${this._pointAt(curDeg, R)[1]}
+                  r="3.4" class="current-knob" style="fill:${accent}" />`
               : ""}
             ${active
               ? svg`<circle cx=${tx} cy=${ty} r="5" class="thumb" style="stroke:${accent}" />`
