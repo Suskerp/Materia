@@ -64,6 +64,13 @@ export const styles = [
       stroke-width: 2.5;
     }
 
+    /* Off: setpoint still visible, just quiet. */
+    .thumb.muted {
+      stroke: var(--md-sys-color-on-surface-variant, #888);
+      stroke-width: 2;
+      opacity: 0.7;
+    }
+
     .center {
       position: relative;
       display: flex;

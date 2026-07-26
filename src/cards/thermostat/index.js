@@ -319,7 +319,10 @@ class MateriaThermostat extends ActionMixin(LitElement) {
 
     const R = 42;
     const endDeg = active ? this._angleFor(target, min, max) : DIAL_START;
-    const [tx, ty] = this._pointAt(endDeg, R);
+    // Even when OFF, the dial should show WHERE the setpoint sits — a muted
+    // thumb on the track instead of an empty ring.
+    const tgtDeg = target != null ? this._angleFor(target, min, max) : null;
+    const [tx, ty] = this._pointAt(active ? endDeg : (tgtDeg ?? endDeg), R);
     const curDeg = current != null ? this._angleFor(current, min, max) : null;
     // Sweep layout: solid accent → current knob → wavy segment → target knob
     // → gray remainder. Without a current temp, the whole sweep waves.
@@ -400,7 +403,9 @@ class MateriaThermostat extends ActionMixin(LitElement) {
               : ""}
             ${active
               ? svg`<circle cx=${tx} cy=${ty} r="5" class="thumb" style="stroke:${accent}" />`
-              : ""}
+              : tgtDeg != null
+                ? svg`<circle cx=${tx} cy=${ty} r="4" class="thumb muted" />`
+                : ""}
           </svg>
           <div class="center" @click=${() => this._fireMoreInfo(this.config.entity)}>
             <div class="mode-label">${modeLabel}</div>
