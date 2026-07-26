@@ -153,7 +153,8 @@ class MateriaThermostat extends ActionMixin(LitElement) {
       const settled = Math.abs(nextAmp - targetAmp) < 0.01;
       this._amp = settled ? targetAmp : nextAmp;
       if (this._amp > 0.005 || targetAmp > 0) {
-        this._phase += action === "cooling" ? 0.028 : traveling ? -0.028 : -0.008;
+        // Barely above the auto-holding breathe — calm, not busy.
+        this._phase += action === "cooling" ? 0.012 : traveling ? -0.012 : -0.008;
         // Mutate the wave path directly — _phase/_amp are deliberately NOT
         // reactive; re-rendering the whole card (and its button-group child)
         // at 60fps was pure waste. Geometry is stashed by render().
