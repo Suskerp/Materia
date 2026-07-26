@@ -19,7 +19,7 @@ const ACTIVE_STATES = ["on", "open", "running", "playing", "heat", "heating", "h
 let uid = 0;
 
 /**
- * Expressive view-only sensor tile (materia-sensor): the weather-metric look
+ * Expressive view-only sensor tile (materia-glance-tile): the weather-metric look
  * for ANY entity. One entity per card; the visualization is picked from the
  * device class (override with `variant`):
  *
@@ -37,7 +37,7 @@ let uid = 0;
  *
  * View only: tap opens more-info (or any configured tap_action).
  */
-class MateriaSensor extends ActionMixin(LitElement) {
+class MateriaGlanceTile extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -48,7 +48,7 @@ class MateriaSensor extends ActionMixin(LitElement) {
   static styles = styles;
 
   static getConfigElement() {
-    return document.createElement("materia-sensor-editor");
+    return document.createElement("materia-glance-tile-editor");
   }
 
   static getStubConfig(hass) {
@@ -57,7 +57,7 @@ class MateriaSensor extends ActionMixin(LitElement) {
   }
 
   setConfig(config) {
-    if (!config.entity) throw new Error("Materia Sensor: entity is required");
+    if (!config.entity) throw new Error("Materia Glance Tile: entity is required");
     this.config = { ...config };
   }
 
@@ -313,12 +313,12 @@ class MateriaSensor extends ActionMixin(LitElement) {
   }
 }
 
-customElements.define("materia-sensor", MateriaSensor);
+customElements.define("materia-glance-tile", MateriaGlanceTile);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "materia-sensor",
-  name: "Materia Sensor",
+  type: "materia-glance-tile",
+  name: "Materia Glance Tile",
   description: "Expressive view-only sensor tile — percent fill, thermometer, power bars, spinning pump star, and a graceful fallback.",
   preview: true,
 });

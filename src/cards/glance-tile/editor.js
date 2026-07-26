@@ -10,7 +10,7 @@ const VARIANTS = [
   { value: "plain", label: "Plain value" },
 ];
 
-class MateriaSensorEditor extends SmartEditorBase {
+class MateriaGlanceTileEditor extends SmartEditorBase {
   _formData() {
     return { variant: "auto", ...this._config };
   }
@@ -67,4 +67,4 @@ class MateriaSensorEditor extends SmartEditorBase {
   }
 }
 
-customElements.define("materia-sensor-editor", MateriaSensorEditor);
+customElements.define("materia-glance-tile-editor", MateriaGlanceTileEditor);
