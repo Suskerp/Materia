@@ -9,6 +9,7 @@ export const styles = [
   motionTokens,
   css`
     :host {
+      display: block;
       height: 100%;
     }
 
@@ -16,14 +17,14 @@ export const styles = [
       background: transparent;
       box-shadow: none;
       border: none;
+      display: block;
       height: 100%;
-      display: flex;
     }
 
     .glance {
       container-type: inline-size;
-      flex: 1; /* fill the flexed ha-card — without this the pill shrinks to content */
       width: 100%;
+      height: 100%;
       min-height: 88px; /* same height as the materia-card family */
       box-sizing: border-box;
       display: flex;
