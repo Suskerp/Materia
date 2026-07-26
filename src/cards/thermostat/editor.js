@@ -16,6 +16,11 @@ class MateriaThermostatEditor extends SmartEditorBase {
           { name: "step", label: "Step", selector: { number: { min: 0.1, max: 2, step: 0.1, mode: "box" } } },
           { name: "show_current", label: "Show current temperature", selector: { boolean: {} } },
           { name: "current_label", label: '"Currently" label', selector: { text: {} } },
+          { name: "wave", label: "Wave animation", selector: { select: { mode: "dropdown", options: [
+            { value: "auto", label: "Auto (hvac_action, or inferred from temps)" },
+            { value: "always", label: "Always (whenever the mode is on)" },
+            { value: "never", label: "Never" },
+          ] } } },
         ],
       },
       {

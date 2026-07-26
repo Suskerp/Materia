@@ -67,6 +67,28 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     return this._entity?.attributes?.hvac_action ?? "";
   }
 
+  /** What the wave should express. hvac_action when the integration reports
+   *  it; otherwise inferred from mode + current-vs-target (many integrations,
+   *  e.g. ViCare, don't expose hvac_action at all). `wave: always` animates
+   *  whenever the mode is on; `never` disables. */
+  get _waveAction() {
+    const mode = this._mode;
+    if (mode === "off" || this.config.wave === "never") return "";
+    if (this.config.wave === "always") return mode === "cool" ? "cooling" : "heating";
+    const action = this._action;
+    if (action === "heating" || action === "cooling") return action;
+    if (action && action !== "idle") return ""; // explicitly off/fan/drying
+    const cur = this._current;
+    const tgt = this._target;
+    if (tgt == null) return "";
+    if (action === "idle") return ""; // integration says it's resting
+    // No hvac_action support — infer intent from the temperatures.
+    if (cur == null) return mode === "cool" ? "cooling" : mode === "heat" ? "heating" : "";
+    if ((mode === "heat" || mode === "auto" || mode === "heat_cool") && cur < tgt - 0.2) return "heating";
+    if ((mode === "cool" || mode === "auto" || mode === "heat_cool") && cur > tgt + 0.2) return "cooling";
+    return "";
+  }
+
   get _mode() {
     return this._entity?.state ?? "off";
   }
@@ -98,7 +120,7 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     if (this._raf) return;
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
     const tick = () => {
-      const action = this._action;
+      const action = this._waveAction;
       const active = action === "heating" || action === "cooling";
       const targetAmp = active && !reduced ? 1 : 0;
       const nextAmp = this._amp + (targetAmp - this._amp) * 0.06;
@@ -120,10 +142,11 @@ class MateriaThermostat extends ActionMixin(LitElement) {
   }
 
   updated(changedProps) {
+    // Wake the loop whenever anything (hass tick, optimistic target, config)
+    // turns the wave on — connectedCallback runs before hass exists, so the
+    // initial start almost always happens here.
+    if (this._waveAction && !this._raf) this._startLoop();
     if (changedProps.has("hass")) {
-      // Wake the loop when heating/cooling starts.
-      const action = this._action;
-      if ((action === "heating" || action === "cooling") && !this._raf) this._startLoop();
       // Reconcile optimistic target.
       if (this._optimisticTemp != null) {
         const actual = this._numRaw(this._entity?.attributes?.temperature);
@@ -240,7 +263,7 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     const target = this._target;
     const current = this._current;
     const mode = this._mode;
-    const action = this._action;
+    const action = this._waveAction;
     const meta = MODE_META[mode] || MODE_META.off;
     const active = mode !== "off" && target != null;
 
