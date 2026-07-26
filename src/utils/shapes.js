@@ -112,18 +112,26 @@ export function arrowPath(cx, cy, r, rotate = 0) {
     { x: 0.499, y: -0.16, r: 0.215 }, // apex
     { x: 1.225, y: 1.06, r: 0.211 },  // base right
   ];
-  const xs = raw.map((p) => p.x);
-  const ys = raw.map((p) => p.y);
+  // Rotate FIRST, then center + scale by the ROTATED bounds — centering the
+  // unrotated bbox left the shape off-center (and looking squished) at
+  // rotated bearings.
+  const cosR = Math.cos(rotate);
+  const sinR = Math.sin(rotate);
+  const rot = raw.map((p) => ({
+    x: p.x * cosR - p.y * sinR,
+    y: p.x * sinR + p.y * cosR,
+    r: p.r,
+  }));
+  const xs = rot.map((p) => p.x);
+  const ys = rot.map((p) => p.y);
   const cx0 = (Math.min(...xs) + Math.max(...xs)) / 2;
   const cy0 = (Math.min(...ys) + Math.max(...ys)) / 2;
   const s = (2 * r) / Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
-  const cosR = Math.cos(rotate);
-  const sinR = Math.sin(rotate);
-  return filletPath(raw.map((p) => {
-    const x = (p.x - cx0) * s;
-    const y = (p.y - cy0) * s;
-    return { x: cx + x * cosR - y * sinR, y: cy + x * sinR + y * cosR, r: p.r * s };
-  }));
+  return filletPath(rot.map((p) => ({
+    x: cx + (p.x - cx0) * s,
+    y: cy + (p.y - cy0) * s,
+    r: p.r * s,
+  })));
 }
 
 /** SVG arc path (for gauges), angles in degrees, 0° = 12 o'clock, clockwise. */
