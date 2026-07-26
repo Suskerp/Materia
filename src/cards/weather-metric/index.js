@@ -238,10 +238,17 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
       ? this._numRaw(this.hass.states[this.config.bearing_entity]?.state)
       : this._numRaw(this._weatherAttr("wind_bearing"));
     const from = bearing != null ? `${this.config.from_label ?? "From"} ${compass(bearing)}` : "";
+    // The blob IS the indicator: its point aims where the wind blows toward
+    // (bearing is the direction it comes FROM), and it sharpens with strength
+    // — soft roundness in calm air, a defined arrowhead in a gale.
+    const flowDeg = bearing != null ? (bearing + 180) % 360 : 180; // default: point down
+    const rotate = ((flowDeg - 90) * Math.PI) / 180; // compass → SVG angle (0=N=up)
+    const kmh = this._convertWind(speed, srcUnit, "km/h").v;
+    const rounding = Math.max(0.2, 0.42 - (Math.min(kmh, 60) / 60) * 0.2);
     return html`
       <div class="rect-tile clip wind">
         <svg class="blob-bg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <path d=${windBlobPath(50, 50, 46)} class="blob-fill" />
+          <path d=${windBlobPath(50, 50, 46, rotate, rounding)} class="blob-fill" />
         </svg>
         <div class="overlay">
           ${this._header("mdi:weather-windy", this.config.name ?? "Wind")}

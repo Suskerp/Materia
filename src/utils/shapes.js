@@ -31,13 +31,14 @@ export function cookiePath(cx, cy, r, lobes = 12, amp = r * 0.1, rotate = 0) {
 }
 
 /** Soft rounded-triangle blob (Pixel wind tile): the canonical MaterialShapes
- *  Triangle (3 vertices, corner rounding) with a softer 0.3 rounding, point
- *  down like the Pixel tile. */
-export function windBlobPath(cx, cy, r) {
-  return roundedPolygonPath(cx, cy - r * 0.08, r * 1.12, {
+ *  Triangle. The blob is a live indicator — `rotate` aims the point at the
+ *  direction the wind blows toward, and `rounding` softens with calm air /
+ *  sharpens with strong wind. */
+export function windBlobPath(cx, cy, r, rotate = Math.PI / 2, rounding = 0.3) {
+  return roundedPolygonPath(cx, cy, r * 1.12, {
     vertices: 3,
-    rounding: 0.3,
-    rotate: Math.PI / 2,
+    rounding,
+    rotate,
   });
 }
 
