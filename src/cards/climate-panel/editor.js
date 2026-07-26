@@ -14,7 +14,7 @@ const ADD_BTN =
   "color:inherit;font-family:inherit;font-size:13px;font-weight:600;padding:8px 16px;" +
   "border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;";
 
-class MateriaClimatePocEditor extends SmartEditorBase {
+class MateriaClimatePanelEditor extends SmartEditorBase {
   static properties = {
     _secIdx: { state: true },
     _cardIdx: { state: true },
@@ -331,4 +331,4 @@ class MateriaClimatePocEditor extends SmartEditorBase {
   }
 }
 
-customElements.define("materia-climate-poc-editor", MateriaClimatePocEditor);
+customElements.define("materia-climate-panel-editor", MateriaClimatePanelEditor);

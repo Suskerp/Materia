@@ -15,10 +15,8 @@ import "./editor.js";
  * entity's options or manual options). Sections take `info` (text or Jinja
  * template) and `actions: [{label, icon?, tap_action}]` chips for the open
  * bar. The card also works with no sections at all (dial + modes only).
- *
- * (Variants B "zones first" and C "vertical slider" were compared and
- * retired; stray legacy keys like `variant:`/`zones:` are ignored.)
  */
+
 // The palette the dial speaks — mode buttons, zone switches and other accents
 // all sync to the active hvac mode.
 const MODE_COLORS = {
@@ -29,7 +27,7 @@ const MODE_COLORS = {
   off: ["var(--md-sys-color-secondary)", "var(--md-sys-color-on-secondary)"],
 };
 
-class MateriaClimatePoc extends ActionMixin(LitElement) {
+class MateriaClimatePanel extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -39,7 +37,7 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
   static styles = styles;
 
   static getConfigElement() {
-    return document.createElement("materia-climate-poc-editor");
+    return document.createElement("materia-climate-panel-editor");
   }
 
   static getStubConfig(hass) {
@@ -48,7 +46,7 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
   }
 
   setConfig(config) {
-    if (!config.entity) throw new Error("Materia Climate POC: entity is required");
+    if (!config.entity) throw new Error("Materia Climate Panel: entity is required");
     this.config = { ...config };
     this._extraEls = null;
     if (this.isConnected) this._createExtraCards();
@@ -227,7 +225,7 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
 
   render() {
     if (!this.hass || !this.config) return html``;
-    if (!this._entity) return html`<ha-card class="poc">Unknown entity: ${this.config.entity}</ha-card>`;
+    if (!this._entity) return html`<ha-card class="panel">Unknown entity: ${this.config.entity}</ha-card>`;
     const secs = this._accordionSections();
     // One wallet section is always open — default to the first non-menu one.
     const firstAcc = secs.findIndex((s) => s.style !== "menu");
@@ -241,7 +239,7 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
     // The accordion sections LIVE IN the connected stack (2px seams, group
     // silhouette): closed bars are compact segments, the open one grows tall.
     return html`
-      <ha-card class="poc" style=${sync ? `--ms-track:${modeAccent};--ms-thumb:${modeContainer};` : ""}>
+      <ha-card class="panel" style=${sync ? `--ms-track:${modeAccent};--ms-thumb:${modeContainer};` : ""}>
         <materia-thermostat
           .hass=${this.hass}
           .config=${{
@@ -287,12 +285,12 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
   }
 }
 
-customElements.define("materia-climate-poc", MateriaClimatePoc);
+customElements.define("materia-climate-panel", MateriaClimatePanel);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "materia-climate-poc",
-  name: "Materia Climate POC",
-  description: "Climate surface: thermostat dial hero + connected stack of modes, zone ladder and water heater.",
-  preview: false,
+  type: "materia-climate-panel",
+  name: "Materia Climate Panel",
+  description: "Climate panel: thermostat dial hero, mode group, and wallet sections you compose with any cards or menus.",
+  preview: true,
 });

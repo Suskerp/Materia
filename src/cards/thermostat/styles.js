@@ -11,7 +11,8 @@ export const styles = [
     ha-card {
       container-type: inline-size;
       border-radius: 28px;
-      padding: clamp(12px, 5cqi, 24px);
+      /* Overridable when embedded (climate panel tightens the bottom). */
+      padding: var(--th-padding, clamp(12px, 5cqi, 24px));
       display: flex;
       flex-direction: column;
       align-items: center;
