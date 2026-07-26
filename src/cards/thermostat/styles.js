@@ -155,12 +155,14 @@ export const styles = [
       width: min(72%, 280px);
     }
 
+    /* Matches materia-button-group "tonal" segments exactly — the steppers
+       and the mode row below read as one component family. */
     .nudge .seg {
       flex: 1 1 0;
       height: clamp(48px, 16cqi, 58px);
       border: none;
-      background: var(--th-container, var(--md-sys-color-secondary-container, rgba(0, 0, 0, 0.06)));
-      color: var(--th-on-container, var(--md-sys-color-on-secondary-container, var(--primary-text-color)));
+      background: var(--md-sys-color-secondary-container, var(--ha-card-background));
+      color: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
       display: grid;
       place-items: center;
       cursor: pointer;
@@ -186,7 +188,7 @@ export const styles = [
     .nudge .seg:active {
       flex-grow: 1.5;
       border-radius: 999px;
-      background: color-mix(in srgb, currentColor 12%, var(--th-container, var(--md-sys-color-secondary-container)));
+      background: color-mix(in srgb, currentColor 12%, var(--md-sys-color-secondary-container));
     }
 
     /* Vertical column (steppers: side) — MUST come after the generic .nudge
