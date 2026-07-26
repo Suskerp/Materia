@@ -6,17 +6,24 @@ import "./editor.js";
 const DIAL_START = -135; // degrees, 0 = 12 o'clock
 const DIAL_SWEEP = 270;
 
-// color = the strong accent (sweep/knobs/active mode bg) — per the theme's
-// climate-*-accent tokens; on = readable content color on that accent.
+// Per-mode palette:
+//   color        — strong accent (sweep, knobs, active-mode pill bg)
+//   on           — content color ON that accent
+//   container    — soft tonal fill (nudge buttons)
+//   onContainer  — content color ON the container
+// Icons stick to long-established Material Symbols names — newer ids like
+// mode-cool / thermostat-auto are missing from older icon-pack builds.
+const AUTO_ACCENT = "var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))";
+const AUTO_CONTAINER = "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-primary-container))";
 const MODE_META = {
-  auto: { icon: "m3o:thermostat-auto", color: "var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", on: "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-on-primary))" },
-  heat_cool: { icon: "m3o:mode-heat-cool", color: "var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", on: "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-on-primary))" },
-  heat: { icon: "m3o:mode-heat", color: "var(--md-sys-cust-color-climate-heat-accent, #a14614)", on: "var(--md-sys-cust-color-climate-heat-container, #ffeee9)" },
-  cool: { icon: "m3o:mode-cool", color: "var(--md-sys-cust-color-climate-cool-accent, #327ea7)", on: "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)" },
-  dry: { icon: "m3o:cool-to-dry", color: "var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", on: "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-on-primary))" },
-  fan_only: { icon: "m3o:mode-fan", color: "var(--md-sys-color-secondary)", on: "var(--md-sys-color-on-secondary)" },
+  auto: { icon: "m3o:autorenew", color: AUTO_ACCENT, on: AUTO_CONTAINER, container: AUTO_CONTAINER, onContainer: AUTO_ACCENT },
+  heat_cool: { icon: "m3o:autorenew", color: AUTO_ACCENT, on: AUTO_CONTAINER, container: AUTO_CONTAINER, onContainer: AUTO_ACCENT },
+  heat: { icon: "m3o:local-fire-department", color: "var(--md-sys-cust-color-climate-heat-accent, #a14614)", on: "var(--md-sys-cust-color-climate-heat-container, #ffeee9)", container: "var(--md-sys-cust-color-climate-heat-container, #ffeee9)", onContainer: "var(--md-sys-cust-color-climate-heat-accent, #a14614)" },
+  cool: { icon: "m3o:ac-unit", color: "var(--md-sys-cust-color-climate-cool-accent, #327ea7)", on: "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)", container: "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)", onContainer: "var(--md-sys-cust-color-climate-cool-accent, #327ea7)" },
+  dry: { icon: "m3o:water-drop", color: AUTO_ACCENT, on: AUTO_CONTAINER, container: AUTO_CONTAINER, onContainer: AUTO_ACCENT },
+  fan_only: { icon: "m3o:mode-fan", color: "var(--md-sys-color-secondary)", on: "var(--md-sys-color-on-secondary)", container: "var(--md-sys-color-secondary-container)", onContainer: "var(--md-sys-color-on-secondary-container)" },
   // Soft neutral for off — a filled on-surface-variant pill reads far too harsh.
-  off: { icon: "m3o:power-settings-new", color: "var(--md-sys-color-surface-variant)", on: "var(--md-sys-color-on-surface-variant)" },
+  off: { icon: "m3o:power-settings-new", color: "var(--md-sys-color-surface-variant)", on: "var(--md-sys-color-on-surface-variant)", container: "var(--md-sys-color-surface-variant)", onContainer: "var(--md-sys-color-on-surface-variant)" },
 };
 
 /**
@@ -145,7 +152,7 @@ class MateriaThermostat extends ActionMixin(LitElement) {
       const settled = Math.abs(nextAmp - targetAmp) < 0.01;
       this._amp = settled ? targetAmp : nextAmp;
       if (this._amp > 0.005 || targetAmp > 0) {
-        this._phase += action === "cooling" ? 0.045 : traveling ? -0.045 : -0.012;
+        this._phase += action === "cooling" ? 0.028 : traveling ? -0.028 : -0.008;
         // Mutate the wave path directly — _phase/_amp are deliberately NOT
         // reactive; re-rendering the whole card (and its button-group child)
         // at 60fps was pure waste. Geometry is stashed by render().
@@ -354,7 +361,7 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     return html`
       <ha-card
         class="${unavailable ? "unavailable" : ""}"
-        style="--th-container:${accentOn};--th-on-container:${accent};"
+        style="--th-container:${accentMeta.container};--th-on-container:${accentMeta.onContainer};"
       >
         <div class="dial-wrap">
           <svg
@@ -407,10 +414,10 @@ class MateriaThermostat extends ActionMixin(LitElement) {
         </div>
 
         <div class="nudge">
-          <button class="round" @click=${() => this._nudge(-(this.config.step ?? 0.5))}>
+          <button class="seg minus" @click=${() => this._nudge(-(this.config.step ?? 0.5))}>
             <ha-icon icon="m3o:remove"></ha-icon>
           </button>
-          <button class="round" @click=${() => this._nudge(this.config.step ?? 0.5)}>
+          <button class="seg plus" @click=${() => this._nudge(this.config.step ?? 0.5)}>
             <ha-icon icon="m3o:add"></ha-icon>
           </button>
         </div>

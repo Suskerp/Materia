@@ -104,19 +104,23 @@ export const styles = [
 
     .nudge {
       display: flex;
-      gap: clamp(16px, 8cqi, 32px);
+      gap: 3px;
       margin-top: calc(-1 * clamp(8px, 4cqi, 20px));
     }
 
-    /* M3 Expressive tonal icon buttons: filled containers (no outline) that
-       shape-morph round → rounded-square on press. */
-    .nudge .round {
-      width: clamp(48px, 17cqi, 60px);
-      height: clamp(48px, 17cqi, 60px);
-      border-radius: 50%;
+    /* M3 Expressive connected pair: outer corners pill, inner corners small
+       (the connected-group silhouette). Pressing a segment EXPANDS it while
+       its neighbor compresses (animated flex-grow) and its shape morphs to a
+       full pill — the signature expressive button-group interaction. Colors
+       follow the active mode's climate palette. */
+    .nudge {
+      width: min(72%, 280px);
+    }
+
+    .nudge .seg {
+      flex: 1 1 0;
+      height: clamp(48px, 16cqi, 58px);
       border: none;
-      /* Follows the active mode's climate palette (container fill, accent
-         icon) so the buttons read as part of the dial, not generic chrome. */
       background: var(--th-container, var(--md-sys-color-secondary-container, rgba(0, 0, 0, 0.06)));
       color: var(--th-on-container, var(--md-sys-color-on-secondary-container, var(--primary-text-color)));
       display: grid;
@@ -124,18 +128,26 @@ export const styles = [
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       transition:
+        flex-grow var(--md-sys-motion-expressive-fast-spatial),
         border-radius var(--md-sys-motion-expressive-fast-spatial),
-        background-color var(--md-sys-motion-fast-effects),
-        transform var(--md-sys-motion-expressive-fast-spatial);
+        background-color var(--md-sys-motion-fast-effects);
     }
 
-    .nudge .round ha-icon {
+    .nudge .seg.minus {
+      border-radius: 999px 10px 10px 999px;
+    }
+
+    .nudge .seg.plus {
+      border-radius: 10px 999px 999px 10px;
+    }
+
+    .nudge .seg ha-icon {
       --mdc-icon-size: clamp(22px, 8cqi, 26px);
     }
 
-    .nudge .round:active {
-      border-radius: 30%;
-      transform: scale(0.94);
+    .nudge .seg:active {
+      flex-grow: 1.5;
+      border-radius: 999px;
       background: color-mix(in srgb, currentColor 12%, var(--th-container, var(--md-sys-color-secondary-container)));
     }
 
