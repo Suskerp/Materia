@@ -87,7 +87,22 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     return this._truthy(st);
   }
 
-  _isOptionActive(opt) {
+  /** Truthy interpretation of a rendered template result. */
+  _tplTruthy(v) {
+    if (typeof v === "boolean") return v;
+    const s = String(v ?? "").trim().toLowerCase();
+    return ["true", "on", "yes", "1", "open", "home", "active"].includes(s);
+  }
+
+  _isOptionActive(opt, i) {
+    // Highest precedence: an explicit per-option `active` — a template
+    // (attribute-based logic etc.) or a literal boolean.
+    if (opt.active != null) {
+      if (this._isTemplate(opt.active)) {
+        return this._tplTruthy(this._tplResults?.[`optActive${i}`]);
+      }
+      return this._tplTruthy(opt.active);
+    }
     // Per-button entity wins over the group entity, so related controls with
     // their own state can be combined in one group.
     if (opt.entity) return this._entityOptionActive(opt);
@@ -134,7 +149,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
         <div class="group ${unavailable ? 'unavailable' : ''} ${multiSelect ? 'multi' : ''}"
           style="${!multiSelect ? `height: ${height}px;` : `--btn-height: ${height}px;`} ${columns ? `--btn-columns: ${columns};` : ''}">
           ${options.map((opt, i) => {
-            const isActive = this._isOptionActive(opt);
+            const isActive = this._isOptionActive(opt, i);
             const isFirst = i === 0;
             const isLast = i === options.length - 1;
 
@@ -246,6 +261,10 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("color_active", "_resolvedColorActive");
       this._resolveField("color_on_active", "_resolvedColorOnActive");
+      // Per-option active templates (attribute-based active states).
+      this._resolvedOptions.forEach((opt, i) => {
+        if (opt.active != null) this._resolveTemplateValue(`optActive${i}`, opt.active);
+      });
     }
     if (changedProps.has("hass") && this._optimisticValue != null) {
       const entity = this.hass?.states[this.config.entity];

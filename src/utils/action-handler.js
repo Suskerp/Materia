@@ -161,6 +161,49 @@ export const ActionMixin = (superClass) =>
      * when the template string is unchanged, calling _resolveField on every
      * `hass` update (as the cards do) costs nothing after the first subscribe.
      */
+    /**
+     * Like _resolveField, but for templates that don't live at a top-level
+     * config key (e.g. per-option templates in a list). Pass the template
+     * value directly with a stable key; results land in this._tplResults[key]
+     * and trigger a re-render. Same WS render_template machinery + teardown.
+     */
+    _resolveTemplateValue(key, template) {
+      this._tplSubs ??= {};
+      this._tplResults ??= {};
+      const existing = this._tplSubs[key];
+
+      if (!this._isTemplate(template)) {
+        if (existing) {
+          this._tplSubs[key] = null;
+          existing.unsub?.then((u) => u && u()).catch(() => {});
+          delete this._tplResults[key];
+        }
+        return;
+      }
+
+      if (existing && existing.template === template) return;
+      if (existing) existing.unsub?.then((u) => u && u()).catch(() => {});
+
+      const conn = this.hass?.connection;
+      if (!conn) return;
+
+      const rec = { template, unsub: null };
+      this._tplSubs[key] = rec;
+      rec.unsub = conn.subscribeMessage(
+        (msg) => {
+          if (this._tplSubs?.[key] !== rec) return; // superseded
+          const result = msg?.result;
+          const value = typeof result === "string" ? result.trim() : result;
+          if (this._tplResults[key] !== value) {
+            this._tplResults[key] = value;
+            this.requestUpdate();
+          }
+        },
+        { type: "render_template", template, report_errors: false }
+      );
+      rec.unsub.catch(() => {});
+    }
+
     _resolveField(configKey, propKey) {
       const val = this.config?.[configKey];
       this._tplSubs ??= {};
