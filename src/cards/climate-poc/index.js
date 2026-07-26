@@ -248,6 +248,7 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
             ...(this.config.step != null ? { step: this.config.step } : {}),
             ...(this.config.min_temp != null ? { min_temp: this.config.min_temp } : {}),
             ...(this.config.max_temp != null ? { max_temp: this.config.max_temp } : {}),
+            ...(this.config.temperature_entity ? { temperature_entity: this.config.temperature_entity } : {}),
           }}
         ></materia-thermostat>
         <div class="stack ${this.config.reserve_height ? "reserve" : ""}">
