@@ -103,9 +103,11 @@ export const styles = [
 
     /* Quieter numerals — the pill should sit at the same visual volume as
        the materia-card rows around it. */
+    /* Big-but-medium: the numeral earns presence through SIZE alone — bold
+       at this scale wins on too many contrast axes at once and shouts. */
     .now {
-      font-size: 24px;
-      font-weight: 700;
+      font-size: 26px;
+      font-weight: 500;
       flex-shrink: 0;
     }
 
