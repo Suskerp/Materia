@@ -293,10 +293,10 @@ export const styles = [
       min-height: 0;
     }
 
-    /* Ladder inset: 4px container + 14px row padding ≈ the bar's 18px icon
-       inset, so bar icon and row icons share a left edge. */
+    /* Ladder inset: breathing room from the section edge; rows sit clearly
+       INSIDE the open section rather than flush against its border. */
     .acc-inner .zones {
-      padding: 0 4px 8px;
+      padding: 0 12px 12px;
     }
 
     /* All off/on — right side of the OPEN bar, no orphan band. */
