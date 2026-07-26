@@ -14,7 +14,7 @@ const METRICS = [
 
 class MateriaWeatherMetricEditor extends SmartEditorBase {
   _formData() {
-    return { metric: "wind", size: 4, ...this._config };
+    return { metric: "wind", size: 3, ...this._config };
   }
 
   _sectionsSignature() {

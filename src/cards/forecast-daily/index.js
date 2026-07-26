@@ -192,10 +192,13 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
             const lo = this._num(day.templow);
             const precip = this._num(day.precipitation_probability);
             const selected = i === this._selected;
+            // Days beyond the hourly horizon (KMI ≈ 3 days) have nothing to
+            // expand — render them inert instead of teasing a dead tap.
+            const expandable = this.config.show_hourly !== false && this._hoursFor(day).length > 0;
             return html`
               <button
-                class="pill ${selected ? "selected" : ""}"
-                @click=${() => this._select(i, day)}
+                class="pill ${selected ? "selected" : ""} ${expandable ? "" : "static"}"
+                @click=${expandable ? () => this._select(i, day) : undefined}
               >
                 <span class="hi">${hi != null ? `${hi}°` : "—"}</span>
                 <span class="lo">${lo != null ? `${lo}°` : "—"}</span>

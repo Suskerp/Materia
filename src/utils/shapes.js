@@ -30,11 +30,80 @@ export function cookiePath(cx, cy, r, lobes = 12, amp = r * 0.1, rotate = 0) {
   return d + "Z";
 }
 
-/** Soft rounded-triangle blob (Pixel wind tile): 3 lobes with a SHALLOW
- *  amplitude — deep lobes read as a trefoil/molar, ~13% reads as a soft
- *  triangle. Rotated so one point faces down (like the Pixel tile). */
+/** Soft rounded-triangle blob (Pixel wind tile): the canonical MaterialShapes
+ *  Triangle (3 vertices, corner rounding) with a softer 0.3 rounding, point
+ *  down like the Pixel tile. */
 export function windBlobPath(cx, cy, r) {
-  return cookiePath(cx, cy, r * 0.95, 3, r * 0.13, Math.PI / 2);
+  return roundedPolygonPath(cx, cy - r * 0.08, r * 1.12, {
+    vertices: 3,
+    rounding: 0.3,
+    rotate: Math.PI / 2,
+  });
+}
+
+/** Canonical MaterialShapes cookie: star(vertices, innerRadius .8, rounding .5). */
+export function materialCookiePath(cx, cy, r, vertices = 12) {
+  return roundedPolygonPath(cx, cy, r, {
+    vertices,
+    innerRadius: 0.8,
+    rounding: 0.5,
+    rotate: -Math.PI / 2,
+  });
+}
+
+/**
+ * Port of androidx.graphics.shapes RoundedPolygon (the geometry behind
+ * androidx.compose.material3.MaterialShapes, which Breezy Weather uses).
+ * Star polygon vertices alternating outer/inner radius, each corner replaced
+ * by a circular-arc fillet tangent to both edges. Canonical parameters:
+ *   Cookie12Sided: star(12, innerRadius .8, rounding .5)
+ *   Cookie9Sided:  star(9,  innerRadius .8, rounding .5)
+ *   Sunny:         star(8,  innerRadius .8, rounding .15)
+ *   Triangle:      polygon(3, rounding .2)
+ */
+export function roundedPolygonPath(cx, cy, R, { vertices, innerRadius = null, rounding = 0.2, rotate = 0 } = {}) {
+  // Vertex ring (star = alternating outer/inner).
+  const pts = [];
+  const n = innerRadius != null ? vertices * 2 : vertices;
+  for (let i = 0; i < n; i++) {
+    const r = innerRadius != null && i % 2 === 1 ? R * innerRadius : R;
+    const a = rotate + (i / n) * Math.PI * 2;
+    pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+  }
+  const rAbs = rounding * R;
+  const seg = [];
+  for (let i = 0; i < n; i++) {
+    const P = pts[(i - 1 + n) % n];
+    const V = pts[i];
+    const N = pts[(i + 1) % n];
+    const uP = [P[0] - V[0], P[1] - V[1]];
+    const uN = [N[0] - V[0], N[1] - V[1]];
+    const lP = Math.hypot(...uP);
+    const lN = Math.hypot(...uN);
+    uP[0] /= lP; uP[1] /= lP;
+    uN[0] /= lN; uN[1] /= lN;
+    // Interior half-angle at V.
+    const dot = uP[0] * uN[0] + uP[1] * uN[1];
+    const half = Math.acos(Math.min(1, Math.max(-1, dot))) / 2;
+    // Cut distance for a tangent fillet of radius rAbs, capped to half edge.
+    let d = rAbs / Math.tan(half);
+    d = Math.min(d, lP * 0.5, lN * 0.5);
+    const rEff = d * Math.tan(half); // radius that actually fits after capping
+    const T1 = [V[0] + uP[0] * d, V[1] + uP[1] * d];
+    const T2 = [V[0] + uN[0] * d, V[1] + uN[1] * d];
+    // Arc direction: convex corners bow outward, concave (star inner) inward.
+    // (Verified numerically: with this vertex winding, convex needs sweep 1.)
+    const cross = uP[0] * uN[1] - uP[1] * uN[0];
+    seg.push({ T1, T2, rEff, sweep: cross > 0 ? 0 : 1 });
+  }
+  let d = `M${seg[0].T1[0].toFixed(2)} ${seg[0].T1[1].toFixed(2)} `;
+  for (let i = 0; i < n; i++) {
+    const s = seg[i];
+    const next = seg[(i + 1) % n];
+    d += `A${s.rEff.toFixed(2)} ${s.rEff.toFixed(2)} 0 0 ${s.sweep} ${s.T2[0].toFixed(2)} ${s.T2[1].toFixed(2)} `;
+    d += `L${next.T1[0].toFixed(2)} ${next.T1[1].toFixed(2)} `;
+  }
+  return d + "Z";
 }
 
 /** SVG arc path (for gauges), angles in degrees, 0° = 12 o'clock, clockwise. */

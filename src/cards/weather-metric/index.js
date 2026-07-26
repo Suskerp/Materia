@@ -1,6 +1,6 @@
 import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { cookiePath, windBlobPath, arcPath } from "../../utils/shapes.js";
+import { cookiePath, windBlobPath, materialCookiePath, arcPath } from "../../utils/shapes.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -142,7 +142,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     // Global size 1–10 caps the tile width (10 = fill the cell), matching the
     // weather-tile's scale so mixed grids line up.
     const sizes = ["120px", "150px", "185px", "225px", "270px", "320px", "380px", "460px", "560px", "none"];
-    const size = Math.min(10, Math.max(1, this.config.size ?? 4));
+    const size = Math.min(10, Math.max(1, this.config.size ?? 3));
     return html`
       <ha-card
         style="--wm-size:${sizes[size - 1]};${bg ? `--wm-color:${bg};` : ""}${fg ? `--wm-color-on:${fg};` : ""}"
@@ -210,7 +210,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     return html`
       <div class="shape-tile">
         <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <path d=${cookiePath(50, 52, 45, 12, 2.6)} class="shape-fill" />
+          <path d=${materialCookiePath(50, 52, 45, 12)} class="shape-fill" />
           ${dots}
         </svg>
         <div class="overlay">
@@ -234,7 +234,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     return html`
       <div class="shape-tile">
         <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <path d=${cookiePath(50, 52, 44, 14, 2.4)} class="shape-fill" />
+          <path d=${materialCookiePath(50, 52, 44, 12)} class="shape-fill" />
         </svg>
         <div class="overlay">
           ${this._header("mdi:eye-outline", this.config.name ?? "Visibility")}
@@ -440,7 +440,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
 
   getGridOptions() {
     const wide = this.config?.metric === "pollen";
-    return { columns: wide ? 12 : 6, rows: "auto", min_columns: wide ? 6 : 3 };
+    return { columns: wide ? 8 : 4, rows: "auto", min_columns: wide ? 6 : 3 };
   }
 
   getCardSize() {

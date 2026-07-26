@@ -60,6 +60,14 @@ export const styles = [
       transform: scale(0.96);
     }
 
+    .pill.static {
+      cursor: default;
+    }
+
+    .pill.static:active {
+      transform: none;
+    }
+
     .pill.selected {
       background: var(--md-sys-color-secondary-container);
       color: var(--md-sys-color-on-secondary-container);
