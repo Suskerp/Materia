@@ -198,6 +198,43 @@ class MateriaClimatePocEditor extends SmartEditorBase {
     `;
   }
 
+  /* Open-bar action chips — a managed list, not a YAML box. */
+  _renderActions(i, s) {
+    const acts = s.actions || [];
+    const patchAct = (ai, patch) => {
+      const next = acts.map((a, j) => (j === ai ? { ...a, ...patch } : a));
+      for (const k of Object.keys(patch)) {
+        if (patch[k] === "" || patch[k] == null) delete next[ai][k];
+      }
+      this._patchSec(i, { actions: next });
+    };
+    return html`
+      <div style="font-weight:600;font-size:13px;margin:6px 0 8px;">Bar actions (chips in the open bar)</div>
+      ${acts.map((a, ai) => html`
+        <div style="border:1px solid var(--md-sys-color-outline-variant, rgba(0,0,0,.15));border-radius:12px;padding:10px;margin-bottom:8px;">
+          <div style="display:flex;gap:6px;align-items:flex-start;">
+            <div style="flex:1;" @value-changed=${(e) => { e.stopPropagation(); patchAct(ai, { label: e.detail.value }); }}>
+              <ha-selector .hass=${this.hass} .selector=${{ text: {} }} .value=${a.label} .label=${"Label"}></ha-selector>
+            </div>
+            <div style="flex:1;" @value-changed=${(e) => { e.stopPropagation(); patchAct(ai, { icon: e.detail.value }); }}>
+              <ha-selector .hass=${this.hass} .selector=${{ icon: {} }} .value=${a.icon} .label=${"Icon"}></ha-selector>
+            </div>
+            <button style="${ICON_BTN}margin-top:12px;" title="Remove action"
+              @click=${() => this._patchSec(i, { actions: acts.filter((_, j) => j !== ai) })}>
+              <ha-icon icon="mdi:delete"></ha-icon>
+            </button>
+          </div>
+          <div style="margin-top:8px;" @value-changed=${(e) => { e.stopPropagation(); patchAct(ai, { tap_action: e.detail.value }); }}>
+            <ha-selector .hass=${this.hass} .selector=${{ ui_action: {} }} .value=${a.tap_action} .label=${"Action"}></ha-selector>
+          </div>
+        </div>
+      `)}
+      <button style="${ADD_BTN}margin-bottom:12px;" @click=${() => this._patchSec(i, { actions: [...acts, { label: "" }] })}>
+        <ha-icon icon="mdi:plus" style="--mdc-icon-size:16px;"></ha-icon>Add action
+      </button>
+    `;
+  }
+
   /* Section style: cards list + HA's own picker to add. */
   _renderSectionCards(i, s) {
     const cards = s.cards || [];
@@ -211,7 +248,7 @@ class MateriaClimatePocEditor extends SmartEditorBase {
     return html`
       ${this._sel("Info (closed-bar text — supports templates)", { template: {} }, s.info, (v) => this._patchSec(i, { info: v }))}
       ${this._sel("…or info from an entity's state", { entity: {} }, s.info_entity, (v) => this._patchSec(i, { info_entity: v }))}
-      ${this._sel("Bar actions (YAML: [{label, icon, tap_action}])", { object: {} }, s.actions, (v) => this._patchSec(i, { actions: v }))}
+      ${this._renderActions(i, s)}
       <div style="font-weight:600;font-size:13px;margin:6px 0 8px;">Cards</div>
       ${cards.map((c, ci) => html`
         <div style=${ROW} @click=${() => { this._cardIdx = ci; }}>

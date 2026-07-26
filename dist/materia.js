@@ -3274,10 +3274,34 @@ const w=globalThis,$=t=>t,k=w.trustedTypes,C=k?k.createPolicy("lit-html",{create
       <button style=${Qe} @click=${()=>this._patchSec(t,{options:[...i,{label:"",value:""}]})}>
         <ha-icon icon="mdi:plus" style="--mdc-icon-size:16px;"></ha-icon>Add option
       </button>
+    `}_renderActions(t,e){const i=e.actions||[],s=(e,s)=>{const o=i.map((t,i)=>i===e?{...t,...s}:t);for(const t of Object.keys(s))""!==s[t]&&null!=s[t]||delete o[e][t];this._patchSec(t,{actions:o})};return I`
+      <div style="font-weight:600;font-size:13px;margin:6px 0 8px;">Bar actions (chips in the open bar)</div>
+      ${i.map((e,o)=>I`
+        <div style="border:1px solid var(--md-sys-color-outline-variant, rgba(0,0,0,.15));border-radius:12px;padding:10px;margin-bottom:8px;">
+          <div style="display:flex;gap:6px;align-items:flex-start;">
+            <div style="flex:1;" @value-changed=${t=>{t.stopPropagation(),s(o,{label:t.detail.value})}}>
+              <ha-selector .hass=${this.hass} .selector=${{text:{}}} .value=${e.label} .label=${"Label"}></ha-selector>
+            </div>
+            <div style="flex:1;" @value-changed=${t=>{t.stopPropagation(),s(o,{icon:t.detail.value})}}>
+              <ha-selector .hass=${this.hass} .selector=${{icon:{}}} .value=${e.icon} .label=${"Icon"}></ha-selector>
+            </div>
+            <button style="${Ke}margin-top:12px;" title="Remove action"
+              @click=${()=>this._patchSec(t,{actions:i.filter((t,e)=>e!==o)})}>
+              <ha-icon icon="mdi:delete"></ha-icon>
+            </button>
+          </div>
+          <div style="margin-top:8px;" @value-changed=${t=>{t.stopPropagation(),s(o,{tap_action:t.detail.value})}}>
+            <ha-selector .hass=${this.hass} .selector=${{ui_action:{}}} .value=${e.tap_action} .label=${"Action"}></ha-selector>
+          </div>
+        </div>
+      `)}
+      <button style="${Qe}margin-bottom:12px;" @click=${()=>this._patchSec(t,{actions:[...i,{label:""}]})}>
+        <ha-icon icon="mdi:plus" style="--mdc-icon-size:16px;"></ha-icon>Add action
+      </button>
     `}_renderSectionCards(t,e){const i=e.cards||[],s=(e,s)=>{const o=e+s;if(o<0||o>=i.length)return;const n=[...i];[n[e],n[o]]=[n[o],n[e]],this._patchCards(t,n)};return I`
       ${this._sel("Info (closed-bar text — supports templates)",{template:{}},e.info,e=>this._patchSec(t,{info:e}))}
       ${this._sel("…or info from an entity's state",{entity:{}},e.info_entity,e=>this._patchSec(t,{info_entity:e}))}
-      ${this._sel("Bar actions (YAML: [{label, icon, tap_action}])",{object:{}},e.actions,e=>this._patchSec(t,{actions:e}))}
+      ${this._renderActions(t,e)}
       <div style="font-weight:600;font-size:13px;margin:6px 0 8px;">Cards</div>
       ${i.map((e,o)=>I`
         <div style=${Ze} @click=${()=>{this._cardIdx=o}}>
@@ -5725,4 +5749,4 @@ const xi=2;
           <circle class="pin" cx="50" cy="50" r="2.4"></circle>
         </svg>
       </ha-card>
-    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const t=document.createElement("style");t.id="materia-fonts",t.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(t)}();console.info("%c MATERIA %c v0.5.125 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");
+    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const t=document.createElement("style");t.id="materia-fonts",t.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(t)}();console.info("%c MATERIA %c v0.5.126 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");
