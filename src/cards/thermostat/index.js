@@ -244,16 +244,21 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     return [50 + rr * Math.cos(rad), 50 + rr * Math.sin(rad)];
   }
 
-  /** Wavy polyline between two dial angles. The wave fades in/out over ~20°
-   *  at each end so it grows smoothly out of the knobs it connects. */
+  /** Wavy polyline between two dial angles. The wave fades in/out at each end
+   *  so it grows smoothly out of the knobs it connects. Short spans (current
+   *  close to target) get a MODEST amplitude boost and tighter fade windows —
+   *  otherwise the envelopes swallow the wave just when it matters most. */
   _wavePath(startDeg, endDeg, r) {
-    const amp = 3.2 * this._amp;
+    const span = endDeg - startDeg;
+    const boost = 1 + 0.55 * Math.max(0, Math.min(1, (90 - span) / 70));
+    const fade = Math.min(20, Math.max(6, span / 3));
+    const amp = 3.2 * boost * this._amp;
     const pts = [];
     const step = 2;
     for (let a = startDeg; a <= endDeg; a += step) {
       const s = a - startDeg;
-      const fadeIn = Math.min(1, s / 20);
-      const fadeOut = Math.min(1, (endDeg - a) / 20);
+      const fadeIn = Math.min(1, s / fade);
+      const fadeOut = Math.min(1, (endDeg - a) / fade);
       const w = amp * fadeIn * fadeOut * Math.sin(s / 7 + this._phase);
       pts.push(this._pointAt(a, r, w));
     }
@@ -348,12 +353,6 @@ class MateriaThermostat extends ActionMixin(LitElement) {
       // Equilibrium: the WHOLE filled arc breathes gently.
       waveStart = DIAL_START;
       waveEnd = curDeg != null ? Math.max(curDeg, endDeg) : endDeg;
-    } else if (active && curDeg != null && this.config.wave_span === "full") {
-      // wave_span: full — the entire filled arc is the living line, not just
-      // the current↔target span. The fade envelopes taper both ends, and the
-      // knobs ride on top, so there is no junction to look ragged.
-      waveStart = DIAL_START;
-      waveEnd = Math.max(curDeg, endDeg);
     } else if (active && curDeg != null) {
       solidEnd = Math.min(curDeg, endDeg);
       waveStart = solidEnd;
