@@ -381,11 +381,20 @@ class MateriaMenu extends ActionMixin(LitElement) {
     return html`
       <ha-card>
         <div class="trigger ${unavailable ? "unavailable" : ""} ${this._open ? (this._pos === "above" ? "open-above" : "open-below") : ""}" style=${triggerStyle} @click=${this._toggle}>
-          ${this.config.icon ? html`
-            <div class="icon-container">
-              <ha-icon .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon}></ha-icon>
-            </div>
-          ` : ""}
+          ${(() => {
+            // config.icon → entity's customized icon → a domain default.
+            const icon =
+              (this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon) ||
+              stateObj?.attributes?.icon ||
+              { water_heater: "mdi:water-boiler", input_select: "mdi:format-list-bulleted", select: "mdi:format-list-bulleted" }[
+                this.config.entity?.split(".")[0]
+              ];
+            return icon ? html`
+              <div class="icon-container">
+                <ha-icon .icon=${icon}></ha-icon>
+              </div>
+            ` : "";
+          })()}
           <div class="text-container">
             ${name ? html`<div class="label">${name}</div>` : ""}
             <div class="value">
