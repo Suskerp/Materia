@@ -237,6 +237,15 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
   _modeGroup() {
     const modes = (this._entity?.attributes?.hvac_modes || []).filter((m) => ["heat", "auto", "off", "cool", "heat_cool"].includes(m));
     if (!modes.length) return nothing;
+    // Same palette the dial speaks — active mode button matches the sweep.
+    const MODE_COLORS = {
+      heat: ["var(--md-sys-cust-color-climate-heat-accent, #a14614)", "var(--md-sys-cust-color-climate-heat-container, #ffeee9)"],
+      cool: ["var(--md-sys-cust-color-climate-cool-accent, #327ea7)", "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)"],
+      auto: ["var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-primary-container))"],
+      heat_cool: ["var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-primary-container))"],
+      off: ["var(--md-sys-color-surface-variant)", "var(--md-sys-color-on-surface-variant)"],
+    };
+    const [act, on] = MODE_COLORS[this._entity?.state] ?? MODE_COLORS.off;
     return html`
       <materia-button-group
         .hass=${this.hass}
@@ -245,7 +254,8 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
           size: "l",
           variant: "tonal",
           active_shape: "square",
-          preset: "secondary",
+          color_active: act,
+          color_on_active: on,
           options: modes.map((m) => ({
             icon: { heat: "m3o:mode-heat", cool: "mdi:snowflake", auto: "mdi:thermostat-auto", heat_cool: "mdi:thermostat-auto", off: "m3o:power-settings-new" }[m],
             value: m,

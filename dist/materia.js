@@ -3005,12 +3005,12 @@ const w=globalThis,$=t=>t,k=w.trustedTypes,C=k?k.createPolicy("lit-html",{create
       </div>
     `}_summaryLine(){const t=this._zones,e=t.filter(t=>t.calling).length,i=t.filter(t=>t.on).length,s=e?`${e} of ${t.length} zones calling for heat`:i?`${i} of ${t.length} zones on · at temperature`:"All zones off";return I`<div class="summary ${e?"hot":""}">
       <ha-icon icon=${e?"m3o:mode-heat":"mdi:radiator-off"}></ha-icon>${s}
-    </div>`}_modeGroup(){const t=(this._entity?.attributes?.hvac_modes||[]).filter(t=>["heat","auto","off","cool","heat_cool"].includes(t));return t.length?I`
+    </div>`}_modeGroup(){const t=(this._entity?.attributes?.hvac_modes||[]).filter(t=>["heat","auto","off","cool","heat_cool"].includes(t));if(!t.length)return V;const e={heat:["var(--md-sys-cust-color-climate-heat-accent, #a14614)","var(--md-sys-cust-color-climate-heat-container, #ffeee9)"],cool:["var(--md-sys-cust-color-climate-cool-accent, #327ea7)","var(--md-sys-cust-color-climate-cool-container, #eaf3ff)"],auto:["var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))","var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-primary-container))"],heat_cool:["var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))","var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-primary-container))"],off:["var(--md-sys-color-surface-variant)","var(--md-sys-color-on-surface-variant)"]},[i,s]=e[this._entity?.state]??e.off;return I`
       <materia-button-group
         .hass=${this.hass}
-        .config=${{entity:this.config.entity,size:"l",variant:"tonal",active_shape:"square",preset:"secondary",options:t.map(t=>({icon:{heat:"m3o:mode-heat",cool:"mdi:snowflake",auto:"mdi:thermostat-auto",heat_cool:"mdi:thermostat-auto",off:"m3o:power-settings-new"}[t],value:t,tap_action:{action:"perform-action",perform_action:"climate.set_hvac_mode",data:{hvac_mode:t},target:{entity_id:this.config.entity}}}))}}
+        .config=${{entity:this.config.entity,size:"l",variant:"tonal",active_shape:"square",color_active:i,color_on_active:s,options:t.map(t=>({icon:{heat:"m3o:mode-heat",cool:"mdi:snowflake",auto:"mdi:thermostat-auto",heat_cool:"mdi:thermostat-auto",off:"m3o:power-settings-new"}[t],value:t,tap_action:{action:"perform-action",perform_action:"climate.set_hvac_mode",data:{hvac_mode:t},target:{entity_id:this.config.entity}}}))}}
       ></materia-button-group>
-    `:V}_waterSegment(){const t=this.config.water_heater?this.hass.states[this.config.water_heater]:null;if(!t)return V;const e=this._numRaw(t.attributes?.current_temperature);return I`
+    `}_waterSegment(){const t=this.config.water_heater?this.hass.states[this.config.water_heater]:null;if(!t)return V;const e=this._numRaw(t.attributes?.current_temperature);return I`
       <div class="seg water" @click=${()=>this._fireMoreInfo(this.config.water_heater)}>
         <ha-icon icon="mdi:water-boiler"></ha-icon>
         <div class="z-text">
@@ -3345,37 +3345,6 @@ ${i?"":I`<ha-icon class="s-chev" icon="m3of:arrow-drop-down"></ha-icon>`}
       width: min(72%, 300px);
     }
 
-    /* + on top (up = warmer) — same scale as the original pair, stacked. */
-    .nudge.vertical {
-      flex-direction: column;
-      margin: 0;
-      width: auto;
-      gap: 3px;
-    }
-
-    /* Roughly half the dial height each — a real column, not chips. */
-    .nudge.vertical .seg {
-      width: clamp(64px, 22cqi, 88px);
-      height: clamp(92px, 32cqi, 136px);
-    }
-
-    .nudge.vertical .seg ha-icon {
-      --mdc-icon-size: clamp(26px, 9cqi, 32px);
-    }
-
-    .nudge.vertical .seg.plus {
-      border-radius: 999px 999px 8px 8px;
-    }
-
-    .nudge.vertical .seg.minus {
-      border-radius: 8px 8px 999px 999px;
-    }
-
-    .nudge.vertical .seg:active {
-      border-radius: 999px;
-      flex-grow: 1.3;
-    }
-
     /* M3 Expressive connected pair: outer corners pill, inner corners small
        (the connected-group silhouette). Pressing a segment EXPANDS it while
        its neighbor compresses (animated flex-grow) and its shape morphs to a
@@ -3417,6 +3386,38 @@ ${i?"":I`<ha-icon class="s-chev" icon="m3of:arrow-drop-down"></ha-icon>`}
       flex-grow: 1.5;
       border-radius: 999px;
       background: color-mix(in srgb, currentColor 12%, var(--th-container, var(--md-sys-color-secondary-container)));
+    }
+
+    /* Vertical column (steppers: side) — MUST come after the generic .nudge
+       rules: equal specificity means source order decides the cascade. */
+    .nudge.vertical {
+      flex-direction: column;
+      margin: 0;
+      width: auto;
+      gap: 3px;
+    }
+
+    .nudge.vertical .seg {
+      flex: 0 0 auto;
+      width: clamp(64px, 22cqi, 88px);
+      height: clamp(92px, 32cqi, 136px);
+    }
+
+    .nudge.vertical .seg ha-icon {
+      --mdc-icon-size: clamp(26px, 9cqi, 32px);
+    }
+
+    .nudge.vertical .seg.plus {
+      border-radius: 999px 999px 8px 8px;
+    }
+
+    .nudge.vertical .seg.minus {
+      border-radius: 8px 8px 999px 999px;
+    }
+
+    .nudge.vertical .seg:active {
+      border-radius: 999px;
+      transform: scale(1.06);
     }
 
     materia-button-group {
@@ -5396,4 +5397,4 @@ const ri=2;
           <circle class="pin" cx="50" cy="50" r="2.4"></circle>
         </svg>
       </ha-card>
-    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const t=document.createElement("style");t.id="materia-fonts",t.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(t)}();console.info("%c MATERIA %c v0.5.94 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");
+    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const t=document.createElement("style");t.id="materia-fonts",t.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(t)}();console.info("%c MATERIA %c v0.5.95 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");

@@ -146,37 +146,6 @@ export const styles = [
       width: min(72%, 300px);
     }
 
-    /* + on top (up = warmer) — same scale as the original pair, stacked. */
-    .nudge.vertical {
-      flex-direction: column;
-      margin: 0;
-      width: auto;
-      gap: 3px;
-    }
-
-    /* Roughly half the dial height each — a real column, not chips. */
-    .nudge.vertical .seg {
-      width: clamp(64px, 22cqi, 88px);
-      height: clamp(92px, 32cqi, 136px);
-    }
-
-    .nudge.vertical .seg ha-icon {
-      --mdc-icon-size: clamp(26px, 9cqi, 32px);
-    }
-
-    .nudge.vertical .seg.plus {
-      border-radius: 999px 999px 8px 8px;
-    }
-
-    .nudge.vertical .seg.minus {
-      border-radius: 8px 8px 999px 999px;
-    }
-
-    .nudge.vertical .seg:active {
-      border-radius: 999px;
-      flex-grow: 1.3;
-    }
-
     /* M3 Expressive connected pair: outer corners pill, inner corners small
        (the connected-group silhouette). Pressing a segment EXPANDS it while
        its neighbor compresses (animated flex-grow) and its shape morphs to a
@@ -218,6 +187,38 @@ export const styles = [
       flex-grow: 1.5;
       border-radius: 999px;
       background: color-mix(in srgb, currentColor 12%, var(--th-container, var(--md-sys-color-secondary-container)));
+    }
+
+    /* Vertical column (steppers: side) — MUST come after the generic .nudge
+       rules: equal specificity means source order decides the cascade. */
+    .nudge.vertical {
+      flex-direction: column;
+      margin: 0;
+      width: auto;
+      gap: 3px;
+    }
+
+    .nudge.vertical .seg {
+      flex: 0 0 auto;
+      width: clamp(64px, 22cqi, 88px);
+      height: clamp(92px, 32cqi, 136px);
+    }
+
+    .nudge.vertical .seg ha-icon {
+      --mdc-icon-size: clamp(26px, 9cqi, 32px);
+    }
+
+    .nudge.vertical .seg.plus {
+      border-radius: 999px 999px 8px 8px;
+    }
+
+    .nudge.vertical .seg.minus {
+      border-radius: 8px 8px 999px 999px;
+    }
+
+    .nudge.vertical .seg:active {
+      border-radius: 999px;
+      transform: scale(1.06);
     }
 
     materia-button-group {
