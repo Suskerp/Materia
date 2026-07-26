@@ -198,11 +198,15 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
 
   _handleOptionTap(opt) {
     if (opt.entity) {
-      // Optimistically flip just this button's own entity.
+      // Optimistically flip just this button's own entity. `baseline` is the
+      // state at tap time: the moment the REAL state moves at all, the pin is
+      // dropped — linked entities/automations may land somewhere else than
+      // predicted, and reality must win over the prediction.
       const eid = opt.entity;
+      const st = String(this.hass?.states[eid]?.state ?? "");
       const next = opt.value != null
-        ? { value: String(opt.value).toLowerCase() }
-        : { active: !this._truthy(this.hass?.states[eid]?.state) };
+        ? { baseline: st, value: String(opt.value).toLowerCase() }
+        : { baseline: st, active: !this._truthy(st) };
       this._optimisticEntities = { ...this._optimisticEntities, [eid]: next };
       this._optEntityTimers = this._optEntityTimers || {};
       clearTimeout(this._optEntityTimers[eid]);
@@ -211,6 +215,10 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
         this._optimisticEntities = rest;
       }, 10000);
     } else if (!this.config.multi_select) {
+      const entity = this.hass?.states[this.config.entity];
+      this._optimisticBaseline = this.config.attribute
+        ? String(entity?.attributes?.[this.config.attribute] ?? "")
+        : String(entity?.state ?? "");
       this._optimisticValue = String(opt.value);
       clearTimeout(this._optimisticTimer);
       this._optimisticTimer = setTimeout(() => { this._optimisticValue = null; }, 10000);
@@ -240,21 +248,32 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
       const entity = this.hass?.states[this.config.entity];
       const actual = this.config.attribute
         ? String(entity?.attributes?.[this.config.attribute] ?? "")
-        : entity?.state ?? "";
-      if (actual === this._optimisticValue) {
+        : String(entity?.state ?? "");
+      // Release the pin when the real state matches the prediction OR when it
+      // moved AT ALL from the tap-time baseline — the entity updated, and the
+      // real state must win (predictions can land wrong: case differences,
+      // rejected calls, automations picking a different option).
+      if (
+        actual.toLowerCase() === this._optimisticValue.toLowerCase() ||
+        (this._optimisticBaseline != null && actual !== this._optimisticBaseline)
+      ) {
         this._optimisticValue = null;
+        this._optimisticBaseline = null;
         clearTimeout(this._optimisticTimer);
       }
     }
-    // Clear per-entity optimism once HA reflects the real state.
+    // Clear per-entity optimism once HA reflects ANY real movement (linked
+    // entities/automations may flip siblings or land differently than the
+    // predicted toggle — reality wins as soon as it arrives).
     if (changedProps.has("hass") && this._optimisticEntities) {
       let changed = false;
       const next = { ...this._optimisticEntities };
       for (const [eid, optim] of Object.entries(next)) {
-        const st = this.hass?.states[eid]?.state;
-        const settled = optim.value != null
-          ? String(st ?? "").toLowerCase() === optim.value
-          : this._truthy(st) === optim.active;
+        const st = String(this.hass?.states[eid]?.state ?? "");
+        const settled = (optim.baseline != null && st !== optim.baseline)
+          || (optim.value != null
+            ? st.toLowerCase() === optim.value
+            : this._truthy(st) === optim.active);
         if (settled) {
           delete next[eid];
           clearTimeout(this._optEntityTimers?.[eid]);
