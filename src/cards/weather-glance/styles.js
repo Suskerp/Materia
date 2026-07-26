@@ -16,6 +16,8 @@ export const styles = [
 
     .glance {
       container-type: inline-size;
+      min-height: 88px; /* same height as the materia-card family */
+      box-sizing: border-box;
       display: flex;
       align-items: center;
       gap: clamp(12px, 3.5cqi, 16px);

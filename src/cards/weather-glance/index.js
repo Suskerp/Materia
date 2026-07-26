@@ -306,7 +306,7 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
   }
 
   getGridOptions() {
-    return { columns: 12, rows: "auto" };
+    return { columns: 12, rows: 1.5 }; // same cell height as materia-card
   }
 
   getCardSize() {

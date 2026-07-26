@@ -1915,13 +1915,14 @@ const w=globalThis,$=t=>t,k=w.trustedTypes,C=k?k.createPolicy("lit-html",{create
     }
 
     .blob-fill {
-      /* Light mode: pure secondary-container is nearly invisible against the
-         card surface — mix in some on-color. Dark mode reads fine as-is, so
-         light-dark() keeps it untouched where supported (the mixed fill is
-         the fallback for engines without light-dark). */
-      fill: var(--wm-shape, color-mix(in srgb, var(--md-sys-color-on-secondary-container, #444) 22%, var(--md-sys-color-secondary-container, #e0e0e8)));
+      /* M3 role for an emphasized fill INSIDE a container: secondary-fixed-dim
+         (tone 80) — a guaranteed ~15-tone step from the ~tone-95 card in light
+         mode, where secondary-container (tone 90+) was indistinguishable.
+         Dark keeps secondary-container (user-approved). The first declaration
+         is the fallback for engines without light-dark(). */
+      fill: var(--wm-shape, color-mix(in srgb, var(--md-sys-color-primary, #5b5e6e) 22%, var(--ha-card-background, var(--card-background-color, #e8e8f0))));
       fill: var(--wm-shape, light-dark(
-        color-mix(in srgb, var(--md-sys-color-on-secondary-container, #444) 22%, var(--md-sys-color-secondary-container, #e0e0e8)),
+        var(--md-sys-color-secondary-fixed-dim, color-mix(in srgb, var(--md-sys-color-primary, #5b5e6e) 25%, var(--ha-card-background, #e8e8f0))),
         var(--md-sys-color-secondary-container, #333a44)
       ));
     }
@@ -2308,6 +2309,8 @@ const w=globalThis,$=t=>t,k=w.trustedTypes,C=k?k.createPolicy("lit-html",{create
 
     .glance {
       container-type: inline-size;
+      min-height: 88px; /* same height as the materia-card family */
+      box-sizing: border-box;
       display: flex;
       align-items: center;
       gap: clamp(12px, 3.5cqi, 16px);
@@ -2461,7 +2464,7 @@ const w=globalThis,$=t=>t,k=w.trustedTypes,C=k?k.createPolicy("lit-html",{create
           ${h?I`<ha-icon class="chev" icon="mdi:chevron-right"></ha-icon>`:""}
         </div>
       </ha-card>
-    `}getGridOptions(){return{columns:12,rows:"auto"}}getCardSize(){return 2}}customElements.define("materia-weather-glance",Ue),window.customCards=window.customCards||[],window.customCards.push({type:"materia-weather-glance",name:"Materia Weather Glance",description:"Weather pill for the home screen: glyph, configurable metric lines or an alert, big temperature.",preview:!0});const De=[ft,mt,gt,ae,n`
+    `}getGridOptions(){return{columns:12,rows:1.5}}getCardSize(){return 2}}customElements.define("materia-weather-glance",Ue),window.customCards=window.customCards||[],window.customCards.push({type:"materia-weather-glance",name:"Materia Weather Glance",description:"Weather pill for the home screen: glyph, configurable metric lines or an alert, big temperature.",preview:!0});const De=[ft,mt,gt,ae,n`
     ha-card {
       border-radius: 24px;
       padding: 16px 20px;
@@ -4657,4 +4660,4 @@ const ii=2;
           <circle class="pin" cx="50" cy="50" r="2.4"></circle>
         </svg>
       </ha-card>
-    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const t=document.createElement("style");t.id="materia-fonts",t.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(t)}();console.info("%c MATERIA %c v0.5.68 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");
+    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const t=document.createElement("style");t.id="materia-fonts",t.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(t)}();console.info("%c MATERIA %c v0.5.69 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");

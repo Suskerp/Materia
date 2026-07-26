@@ -198,13 +198,14 @@ export const styles = [
     }
 
     .blob-fill {
-      /* Light mode: pure secondary-container is nearly invisible against the
-         card surface — mix in some on-color. Dark mode reads fine as-is, so
-         light-dark() keeps it untouched where supported (the mixed fill is
-         the fallback for engines without light-dark). */
-      fill: var(--wm-shape, color-mix(in srgb, var(--md-sys-color-on-secondary-container, #444) 22%, var(--md-sys-color-secondary-container, #e0e0e8)));
+      /* M3 role for an emphasized fill INSIDE a container: secondary-fixed-dim
+         (tone 80) — a guaranteed ~15-tone step from the ~tone-95 card in light
+         mode, where secondary-container (tone 90+) was indistinguishable.
+         Dark keeps secondary-container (user-approved). The first declaration
+         is the fallback for engines without light-dark(). */
+      fill: var(--wm-shape, color-mix(in srgb, var(--md-sys-color-primary, #5b5e6e) 22%, var(--ha-card-background, var(--card-background-color, #e8e8f0))));
       fill: var(--wm-shape, light-dark(
-        color-mix(in srgb, var(--md-sys-color-on-secondary-container, #444) 22%, var(--md-sys-color-secondary-container, #e0e0e8)),
+        var(--md-sys-color-secondary-fixed-dim, color-mix(in srgb, var(--md-sys-color-primary, #5b5e6e) 25%, var(--ha-card-background, #e8e8f0))),
         var(--md-sys-color-secondary-container, #333a44)
       ));
     }
