@@ -344,9 +344,11 @@ export const styles = [
       align-items: center;
     }
 
+    /* viewBox is 100×86 — the 270° arc leaves the bottom band empty, so the
+       svg is trimmed to keep the level label snug under the gauge. */
     .gauge svg {
       width: 100%;
-      aspect-ratio: 1;
+      aspect-ratio: 100 / 86;
     }
 
     .gauge-center {
@@ -354,7 +356,7 @@ export const styles = [
       top: 0;
       left: 0;
       right: 0;
-      aspect-ratio: 1;
+      aspect-ratio: 100 / 86;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -377,7 +379,7 @@ export const styles = [
       opacity: 0.8;
       text-align: center;
       line-height: 1.35;
-      margin-top: -6px;
+      margin-top: 2px;
     }
 
     /* Pollen small variant: left-aligned dot + species + level list. */

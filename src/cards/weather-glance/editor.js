@@ -24,6 +24,8 @@ class MateriaWeatherGlanceEditor extends SmartEditorBase {
           { name: "entity", required: true, selector: { entity: { domain: "weather" } } },
           { name: "temperature_entity", label: "Real temperature sensor (optional)", selector: { entity: { domain: "sensor", device_class: "temperature" } } },
           { name: "metrics", label: "Metric lines (first = top line)", selector: { select: { multiple: true, mode: "list", options: METRIC_OPTIONS } } },
+          { name: "sort_by_severity", label: "Sort metrics worst-first", selector: { boolean: {} } },
+          { name: "show_metric_icons", label: "Show metric icons", selector: { boolean: {} } },
           { name: "alert", label: "Alert text / template (takes over top line)", template: true, selector: { text: {} } },
         ],
       },

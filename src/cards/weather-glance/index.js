@@ -91,48 +91,98 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
     return Number.isFinite(n) ? Math.round(n) : null;
   }
 
-  /** Compact text for one metric; null = skip (no data). */
-  _metricText(type, stateObj) {
+  /** One metric entry → { text, sev (0–4 severity), icon } or null (no data).
+   *  Entries are strings ("uv") or objects ({ type, icon, entity, unit,
+   *  label, severity }) — "sensor" reads any entity you point it at. */
+  _metricData(entry, stateObj) {
     const a = stateObj?.attributes || {};
     const fc = this._forecast?.[0] || a.forecast?.[0];
-    switch (type) {
+    const DEFAULT_ICONS = {
+      minmax: "mdi:thermometer",
+      wind: "mdi:weather-windy",
+      humidity: "mdi:water-outline",
+      uv: "mdi:white-balance-sunny",
+      precipitation: "mdi:weather-pouring",
+      pressure: "mdi:gauge",
+      sensor: "mdi:information-outline",
+    };
+    let text = null;
+    let sev = 0;
+    switch (entry.type) {
       case "condition": {
         const c = stateObj?.state ?? "";
-        return CONDITION_LABELS[c] || this._capitalize(String(c).replace(/-|_/g, " "));
+        text = CONDITION_LABELS[c] || this._capitalize(String(c).replace(/-|_/g, " "));
+        if (/lightning/.test(c)) sev = 3;
+        else if (/pouring|snowy|hail/.test(c)) sev = 2;
+        else if (/rainy|fog|windy/.test(c)) sev = 1;
+        break;
       }
       case "minmax": {
         const hi = this._num(fc?.temperature);
         const lo = this._num(fc?.templow);
         if (hi == null && lo == null) return null;
-        return `${hi != null ? `${hi}°` : "—"} ${lo != null ? `${lo}°` : "—"}`;
+        text = `${hi != null ? `${hi}°` : "—"} ${lo != null ? `${lo}°` : "—"}`;
+        break;
       }
       case "wind": {
         const s = this._num(a.wind_speed);
         if (s == null) return null;
         const b = this._num(a.wind_bearing);
-        return `${s} ${a.wind_speed_unit ?? "km/h"}${b != null ? ` ${compass(b)}` : ""}`;
+        text = `${s} ${a.wind_speed_unit ?? "km/h"}${b != null ? ` ${compass(b)}` : ""}`;
+        sev = s >= 88 ? 4 : s >= 62 ? 3 : s >= 39 ? 2 : s >= 20 ? 1 : 0;
+        break;
       }
       case "humidity": {
         const h = this._num(a.humidity);
-        return h == null ? null : `${h}%`;
+        if (h == null) return null;
+        text = `${h}%`;
+        sev = h >= 85 || h <= 20 ? 2 : h >= 70 || h <= 30 ? 1 : 0;
+        break;
       }
       case "uv": {
         const u = this._num(a.uv_index);
-        return u == null ? null : `UV ${u}`;
+        if (u == null) return null;
+        text = `UV ${u}`;
+        sev = u >= 11 ? 4 : u >= 8 ? 3 : u >= 6 ? 2 : u >= 3 ? 1 : 0;
+        break;
       }
       case "precipitation": {
         const p = fc?.precipitation;
         const n = p == null ? null : Number(p);
         if (n == null || !Number.isFinite(n)) return null;
-        return `${n} ${a.precipitation_unit ?? "mm"}`;
+        text = `${n} ${a.precipitation_unit ?? "mm"}`;
+        sev = n >= 10 ? 3 : n >= 2 ? 2 : n > 0 ? 1 : 0;
+        break;
       }
       case "pressure": {
         const p = this._num(a.pressure);
-        return p == null ? null : `${p} ${a.pressure_unit ?? "hPa"}`;
+        if (p == null) return null;
+        text = `${p} ${a.pressure_unit ?? "hPa"}`;
+        sev = Math.abs(p - 1013) >= 25 ? 2 : Math.abs(p - 1013) >= 15 ? 1 : 0;
+        break;
+      }
+      case "sensor": {
+        const st = entry.entity ? this.hass.states[entry.entity] : null;
+        if (!st || this._isUnavailable(st)) return null;
+        const unit = entry.unit ?? st.attributes.unit_of_measurement ?? "";
+        text = `${entry.label ? `${entry.label} ` : ""}${st.state}${unit ? ` ${unit}` : ""}`;
+        break;
       }
       default:
         return null;
     }
+    if (entry.severity != null) sev = Number(entry.severity) || 0;
+    const icon = entry.icon
+      ?? (this.config.show_metric_icons ? DEFAULT_ICONS[entry.type] : null);
+    return { text, sev, icon };
+  }
+
+  /** All configured metrics resolved, optionally sorted worst-first. */
+  _metricItems(stateObj) {
+    const entries = (this.config.metrics || []).map((e) => (typeof e === "string" ? { type: e } : e));
+    const items = entries.map((e) => this._metricData(e, stateObj)).filter(Boolean);
+    if (this.config.sort_by_severity) items.sort((x, y) => y.sev - x.sev);
+    return items;
   }
 
   render() {
@@ -150,12 +200,20 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
 
     // Alert template (e.g. a warning sensor) takes over line 1 when non-empty.
     const alert = this._isTemplate(this.config.alert) ? this._resolvedAlert : this.config.alert;
-    const metrics = (this.config.metrics || []).map((m) => this._metricText(m, stateObj)).filter(Boolean);
-    const line1 = alert || metrics[0] || "";
-    const line2 = (alert ? metrics : metrics.slice(1)).join(" · ");
+    const items = this._metricItems(stateObj);
+    const first = alert ? null : items[0];
+    const rest = alert ? items : items.slice(1);
 
     const bg = this._isTemplate(this.config.color) ? this._resolvedColor : this.config.color;
     const fg = this._isTemplate(this.config.color_on) ? this._resolvedColorOn : this.config.color_on;
+    // Navigation affordance: a chevron on the right edge when the pill routes
+    // somewhere (or force with show_chevron).
+    const chevron = this.config.show_chevron
+      ?? (this.config.tap_action?.action === "navigate");
+
+    const metricSpan = (i) => html`<span class="m">
+      ${i.icon ? html`<ha-icon .icon=${i.icon}></ha-icon>` : ""}${i.text}
+    </span>`;
 
     return html`
       <ha-card>
@@ -166,15 +224,20 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
         >
           <svg class="glyph" viewBox="0 0 24 24">${coloredWeatherIcon(condition)}</svg>
           <div class="mid">
-            ${line1
+            ${alert || first
               ? html`<div class="line1">
                   ${alert ? html`<ha-icon icon="mdi:alert-outline"></ha-icon>` : ""}
-                  <span>${line1}</span>
+                  ${alert ? html`<span>${alert}</span>` : metricSpan(first)}
                 </div>`
               : ""}
-            ${line2 ? html`<div class="line2">${line2}</div>` : ""}
+            ${rest.length
+              ? html`<div class="line2">
+                  ${rest.map((i, n) => html`${n ? html`<span class="dot">·</span>` : ""}${metricSpan(i)}`)}
+                </div>`
+              : ""}
           </div>
           <div class="now">${unavailable || tempNum == null ? "—" : `${tempNum}°`}</div>
+          ${chevron ? html`<ha-icon class="chev" icon="mdi:chevron-right"></ha-icon>` : ""}
         </div>
       </ha-card>
     `;

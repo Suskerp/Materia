@@ -535,7 +535,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
             const start = -135;
             return html`
               <div class="gauge">
-                <svg viewBox="0 0 100 100">
+                <svg viewBox="0 0 100 86">
                   <path d=${arcPath(50, 50, 40, -135, 135)} class="gauge-track" />
                   ${k.frac > 0.01
                     ? svg`<path d=${arcPath(50, 50, 40, start, start + 270 * k.frac)} class="gauge-fill" style="stroke:${k.color || "var(--wm-accent, #7bc96a)"}" />`

@@ -65,18 +65,42 @@ export const styles = [
     }
 
     .line2 {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       font-size: clamp(13px, 4cqi, 15px);
       font-weight: 500;
       opacity: 0.85;
       white-space: nowrap;
       overflow: hidden;
-      text-overflow: ellipsis;
+    }
+
+    .m {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .m ha-icon {
+      --mdc-icon-size: clamp(14px, 4.5cqi, 17px);
+      opacity: 0.85;
+    }
+
+    .dot {
+      opacity: 0.55;
     }
 
     .now {
       font-size: clamp(26px, 9cqi, 38px);
       font-weight: 500;
       flex-shrink: 0;
+    }
+
+    .chev {
+      --mdc-icon-size: clamp(20px, 6cqi, 26px);
+      opacity: 0.55;
+      flex-shrink: 0;
+      margin: 0 -6px 0 -4px;
     }
   `,
 ];
