@@ -340,8 +340,20 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     if (amount == null) return nothing;
     const unit = this.config.unit ?? this._weatherAttr("precipitation_unit") ?? "mm";
     const none = this.config.none_label ?? "No precipitation expected";
+    // Rain-fill visual: same drifting wave as humidity, height scaled by the
+    // expected amount (caps at ~15 mm — anything above is "a lot").
+    const level = amount > 0 ? Math.min(0.6, 0.1 + (amount / 15) * 0.5) : 0;
+    const y = 100 - level * 78;
+    let wavePath = `M0 ${y + 4} Q 12.5 ${y - 4} 25 ${y + 4} `;
+    for (let x = 50; x <= 200; x += 25) wavePath += `T ${x} ${y + 4} `;
+    wavePath += `V100 H0 Z`;
     return html`
-      <div class="rect-tile">
+      <div class="rect-tile clip">
+        ${amount > 0
+          ? svg`<svg class="wave" viewBox="0 0 200 100" preserveAspectRatio="none">
+              <path d=${wavePath} class="wave-fill" />
+            </svg>`
+          : ""}
         ${this._header("mdi:weather-pouring", this.config.name ?? "Precipitation")}
         <div class="big">${amount}<span class="unit"> ${unit}</span></div>
         ${amount === 0 ? html`<div class="sub">${none}</div>` : ""}

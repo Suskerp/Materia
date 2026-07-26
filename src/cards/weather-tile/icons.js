@@ -16,6 +16,42 @@ const BOLT = "var(--md-sys-cust-color-weather-sun, #FFC83D)";
 const MOON = "var(--md-sys-cust-color-weather-moon, #DCE3F7)";
 const FOG = "var(--md-sys-cust-color-weather-cloud-dark, #C7CEDA)";
 
+/* Soft-3D shading (Google Weather / Breezy look): each glyph fills with a
+   gradient built from its harmonized token — highlight toward the top-left,
+   deeper shade at the lower edge — so the icons keep tinting with the theme.
+   Identical <defs> may repeat inside one shadow root; the first wins and
+   they're all the same, so that's harmless. */
+function shadeDefs() {
+  return svg`<defs>
+    <radialGradient id="wxSunG" cx="38%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="color-mix(in srgb, ${SUN} 55%, #FFF4CF)" />
+      <stop offset="55%" stop-color=${SUN} />
+      <stop offset="100%" stop-color="color-mix(in srgb, ${SUN} 72%, #B85C00)" />
+    </radialGradient>
+    <linearGradient id="wxCloudG" x1="0" y1="0" x2="0.25" y2="1">
+      <stop offset="0%" stop-color="color-mix(in srgb, ${CLOUD} 30%, #FFFFFF)" />
+      <stop offset="70%" stop-color=${CLOUD} />
+      <stop offset="100%" stop-color="color-mix(in srgb, ${CLOUD} 78%, #8B94A5)" />
+    </linearGradient>
+    <linearGradient id="wxCloudDkG" x1="0" y1="0" x2="0.25" y2="1">
+      <stop offset="0%" stop-color="color-mix(in srgb, ${CLOUD_DK} 45%, #FFFFFF)" />
+      <stop offset="70%" stop-color=${CLOUD_DK} />
+      <stop offset="100%" stop-color="color-mix(in srgb, ${CLOUD_DK} 72%, #5A6474)" />
+    </linearGradient>
+    <radialGradient id="wxMoonG" cx="35%" cy="28%" r="85%">
+      <stop offset="0%" stop-color="color-mix(in srgb, ${MOON} 45%, #FFFFFF)" />
+      <stop offset="60%" stop-color=${MOON} />
+      <stop offset="100%" stop-color="color-mix(in srgb, ${MOON} 62%, #4A5AB8)" />
+    </radialGradient>
+  </defs>`;
+}
+
+// Gradient fills used by the glyph builders below.
+const SUN_FILL = "url(#wxSunG)";
+const CLOUD_FILL = "url(#wxCloudG)";
+const CLOUD_DK_FILL = "url(#wxCloudDkG)";
+const MOON_FILL = "url(#wxMoonG)";
+
 function sun(cx, cy, r) {
   // 9-lobe "cookie": a smooth polar-cosine scallop — r = R + A·cos(9θ) — which
   // has ROUNDED peaks AND rounded valleys (unlike a rounded-star, whose inner
@@ -42,7 +78,7 @@ function sun(cx, cy, r) {
     const c2y = p2[1] - (p3[1] - p1[1]) / 6;
     d += `C${c1x.toFixed(2)} ${c1y.toFixed(2)} ${c2x.toFixed(2)} ${c2y.toFixed(2)} ${p2[0].toFixed(2)} ${p2[1].toFixed(2)} `;
   }
-  return svg`<path d=${d + "Z"} fill=${SUN} />`;
+  return svg`<path d=${d + "Z"} fill=${SUN_FILL} />`;
 }
 
 function cloud(cx, cy, s, fill) {
@@ -71,22 +107,22 @@ const ICONS = {
   sunny: () => sun(12, 12, 7.5),
   clear: () => sun(12, 12, 7.5),
   "clear-night": () =>
-    svg`<path d="M17 14.5 A7 7 0 1 1 10.5 5 A5.5 5.5 0 0 0 17 14.5 Z" fill=${MOON} />`,
-  partlycloudy: () => svg`${sun(12, 8, 5.2)}${cloud(10, 15, 0.85, CLOUD)}`,
-  partly_cloudy: () => svg`${sun(12, 8, 5.2)}${cloud(10, 15, 0.85, CLOUD)}`,
-  cloudy: () => cloud(12, 12, 1.1, CLOUD_DK),
-  rainy: () => svg`${cloud(12, 10, 1, CLOUD_DK)}${drops(RAIN, [8, 12, 16], 17)}`,
-  pouring: () => svg`${cloud(12, 9.5, 1, CLOUD_DK)}${drops(RAIN, [7, 10, 13, 16], 16.5)}`,
-  snowy: () => svg`${cloud(12, 10, 1, CLOUD)}${flakes([8, 12, 16], 18)}`,
-  "snowy-rainy": () => svg`${cloud(12, 10, 1, CLOUD)}${drops(RAIN, [9, 15], 17)}${flakes([12], 18)}`,
+    svg`<path d="M17 14.5 A7 7 0 1 1 10.5 5 A5.5 5.5 0 0 0 17 14.5 Z" fill=${MOON_FILL} />`,
+  partlycloudy: () => svg`${sun(12, 8, 5.2)}${cloud(10, 15, 0.85, CLOUD_FILL)}`,
+  partly_cloudy: () => svg`${sun(12, 8, 5.2)}${cloud(10, 15, 0.85, CLOUD_FILL)}`,
+  cloudy: () => cloud(12, 12, 1.1, CLOUD_DK_FILL),
+  rainy: () => svg`${cloud(12, 10, 1, CLOUD_DK_FILL)}${drops(RAIN, [8, 12, 16], 17)}`,
+  pouring: () => svg`${cloud(12, 9.5, 1, CLOUD_DK_FILL)}${drops(RAIN, [7, 10, 13, 16], 16.5)}`,
+  snowy: () => svg`${cloud(12, 10, 1, CLOUD_FILL)}${flakes([8, 12, 16], 18)}`,
+  "snowy-rainy": () => svg`${cloud(12, 10, 1, CLOUD_FILL)}${drops(RAIN, [9, 15], 17)}${flakes([12], 18)}`,
   fog: () =>
-    svg`${cloud(12, 9, 0.95, FOG)}<g stroke=${FOG} stroke-width="1.8" stroke-linecap="round">
+    svg`${cloud(12, 9, 0.95, CLOUD_DK_FILL)}<g stroke=${FOG} stroke-width="1.8" stroke-linecap="round">
       <line x1="6" y1="17" x2="18" y2="17" /><line x1="7.5" y1="20" x2="16.5" y2="20" /></g>`,
-  hail: () => svg`${cloud(12, 10, 1, CLOUD_DK)}${flakes([8, 12, 16], 18)}`,
+  hail: () => svg`${cloud(12, 10, 1, CLOUD_DK_FILL)}${flakes([8, 12, 16], 18)}`,
   lightning: () =>
-    svg`${cloud(12, 10, 1, CLOUD_DK)}<path d="M12 14 l-2.5 5 h2 l-1 4 4.5-6.5 h-2.2 l1.5-2.5 z" fill=${BOLT} />`,
+    svg`${cloud(12, 10, 1, CLOUD_DK_FILL)}<path d="M12 14 l-2.5 5 h2 l-1 4 4.5-6.5 h-2.2 l1.5-2.5 z" fill=${BOLT} />`,
   "lightning-rainy": () =>
-    svg`${cloud(12, 9.5, 1, CLOUD_DK)}${drops(RAIN, [8, 16], 17)}<path d="M12 14 l-2 4 h1.8 l-0.8 3.5 4-5.5 h-2 l1.3-2 z" fill=${BOLT} />`,
+    svg`${cloud(12, 9.5, 1, CLOUD_DK_FILL)}${drops(RAIN, [8, 16], 17)}<path d="M12 14 l-2 4 h1.8 l-0.8 3.5 4-5.5 h-2 l1.3-2 z" fill=${BOLT} />`,
   windy: () =>
     svg`<g stroke=${CLOUD_DK} stroke-width="2" stroke-linecap="round" fill="none">
       <path d="M4 9 h11 a2.5 2.5 0 1 0-2.5-2.5" />
@@ -95,11 +131,12 @@ const ICONS = {
     svg`<g stroke=${CLOUD_DK} stroke-width="2" stroke-linecap="round" fill="none">
       <path d="M4 9 h11 a2.5 2.5 0 1 0-2.5-2.5" />
       <path d="M4 14 h14 a2.5 2.5 0 1 1-2.5 2.5" /></g>`,
-  exceptional: () => cloud(12, 12, 1.1, CLOUD_DK),
+  exceptional: () => cloud(12, 12, 1.1, CLOUD_DK_FILL),
 };
 
-/** Return the colored SVG group for a weather condition (falls back to cloud). */
+/** Return the colored SVG group for a weather condition (falls back to cloud).
+ *  Prepends the shared shading gradients so every glyph is soft-3D. */
 export function coloredWeatherIcon(condition) {
   const fn = ICONS[condition] || ICONS.cloudy;
-  return fn();
+  return svg`${shadeDefs()}${fn()}`;
 }
