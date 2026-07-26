@@ -130,21 +130,33 @@ export const styles = [
       margin-top: calc(-1 * clamp(8px, 4cqi, 20px));
     }
 
-    /* Side-mounted vertical pair: + on top (up = warmer), anchored to the
-       dial's right edge at its vertical center — thumb-zone friendly. */
+    /* Side layout: dial and a LARGE vertical +/- column side by side. */
+    .dial-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .dial-row.side {
+      gap: clamp(10px, 4cqi, 22px);
+    }
+
+    .dial-row.side .dial-wrap {
+      width: min(72%, 300px);
+    }
+
+    /* + on top (up = warmer) — same scale as the original pair, stacked. */
     .nudge.vertical {
-      position: absolute;
-      right: 0;
-      top: 50%;
-      transform: translateY(-50%);
       flex-direction: column;
       margin: 0;
       width: auto;
+      gap: 3px;
     }
 
     .nudge.vertical .seg {
-      width: clamp(44px, 15cqi, 54px);
-      height: clamp(44px, 15cqi, 52px);
+      width: clamp(52px, 17cqi, 68px);
+      height: clamp(64px, 20cqi, 92px);
     }
 
     .nudge.vertical .seg.plus {
