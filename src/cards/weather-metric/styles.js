@@ -147,7 +147,7 @@ export const styles = [
          outer gauges on narrow cards no matter the padding. 36–64px keeps the
          soft look with corners that never reach the content. */
       border-radius: clamp(36px, 9cqi, 64px);
-      padding: clamp(14px, 4cqi, 20px) clamp(22px, 7cqi, 40px) clamp(18px, 5cqi, 26px);
+      padding: clamp(14px, 4cqi, 20px) clamp(22px, 7cqi, 40px) clamp(22px, 6cqi, 30px);
       max-width: calc(var(--wm-size, 225px) * 2 + 16px);
       gap: clamp(4px, 2cqi, 10px);
     }
@@ -389,6 +389,10 @@ export const styles = [
     .gauge-label {
       font-size: clamp(11px, 4.5cqi, 14px);
       font-weight: 600;
+      max-width: 92%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .gauge-sub {
@@ -397,7 +401,8 @@ export const styles = [
       opacity: 0.8;
       text-align: center;
       line-height: 1.35;
-      margin-top: 2px;
+      margin-top: 6px;
+      padding-bottom: 2px;
     }
 
     /* Pollen small variant: left-aligned dot + species + level list. */
