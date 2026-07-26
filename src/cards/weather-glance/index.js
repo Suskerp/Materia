@@ -164,7 +164,8 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
         const p = fc?.precipitation;
         const n = p == null ? null : Number(p);
         if (n == null || !Number.isFinite(n)) return null;
-        text = `${n} ${a.precipitation_unit ?? "mm"}`;
+        // Labeled — a bare "2 mm" in a metric line reads as nothing in particular.
+        text = `${entry.label ?? "Rain"} ${n} ${a.precipitation_unit ?? "mm"}`;
         sev = n >= 10 ? 3 : n >= 2 ? 2 : n > 0 ? 1 : 0;
         break;
       }
