@@ -170,9 +170,13 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
   /* M3 expressive menu: container-toned panel, 28px corners all around,
      roomy medium-weight rows with trailing icons. Colors override via
      menu_color / menu_color_on. */
+  /* Vibrant mapping per the M3E menu spec: tertiary-container panel,
+     on-tertiary-container items, selected = solid tertiary/on-tertiary. */
   .dropdown.expressive {
-    --_surf: var(--md-sys-color-secondary-container, #e8def8);
-    color: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
+    --_surf: var(--md-sys-color-tertiary-container, #ffd8e4);
+    color: var(--md-sys-color-on-tertiary-container, var(--primary-text-color));
+    --menu-selected-bg: var(--md-sys-color-tertiary, #7d5260);
+    --menu-selected-fg: var(--md-sys-color-on-tertiary, #fff);
     padding: 10px 8px;
     min-width: 200px;
     /* Clearly lifted off the page — M3 level-2 shadow pair. */
