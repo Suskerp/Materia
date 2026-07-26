@@ -21,6 +21,12 @@ export const styles = [
       padding: 2px;
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .row:active {
+      cursor: grabbing;
     }
 
     .row::-webkit-scrollbar {

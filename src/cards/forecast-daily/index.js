@@ -86,7 +86,35 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
     return d.toLocaleDateString(locale, { weekday: "short" });
   }
 
+  /* Mouse drag-to-scroll: overflow-x only pans natively for touch/trackpad,
+     so grab-and-drag with a mouse must be wired up by hand. A real drag also
+     suppresses the click so letting go doesn't select a pill. */
+  _onPointerDown(e) {
+    if (e.pointerType !== "mouse") return; // touch pans natively
+    const row = e.currentTarget;
+    this._dragStartX = e.clientX;
+    this._dragStartScroll = row.scrollLeft;
+    this._didDrag = false;
+    row.setPointerCapture(e.pointerId);
+  }
+
+  _onPointerMove(e) {
+    if (this._dragStartX == null) return;
+    const dx = e.clientX - this._dragStartX;
+    if (Math.abs(dx) > 4) this._didDrag = true;
+    if (this._didDrag) e.currentTarget.scrollLeft = this._dragStartScroll - dx;
+  }
+
+  _onPointerUp(e) {
+    if (this._dragStartX == null) return;
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
+    this._dragStartX = null;
+    // _didDrag stays set until the click fires (click comes after pointerup).
+    setTimeout(() => { this._didDrag = false; }, 0);
+  }
+
   _select(i, day) {
+    if (this._didDrag) return; // it was a scroll, not a tap
     this._selected = i;
     // Let dashboards react to the selection (e.g. a detail card) if they want.
     this.dispatchEvent(new CustomEvent("materia-forecast-day-selected", {
@@ -110,7 +138,13 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
 
     return html`
       <ha-card>
-        <div class="row ${unavailable ? "unavailable" : ""}">
+        <div
+          class="row ${unavailable ? "unavailable" : ""}"
+          @pointerdown=${this._onPointerDown}
+          @pointermove=${this._onPointerMove}
+          @pointerup=${this._onPointerUp}
+          @pointercancel=${this._onPointerUp}
+        >
           ${days.map((day, i) => {
             const hi = this._num(day.temperature);
             const lo = this._num(day.templow);
