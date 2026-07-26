@@ -141,8 +141,12 @@ export const styles = [
     .rect-tile.pollen {
       aspect-ratio: auto;
       border-radius: 999px;
-      padding: clamp(14px, 4cqi, 22px) clamp(16px, 6cqi, 28px);
+      /* Generous horizontal padding pulls the outer gauges out of the pill's
+         curved corners (they were getting pinched on mobile), and the bottom
+         gets a touch more room so the level labels don't kiss the edge. */
+      padding: clamp(14px, 4cqi, 20px) clamp(28px, 10cqi, 48px) clamp(18px, 5cqi, 26px);
       max-width: calc(var(--wm-size, 225px) * 2 + 16px);
+      gap: clamp(4px, 2cqi, 10px);
     }
 
     .sub.hint {
