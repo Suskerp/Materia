@@ -1,8 +1,7 @@
 import { LitElement, html, svg } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { materialCookiePath } from "../../utils/shapes.js";
-import { styles } from "./styles.js";
-import "./editor.js";
+import { styles } from "./dial-styles.js";
 
 const DIAL_START = -135; // degrees, 0 = 12 o'clock
 const DIAL_SWEEP = 270;
@@ -30,12 +29,12 @@ const MODE_META = {
 };
 
 /**
- * Expressive thermostat: the classic circular dial, but the active sweep is
- * an M3-Expressive wavy line. While actively heating the wave travels toward
+ * The climate panel's dial (INTERNAL element, not a card): the classic
+ * circular dial, but the active sweep is an M3-Expressive wavy line. While actively heating the wave travels toward
  * the target; while cooling it travels away; idle/off is a calm flat arc.
  * Modes render as a connected button group; -/+ nudge by `step`.
  */
-class MateriaThermostat extends ActionMixin(LitElement) {
+class MateriaClimateDial extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -44,15 +43,6 @@ class MateriaThermostat extends ActionMixin(LitElement) {
   };
 
   static styles = styles;
-
-  static getConfigElement() {
-    return document.createElement("materia-thermostat-editor");
-  }
-
-  static getStubConfig(hass) {
-    const entity = Object.keys(hass?.states || {}).find((e) => e.startsWith("climate.")) || "";
-    return { entity };
-  }
 
   setConfig(config) {
     if (!config.entity) throw new Error("entity is required");
@@ -496,9 +486,7 @@ class MateriaThermostat extends ActionMixin(LitElement) {
   }
 }
 
-customElements.define("materia-thermostat", MateriaThermostat);
+customElements.define("materia-climate-dial", MateriaClimateDial);
 
 window.customCards = window.customCards || [];
-// NOT registered in the card picker: the dial is the climate panel's engine
-// (materia-climate-panel embeds it). The element stays defined, so existing
-// custom:materia-thermostat YAML keeps rendering.
+

@@ -3,9 +3,10 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { loadCardHelpers } from "../../styles/shared.js";
 import { styles } from "./styles.js";
 import "./editor.js";
+import "./dial.js";
 
 /**
- * Climate surface — the materia-thermostat as hero with the mode group as a
+ * Climate surface — its dial as hero with the mode group as a
  * connected segment, and below them a WALLET-style accordion (exactly one
  * section open, muted bars morph large on tap).
  *
@@ -240,7 +241,7 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
     // silhouette): closed bars are compact segments, the open one grows tall.
     return html`
       <ha-card class="panel" style=${sync ? `--ms-track:${modeAccent};--ms-thumb:${modeContainer};` : ""}>
-        <materia-thermostat
+        <materia-climate-dial
           .hass=${this.hass}
           .config=${{
             entity: this.config.entity,
@@ -252,7 +253,7 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
             ...(this.config.max_temp != null ? { max_temp: this.config.max_temp } : {}),
             ...(this.config.temperature_entity ? { temperature_entity: this.config.temperature_entity } : {}),
           }}
-        ></materia-thermostat>
+        ></materia-climate-dial>
         <div class="stack ${this.config.reserve_height ? "reserve" : ""}">
           <div class="seg">${this._modeGroup()}</div>
           ${secs.map((s, i) => s.style === "menu"

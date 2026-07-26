@@ -26,7 +26,6 @@ import "./cards/list/index.js";
 import "./cards/switch/index.js";
 import "./cards/glance-tile/index.js";
 import "./cards/climate-panel/index.js";
-import "./cards/thermostat/index.js";
 import "./cards/icon-row/index.js";
 
 // Elements (native Lit)
@@ -46,7 +45,7 @@ import "./elements/clock/index.js";
 injectFonts();
 
 // Version info
-const VERSION = "0.5.142";
+const VERSION = "0.5.143";
 console.info(
   `%c MATERIA %c v${VERSION} `,
   "color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;",

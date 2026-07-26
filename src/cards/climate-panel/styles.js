@@ -44,7 +44,7 @@ export const styles = [
       display: block;
     }
 
-    materia-thermostat {
+    materia-climate-dial {
       display: block;
       /* Trim the embedded dial's padding — halved top edge, the panel's own
          gap is the hero/stack separation; stacking both read as a hole. */
