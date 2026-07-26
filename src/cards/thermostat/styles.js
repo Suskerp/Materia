@@ -193,37 +193,56 @@ export const styles = [
 
     /* Vertical column (steppers: side) — MUST come after the generic .nudge
        rules: equal specificity means source order decides the cascade. */
-    /* Button-group look (not split-button): a VISIBLE gap and near-pill
-       segments — each button fully round on its outer end, generously rounded
-       on the seam side. */
+    /* EXACTLY materia-button-group's construction, rotated: a pill container
+       whose overflow clips the outer corners, buttons with one uniform
+       size-scaled inner radius, a 2px seam, currentColor state layer, and the
+       expressive flex-grow press morph. */
     .nudge.vertical {
       flex-direction: column;
       margin: 0;
-      width: auto;
-      gap: 6px;
+      gap: 2px;
+      width: clamp(56px, 18cqi, 74px);
+      height: clamp(154px, 54cqi, 222px);
+      border-radius: 999px;
+      overflow: hidden;
     }
 
     .nudge.vertical .seg {
-      flex: 0 0 auto;
-      width: clamp(56px, 18cqi, 74px);
-      height: clamp(76px, 26cqi, 110px);
+      flex: 1 1 0;
+      width: 100%;
+      height: auto;
+      /* group innerCorner ratio (16 @ 48px l, 20 @ 56px xl) scaled to width */
+      border-radius: clamp(18px, 6cqi, 26px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nudge.vertical .seg::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: currentColor;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--md-sys-motion-fast-effects);
+    }
+
+    .nudge.vertical .seg:hover::before {
+      opacity: 0.08;
+    }
+
+    .nudge.vertical .seg:active::before {
+      opacity: 0.12;
     }
 
     .nudge.vertical .seg ha-icon {
       --mdc-icon-size: clamp(24px, 8cqi, 28px);
     }
 
-    .nudge.vertical .seg.plus {
-      border-radius: 999px 999px clamp(18px, 9cqi, 28px) clamp(18px, 9cqi, 28px);
-    }
-
-    .nudge.vertical .seg.minus {
-      border-radius: clamp(18px, 9cqi, 28px) clamp(18px, 9cqi, 28px) 999px 999px;
-    }
-
     .nudge.vertical .seg:active {
+      flex-grow: 1.4;
       border-radius: 999px;
-      transform: scale(1.06);
+      background: var(--md-sys-color-secondary-container, var(--ha-card-background));
     }
 
     materia-button-group {
