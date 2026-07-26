@@ -445,18 +445,19 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
       frac = now < rise ? 0 : 1; // night
     }
     const t = frac;
-    // The hump is the quadratic Bézier (4,48) → ctrl (50,-4) → (96,48); the
-    // sun must sit ON it, so evaluate the same curve rather than approximating.
-    const x = (1 - t) * (1 - t) * 4 + 2 * t * (1 - t) * 50 + t * t * 96;
-    const y = (1 - t) * (1 - t) * 48 + 2 * t * (1 - t) * -4 + t * t * 48;
+    // WIDE, FLAT hump (viewBox 100×38): fills the card width while header +
+    // arc + times still fit the square tile. The sun sits ON the Bézier
+    // (2,32) → ctrl (50,-4) → (98,32), so evaluate the same curve.
+    const x = (1 - t) * (1 - t) * 2 + 2 * t * (1 - t) * 50 + t * t * 98;
+    const y = (1 - t) * (1 - t) * 32 + 2 * t * (1 - t) * -4 + t * t * 32;
     return html`
       <div class="rect-tile sun">
         ${this._header("mdi:weather-sunset", this.config.name ?? "Sunrise & sunset")}
-        <svg class="sun-arc" viewBox="0 0 100 58">
-          <path d="M4 48 Q 50 -4 96 48 Z" class="arc-fill" />
-          <line x1="0" y1="48" x2="100" y2="48" class="horizon" />
+        <svg class="sun-arc" viewBox="0 0 100 38">
+          <path d="M2 32 Q 50 -4 98 32 Z" class="arc-fill" />
+          <line x1="0" y1="32" x2="100" y2="32" class="horizon" />
           ${frac > 0 && frac < 1
-            ? svg`<path d=${cookiePath(x, y, 6, 9, 0.7)} fill="var(--md-sys-cust-color-weather-sun, #FFC83D)" />`
+            ? svg`<path d=${cookiePath(x, y, 5.5, 9, 0.6)} fill="var(--md-sys-cust-color-weather-sun, #FFC83D)" />`
             : ""}
         </svg>
         <div class="sun-times">
@@ -517,7 +518,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
           const words = fn.replace(/pollen/i, "").trim().split(/\s+/);
           label = words[words.length - 1] || fn;
         }
-        const icon = cfg.icon || st.attributes.icon || "mdi:flower-pollen";
+        const icon = cfg.icon || st.attributes.icon || "m3of:allergy";
         return { label, icon, frac, levelLabel, color };
       })
       .filter(Boolean)
@@ -529,14 +530,14 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
       const configured = (this.config.entities?.length) || this.config.grass_entity || this.config.tree_entity || this.config.weed_entity;
       return configured
         ? nothing
-        : this._hint("mdi:flower-pollen", this.config.name ?? "Pollen", "Add pollen sensors");
+        : this._hint("m3of:allergy", this.config.name ?? "Pollen", "Add pollen sensors");
     }
     // Small variant (Pixel small tile): colored level dot + species + level,
     // as a compact left-aligned list.
     if (this.config.variant === "small") {
       return html`
         <div class="rect-tile pollen-small">
-          ${this._header("mdi:flower-pollen", this.config.name ?? "Pollen")}
+          ${this._header("m3of:allergy", this.config.name ?? "Pollen")}
           <div class="pollen-rows">
             ${kinds.map((k) => html`
               <div class="pollen-row">
@@ -553,7 +554,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     }
     return html`
       <div class="rect-tile pollen">
-        ${this._header("mdi:flower-pollen", this.config.name ?? "Pollen")}
+        ${this._header("m3of:allergy", this.config.name ?? "Pollen")}
         <div class="gauges">
           ${kinds.map((k) => {
             const start = -135;

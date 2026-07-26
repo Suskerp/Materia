@@ -297,9 +297,9 @@ export const styles = [
     }
 
     .sun-arc {
-      /* Small enough that header + arc + times fit the SQUARE tile — the
-         arc was pushing the tile taller than its siblings. */
-      width: 62%;
+      /* Wide and FLAT (viewBox 100×38) — fills the card without pushing the
+         square tile taller. */
+      width: 94%;
       height: auto;
       display: block;
     }

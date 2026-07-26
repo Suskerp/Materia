@@ -116,7 +116,7 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
       uv: "mdi:white-balance-sunny",
       precipitation: "m3o:rainy",
       pressure: "mdi:gauge",
-      pollen: "m3o:allergies",
+      pollen: "m3of:allergy",
       aqi: "mdi:waves",
       sensor: "mdi:information-outline",
     };
