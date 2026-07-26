@@ -23,8 +23,9 @@ const MODE_META = {
   cool: { icon: "mdi:snowflake", color: "var(--md-sys-cust-color-climate-cool-accent, #327ea7)", on: "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)", container: "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)", onContainer: "var(--md-sys-cust-color-climate-cool-accent, #327ea7)" },
   dry: { icon: "mdi:water-percent", color: AUTO_ACCENT, on: AUTO_CONTAINER, container: AUTO_CONTAINER, onContainer: AUTO_ACCENT },
   fan_only: { icon: "mdi:fan", color: "var(--md-sys-color-secondary)", on: "var(--md-sys-color-on-secondary)", container: "var(--md-sys-color-secondary-container)", onContainer: "var(--md-sys-color-on-secondary-container)" },
-  // Soft neutral for off — a filled on-surface-variant pill reads far too harsh.
-  off: { icon: "m3o:power-settings-new", color: "var(--md-sys-color-surface-variant)", on: "var(--md-sys-color-on-surface-variant)", container: "var(--md-sys-color-surface-variant)", onContainer: "var(--md-sys-color-on-surface-variant)" },
+  // Off: selection still needs a COLOR (surface-variant read as unselected).
+  // M3E vibrant selection = tertiary — distinct from every climate hue.
+  off: { icon: "m3o:power-settings-new", color: "var(--md-sys-color-tertiary-container)", on: "var(--md-sys-color-on-tertiary-container)", container: "var(--md-sys-color-tertiary-container)", onContainer: "var(--md-sys-color-on-tertiary-container)" },
 };
 
 /**

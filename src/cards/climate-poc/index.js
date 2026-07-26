@@ -243,7 +243,7 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
       cool: ["var(--md-sys-cust-color-climate-cool-accent, #327ea7)", "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)"],
       auto: ["var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-primary-container))"],
       heat_cool: ["var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-primary-container))"],
-      off: ["var(--md-sys-color-surface-variant)", "var(--md-sys-color-on-surface-variant)"],
+      off: ["var(--md-sys-color-tertiary-container)", "var(--md-sys-color-on-tertiary-container)"],
     };
     const [act, on] = MODE_COLORS[this._entity?.state] ?? MODE_COLORS.off;
     return html`
