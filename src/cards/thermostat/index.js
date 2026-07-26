@@ -405,12 +405,12 @@ class MateriaThermostat extends ActionMixin(LitElement) {
             ${active
               ? svg`<g>
                   <circle cx=${tx} cy=${ty} r="5.5" class="thumb" style="fill:${accent}" />
-                  <path d=${materialCookiePath(tx, ty, 2.9, 12)} class="thumb-cookie" />
+                  <path d=${materialCookiePath(tx, ty, 3.7, 12)} class="thumb-cookie" />
                 </g>`
               : tgtDeg != null
                 ? svg`<g>
                     <circle cx=${tx} cy=${ty} r="4.5" class="thumb muted" />
-                    <path d=${materialCookiePath(tx, ty, 2.3, 12)} class="thumb-cookie" />
+                    <path d=${materialCookiePath(tx, ty, 3.0, 12)} class="thumb-cookie" />
                   </g>`
                 : ""}
           </svg>
