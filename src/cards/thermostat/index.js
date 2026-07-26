@@ -53,7 +53,9 @@ class MateriaThermostat extends ActionMixin(LitElement) {
 
   setConfig(config) {
     if (!config.entity) throw new Error("entity is required");
-    this.config = { step: 0.5, ...config };
+    // NB: no step default here — _step falls back to the entity's own
+    // target_temp_step so the device's increments are respected.
+    this.config = { ...config };
   }
 
   connectedCallback() {
@@ -125,6 +127,13 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     if (v == null || v === "" || v === "unknown" || v === "unavailable") return null;
     const n = Number(v);
     return Number.isFinite(n) ? n : null;
+  }
+
+  /** Temperature step — config override → entity target_temp_step → 0.5. */
+  get _step() {
+    return this.config.step
+      ?? this._numRaw(this._entity?.attributes?.target_temp_step)
+      ?? 0.5;
   }
 
   /** Dial scale — config override → entity min/max → sane defaults. */
@@ -260,7 +269,7 @@ class MateriaThermostat extends ActionMixin(LitElement) {
   /* ---- Interaction --------------------------------------------------------- */
   _setTarget(temp) {
     const { min, max } = this._scale;
-    const step = this.config.step ?? 0.5;
+    const step = this._step;
     // Round twice: to the step, then to 2 decimals — step math leaks float
     // noise (17.900000000000002) into the display AND the service call.
     const clamped = Math.round(Math.min(max, Math.max(min, Math.round(temp / step) * step)) * 100) / 100;
@@ -433,10 +442,10 @@ class MateriaThermostat extends ActionMixin(LitElement) {
         </div>
 
         <div class="nudge">
-          <button class="seg minus" @click=${() => this._nudge(-(this.config.step ?? 0.5))}>
+          <button class="seg minus" @click=${() => this._nudge(-this._step)}>
             <ha-icon icon="mdi:minus"></ha-icon>
           </button>
-          <button class="seg plus" @click=${() => this._nudge(this.config.step ?? 0.5)}>
+          <button class="seg plus" @click=${() => this._nudge(this._step)}>
             <ha-icon icon="mdi:plus"></ha-icon>
           </button>
         </div>
