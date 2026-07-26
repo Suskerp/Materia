@@ -1,8 +1,8 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 
-class MateriaForecastDailyEditor extends SmartEditorBase {
+class MateriaForecastHourlyEditor extends SmartEditorBase {
   _formData() {
-    return { days: 10, show_hourly: true, show_precipitation: true, ...this._config };
+    return { hours: 24, show_header: true, show_precipitation: true, ...this._config };
   }
 
   get _sections() {
@@ -12,15 +12,15 @@ class MateriaForecastDailyEditor extends SmartEditorBase {
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: "weather" } } },
-          { name: "days", label: "Days shown", selector: { number: { min: 3, max: 15, step: 1, mode: "slider" } } },
-          { name: "show_hourly", label: "Tap a day to expand its hourly detail", selector: { boolean: {} } },
+          { name: "name", label: "Header title", selector: { text: {} } },
+          { name: "show_header", label: "Show header", selector: { boolean: {} } },
+          { name: "hours", label: "Hours shown", selector: { number: { min: 6, max: 48, step: 1, mode: "slider" } } },
           { name: "show_precipitation", label: "Show precipitation chance", selector: { boolean: {} } },
           { name: "min_precipitation", label: "Hide below (%)", selector: { number: { min: 0, max: 100, step: 5, mode: "box" } } },
-          { name: "today_label", label: "Label for today", selector: { text: {} } },
         ],
       },
     ];
   }
 }
 
-customElements.define("materia-forecast-daily-editor", MateriaForecastDailyEditor);
+customElements.define("materia-forecast-hourly-editor", MateriaForecastHourlyEditor);

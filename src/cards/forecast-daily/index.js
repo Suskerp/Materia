@@ -1,6 +1,7 @@
 import { LitElement, html, svg } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { coloredWeatherIcon } from "../weather-tile/icons.js";
+import { hourlyItems } from "../forecast-hourly/row.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -14,7 +15,9 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
     hass: { attribute: false },
     config: { state: true },
     _forecast: { state: true },
+    _hourly: { state: true },
     _selected: { state: true },
+    _expanded: { state: true },
   };
 
   static styles = styles;
@@ -33,6 +36,7 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
     this.config = { ...config };
     this._fcEntity = undefined; // (re)subscribe forecast for the (new) entity
     this._selected = 0;
+    this._expanded = false;
   }
 
   updated(changedProps) {
@@ -52,21 +56,43 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
     this._unsubForecast();
     this._fcEntity = entity;
     this._forecast = [];
-    const p = this.hass.connection.subscribeMessage(
+    this._hourly = [];
+    const daily = this.hass.connection.subscribeMessage(
       (ev) => {
         this._forecast = ev?.forecast || [];
       },
       { type: "weather/subscribe_forecast", forecast_type: "daily", entity_id: entity }
     );
-    this._fcUnsub = p;
-    p.catch(() => {}); // entity may not support forecasts — fall back gracefully
+    daily.catch(() => {}); // entity may not support forecasts — fall back gracefully
+    this._fcUnsubs = [daily];
+    if (this.config.show_hourly !== false) {
+      // Hourly detail for the tapped day. Integrations with a short hourly
+      // horizon (e.g. KMI ~3 days) simply have no hours for later days.
+      const hourly = this.hass.connection.subscribeMessage(
+        (ev) => {
+          this._hourly = ev?.forecast || [];
+        },
+        { type: "weather/subscribe_forecast", forecast_type: "hourly", entity_id: entity }
+      );
+      hourly.catch(() => {});
+      this._fcUnsubs.push(hourly);
+    }
   }
 
   _unsubForecast() {
-    if (this._fcUnsub) {
-      this._fcUnsub.then((u) => u && u()).catch(() => {});
-      this._fcUnsub = null;
+    for (const p of this._fcUnsubs || []) {
+      p.then((u) => u && u()).catch(() => {});
     }
+    this._fcUnsubs = null;
+  }
+
+  /** Hourly entries falling on the same local calendar day as `day`. */
+  _hoursFor(day) {
+    if (!day?.datetime || !this._hourly?.length) return [];
+    const target = new Date(day.datetime).toDateString();
+    return this._hourly
+      .filter((h) => new Date(h.datetime).toDateString() === target)
+      .slice(0, 24);
   }
 
   _num(v) {
@@ -115,6 +141,8 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
 
   _select(i, day) {
     if (this._didDrag) return; // it was a scroll, not a tap
+    // Re-tapping the selected day folds the hourly detail; a new day opens it.
+    this._expanded = i === this._selected ? !this._expanded : true;
     this._selected = i;
     // Let dashboards react to the selection (e.g. a detail card) if they want.
     this.dispatchEvent(new CustomEvent("materia-forecast-day-selected", {
@@ -135,6 +163,15 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
 
     const showPrecip = this.config.show_precipitation !== false;
     const minPrecip = this.config.min_precipitation ?? 10; // hide noise below 10%
+
+    // Hourly detail for the selected day — empty beyond the integration's
+    // hourly horizon, in which case the panel just stays closed.
+    const selDay = days[this._selected];
+    const hours = this.config.show_hourly !== false && this._expanded && selDay
+      ? this._hoursFor(selDay)
+      : [];
+    const open = this._expanded && hours.length > 0;
+    const locale = this.hass?.locale?.language || navigator.language || "en";
 
     return html`
       <ha-card>
@@ -165,6 +202,19 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
               </button>
             `;
           })}
+        </div>
+        <div class="detail ${open ? "open" : ""}">
+          <div class="detail-inner">
+            <div
+              class="hours"
+              @pointerdown=${this._onPointerDown}
+              @pointermove=${this._onPointerMove}
+              @pointerup=${this._onPointerUp}
+              @pointercancel=${this._onPointerUp}
+            >
+              ${open ? hourlyItems(hours, { locale, showPrecip, minPrecip }) : ""}
+            </div>
+          </div>
         </div>
       </ha-card>
     `;

@@ -1,12 +1,14 @@
 import { css } from "lit";
 import { hostStyles, haCardReset, unavailableStyles } from "../../styles/card-styles.js";
 import { motionTokens } from "../../utils/motion.js";
+import { hourlyRowStyles } from "../forecast-hourly/styles.js";
 
 export const styles = [
   hostStyles,
   haCardReset,
   unavailableStyles,
   motionTokens,
+  hourlyRowStyles,
   css`
     ha-card {
       background: transparent;
@@ -104,6 +106,30 @@ export const styles = [
       font-weight: 500;
       margin-top: 2px;
       opacity: 0.85;
+    }
+
+    /* Expanding hourly detail — the 0fr→1fr grid-row trick animates height
+       without measuring; the expressive spatial spring gives it the M3 bounce. */
+    .detail {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows var(--md-sys-motion-expressive-default-spatial);
+    }
+
+    .detail.open {
+      grid-template-rows: 1fr;
+    }
+
+    .detail-inner {
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .detail-inner .hours {
+      margin-top: 8px;
+      background: var(--ha-card-background, var(--card-background-color));
+      border-radius: 24px;
+      padding: 8px 10px;
     }
   `,
 ];
