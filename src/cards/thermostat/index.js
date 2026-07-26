@@ -499,9 +499,6 @@ class MateriaThermostat extends ActionMixin(LitElement) {
 customElements.define("materia-thermostat", MateriaThermostat);
 
 window.customCards = window.customCards || [];
-window.customCards.push({
-  type: "materia-thermostat",
-  name: "Materia Thermostat",
-  description: "Expressive thermostat dial — the active sweep is a living wavy line that moves with heating/cooling.",
-  preview: true,
-});
+// NOT registered in the card picker: the dial is the climate panel's engine
+// (materia-climate-panel embeds it). The element stays defined, so existing
+// custom:materia-thermostat YAML keeps rendering.

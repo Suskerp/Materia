@@ -301,29 +301,6 @@ buttons:
 ---
 
 
-#### `materia-thermostat`
-
-Expressive thermostat dial — the active sweep is a living wavy line that travels while heating/cooling and breathes at equilibrium. Handle-only drag, hold-to-repeat steppers (`side` puts a large vertical +/− column beside the dial), and mode buttons that follow the climate palette.
-
-```yaml
-type: custom:materia-thermostat
-entity: climate.living_room
-steppers: side
-temperature_entity: sensor.living_room_temperature
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `entity` | string | **required** | Climate entity |
-| `temperature_entity` | string | | Current-temp sensor (marker on the dial) |
-| `step` | number | entity step | Setpoint step |
-| `min_temp` / `max_temp` | number | entity | Dial scale |
-| `steppers` | `below` \| `side` | `below` | Stepper placement |
-| `wave` | `auto` \| `always` \| `never` | `auto` | Wave animation |
-| `show_modes` / `mode_size` | | `true` / `l` | Mode button row |
-
----
-
 #### `materia-climate-panel`
 
 The full climate surface: the thermostat dial as hero, the mode group as a connected segment, and below them wallet-style sections you compose yourself — each one either an accordion section around **any nested cards** or a compact **menu** row. Exactly one section is open; bars show live `info` (templates supported) and optional action chips.
@@ -352,7 +329,10 @@ sections:
 | `entity` | string | **required** | Climate entity |
 | `sections` | list | `[]` | `{title, icon, style: section\|menu, cards / entity+options, info, info_entity, actions}` |
 | `reserve_height` | boolean | `false` | Keep the height of the tallest section |
-| `temperature_entity`, `step`, `min_temp`, `max_temp`, `steppers`, `wave` | | | Forwarded to the dial |
+| `temperature_entity` | string | | Current-temp sensor (marker on the dial) |
+| `step` / `min_temp` / `max_temp` | number | entity | Dial scale & step |
+| `steppers` | `side` \| `below` | `side` | Stepper placement |
+| `wave` | `auto` \| `always` \| `never` | `auto` | Dial wave animation |
 
 Zone switches inside the panel automatically sync their track/thumb colors to the active hvac mode.
 
