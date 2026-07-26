@@ -1,12 +1,15 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { loadCardHelpers } from "../../styles/shared.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
 /**
- * Climate redesign POC — the chosen layout ("dial hero + connected stack"):
- * the materia-thermostat as hero, with modes/zones/water-heater as 2px-seam
- * connected segments (M3 connected-group spec: 8px inner corners, 24px outer).
+ * Climate redesign POC — the chosen layout: the materia-thermostat as hero
+ * with the mode group as a connected segment, and below them a WALLET-style
+ * accordion cycling between Zones and Water heater (exactly one open, muted
+ * pills morph large on tap). `sections:` config appends arbitrary card
+ * sections to the accordion — that's the composability.
  *
  * Zone config: zones: [{ entity, name, temp_entity? }] — on/off valve
  * switches. State ladder derives "calling" from the climate entity actively
@@ -19,6 +22,7 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
+    _openSection: { state: true },
   };
 
   static styles = styles;
@@ -35,6 +39,21 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
   setConfig(config) {
     if (!config.entity) throw new Error("Materia Climate POC: entity is required");
     this.config = { zones: [], ...config };
+    this._extraEls = null;
+    if (this.isConnected) this._createExtraCards();
+  }
+
+  firstUpdated() {
+    this._createExtraCards();
+  }
+
+  updated(changedProps) {
+    if (changedProps.has("hass") && this._extraEls) {
+      // Only the OPEN custom section needs live child updates.
+      const offset = (this._zones.length ? 1 : 0) + (this.config.water_heater ? 1 : 0);
+      const idx = (this._openSection ?? 0) - offset;
+      if (idx >= 0 && this._extraEls[idx]) this._extraEls[idx].forEach((el) => { el.hass = this.hass; });
+    }
   }
 
   /* ---- model --------------------------------------------------------------- */
@@ -101,13 +120,22 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
     this._fireHaptic("light");
   }
 
+  _allZones(onOff) {
+    for (const z of this._zones) {
+      this._callService("switch", onOff ? "turn_on" : "turn_off", { entity_id: z.entity });
+    }
+  }
+
   /* ---- fragments ------------------------------------------------------------ */
 
   /** Zone row — the 3-state ladder from the research: calling (container
    *  fill + fire), satisfied (subtle fill + radiator), off (outline only). */
   _zoneRow(z) {
     const stateClass = z.calling ? "calling" : z.on ? "idle" : "off";
-    const icon = z.calling ? "mdi:radiator" : z.on ? "mdi:radiator" : "mdi:radiator-off";
+    // Per-zone icon (or card-wide zone_icon) wins — underfloor heating isn't
+    // a radiator. The row's state styling still carries on/calling/off.
+    const custom = z.icon || this.config.zone_icon;
+    const icon = custom || (z.on ? "mdi:radiator" : "mdi:radiator-off");
     const secondary = z.calling
       ? `Heating · open ${z.sinceMin} min`
       : z.on
@@ -162,12 +190,12 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
     `;
   }
 
-  _waterSegment() {
-    const wh = this.config.water_heater ? this.hass.states[this.config.water_heater] : null;
+  _waterRow() {
+    const wh = this.hass.states[this.config.water_heater];
     if (!wh) return nothing;
     const temp = this._numRaw(wh.attributes?.current_temperature);
     return html`
-      <div class="seg water" @click=${() => this._fireMoreInfo(this.config.water_heater)}>
+      <div class="water-row" @click=${() => this._fireMoreInfo(this.config.water_heater)}>
         <ha-icon icon="mdi:water-boiler"></ha-icon>
         <div class="z-text">
           <span class="z-name">${wh.attributes?.friendly_name ?? "Water heater"}</span>
@@ -178,19 +206,119 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
     `;
   }
 
+  /* ---- wallet accordion: Zones / Water heater / custom sections ------------ */
+
+  async _createExtraCards() {
+    const gen = (this._extraGen = (this._extraGen || 0) + 1);
+    const secs = this.config.sections || [];
+    if (!secs.length) { this._extraEls = []; return; }
+    const helpers = await loadCardHelpers();
+    const els = await Promise.all(
+      secs.map(async (s) =>
+        (await Promise.all(
+          (s.cards || []).map(async (c) => {
+            try {
+              const el = await helpers.createCardElement(c);
+              el.hass = this.hass;
+              return el;
+            } catch {
+              return null;
+            }
+          })
+        )).filter(Boolean)
+      )
+    );
+    if (gen !== this._extraGen) return;
+    this._extraEls = els;
+    this.requestUpdate();
+  }
+
+  _accordionSections() {
+    const zones = this._zones;
+    const calling = zones.filter((z) => z.calling).length;
+    const on = zones.filter((z) => z.on).length;
+    const secs = [];
+    if (zones.length) {
+      secs.push({
+        title: this.config.zones_title ?? "Zones",
+        icon: this.config.zone_icon ?? "mdi:radiator",
+        info: calling ? `${calling} of ${zones.length} heating` : `${on} of ${zones.length} on`,
+        body: html`
+          <div class="acc-actions">
+            <button class="mini" @click=${() => this._allZones(false)}>All off</button>
+            <button class="mini" @click=${() => this._allZones(true)}>All on</button>
+          </div>
+          <div class="zones">${zones.map((z) => this._zoneRow(z))}</div>
+        `,
+      });
+    }
+    const wh = this.config.water_heater ? this.hass.states[this.config.water_heater] : null;
+    if (wh) {
+      const temp = this._numRaw(wh.attributes?.current_temperature);
+      secs.push({
+        title: this.config.water_title ?? "Water heater",
+        icon: "mdi:water-boiler",
+        info: `${this._capitalize(wh.state)}${temp != null ? ` · ${this._fmt(temp)}°` : ""}`,
+        body: this._waterRow(),
+      });
+    }
+    (this.config.sections || []).forEach((s, i) => {
+      const st = s.info_entity ? this.hass.states[s.info_entity] : null;
+      secs.push({
+        title: s.title ?? `Section ${i + 1}`,
+        icon: s.icon,
+        info: s.info ?? (st ? (this.hass.formatEntityState?.(st) ?? st.state) : ""),
+        body: this._extraEls?.[i]?.length ? html`<div class="acc-cards">${this._extraEls[i]}</div>` : nothing,
+      });
+    });
+    return secs;
+  }
+
+  _openAcc(i) {
+    if (this._openSection === i) return; // wallet invariant: one always large
+    this._openSection = i;
+    this._fireHaptic("light");
+    // Catch-up hass for custom-section children that were dormant.
+    const extraIdx = i - (this._zones.length ? 1 : 0) - (this.config.water_heater ? 1 : 0);
+    if (extraIdx >= 0 && this._extraEls?.[extraIdx]) {
+      this._extraEls[extraIdx].forEach((el) => { el.hass = this.hass; });
+    }
+  }
+
   render() {
     if (!this.hass || !this.config) return html``;
     if (!this._entity) return html`<ha-card class="poc">Unknown entity: ${this.config.entity}</ha-card>`;
+    const open = this._openSection ?? 0;
+    const secs = this._accordionSections();
+    // The accordion sections LIVE IN the connected stack (2px seams, group
+    // silhouette): closed bars are compact segments, the open one grows tall.
     return html`
       <ha-card class="poc">
         <materia-thermostat
           .hass=${this.hass}
-          .config=${{ entity: this.config.entity, show_modes: false, wave: this.config.wave ?? "auto", steppers: this.config.steppers ?? "side" }}
+          .config=${{
+            entity: this.config.entity,
+            show_modes: false,
+            wave: this.config.wave ?? "auto",
+            steppers: this.config.steppers ?? "side",
+            ...(this.config.step != null ? { step: this.config.step } : {}),
+            ...(this.config.min_temp != null ? { min_temp: this.config.min_temp } : {}),
+            ...(this.config.max_temp != null ? { max_temp: this.config.max_temp } : {}),
+          }}
         ></materia-thermostat>
         <div class="stack">
           <div class="seg">${this._modeGroup()}</div>
-          <div class="seg zones">${this._zones.map((z) => this._zoneRow(z))}</div>
-          ${this._waterSegment()}
+          ${secs.map((s, i) => html`
+            <div class="seg acc-sec ${open === i ? "open" : ""}">
+              <div class="acc-bar" @click=${() => this._openAcc(i)}>
+                ${s.icon ? html`<ha-icon class="acc-icon" icon=${s.icon}></ha-icon>` : ""}
+                <span class="acc-title">${s.title}</span>
+                <span class="acc-info">${open === i ? "" : s.info}</span>
+                ${open === i ? nothing : html`<ha-icon class="acc-chev" icon="mdi:chevron-down"></ha-icon>`}
+              </div>
+              <div class="acc-body"><div class="acc-inner">${open === i ? s.body : nothing}</div></div>
+            </div>
+          `)}
         </div>
       </ha-card>
     `;

@@ -113,61 +113,194 @@ export const styles = [
       opacity: 0.75;
     }
 
-    /* M3-ish switch visual (display only — row handles the tap) */
+    /* M3 switch, per SwitchTokens.kt (scaled from the 52×32 spec track):
+       unselected = surface-container-highest track + 2dp outline border +
+       SMALL thumb in outline; selected = primary track + LARGER on-primary
+       thumb; pressed grows further. All size, no shape morph — the growth on
+       fast-spatial IS the expressive tactility. (Display only — the row
+       handles the tap.) */
     .z-switch {
       width: 44px;
       height: 26px;
       border-radius: 999px;
-      background: var(--md-sys-color-surface-variant, rgba(0, 0, 0, 0.15));
-      border: 1.5px solid var(--md-sys-color-outline-variant, rgba(0, 0, 0, 0.2));
+      background: var(--md-sys-color-surface-container-highest, var(--md-sys-color-surface-variant, rgba(0, 0, 0, 0.15)));
+      border: 2px solid var(--md-sys-color-outline, rgba(0, 0, 0, 0.35));
       position: relative;
       flex-shrink: 0;
-      transition: background-color var(--md-sys-motion-fast-effects);
+      box-sizing: border-box;
+      transition:
+        background-color var(--md-sys-motion-fast-effects),
+        border-color var(--md-sys-motion-fast-effects);
     }
 
     .z-switch i {
       position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 18px;
-      height: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      left: 4px;
+      width: 13px; /* spec 16/32 of track height */
+      height: 13px;
       border-radius: 50%;
       background: var(--md-sys-color-outline, #888);
       transition:
         left var(--md-sys-motion-expressive-fast-spatial),
+        width var(--md-sys-motion-expressive-fast-spatial),
+        height var(--md-sys-motion-expressive-fast-spatial),
         background-color var(--md-sys-motion-fast-effects);
     }
 
     .z-switch.on {
-      background: var(--md-sys-cust-color-climate-heat-accent, var(--md-sys-color-primary));
+      background: var(--md-sys-color-primary);
       border-color: transparent;
     }
 
     .z-switch.on i {
-      left: 21px;
-      background: var(--md-sys-color-surface, #fff);
+      left: 19px;
+      width: 20px; /* spec 24/32 — the thumb GROWS when selected */
+      height: 20px;
+      background: var(--md-sys-color-on-primary, #fff);
     }
 
-    /* ---- water heater segment -------------------------------------------------- */
-    .seg.water {
+    /* Pressed: thumb swells toward the spec's 28/32 pressed size. */
+    .zone-row:active .z-switch i {
+      width: 22px;
+      height: 22px;
+    }
+
+    .zone-row:active .z-switch:not(.on) i {
+      left: 2px;
+    }
+
+    .zone-row:active .z-switch.on i {
+      left: 16px;
+    }
+
+    /* ---- water heater row (accordion body) --------------------------------- */
+    .water-row {
       display: flex;
       align-items: center;
       gap: 12px;
+      padding: 8px 10px 12px;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
 
-    .seg.water ha-icon {
+    .water-row ha-icon {
       --mdc-icon-size: 20px;
       opacity: 0.85;
     }
 
-    .seg.water .chev {
+    .water-row .chev {
       opacity: 0.5;
     }
 
     materia-thermostat {
       display: block;
+    }
+
+    /* ---- wallet accordion INSIDE the connected stack ------------------------
+       The sections keep the group silhouette (2px seams, positional 8/24px
+       corners from the .seg first/last rules). Wallet cues: closed bars are
+       compact and slightly muted; the open one grows tall on the expressive
+       spring and carries the full card tone. */
+    .stack > .seg.acc-sec {
+      padding: 0;
+      overflow: hidden;
+      background: color-mix(in srgb, var(--ha-card-background, var(--card-background-color)) 78%, var(--md-sys-color-surface, var(--ha-card-background)));
+      transition: background-color var(--md-sys-motion-default-effects);
+    }
+
+    .stack > .seg.acc-sec.open {
+      background: var(--ha-card-background, var(--card-background-color));
+    }
+
+    .acc-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .acc-icon {
+      --mdc-icon-size: 20px;
+      opacity: 0.9;
+      flex-shrink: 0;
+    }
+
+    .acc-title {
+      font-size: 14px;
+      font-weight: 600;
+      flex: 1;
+      transition: font-size var(--md-sys-motion-fast-effects);
+    }
+
+    .acc-sec.open .acc-title {
+      font-size: 16px;
+    }
+
+    .acc-info {
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0.7;
+      white-space: nowrap;
+    }
+
+    .acc-chev {
+      --mdc-icon-size: 22px;
+      opacity: 0.55;
+      flex-shrink: 0;
+    }
+
+    .acc-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows var(--md-sys-motion-expressive-default-spatial);
+    }
+
+    .acc-sec.open .acc-body {
+      grid-template-rows: 1fr;
+    }
+
+    .acc-inner {
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .acc-inner .zones {
+      padding: 0 10px 12px;
+    }
+
+    .acc-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      padding: 0 10px 6px;
+    }
+
+    .mini {
+      border: 1.5px solid var(--md-sys-color-outline-variant, rgba(0, 0, 0, 0.2));
+      background: transparent;
+      color: inherit;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background-color var(--md-sys-motion-fast-effects);
+    }
+
+    .mini:active {
+      background: color-mix(in srgb, currentColor 10%, transparent);
+    }
+
+    .acc-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 0 12px 14px;
     }
   `,
 ];
