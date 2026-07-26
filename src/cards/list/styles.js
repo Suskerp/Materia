@@ -11,6 +11,9 @@ export const styles = [
     ha-card {
       border-radius: 24px;
       padding: 16px 20px;
+      /* haCardReset clears the background — restore the surface (obvious on
+         dark themes, where the rows otherwise float on the view). */
+      background: var(--ha-card-background, var(--card-background-color));
     }
 
     .header {
