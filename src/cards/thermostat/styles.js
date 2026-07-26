@@ -186,7 +186,6 @@ export const styles = [
     }
 
     .nudge .seg:active {
-      flex-grow: 1.5;
       border-radius: 999px;
       background: color-mix(in srgb, currentColor 12%, var(--md-sys-color-secondary-container));
     }
@@ -239,10 +238,12 @@ export const styles = [
       --mdc-icon-size: clamp(24px, 8cqi, 28px);
     }
 
+    /* Press = icon-button feedback (shape morph + state layer), NOT the
+       group's flex-grow selection morph — steppers get mashed repeatedly and
+       a layout reflow inside the clipping pill container both clips on
+       release and looks frantic under rapid taps. */
     .nudge.vertical .seg:active {
-      flex-grow: 1.4;
       border-radius: 999px;
-      background: var(--md-sys-color-secondary-container, var(--ha-card-background));
     }
 
     materia-button-group {
