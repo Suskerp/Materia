@@ -123,7 +123,9 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     if (this.config.preset && PRESETS[this.config.preset]) {
       return PRESETS[this.config.preset];
     }
-    return PRESETS.primary;
+    // M3 guardrail: unstyled groups default to the SECONDARY selected-toggle
+    // family, not solid primary — one primary element per surface.
+    return PRESETS.secondary;
   }
 
   render() {
@@ -138,7 +140,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     const activeValue = this._activeValue;
     const colors = this._getActiveColors();
     const options = this._resolvedOptions;
-    const variant = this.config.variant || "filled";
+    const variant = this.config.variant || "tonal";
     if (!options.length) return html``;
 
     const multiSelect = this.config.multi_select;
