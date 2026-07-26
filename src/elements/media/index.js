@@ -33,7 +33,24 @@ class MateriaMedia extends ActionMixin(LitElement) {
       this._resolveField("name", "_resolvedName");
       this._resolveField("subtitle", "_resolvedSubtitle");
       this._resolveField("image", "_resolvedImage");
+      // C-morph: a typographic beat when a NEW track lands, then settle.
+      const track = this._stateObj?.attributes?.media_title;
+      if (track && this._lastTrack && track !== this._lastTrack) {
+        this._beat = true;
+        this.requestUpdate();
+        clearTimeout(this._beatTimer);
+        this._beatTimer = setTimeout(() => {
+          this._beat = false;
+          this.requestUpdate();
+        }, 900);
+      }
+      this._lastTrack = track;
     }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    clearTimeout(this._beatTimer);
   }
 
   get _stateObj() {
@@ -80,9 +97,10 @@ class MateriaMedia extends ActionMixin(LitElement) {
     // Editorial typography only when a real track is showing — a device name
     // (off/idle) is not a headline.
     const editorial = !unavailable && !!stateObj?.attributes?.media_title && !["off", "idle", "standby"].includes(stateObj.state);
+    const paused = editorial && stateObj.state === "paused";
     return html`
       <ha-card>
-        <div class="wrap ${unavailable ? "unavailable" : ""} ${editorial ? "editorial" : ""}" @click=${this._tap}>
+        <div class="wrap ${unavailable ? "unavailable" : ""} ${editorial ? "editorial" : ""} ${this._beat ? "beat" : ""} ${paused ? "paused" : ""}" @click=${this._tap}>
           ${this.config.show_art === false
             ? nothing
             : html`<div class="art" style=${artStyle}></div>`}

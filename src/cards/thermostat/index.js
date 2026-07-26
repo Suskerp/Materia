@@ -40,6 +40,7 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     hass: { attribute: false },
     config: { state: true },
     _optimisticTemp: { state: true },
+    _adjusting: { state: true },
   };
 
   static styles = styles;
@@ -281,6 +282,11 @@ class MateriaThermostat extends ActionMixin(LitElement) {
     // noise (17.900000000000002) into the display AND the service call.
     const clamped = Math.round(Math.min(max, Math.max(min, Math.round(temp / step) * step)) * 100) / 100;
     this._optimisticTemp = clamped;
+    // C-morph: the numeral thickens while you adjust, relaxing on release —
+    // type itself signaling "live" (rides the variable wght axis).
+    this._adjusting = true;
+    clearTimeout(this._adjustTimer);
+    this._adjustTimer = setTimeout(() => { this._adjusting = false; }, 650);
     clearTimeout(this._optimisticTimer);
     this._optimisticTimer = setTimeout(() => { this._optimisticTemp = null; }, 10000);
     clearTimeout(this._sendTimer);
@@ -440,7 +446,7 @@ class MateriaThermostat extends ActionMixin(LitElement) {
           </svg>
           <div class="center" @click=${() => this._fireMoreInfo(this.config.entity)}>
             <div class="mode-label">${modeLabel}</div>
-            <div class="target">
+            <div class="target ${this._adjusting ? "adjusting" : ""}">
               ${target != null ? Math.round(target * 10) / 10 : current != null ? Math.round(current * 10) / 10 : "—"}<span class="deg">${unit}</span>
             </div>
             ${current != null && this.config.show_current !== false

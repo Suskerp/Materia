@@ -112,6 +112,22 @@ export const styles = [
       display: flex;
       align-items: flex-start;
       font-variant-numeric: tabular-nums;
+      transition: font-weight var(--md-sys-motion-fast-effects);
+    }
+
+    /* C-morph: live adjustment thickens the numeral on the variable axis. */
+    .target.adjusting {
+      font-weight: 680;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .target {
+        transition: none;
+      }
+
+      .target.adjusting {
+        font-weight: 600;
+      }
     }
 
     .target .deg {

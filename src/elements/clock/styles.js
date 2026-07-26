@@ -40,12 +40,16 @@ export const styles = css`
     font-weight: 800;
     letter-spacing: -1px;
     font-variant-numeric: tabular-nums;
+    /* C-morph glide between the per-second breathe steps. */
+    transition: font-weight 1s linear;
   }
 
+  /* The ONE accent-face moment in the system (Fraunces italic). */
   .date {
     fill: var(--clock-number, color-mix(in srgb, var(--md-sys-color-primary, #888) 45%, transparent));
-    font-family: var(--materia-font-display, inherit);
-    font-weight: 700;
+    font-family: var(--materia-font-accent, var(--materia-font-display, inherit));
+    font-style: italic;
+    font-weight: 500;
   }
 
   .second-dot {

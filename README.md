@@ -300,6 +300,162 @@ buttons:
 
 ---
 
+
+#### `materia-thermostat`
+
+Expressive thermostat dial — the active sweep is a living wavy line that travels while heating/cooling and breathes at equilibrium. Handle-only drag, hold-to-repeat steppers (`side` puts a large vertical +/− column beside the dial), and mode buttons that follow the climate palette.
+
+```yaml
+type: custom:materia-thermostat
+entity: climate.living_room
+steppers: side
+temperature_entity: sensor.living_room_temperature
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `entity` | string | **required** | Climate entity |
+| `temperature_entity` | string | | Current-temp sensor (marker on the dial) |
+| `step` | number | entity step | Setpoint step |
+| `min_temp` / `max_temp` | number | entity | Dial scale |
+| `steppers` | `below` \| `side` | `below` | Stepper placement |
+| `wave` | `auto` \| `always` \| `never` | `auto` | Wave animation |
+| `show_modes` / `mode_size` | | `true` / `l` | Mode button row |
+
+---
+
+#### `materia-climate-panel`
+
+The full climate surface: the thermostat dial as hero, the mode group as a connected segment, and below them wallet-style sections you compose yourself — each one either an accordion section around **any nested cards** or a compact **menu** row. Exactly one section is open; bars show live `info` (templates supported) and optional action chips.
+
+```yaml
+type: custom:materia-climate-panel
+entity: climate.home
+sections:
+  - title: Zones
+    icon: mdi:heating-coil
+    info: "{{ ... }}"            # closed-bar status, Jinja OK
+    actions:
+      - label: All off
+        tap_action: { action: perform-action, perform_action: switch.turn_off, target: { entity_id: [...] } }
+    cards:
+      - type: custom:materia-switch
+        entity: switch.zone_living
+        flat: true
+  - title: Water heater
+    style: menu                   # tap opens the operation-mode menu
+    entity: water_heater.home
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `entity` | string | **required** | Climate entity |
+| `sections` | list | `[]` | `{title, icon, style: section\|menu, cards / entity+options, info, info_entity, actions}` |
+| `reserve_height` | boolean | `false` | Keep the height of the tallest section |
+| `temperature_entity`, `step`, `min_temp`, `max_temp`, `steppers`, `wave` | | | Forwarded to the dial |
+
+Zone switches inside the panel automatically sync their track/thumb colors to the active hvac mode.
+
+---
+
+#### `materia-switch`
+
+Generic toggle row: icon + name + secondary line + a spec-faithful M3 switch. Compose lists (heating zones, plugs) from several of these.
+
+```yaml
+type: custom:materia-switch
+entity: switch.zone_living
+secondary: "{{ 'Heating' if ... else 'Idle' }}"
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `entity` | string | **required** | Any toggleable entity |
+| `name` / `icon` | string | entity | Row identity |
+| `secondary` | string | localized state | Secondary line. *Templatable* |
+| `color` / `color_on` | string | | Row colors (state escalation). *Templatable* |
+| `switch_color` / `switch_color_on` | string | primary pair | The toggle's selected track/thumb. *Templatable* |
+| `flat` | boolean | `false` | Drop card chrome for nesting |
+| `tap_action` | object | toggle | Row tap |
+
+---
+
+#### `materia-glance-tile`
+
+View-only sensor tile for **any** entity — the visualization is picked from the device class (override with `variant`): percent liquid fill (humidity drifts gently), thermometer for temperatures, load bars for power, a slowly turning star for running binaries, and a graceful plain fallback.
+
+```yaml
+type: custom:materia-glance-tile
+entity: sensor.bathroom_humidity
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `entity` | string | **required** | Any entity |
+| `variant` | `auto` \| `percent` \| `temperature` \| `power` \| `energy` \| `binary` \| `plain` | `auto` | Visualization |
+| `min` / `max` | number | per variant | Scale (temperature/power) |
+| `accent` / `color` / `color_on` | string | | Colors |
+| `tap_action` | object | more-info | Tap |
+
+---
+
+#### `materia-wallet`
+
+Swipe-card replacement: slim bars that spring open expressively — exactly one section is always large; the rest collapse to labeled pills. Sections hold any cards.
+
+```yaml
+type: custom:materia-wallet
+sections:
+  - title: Climate
+    icon: mdi:thermostat
+    info_entity: climate.home
+    cards: [ ... ]
+  - title: Music
+    icon: mdi:music
+    cards: [ ... ]
+```
+
+---
+
+#### `materia-list`
+
+Compact entity list — name left, localized state right.
+
+```yaml
+type: custom:materia-list
+title: Indoor sensors
+icon: m3o:home
+entities:
+  - entity: sensor.bathroom_humidity
+    name: Humidity Bathroom
+```
+
+---
+
+#### `materia-weather-hero`
+
+Pixel-style weather hero: big light temperature, condition glyph + text, feels-like and day range. Add `temperature_entity` for a real outdoor sensor.
+
+#### `materia-forecast-daily` / `materia-forecast-hourly`
+
+Forecast tiles fed by the weather entity's forecast subscription. Daily supports tap-a-day to expand its hourly detail (`show_hourly`); hourly is drag-scrollable.
+
+#### `materia-weather-metric`
+
+One metric per tile, Pixel-style: `wind` (direction/strength blob), `uv`, `aqi`, `pollen` (gauges or small list), `precipitation`, `sun`, `visibility`, `humidity` (drifting wave), `pressure`.
+
+```yaml
+type: custom:materia-weather-metric
+metric: wind
+entity: weather.home
+```
+
+#### `materia-weather-glance`
+
+Home-card weather pill: condition + temperature plus the worst metrics first (priority configurable and drag-sortable in the editor), with a chevron when it navigates.
+
+---
+
 ### Elements
 
 ---
@@ -479,7 +635,7 @@ tap_action_map:
 
 #### `materia-menu`
 
-A button that opens a dropdown of options -- useful for `input_select`/`select` entities or a list of actions.
+A button that opens a dropdown of options -- useful for `input_select`/`select`/`water_heater` entities or a list of actions. `position: auto` (default) flips up when there's no room below; `menu_variant: expressive` renders the M3-expressive menu (tertiary container tone, 28px corners, trailing icons, content-sized and elevated).
 
 ```yaml
 type: custom:materia-menu
@@ -614,6 +770,10 @@ entity: media_player.living_room
 ---
 
 ## Features
+
+### Typography
+
+Figtree is the functional voice everywhere; **Outfit** (variable) is the display voice on hero moments only — clock, weather hero temperature, thermostat target, tile numerals (tabular figures), wallet/panel section titles, media track titles. The weight axis animates: the thermostat numeral thickens while adjusting, section titles ride the open spring, the clock's digital readout breathes across the minute, and the media title beats on track changes. Fraunces italic appears in exactly one place: the clock's date. Swap the display face via `--materia-font-display`.
 
 ### Visual editor
 

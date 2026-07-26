@@ -58,16 +58,20 @@ export const styles = [
       font-family: var(--materia-font-display, inherit);
       font-size: 14px;
       font-weight: 600;
+      /* C-morph: weight rides the expand spring with the size. */
       flex: 1;
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      transition: font-size var(--md-sys-motion-expressive-default-spatial);
+      transition:
+        font-size var(--md-sys-motion-expressive-default-spatial),
+        font-weight var(--md-sys-motion-expressive-default-spatial);
     }
 
     .section.open .s-title {
       font-size: 17px;
+      font-weight: 700;
     }
 
     .s-info {

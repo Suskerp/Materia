@@ -186,10 +186,19 @@ class MateriaClock extends LitElement {
             return svg`<circle class="dot" cx=${x.toFixed(1)} cy=${y.toFixed(1)} r="1.3"></circle>`;
           })}
           ${digital
-            ? svg`
-                <text class="digital" x="50" y="40" font-size="30" text-anchor="middle" dominant-baseline="central">${hh}</text>
-                <text class="digital" x="50" y="64" font-size="30" text-anchor="middle" dominant-baseline="central">${mm}</text>
-              `
+            ? (() => {
+                // C-morph: the numerals BREATHE across the minute on the
+                // variable wght axis (780 → 820 → 780, one full cycle) — the
+                // per-second re-render + a 1s linear transition makes the
+                // steps glide. Must whisper: ±20 around the resting 800.
+                const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+                const frac = (now.getSeconds() + (now.getMilliseconds?.() ?? 0) / 1000) / 60;
+                const w = reduced ? 800 : Math.round(780 + 20 * (1 - Math.cos(2 * Math.PI * frac)));
+                return svg`
+                <text class="digital" style="font-weight:${w}" x="50" y="40" font-size="30" text-anchor="middle" dominant-baseline="central">${hh}</text>
+                <text class="digital" style="font-weight:${w}" x="50" y="64" font-size="30" text-anchor="middle" dominant-baseline="central">${mm}</text>
+              `;
+              })()
             : ""}
           ${showDate
             ? svg`<text class="date" x=${dateX} y=${dateY} font-size="8" text-anchor="middle" dominant-baseline="central" transform="rotate(${dateRot.toFixed(1)} ${dateX} ${dateY})">${dateStr}</text>`

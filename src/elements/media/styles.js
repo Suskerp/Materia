@@ -65,6 +65,23 @@ export const styles = css`
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    transition: font-weight 0.4s ease;
+  }
+
+  /* C-morph: a typographic BEAT as a new track starts, then settle. */
+  .wrap.editorial.beat .title {
+    font-weight: 800;
+  }
+
+  /* Paused music relaxes its voice. */
+  .wrap.editorial.paused .title {
+    font-weight: 550;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wrap.editorial .title {
+      transition: none;
+    }
   }
 
   .wrap.editorial .subtitle {

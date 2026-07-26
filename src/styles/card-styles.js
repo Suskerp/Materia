@@ -26,6 +26,7 @@ export const hostStyles = css`
     font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
     /* The DISPLAY voice — hero numerals & titles only, one shout per card. */
     --materia-font-display: "Outfit", "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
+    --materia-font-accent: "Fraunces", "Georgia", serif;
   }
 `;
 

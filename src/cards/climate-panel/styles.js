@@ -107,14 +107,19 @@ export const styles = [
     }
 
     .acc-title {
+      font-family: var(--materia-font-display, inherit);
       font-size: 14px;
       font-weight: 600;
       flex: 1;
-      transition: font-size var(--md-sys-motion-fast-effects);
+      /* C-morph: weight rides the open spring with the size. */
+      transition:
+        font-size var(--md-sys-motion-expressive-default-spatial),
+        font-weight var(--md-sys-motion-expressive-default-spatial);
     }
 
     .acc-sec.open .acc-title {
       font-size: 16px;
+      font-weight: 700;
     }
 
     .acc-info {
