@@ -152,9 +152,12 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     const frac = Math.min(1, Math.max(0, v / 100));
     const dc = this._stateObj.attributes.device_class;
     // Battery drains through the severity scale; everything else stays accent.
+    // Always a translucent WASH (like the weather humidity wave) — a solid
+    // fill drowns the card and the text sitting in it.
     let fill = null;
     if (dc === "battery") fill = frac > 0.4 ? SCALE.green : frac > 0.15 ? SCALE.orange : SCALE.red;
     else if (dc === "humidity" || dc === "moisture") fill = SCALE.blue;
+    if (fill) fill = `color-mix(in srgb, ${fill} 30%, transparent)`;
     const y = 100 - frac * 100; // square tile: the fill level maps edge to edge
     // Liquid surface. Water-like values (humidity/moisture) get a gentle wave
     // that drifts almost imperceptibly; everything else (battery…) stays a

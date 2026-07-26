@@ -68,8 +68,9 @@ export const styles = [
       fill: var(--ms-color, color-mix(in srgb, var(--md-sys-color-primary, #6750a4) 16%, var(--md-sys-color-secondary-container, var(--ha-card-background))));
     }
 
+    /* Always a translucent wash — the level should tint the card, not bury it. */
     .level-fill {
-      fill: var(--ms-accent, color-mix(in srgb, var(--md-sys-color-primary, #6750a4) 45%, transparent));
+      fill: color-mix(in srgb, var(--ms-accent, var(--md-sys-color-primary, #6750a4)) 30%, transparent);
       transition: d var(--md-sys-motion-default-effects);
     }
 
