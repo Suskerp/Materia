@@ -2,7 +2,7 @@ import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaClockEditor extends SmartEditorBase {
   _formData() {
-    return { hand_width: 5, size: 10, ...this._config };
+    return { hand_width: 5, size: 10, show_seconds: true, ...this._config };
   }
 
   get _sections() {

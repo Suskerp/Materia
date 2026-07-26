@@ -2,7 +2,7 @@ import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaWeatherHeroEditor extends SmartEditorBase {
   _formData() {
-    return { show_condition: true, show_feels_like: true, show_minmax: true, ...this._config };
+    return { show_condition: true, show_icon: true, show_feels_like: true, show_minmax: true, ...this._config };
   }
 
   get _sections() {

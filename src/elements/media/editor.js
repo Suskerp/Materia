@@ -24,14 +24,6 @@ class MateriaMediaEditor extends SmartEditorBase {
         fields: [
           { name: "show_art", selector: { boolean: {} } },
           { name: "art_size", label: "Art size (px)", selector: { number: { min: 80, max: 480, mode: "box" } } },
-          { name: "art_shape", label: "Art shape", selector: { select: { mode: "dropdown", options: [
-            { value: "auto", label: "Auto (rotates per track)" },
-            { value: "square", label: "Square (classic)" },
-            { value: "cookie12", label: "Cookie (12)" },
-            { value: "cookie9", label: "Cookie (9)" },
-            { value: "cookie7", label: "Cookie (7)" },
-            { value: "sunny", label: "Sunny" },
-          ] } } },
         ],
       },
       {

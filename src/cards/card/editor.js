@@ -10,6 +10,9 @@ export function applyCardFormDefaults(config) {
   const domain = config.entity.split(".")[0];
   const defaults = { show_sub_buttons: false, show_stop: true, show_state: true, subtitle_inline: true };
   if (DOMAINS_WITH_SUB_BUTTONS.has(domain)) defaults.show_sub_buttons = true;
+  // Mirror the runtime's auto-slider (dimmable light / cover) so the toggle
+  // reflects what actually renders.
+  if (domain === "light" || domain === "cover") defaults.show_slider = true;
   return { ...defaults, ...config };
 }
 
