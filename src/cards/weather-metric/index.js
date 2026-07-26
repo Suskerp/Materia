@@ -1,0 +1,420 @@
+import { LitElement, html, svg, nothing } from "lit";
+import { ActionMixin } from "../../utils/action-handler.js";
+import { cookiePath, windBlobPath, arcPath } from "../../utils/shapes.js";
+import { styles } from "./styles.js";
+import "./editor.js";
+
+/** Compass point from bearing degrees (16-wind). */
+function compass(deg) {
+  const pts = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+  return pts[Math.round((((deg % 360) + 360) % 360) / 22.5) % 16];
+}
+
+const UV_LEVELS = [
+  { max: 2, label: "Low", color: "#7BC96A" },
+  { max: 5, label: "Moderate", color: "#F7D154" },
+  { max: 7, label: "High", color: "#F58B4C" },
+  { max: 10, label: "Very high", color: "#E4574C" },
+  { max: Infinity, label: "Extreme", color: "#9E5BB7" },
+];
+
+const AQI_BANDS = [
+  { max: 50, label: "Good air quality", color: "#7BC96A" },
+  { max: 100, label: "Moderate air quality", color: "#F7D154" },
+  { max: 150, label: "Unhealthy for sensitive groups", color: "#F58B4C" },
+  { max: 200, label: "Unhealthy air quality", color: "#E4574C" },
+  { max: 300, label: "Very unhealthy air quality", color: "#9E5BB7" },
+  { max: Infinity, label: "Hazardous air quality", color: "#8A4B4B" },
+];
+
+const POLLEN_LEVELS = ["None", "Low", "Moderate", "High", "Very high"];
+
+/**
+ * Expressive weather metric tiles (Pixel weather style): one card, one
+ * `metric` per instance — wind, uv, aqi, pollen, precipitation, sun,
+ * visibility, humidity, pressure. Values come from the weather entity's
+ * attributes where possible; a sensor override always wins; tiles with no
+ * data render nothing instead of breaking.
+ */
+class MateriaWeatherMetric extends ActionMixin(LitElement) {
+  static properties = {
+    hass: { attribute: false },
+    config: { state: true },
+    _forecast: { state: true },
+    _resolvedColor: { state: true },
+    _resolvedColorOn: { state: true },
+  };
+
+  static styles = styles;
+
+  static getConfigElement() {
+    return document.createElement("materia-weather-metric-editor");
+  }
+
+  static getStubConfig(hass) {
+    const entity = Object.keys(hass?.states || {}).find((e) => e.startsWith("weather.")) || "";
+    return { entity, metric: "wind" };
+  }
+
+  setConfig(config) {
+    if (!config.metric) throw new Error("metric is required");
+    this.config = { ...config };
+    this._fcEntity = undefined;
+  }
+
+  updated(changedProps) {
+    if (changedProps.has("hass") && this.hass) {
+      this._resolveField("color", "_resolvedColor");
+      this._resolveField("color_on", "_resolvedColorOn");
+      // Precipitation without an explicit sensor reads today's forecast.
+      if (this.config.metric === "precipitation" && !this.config.sensor) {
+        this._subscribeForecast();
+      }
+    }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._unsubForecast();
+  }
+
+  _subscribeForecast() {
+    const entity = this.config?.entity;
+    if (!this.hass || !entity || this._fcEntity === entity) return;
+    this._unsubForecast();
+    this._fcEntity = entity;
+    this._forecast = [];
+    const p = this.hass.connection.subscribeMessage(
+      (ev) => { this._forecast = ev?.forecast || []; },
+      { type: "weather/subscribe_forecast", forecast_type: "daily", entity_id: entity }
+    );
+    this._fcUnsub = p;
+    p.catch(() => {});
+  }
+
+  _unsubForecast() {
+    if (this._fcUnsub) {
+      this._fcUnsub.then((u) => u && u()).catch(() => {});
+      this._fcUnsub = null;
+    }
+  }
+
+  _numRaw(v) {
+    if (v == null || v === "" || v === "unknown" || v === "unavailable") return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  /** Sensor override → weather attribute → null. */
+  _value(attrName) {
+    if (this.config.sensor) {
+      const s = this.hass.states[this.config.sensor];
+      if (s && !this._isUnavailable(s)) return this._numRaw(s.state);
+      return null;
+    }
+    const w = this.hass.states[this.config.entity];
+    return this._numRaw(w?.attributes?.[attrName]);
+  }
+
+  _weatherAttr(name) {
+    return this.hass.states[this.config.entity]?.attributes?.[name];
+  }
+
+  render() {
+    if (!this.hass || !this.config) return html``;
+    const m = this.config.metric;
+    const renderer = {
+      wind: () => this._wind(),
+      uv: () => this._uv(),
+      aqi: () => this._aqi(),
+      pollen: () => this._pollen(),
+      precipitation: () => this._precipitation(),
+      sun: () => this._sun(),
+      visibility: () => this._visibility(),
+      humidity: () => this._humidity(),
+      pressure: () => this._pressure(),
+    }[m];
+    if (!renderer) return html``;
+    const body = renderer();
+    if (body === nothing) return html``; // no data → tile no-shows
+    const bg = this._isTemplate(this.config.color) ? this._resolvedColor : this.config.color;
+    const fg = this._isTemplate(this.config.color_on) ? this._resolvedColorOn : this.config.color_on;
+    return html`
+      <ha-card
+        style="${bg ? `--wm-color:${bg};` : ""}${fg ? `--wm-color-on:${fg};` : ""}"
+        @click=${() => this._handleAction(this.config.tap_action || (this.config.sensor || this.config.entity ? { action: "more-info", entity: this.config.sensor || this.config.entity } : undefined))}
+      >
+        ${body}
+      </ha-card>
+    `;
+  }
+
+  _header(icon, title) {
+    return html`<div class="header"><ha-icon icon=${icon}></ha-icon><span>${title}</span></div>`;
+  }
+
+  /* ---- Wind: soft rounded-triangle blob --------------------------------- */
+  _wind() {
+    const speed = this._value("wind_speed");
+    if (speed == null) return nothing;
+    const unit = this.config.unit ?? this._weatherAttr("wind_speed_unit") ?? "km/h";
+    let bearing = this.config.bearing_entity
+      ? this._numRaw(this.hass.states[this.config.bearing_entity]?.state)
+      : this._numRaw(this._weatherAttr("wind_bearing"));
+    const from = bearing != null ? `${this.config.from_label ?? "From"} ${compass(bearing)}` : "";
+    return html`
+      <div class="shape-tile">
+        <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+          <path d=${windBlobPath(50, 52, 46)} class="shape-fill" />
+        </svg>
+        <div class="overlay">
+          ${this._header("mdi:weather-windy", this.config.name ?? "Wind")}
+          <div class="big">${Math.round(speed)}<span class="unit">${unit.replace("km/h", " km/h").replace("mph", " mph")}</span></div>
+          ${from ? html`<div class="sub">${from}</div>` : ""}
+        </div>
+      </div>
+    `;
+  }
+
+  /* ---- UV: 12-lobe cookie with a colored scale dot ----------------------- */
+  _uv() {
+    const uv = this._value("uv_index");
+    if (uv == null) return nothing;
+    const level = UV_LEVELS.find((l) => uv <= l.max);
+    // Scale dots hug the inside of the cookie on a lower arc.
+    const dots = UV_LEVELS.map((l, i) => {
+      const ang = (150 + i * 60) * (Math.PI / 180); // 150°..390° around the bottom
+      const x = 50 + 36 * Math.cos(ang);
+      const y = 52 + 36 * Math.sin(ang);
+      const active = l === level;
+      return svg`<circle cx=${x} cy=${y} r=${active ? 5 : 3}
+        fill=${l.color} opacity=${active ? 1 : 0.35} />`;
+    });
+    return html`
+      <div class="shape-tile">
+        <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+          <path d=${cookiePath(50, 52, 44, 12, 4)} class="shape-fill" />
+          ${dots}
+        </svg>
+        <div class="overlay">
+          ${this._header("mdi:white-balance-sunny", this.config.name ?? "UV index")}
+          <div class="big">${Math.round(uv)}</div>
+          <div class="sub">${level.label}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ---- Visibility: subtle scalloped circle ------------------------------ */
+  _visibility() {
+    const vis = this._value("visibility");
+    if (vis == null) return nothing;
+    const unit = this.config.unit ?? this._weatherAttr("visibility_unit") ?? "km";
+    return html`
+      <div class="shape-tile">
+        <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+          <path d=${cookiePath(50, 52, 44, 14, 2.4)} class="shape-fill" />
+        </svg>
+        <div class="overlay">
+          ${this._header("mdi:eye-outline", this.config.name ?? "Visibility")}
+          <div class="big">${vis}<span class="unit"> ${unit}</span></div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ---- Pressure: gauge ring ---------------------------------------------- */
+  _pressure() {
+    const p = this._value("pressure");
+    if (p == null) return nothing;
+    const unit = this.config.unit ?? this._weatherAttr("pressure_unit") ?? "hPa";
+    const min = this.config.min ?? (unit === "hPa" ? 950 : 28);
+    const max = this.config.max ?? (unit === "hPa" ? 1050 : 31);
+    const frac = Math.min(1, Math.max(0, (p - min) / (max - min)));
+    // 270° sweep starting at 225° (7:30) like a classic gauge.
+    const start = -135;
+    const end = start + 270 * frac;
+    return html`
+      <div class="shape-tile">
+        <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+          <circle cx="50" cy="52" r="44" class="shape-fill-c" />
+          <path d=${arcPath(50, 52, 40, -135, 135)} class="gauge-track" />
+          ${frac > 0.01 ? svg`<path d=${arcPath(50, 52, 40, start, end)} class="gauge-fill" />` : ""}
+        </svg>
+        <div class="overlay">
+          ${this._header("mdi:gauge", this.config.name ?? "Pressure")}
+          <div class="big small-big">${unit === "hPa" ? Math.round(p) : p}</div>
+          <div class="sub">${unit}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ---- AQI: rect tile with color band bar -------------------------------- */
+  _aqi() {
+    const aqi = this._value("air_quality_index");
+    if (aqi == null) return nothing;
+    const band = AQI_BANDS.find((b) => aqi <= b.max);
+    const frac = Math.min(1, aqi / 300);
+    return html`
+      <div class="rect-tile">
+        ${this._header("mdi:waves", this.config.name ?? "Air quality")}
+        <div class="big">${Math.round(aqi)}</div>
+        <div class="aqi-bar">
+          ${AQI_BANDS.slice(0, 5).map((b) => html`<span style="background:${b.color}"></span>`)}
+          <span style="background:${AQI_BANDS[5].color}"></span>
+          <i class="aqi-dot" style="left:${(frac * 100).toFixed(1)}%; border-color:${band.color}"></i>
+        </div>
+        <div class="sub">${band.label}</div>
+      </div>
+    `;
+  }
+
+  /* ---- Precipitation: rect tile ------------------------------------------ */
+  _precipitation() {
+    let amount = null;
+    if (this.config.sensor) {
+      amount = this._value();
+    } else {
+      const fc = this._forecast?.[0];
+      amount = this._numRaw(fc?.precipitation);
+    }
+    if (amount == null) return nothing;
+    const unit = this.config.unit ?? this._weatherAttr("precipitation_unit") ?? "mm";
+    const none = this.config.none_label ?? "No precipitation expected";
+    return html`
+      <div class="rect-tile">
+        ${this._header("mdi:weather-pouring", this.config.name ?? "Precipitation")}
+        <div class="big">${amount}<span class="unit"> ${unit}</span></div>
+        ${amount === 0 ? html`<div class="sub">${none}</div>` : ""}
+      </div>
+    `;
+  }
+
+  /* ---- Humidity: wave fill + dew point chip ------------------------------ */
+  _humidity() {
+    const hum = this._value("humidity");
+    if (hum == null) return nothing;
+    const dew = this.config.dew_entity
+      ? this._numRaw(this.hass.states[this.config.dew_entity]?.state)
+      : this._numRaw(this._weatherAttr("dew_point"));
+    const level = Math.min(1, Math.max(0, hum / 100));
+    const y = 100 - level * 78; // wave crest height inside the tile
+    const wave = `M0 ${y + 4} Q 12.5 ${y - 4} 25 ${y + 4} T 50 ${y + 4} T 75 ${y + 4} T 100 ${y + 4} V100 H0 Z`;
+    return html`
+      <div class="rect-tile clip">
+        <svg class="wave" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path d=${wave} class="wave-fill" />
+        </svg>
+        ${this._header("mdi:water-outline", this.config.name ?? "Humidity")}
+        <div class="big">${Math.round(hum)}<span class="unit">%</span></div>
+        ${dew != null
+          ? html`<div class="dew"><span class="dew-chip">${Math.round(dew)}°</span> ${this.config.dew_label ?? "Dew point"}</div>`
+          : ""}
+      </div>
+    `;
+  }
+
+  /* ---- Sunrise & sunset: sun arc ------------------------------------------ */
+  _sun() {
+    const sunEntity = this.hass.states[this.config.sun_entity ?? "sun.sun"];
+    if (!sunEntity) return nothing;
+    const rising = sunEntity.attributes?.next_rising;
+    const setting = sunEntity.attributes?.next_setting;
+    if (!rising || !setting) return nothing;
+    const locale = this.hass?.locale?.language || navigator.language || "en";
+    const fmt = (iso) => new Date(iso).toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" });
+    // Sun position along the hump: fraction of daylight elapsed (only
+    // meaningful while the sun is up; clamp otherwise).
+    const rise = new Date(rising).getTime();
+    const set = new Date(setting).getTime();
+    const now = Date.now();
+    let frac = 0.5;
+    if (set < rise) {
+      // Daytime: next_setting is today, next_rising is tomorrow.
+      const dayLen = 24 * 3600 * 1000 - (rise - set);
+      frac = Math.min(1, Math.max(0, 1 - (set - now) / dayLen));
+    } else {
+      frac = now < rise ? 0 : 1; // night
+    }
+    const t = frac;
+    // Quadratic hump y = 4h·t(1-t), h=34 → x=8..92
+    const x = 8 + t * 84;
+    const y = 78 - 4 * 34 * t * (1 - t) * 0.68;
+    return html`
+      <div class="rect-tile clip">
+        <svg class="sun-arc" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path d="M0 100 L0 78 Q 50 8 100 78 L100 100 Z" class="arc-fill" />
+          <line x1="0" y1="78" x2="100" y2="78" class="horizon" />
+          ${frac > 0 && frac < 1
+            ? svg`<path d=${cookiePath(x, y, 6, 9, 0.7)} fill="var(--md-sys-cust-color-weather-sun, #FFC83D)" />`
+            : ""}
+        </svg>
+        ${this._header("mdi:weather-sunset", this.config.name ?? "Sunrise & sunset")}
+        <div class="sun-times">
+          <div><ha-icon icon="mdi:weather-sunset-up"></ha-icon> ${fmt(rising)}</div>
+          <div><ha-icon icon="mdi:weather-sunset-down"></ha-icon> ${fmt(setting)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ---- Pollen: three mini gauges ------------------------------------------ */
+  _pollen() {
+    const kinds = [
+      { key: "grass_entity", icon: "mdi:grass", label: this.config.grass_label ?? "Grass" },
+      { key: "tree_entity", icon: "mdi:tree-outline", label: this.config.tree_label ?? "Tree" },
+      { key: "weed_entity", icon: "mdi:sprout-outline", label: this.config.weed_label ?? "Weed" },
+    ].map((k) => {
+      const eid = this.config[k.key];
+      const v = eid ? this._numRaw(this.hass.states[eid]?.state) : null;
+      return { ...k, value: v };
+    }).filter((k) => k.value != null);
+    if (!kinds.length) return nothing;
+    const max = this.config.max ?? 4;
+    return html`
+      <div class="rect-tile pollen">
+        ${this._header("mdi:flower-pollen-outline", this.config.name ?? "Pollen")}
+        <div class="gauges">
+          ${kinds.map((k) => {
+            const frac = Math.min(1, Math.max(0, k.value / max));
+            const start = -135;
+            const level = POLLEN_LEVELS[Math.min(POLLEN_LEVELS.length - 1, Math.round(frac * (POLLEN_LEVELS.length - 1)))];
+            return html`
+              <div class="gauge">
+                <svg viewBox="0 0 100 100">
+                  <path d=${arcPath(50, 50, 40, -135, 135)} class="gauge-track" />
+                  ${frac > 0.01 ? svg`<path d=${arcPath(50, 50, 40, start, start + 270 * frac)} class="gauge-fill green" />` : ""}
+                </svg>
+                <div class="gauge-center">
+                  <ha-icon icon=${k.icon}></ha-icon>
+                  <span class="gauge-label">${k.label}</span>
+                </div>
+                <div class="gauge-sub">${k.value}/${max}<br />${level}</div>
+              </div>
+            `;
+          })}
+        </div>
+      </div>
+    `;
+  }
+
+  getGridOptions() {
+    const wide = this.config?.metric === "pollen";
+    return { columns: wide ? 12 : 6, rows: "auto", min_columns: wide ? 6 : 3 };
+  }
+
+  getCardSize() {
+    return 3;
+  }
+}
+
+customElements.define("materia-weather-metric", MateriaWeatherMetric);
+
+window.customCards = window.customCards || [];
+window.customCards.push({
+  type: "materia-weather-metric",
+  name: "Materia Weather Metric",
+  description: "Expressive weather metric tiles: wind, UV, AQI, pollen, precipitation, sun, visibility, humidity, pressure.",
+  preview: true,
+});

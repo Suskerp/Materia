@@ -20,6 +20,7 @@ import "./cards/weather-tile/index.js";
 import "./cards/weather-hero/index.js";
 import "./cards/forecast-daily/index.js";
 import "./cards/forecast-hourly/index.js";
+import "./cards/weather-metric/index.js";
 import "./cards/icon-row/index.js";
 
 // Elements (native Lit)
@@ -39,7 +40,7 @@ import "./elements/clock/index.js";
 injectFonts();
 
 // Version info
-const VERSION = "0.5.28";
+const VERSION = "0.5.29";
 console.info(
   `%c MATERIA %c v${VERSION} `,
   "color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;",
