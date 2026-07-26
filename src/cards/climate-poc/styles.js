@@ -52,6 +52,8 @@ export const styles = [
       padding: 10px;
     }
 
+    /* Expressive M3: states are container TONES, no strokes — outlines on top
+       of fills read as the old outlined-card style. */
     .zone-row {
       display: flex;
       align-items: center;
@@ -60,10 +62,8 @@ export const styles = [
       border-radius: 16px;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
-      border: 1.5px solid transparent;
       transition:
         background-color var(--md-sys-motion-fast-effects),
-        border-color var(--md-sys-motion-fast-effects),
         border-radius var(--md-sys-motion-expressive-fast-spatial);
     }
 
@@ -78,16 +78,15 @@ export const styles = [
       color: var(--md-sys-cust-color-climate-heat-accent, var(--md-sys-color-primary));
     }
 
-    /* enabled + satisfied — subtle fill, visible outline */
+    /* enabled + satisfied — a clear tonal step above the section */
     .zone-row.idle {
-      background: color-mix(in srgb, var(--md-sys-color-on-surface, #444) 5%, transparent);
-      border-color: var(--md-sys-color-outline-variant, rgba(0, 0, 0, 0.15));
+      background: color-mix(in srgb, var(--md-sys-color-on-surface, #444) 7%, transparent);
     }
 
-    /* off — outline only, reduced ink */
+    /* off — the quietest tone, reduced ink */
     .zone-row.off {
-      border-color: var(--md-sys-color-outline-variant, rgba(0, 0, 0, 0.15));
-      opacity: 0.75;
+      background: color-mix(in srgb, var(--md-sys-color-on-surface, #444) 3%, transparent);
+      opacity: 0.7;
     }
 
     .z-icon {
