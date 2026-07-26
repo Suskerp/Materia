@@ -485,7 +485,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
         <div class="sun-times">
           <div><ha-icon icon="mdi:weather-sunset-up"></ha-icon> ${fmt(rising)}</div>
           <div><ha-icon icon="mdi:weather-sunset-down"></ha-icon> ${fmt(setting)}</div>
-          ${moonSt ? html`<div class="moon-row"><ha-icon icon="mdi:moon-waning-crescent"></ha-icon> ${this.hass.formatEntityState?.(moonSt) ?? moonSt.state}</div>` : ""}
+          ${moonSt ? html`<div class="moon-row"><ha-icon icon=${moonSt.attributes?.icon || `mdi:moon-${String(moonSt.state).replace(/_/g, "-").replace("-moon", "")}`}></ha-icon> ${this.hass.formatEntityState?.(moonSt) ?? moonSt.state}</div>` : ""}
         </div>
       </div>
     `;
