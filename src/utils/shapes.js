@@ -30,18 +30,6 @@ export function cookiePath(cx, cy, r, lobes = 12, amp = r * 0.1, rotate = 0) {
   return d + "Z";
 }
 
-/** Soft rounded-triangle blob (Pixel wind tile): the canonical MaterialShapes
- *  Triangle. The blob is a live indicator — `rotate` aims the point at the
- *  direction the wind blows toward, and `rounding` softens with calm air /
- *  sharpens with strong wind. */
-export function windBlobPath(cx, cy, r, rotate = Math.PI / 2, rounding = 0.3) {
-  return roundedPolygonPath(cx, cy, r * 1.12, {
-    vertices: 3,
-    rounding,
-    rotate,
-  });
-}
-
 /** Canonical MaterialShapes cookie: star(vertices, innerRadius .8, rounding .5). */
 export function materialCookiePath(cx, cy, r, vertices = 12) {
   return roundedPolygonPath(cx, cy, r, {
@@ -69,16 +57,23 @@ export function roundedPolygonPath(cx, cy, R, { vertices, innerRadius = null, ro
   for (let i = 0; i < n; i++) {
     const r = innerRadius != null && i % 2 === 1 ? R * innerRadius : R;
     const a = rotate + (i / n) * Math.PI * 2;
-    pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+    pts.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a), r: rounding * R });
   }
-  const rAbs = rounding * R;
+  return filletPath(pts);
+}
+
+/** Corner-fillet a closed polygon of {x, y, r} vertices (per-vertex radius) —
+ *  the same tangent-arc construction androidx RoundedPolygon uses; concave
+ *  corners (cross sign) bow inward. */
+export function filletPath(pts) {
+  const n = pts.length;
   const seg = [];
   for (let i = 0; i < n; i++) {
     const P = pts[(i - 1 + n) % n];
     const V = pts[i];
     const N = pts[(i + 1) % n];
-    const uP = [P[0] - V[0], P[1] - V[1]];
-    const uN = [N[0] - V[0], N[1] - V[1]];
+    const uP = [P.x - V.x, P.y - V.y];
+    const uN = [N.x - V.x, N.y - V.y];
     const lP = Math.hypot(...uP);
     const lN = Math.hypot(...uN);
     uP[0] /= lP; uP[1] /= lP;
@@ -86,13 +81,13 @@ export function roundedPolygonPath(cx, cy, R, { vertices, innerRadius = null, ro
     // Interior half-angle at V.
     const dot = uP[0] * uN[0] + uP[1] * uN[1];
     const half = Math.acos(Math.min(1, Math.max(-1, dot))) / 2;
-    // Cut distance for a tangent fillet of radius rAbs, capped to half edge.
-    let d = rAbs / Math.tan(half);
+    // Cut distance for a tangent fillet of radius V.r, capped to half edge.
+    let d = V.r / Math.tan(half);
     d = Math.min(d, lP * 0.5, lN * 0.5);
     const rEff = d * Math.tan(half); // radius that actually fits after capping
-    const T1 = [V[0] + uP[0] * d, V[1] + uP[1] * d];
-    const T2 = [V[0] + uN[0] * d, V[1] + uN[1] * d];
-    // Arc direction: convex corners bow outward, concave (star inner) inward.
+    const T1 = [V.x + uP[0] * d, V.y + uP[1] * d];
+    const T2 = [V.x + uN[0] * d, V.y + uN[1] * d];
+    // Arc direction: convex corners bow outward, concave inward.
     // (Verified numerically: with this vertex winding, convex needs sweep 1.)
     const cross = uP[0] * uN[1] - uP[1] * uN[0];
     seg.push({ T1, T2, rEff, sweep: cross > 0 ? 0 : 1 });
@@ -105,6 +100,30 @@ export function roundedPolygonPath(cx, cy, R, { vertices, innerRadius = null, ro
     d += `L${next.T1[0].toFixed(2)} ${next.T1[1].toFixed(2)} `;
   }
   return d + "Z";
+}
+
+/** Canonical MaterialShapes ARROW (MaterialShapes.kt customPolygon points):
+ *  apex, two base corners, and a NOTCHED base center — per-vertex rounding.
+ *  rotate = 0 points UP; r = half the shape's larger dimension. */
+export function arrowPath(cx, cy, r, rotate = 0) {
+  const raw = [
+    { x: 0.5, y: 0.892, r: 0.313 },   // base center notch (concave)
+    { x: -0.216, y: 1.05, r: 0.207 }, // base left
+    { x: 0.499, y: -0.16, r: 0.215 }, // apex
+    { x: 1.225, y: 1.06, r: 0.211 },  // base right
+  ];
+  const xs = raw.map((p) => p.x);
+  const ys = raw.map((p) => p.y);
+  const cx0 = (Math.min(...xs) + Math.max(...xs)) / 2;
+  const cy0 = (Math.min(...ys) + Math.max(...ys)) / 2;
+  const s = (2 * r) / Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+  const cosR = Math.cos(rotate);
+  const sinR = Math.sin(rotate);
+  return filletPath(raw.map((p) => {
+    const x = (p.x - cx0) * s;
+    const y = (p.y - cy0) * s;
+    return { x: cx + x * cosR - y * sinR, y: cy + x * sinR + y * cosR, r: p.r * s };
+  }));
 }
 
 /** SVG arc path (for gauges), angles in degrees, 0° = 12 o'clock, clockwise. */

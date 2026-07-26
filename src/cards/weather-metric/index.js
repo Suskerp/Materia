@@ -1,6 +1,6 @@
 import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { cookiePath, windBlobPath, materialCookiePath, arcPath } from "../../utils/shapes.js";
+import { cookiePath, arrowPath, materialCookiePath, arcPath } from "../../utils/shapes.js";
 import { coloredWeatherIcon } from "../weather-tile/icons.js";
 import { styles } from "./styles.js";
 import "./editor.js";
@@ -238,16 +238,16 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
       ? this._numRaw(this.hass.states[this.config.bearing_entity]?.state)
       : this._numRaw(this._weatherAttr("wind_bearing"));
     const from = bearing != null ? `${this.config.from_label ?? "From"} ${compass(bearing)}` : "";
-    // The arrowhead IS the indicator: always the PRONOUNCED canonical
-    // MaterialShapes Triangle (rounding .2), rotated to where the wind blows
-    // toward (bearing is the direction it comes FROM) — like the Pixel tile.
-    // No strength modulation: the number carries the magnitude.
+    // The canonical MaterialShapes ARROW (notched base — you can SEE where it
+    // points), rotated to where the wind blows toward (bearing is the
+    // direction it comes FROM), like the Pixel tile. No strength modulation:
+    // the number carries the magnitude.
     const flowDeg = bearing != null ? (bearing + 180) % 360 : 0; // default: point up
-    const rotate = ((flowDeg - 90) * Math.PI) / 180; // compass → SVG angle (0=N=up)
+    const rotate = (flowDeg * Math.PI) / 180; // arrowPath points up at 0
     return html`
       <div class="rect-tile clip wind">
         <svg class="blob-bg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <path d=${windBlobPath(50, 50, 46, rotate, 0.2)} class="blob-fill" />
+          <path d=${arrowPath(50, 50, 44, rotate)} class="blob-fill" />
         </svg>
         <div class="overlay">
           ${this._header("mdi:weather-windy", this.config.name ?? "Wind")}
