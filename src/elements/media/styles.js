@@ -53,6 +53,29 @@ export const styles = css`
     white-space: nowrap;
   }
 
+  /* Editorial treatment — ONLY while actual media plays (off/idle shows the
+     device name, which stays quiet). Track = headline (display face, big,
+     tight, wraps to two lines); artist = letter-spaced kicker byline. */
+  .wrap.editorial .title {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.18;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .wrap.editorial .subtitle {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    margin-top: 2px;
+    opacity: 0.8;
+  }
+
   .wrap.unavailable {
     opacity: 0.5;
     pointer-events: none;

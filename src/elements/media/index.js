@@ -77,9 +77,12 @@ class MateriaMedia extends ActionMixin(LitElement) {
     const subtitle = this._subtitle;
     const artStyle = `${this.config.art_size ? `--mm-art:${this.config.art_size}px;` : ""}${image ? `background-image:url('${image}');` : ""}`;
 
+    // Editorial typography only when a real track is showing — a device name
+    // (off/idle) is not a headline.
+    const editorial = !unavailable && !!stateObj?.attributes?.media_title && !["off", "idle", "standby"].includes(stateObj.state);
     return html`
       <ha-card>
-        <div class="wrap ${unavailable ? "unavailable" : ""}" @click=${this._tap}>
+        <div class="wrap ${unavailable ? "unavailable" : ""} ${editorial ? "editorial" : ""}" @click=${this._tap}>
           ${this.config.show_art === false
             ? nothing
             : html`<div class="art" style=${artStyle}></div>`}
