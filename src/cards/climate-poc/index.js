@@ -1,35 +1,24 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { loadCardHelpers } from "../../styles/shared.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
 /**
- * Climate redesign POC — three research-backed layouts behind one `variant`
- * switch so they can be compared live on the same entities:
- *
- *   a — "dial hero + connected stack": the existing materia-thermostat as
- *       hero, with modes/zones/water-heater as 2px-seam connected segments
- *       (M3 connected-group spec: 8px inner corners, 24px outer).
- *   b — "zones first": the zone ladder IS the hero (3-state rows: calling /
- *       satisfied / off, with valve-open duration), a house summary line on
- *       top, and a compact stepper-only setpoint row at the bottom (Google
- *       Home Favorites pattern — no dial at all).
- *   c — "slider": vertical temperature slider (handle-only drag, claims the
- *       vertical axis only after a movement threshold), current temp beside
- *       it, steppers for fine control, zone chips below.
+ * Climate redesign POC — the chosen layout ("dial hero + connected stack"):
+ * the materia-thermostat as hero, with modes/zones/water-heater as 2px-seam
+ * connected segments (M3 connected-group spec: 8px inner corners, 24px outer).
  *
  * Zone config: zones: [{ entity, name, temp_entity? }] — on/off valve
  * switches. State ladder derives "calling" from the climate entity actively
  * heating while the valve is open.
+ *
+ * (Variants B "zones first" and C "vertical slider" were compared and
+ * retired; a stray `variant:` key in old configs is ignored.)
  */
 class MateriaClimatePoc extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
-    _optimisticTemp: { state: true },
-    _dragTemp: { state: true },
-    _openSection: { state: true },
   };
 
   static styles = styles;
@@ -40,27 +29,15 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
 
   static getStubConfig(hass) {
     const entity = Object.keys(hass?.states || {}).find((e) => e.startsWith("climate.")) || "";
-    return { entity, variant: "a", zones: [] };
+    return { entity, zones: [] };
   }
 
   setConfig(config) {
     if (!config.entity) throw new Error("Materia Climate POC: entity is required");
-    this.config = { variant: "a", zones: [], ...config };
-    this._extraEls = null;
-    if (this.isConnected) this._createExtraCards();
+    this.config = { zones: [], ...config };
   }
 
-  firstUpdated() {
-    this._createExtraCards();
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    clearTimeout(this._optimisticTimer);
-    clearTimeout(this._sendTimer);
-  }
-
-  /* ---- shared model ------------------------------------------------------ */
+  /* ---- model --------------------------------------------------------------- */
 
   get _entity() {
     return this.hass?.states[this.config.entity];
@@ -72,25 +49,8 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
     return Number.isFinite(n) ? n : null;
   }
 
-  get _step() {
-    return this.config.step ?? this._numRaw(this._entity?.attributes?.target_temp_step) ?? 0.5;
-  }
-
-  get _target() {
-    if (this._dragTemp != null) return this._dragTemp;
-    if (this._optimisticTemp != null) return this._optimisticTemp;
-    return this._numRaw(this._entity?.attributes?.temperature);
-  }
-
   get _current() {
     return this._numRaw(this._entity?.attributes?.current_temperature);
-  }
-
-  get _scale() {
-    return {
-      min: this.config.min_temp ?? this._numRaw(this._entity?.attributes?.min_temp) ?? 7,
-      max: this.config.max_temp ?? this._numRaw(this._entity?.attributes?.max_temp) ?? 30,
-    };
   }
 
   /** Boiler is actively producing heat (reported or inferred). */
@@ -136,81 +96,12 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
     return v == null ? "—" : Math.round(v * 10) / 10;
   }
 
-  _setTarget(temp) {
-    const { min, max } = this._scale;
-    const step = this._step;
-    const clamped = Math.round(Math.min(max, Math.max(min, Math.round(temp / step) * step)) * 100) / 100;
-    this._optimisticTemp = clamped;
-    clearTimeout(this._optimisticTimer);
-    this._optimisticTimer = setTimeout(() => { this._optimisticTemp = null; }, 10000);
-    clearTimeout(this._sendTimer);
-    this._sendTimer = setTimeout(() => {
-      this._callService("climate", "set_temperature", {
-        entity_id: this.config.entity,
-        temperature: clamped,
-      });
-    }, 400);
-  }
-
-  _nudge(d) {
-    const t = this._target;
-    if (t != null) this._setTarget(t + d);
-  }
-
   _toggleZone(z) {
     this._callService("switch", z.on ? "turn_off" : "turn_on", { entity_id: z.entity });
     this._fireHaptic("light");
   }
 
-  _allZones(onOff) {
-    for (const z of this._zones) {
-      this._callService("switch", onOff ? "turn_on" : "turn_off", { entity_id: z.entity });
-    }
-  }
-
-  updated(changedProps) {
-    if (changedProps.has("hass") && this._extraEls) {
-      // Only the OPEN custom section needs live child updates.
-      const offset = (this._zones.length ? 1 : 0) + (this.config.water_heater ? 1 : 0);
-      const idx = (this._openSection ?? 0) - offset;
-      if (idx >= 0 && this._extraEls[idx]) this._extraEls[idx].forEach((el) => { el.hass = this.hass; });
-    }
-    if (changedProps.has("hass") && this._optimisticTemp != null) {
-      const actual = this._numRaw(this._entity?.attributes?.temperature);
-      if (actual != null && Math.abs(actual - this._optimisticTemp) < 1e-6) {
-        this._optimisticTemp = null;
-        clearTimeout(this._optimisticTimer);
-      }
-    }
-  }
-
-  /* ---- shared fragments --------------------------------------------------- */
-
-  /** Stepper pair — the universal fine control (48px targets, hold repeats).
-   *  Vertical puts + on TOP: up = warmer, the strongest stepper metaphor. */
-  _steppers(vertical = false) {
-    const start = (d) => {
-      this._nudge(d);
-      this._holdTimer = setTimeout(() => {
-        this._holdInterval = setInterval(() => this._nudge(d), 220);
-      }, 550);
-    };
-    const stop = () => {
-      clearTimeout(this._holdTimer);
-      clearInterval(this._holdInterval);
-    };
-    const plus = html`<button class="step" @pointerdown=${() => start(this._step)} @pointerup=${stop} @pointerleave=${stop}>
-      <ha-icon icon="mdi:plus"></ha-icon>
-    </button>`;
-    const minus = html`<button class="step" @pointerdown=${() => start(-this._step)} @pointerup=${stop} @pointerleave=${stop}>
-      <ha-icon icon="mdi:minus"></ha-icon>
-    </button>`;
-    return html`
-      <div class="steppers ${vertical ? "vertical" : ""}">
-        ${vertical ? plus : minus}${vertical ? minus : plus}
-      </div>
-    `;
-  }
+  /* ---- fragments ------------------------------------------------------------ */
 
   /** Zone row — the 3-state ladder from the research: calling (container
    *  fill + fire), satisfied (subtle fill + radiator), off (outline only). */
@@ -232,20 +123,6 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
         <div class="z-switch ${z.on ? "on" : ""}"><i></i></div>
       </div>
     `;
-  }
-
-  _summaryLine() {
-    const zones = this._zones;
-    const calling = zones.filter((z) => z.calling).length;
-    const on = zones.filter((z) => z.on).length;
-    const txt = calling
-      ? `${calling} of ${zones.length} zones calling for heat`
-      : on
-        ? `${on} of ${zones.length} zones on · at temperature`
-        : "All zones off";
-    return html`<div class="summary ${calling ? "hot" : ""}">
-      <ha-icon icon=${calling ? "m3o:mode-heat" : "mdi:radiator-off"}></ha-icon>${txt}
-    </div>`;
   }
 
   _modeGroup() {
@@ -301,220 +178,20 @@ class MateriaClimatePoc extends ActionMixin(LitElement) {
     `;
   }
 
-  /* ---- variant A: dial hero + connected stack ------------------------------ */
-
-  _variantA() {
-    return html`
-      <materia-thermostat
-        .hass=${this.hass}
-        .config=${{ entity: this.config.entity, show_modes: false, wave: this.config.wave ?? "auto", steppers: this.config.steppers ?? "side" }}
-      ></materia-thermostat>
-      <div class="stack">
-        <div class="seg">${this._modeGroup()}</div>
-        <div class="seg zones">${this._zones.map((z) => this._zoneRow(z))}</div>
-        ${this._waterSegment()}
-      </div>
-    `;
-  }
-
-  /* ---- variant B: zones first ---------------------------------------------- */
-
-  /* ---- variant B: wallet-composed sections --------------------------------
-     Summary + setpoint stay FIXED; below them, sections cycle wallet-style
-     (exactly one large). Built-ins: Zones, Water heater. `sections:` config
-     appends arbitrary card sections — that's the composability. */
-
-  async _createExtraCards() {
-    const gen = (this._extraGen = (this._extraGen || 0) + 1);
-    const secs = this.config.sections || [];
-    if (!secs.length) { this._extraEls = []; return; }
-    const helpers = await loadCardHelpers();
-    const els = await Promise.all(
-      secs.map(async (s) =>
-        (await Promise.all(
-          (s.cards || []).map(async (c) => {
-            try {
-              const el = await helpers.createCardElement(c);
-              el.hass = this.hass;
-              return el;
-            } catch {
-              return null;
-            }
-          })
-        )).filter(Boolean)
-      )
-    );
-    if (gen !== this._extraGen) return;
-    this._extraEls = els;
-    this.requestUpdate();
-  }
-
-  _accordionSections() {
-    const zones = this._zones;
-    const calling = zones.filter((z) => z.calling).length;
-    const on = zones.filter((z) => z.on).length;
-    const secs = [];
-    if (zones.length) {
-      secs.push({
-        title: this.config.zones_title ?? "Zones",
-        icon: "mdi:radiator",
-        info: calling ? `${calling} of ${zones.length} heating` : `${on} of ${zones.length} on`,
-        body: html`
-          <div class="seg actions">
-            <button class="mini" @click=${() => this._allZones(false)}>All off</button>
-            <button class="mini" @click=${() => this._allZones(true)}>All on</button>
-          </div>
-          <div class="zones big">${zones.map((z) => this._zoneRow(z))}</div>
-        `,
-      });
-    }
-    const wh = this.config.water_heater ? this.hass.states[this.config.water_heater] : null;
-    if (wh) {
-      const temp = this._numRaw(wh.attributes?.current_temperature);
-      secs.push({
-        title: this.config.water_title ?? "Water heater",
-        icon: "mdi:water-boiler",
-        info: `${this._capitalize(wh.state)}${temp != null ? ` · ${this._fmt(temp)}°` : ""}`,
-        body: this._waterSegment(),
-      });
-    }
-    (this.config.sections || []).forEach((s, i) => {
-      const st = s.info_entity ? this.hass.states[s.info_entity] : null;
-      secs.push({
-        title: s.title ?? `Section ${i + 1}`,
-        icon: s.icon,
-        info: s.info ?? (st ? (this.hass.formatEntityState?.(st) ?? st.state) : ""),
-        body: this._extraEls?.[i]?.length ? html`<div class="acc-cards">${this._extraEls[i]}</div>` : nothing,
-      });
-    });
-    return secs;
-  }
-
-  _openAcc(i) {
-    if (this._openSection === i) return; // wallet invariant: one always large
-    this._openSection = i;
-    this._fireHaptic("light");
-    // Catch-up hass for custom-section children that were dormant.
-    const extraIdx = i - (this._zones.length ? 1 : 0) - (this.config.water_heater ? 1 : 0);
-    if (extraIdx >= 0 && this._extraEls?.[extraIdx]) {
-      this._extraEls[extraIdx].forEach((el) => { el.hass = this.hass; });
-    }
-  }
-
-  _variantB() {
-    const target = this._target;
-    const current = this._current;
-    const open = this._openSection ?? 0;
-    return html`
-      ${this._summaryLine()}
-      <div class="stack hero-zones">
-        <div class="seg setpoint">
-          <div class="sp-text">
-            <span class="sp-current">${current != null ? `${this._fmt(current)}°` : ""}</span>
-            <span class="sp-label">Set to ${this._fmt(target)}°</span>
-          </div>
-          ${this._steppers(true)}
-        </div>
-      </div>
-      <div class="acc">
-        ${this._accordionSections().map((s, i) => html`
-          <div class="acc-sec ${open === i ? "open" : ""}">
-            <div class="acc-bar" @click=${() => this._openAcc(i)}>
-              ${s.icon ? html`<ha-icon class="acc-icon" icon=${s.icon}></ha-icon>` : ""}
-              <span class="acc-title">${s.title}</span>
-              <span class="acc-info">${open === i ? "" : s.info}</span>
-              ${open === i ? "" : html`<ha-icon class="acc-chev" icon="m3of:arrow-drop-down"></ha-icon>`}
-            </div>
-            <div class="acc-body"><div class="acc-inner">${open === i ? s.body : nothing}</div></div>
-          </div>
-        `)}
-      </div>
-    `;
-  }
-
-  /* ---- variant C: vertical slider ------------------------------------------ */
-
-  _sliderPointerDown(e) {
-    if (e.button != null && e.button !== 0) return;
-    const handle = e.currentTarget;
-    this._slDrag = { startY: e.clientY, engaged: false, pointerId: e.pointerId, handle };
-  }
-
-  _sliderPointerMove(e) {
-    const d = this._slDrag;
-    if (!d) return;
-    const dy = e.clientY - d.startY;
-    if (!d.engaged) {
-      if (Math.abs(dy) < 6) return; // movement threshold before claiming the gesture
-      d.engaged = true;
-      d.handle.setPointerCapture(d.pointerId);
-    }
-    const track = this.renderRoot.querySelector(".sl-track");
-    const rect = track.getBoundingClientRect();
-    const frac = Math.min(1, Math.max(0, 1 - (e.clientY - rect.top) / rect.height));
-    const { min, max } = this._scale;
-    const raw = min + frac * (max - min);
-    const step = this._step;
-    this._dragTemp = Math.round(Math.round(raw / step) * step * 100) / 100;
-  }
-
-  _sliderPointerUp(e) {
-    const d = this._slDrag;
-    this._slDrag = null;
-    if (!d?.engaged) return;
-    d.handle.releasePointerCapture?.(d.pointerId);
-    if (this._dragTemp != null) {
-      this._setTarget(this._dragTemp);
-      this._dragTemp = null;
-    }
-  }
-
-  _variantC() {
-    const { min, max } = this._scale;
-    const target = this._target;
-    const current = this._current;
-    const frac = target != null ? Math.min(1, Math.max(0, (target - min) / (max - min))) : 0;
-    const adjusting = this._dragTemp != null;
-    return html`
-      <div class="sl-hero ${this._boilerActive ? "hot" : ""}">
-        <div class="sl-track">
-          <div class="sl-fill" style="height:${(frac * 100).toFixed(1)}%"></div>
-          <button
-            class="sl-handle"
-            style="bottom:calc(${(frac * 100).toFixed(1)}% - 14px)"
-            @pointerdown=${this._sliderPointerDown}
-            @pointermove=${this._sliderPointerMove}
-            @pointerup=${this._sliderPointerUp}
-            @pointercancel=${this._sliderPointerUp}
-          ></button>
-        </div>
-        <div class="sl-read">
-          <span class="sl-big ${adjusting ? "adjust" : ""}">
-            ${adjusting ? this._fmt(target) : current != null ? this._fmt(current) : this._fmt(target)}°
-          </span>
-          <span class="sl-sub">${adjusting ? "Setting…" : `Set to ${this._fmt(target)}°`}</span>
-          ${this._steppers()}
-        </div>
-      </div>
-      <div class="chip-row">
-        ${this._zones.map((z) => html`
-          <button class="chip ${z.calling ? "calling" : z.on ? "idle" : "off"}" @click=${() => this._toggleZone(z)}>
-            <ha-icon icon=${z.on ? "mdi:radiator" : "mdi:radiator-off"}></ha-icon>
-            ${z.name}
-          </button>
-        `)}
-      </div>
-      <div class="stack"><div class="seg">${this._modeGroup()}</div></div>
-    `;
-  }
-
   render() {
     if (!this.hass || !this.config) return html``;
     if (!this._entity) return html`<ha-card class="poc">Unknown entity: ${this.config.entity}</ha-card>`;
-    const v = this.config.variant;
     return html`
-      <ha-card class="poc variant-${v}">
-        ${v === "b" ? this._variantB() : v === "c" ? this._variantC() : this._variantA()}
+      <ha-card class="poc">
+        <materia-thermostat
+          .hass=${this.hass}
+          .config=${{ entity: this.config.entity, show_modes: false, wave: this.config.wave ?? "auto", steppers: this.config.steppers ?? "side" }}
+        ></materia-thermostat>
+        <div class="stack">
+          <div class="seg">${this._modeGroup()}</div>
+          <div class="seg zones">${this._zones.map((z) => this._zoneRow(z))}</div>
+          ${this._waterSegment()}
+        </div>
       </ha-card>
     `;
   }
@@ -534,6 +211,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-climate-poc",
   name: "Materia Climate POC",
-  description: "Comparison POC: three climate-surface layouts (dial+stack / zones-first / slider) behind one variant switch.",
+  description: "Climate surface: thermostat dial hero + connected stack of modes, zone ladder and water heater.",
   preview: false,
 });
