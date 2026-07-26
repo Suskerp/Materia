@@ -160,7 +160,11 @@ export const styles = [
     }
 
     .blob-fill {
-      fill: var(--wm-shape, color-mix(in srgb, var(--md-sys-color-on-surface, #444) 8%, transparent));
+      fill: var(--wm-shape, var(--md-sys-color-secondary-container, color-mix(in srgb, var(--md-sys-color-on-surface, #444) 8%, transparent)));
+    }
+
+    .rect-tile.wind .overlay {
+      color: var(--wm-color-on, var(--md-sys-color-on-secondary-container, var(--md-sys-color-on-surface)));
     }
 
     .rect-tile .overlay {

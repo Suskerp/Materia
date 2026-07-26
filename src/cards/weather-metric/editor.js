@@ -14,7 +14,7 @@ const METRICS = [
 
 class MateriaWeatherMetricEditor extends SmartEditorBase {
   _formData() {
-    return { metric: "wind", size: 3, ...this._config };
+    return { metric: "wind", ...this._config };
   }
 
   _sectionsSignature() {
@@ -83,7 +83,6 @@ class MateriaWeatherMetricEditor extends SmartEditorBase {
       title: "Appearance",
       icon: "mdi:palette-outline",
       fields: [
-        { name: "size", label: "Size (10 = fill)", selector: { number: { min: 1, max: 10, step: 1, mode: "slider" } } },
         { name: "color", label: "Tile color", color: true, template: true, selector: { text: {} } },
         { name: "color_on", label: "Text color", color: true, template: true, selector: { text: {} } },
       ],

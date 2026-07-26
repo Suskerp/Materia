@@ -10,21 +10,32 @@ function compass(deg) {
   return pts[Math.round((((deg % 360) + 360) % 360) / 22.5) % 16];
 }
 
+// Severity scale — harmonizable theme tokens (add scale-* entries to
+// custom_colors.json to tint them to the wallpaper) with hex fallbacks.
+const SCALE = {
+  green: "var(--md-sys-cust-color-scale-green, #7BC96A)",
+  yellow: "var(--md-sys-cust-color-scale-yellow, #F7D154)",
+  orange: "var(--md-sys-cust-color-scale-orange, #F58B4C)",
+  red: "var(--md-sys-cust-color-scale-red, #E4574C)",
+  purple: "var(--md-sys-cust-color-scale-purple, #9E5BB7)",
+  maroon: "var(--md-sys-cust-color-scale-maroon, #8A4B4B)",
+};
+
 const UV_LEVELS = [
-  { max: 2, label: "Low", color: "#7BC96A" },
-  { max: 5, label: "Moderate", color: "#F7D154" },
-  { max: 7, label: "High", color: "#F58B4C" },
-  { max: 10, label: "Very high", color: "#E4574C" },
-  { max: Infinity, label: "Extreme", color: "#9E5BB7" },
+  { max: 2, label: "Low", color: SCALE.green },
+  { max: 5, label: "Moderate", color: SCALE.yellow },
+  { max: 7, label: "High", color: SCALE.orange },
+  { max: 10, label: "Very high", color: SCALE.red },
+  { max: Infinity, label: "Extreme", color: SCALE.purple },
 ];
 
 const AQI_BANDS = [
-  { max: 50, label: "Good air quality", color: "#7BC96A" },
-  { max: 100, label: "Moderate air quality", color: "#F7D154" },
-  { max: 150, label: "Unhealthy for sensitive groups", color: "#F58B4C" },
-  { max: 200, label: "Unhealthy air quality", color: "#E4574C" },
-  { max: 300, label: "Very unhealthy air quality", color: "#9E5BB7" },
-  { max: Infinity, label: "Hazardous air quality", color: "#8A4B4B" },
+  { max: 50, label: "Good air quality", color: SCALE.green },
+  { max: 100, label: "Moderate air quality", color: SCALE.yellow },
+  { max: 150, label: "Unhealthy for sensitive groups", color: SCALE.orange },
+  { max: 200, label: "Unhealthy air quality", color: SCALE.red },
+  { max: 300, label: "Very unhealthy air quality", color: SCALE.purple },
+  { max: Infinity, label: "Hazardous air quality", color: SCALE.maroon },
 ];
 
 const POLLEN_LEVELS = ["None", "Low", "Moderate", "High", "Very high"];
@@ -142,7 +153,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     // Global size 1–10 caps the tile width (10 = fill the cell), matching the
     // weather-tile's scale so mixed grids line up.
     const sizes = ["120px", "150px", "185px", "225px", "270px", "320px", "380px", "460px", "560px", "none"];
-    const size = Math.min(10, Math.max(1, this.config.size ?? 3));
+    const size = Math.min(10, Math.max(1, this.config.size ?? 10));
     return html`
       <ha-card
         style="--wm-size:${sizes[size - 1]};${bg ? `--wm-color:${bg};` : ""}${fg ? `--wm-color-on:${fg};` : ""}"
@@ -421,13 +432,13 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
      level. `entities:` takes strings or {entity, label, icon}. */
   _pollen() {
     const ENUM = {
-      none: { v: 0, label: "None", color: "#9E9E9E" },
-      active: { v: 1, label: "Active", color: "#7BC96A" },
-      green: { v: 1, label: "Low", color: "#7BC96A" },
-      yellow: { v: 2, label: "Moderate", color: "#F7D154" },
-      orange: { v: 3, label: "High", color: "#F58B4C" },
-      red: { v: 4, label: "Very high", color: "#E4574C" },
-      purple: { v: 5, label: "Extreme", color: "#9E5BB7" },
+      none: { v: 0, label: "None", color: "var(--md-sys-color-outline, #9E9E9E)" },
+      active: { v: 1, label: "Active", color: SCALE.green },
+      green: { v: 1, label: "Low", color: SCALE.green },
+      yellow: { v: 2, label: "Moderate", color: SCALE.yellow },
+      orange: { v: 3, label: "High", color: SCALE.orange },
+      red: { v: 4, label: "Very high", color: SCALE.red },
+      purple: { v: 5, label: "Extreme", color: SCALE.purple },
     };
     const max = this.config.max ?? 4;
     let list = this.config.entities;
