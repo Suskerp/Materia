@@ -66,10 +66,9 @@ class MateriaWeatherMetricEditor extends SmartEditorBase {
     }
     if (m === "pollen") {
       extras.fields.push(
-        { name: "grass_entity", label: "Grass sensor", selector: { entity: { domain: "sensor" } } },
-        { name: "tree_entity", label: "Tree sensor", selector: { entity: { domain: "sensor" } } },
-        { name: "weed_entity", label: "Weed sensor", selector: { entity: { domain: "sensor" } } },
-        { name: "max", label: "Scale max (default 4)", selector: { number: { min: 1, max: 10, mode: "box" } } },
+        { name: "entities", label: "Pollen sensors", selector: { entity: { domain: "sensor", multiple: true } } },
+        { name: "hide_inactive", label: "Hide species at 'none'", selector: { boolean: {} } },
+        { name: "max", label: "Scale max for numeric sensors (default 4)", selector: { number: { min: 1, max: 10, mode: "box" } } },
       );
     }
 

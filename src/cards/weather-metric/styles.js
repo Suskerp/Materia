@@ -275,12 +275,14 @@ export const styles = [
       --mdc-icon-size: 17px;
     }
 
-    /* Pollen gauges */
+    /* Pollen gauges — wraps for integrations with many species (KMI has 7). */
     .gauges {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-evenly;
       width: 100%;
       gap: 8px;
+      row-gap: 12px;
     }
 
     .gauge {

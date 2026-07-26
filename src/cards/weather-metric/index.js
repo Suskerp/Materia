@@ -393,43 +393,86 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     `;
   }
 
-  /* ---- Pollen: three mini gauges ------------------------------------------ */
+  /* ---- Pollen: a mini gauge per configured sensor -------------------------
+     Supports numeric sensors (0..max) AND enum level sensors like the KMI
+     integration (green/yellow/orange/red/purple/active/none), colored by
+     level. `entities:` takes strings or {entity, label, icon}. */
   _pollen() {
-    const kinds = [
-      { key: "grass_entity", icon: "mdi:grass", label: this.config.grass_label ?? "Grass" },
-      { key: "tree_entity", icon: "mdi:tree-outline", label: this.config.tree_label ?? "Tree" },
-      { key: "weed_entity", icon: "mdi:sprout-outline", label: this.config.weed_label ?? "Weed" },
-    ].map((k) => {
-      const eid = this.config[k.key];
-      const v = eid ? this._numRaw(this.hass.states[eid]?.state) : null;
-      return { ...k, value: v };
-    }).filter((k) => k.value != null);
+    const ENUM = {
+      none: { v: 0, label: "None", color: "#9E9E9E" },
+      active: { v: 1, label: "Active", color: "#7BC96A" },
+      green: { v: 1, label: "Low", color: "#7BC96A" },
+      yellow: { v: 2, label: "Moderate", color: "#F7D154" },
+      orange: { v: 3, label: "High", color: "#F58B4C" },
+      red: { v: 4, label: "Very high", color: "#E4574C" },
+      purple: { v: 5, label: "Extreme", color: "#9E5BB7" },
+    };
+    const max = this.config.max ?? 4;
+    let list = this.config.entities;
+    if (!list?.length) {
+      // Back-compat: the original grass/tree/weed slots.
+      list = [
+        this.config.grass_entity && { entity: this.config.grass_entity, label: this.config.grass_label ?? "Grass", icon: "mdi:grass" },
+        this.config.tree_entity && { entity: this.config.tree_entity, label: this.config.tree_label ?? "Tree", icon: "mdi:tree-outline" },
+        this.config.weed_entity && { entity: this.config.weed_entity, label: this.config.weed_label ?? "Weed", icon: "mdi:sprout-outline" },
+      ].filter(Boolean);
+    }
+    const kinds = (list || [])
+      .map((item) => {
+        const cfg = typeof item === "string" ? { entity: item } : item;
+        const st = this.hass.states[cfg.entity];
+        if (!st || this._isUnavailable(st)) return null;
+        const raw = String(st.state).toLowerCase();
+        let frac, levelLabel, color;
+        if (raw in ENUM) {
+          const e = ENUM[raw];
+          frac = e.v / 5;
+          levelLabel = e.label;
+          color = e.color;
+        } else {
+          const n = this._numRaw(raw);
+          if (n == null) return null;
+          frac = Math.min(1, Math.max(0, n / max));
+          levelLabel = `${n}/${max} ${POLLEN_LEVELS[Math.min(POLLEN_LEVELS.length - 1, Math.round(frac * (POLLEN_LEVELS.length - 1)))]}`;
+          color = null;
+        }
+        let label = cfg.label;
+        if (!label) {
+          // "Oostende Grass pollen" → "Grass"
+          const fn = st.attributes.friendly_name || cfg.entity;
+          const words = fn.replace(/pollen/i, "").trim().split(/\s+/);
+          label = words[words.length - 1] || fn;
+        }
+        const icon = cfg.icon || st.attributes.icon || "mdi:flower-pollen-outline";
+        return { label, icon, frac, levelLabel, color };
+      })
+      .filter(Boolean)
+      .filter((k) => (this.config.hide_inactive ? k.frac > 0 : true));
     if (!kinds.length) {
-      const configured = this.config.grass_entity || this.config.tree_entity || this.config.weed_entity;
+      const configured = (this.config.entities?.length) || this.config.grass_entity || this.config.tree_entity || this.config.weed_entity;
       return configured
         ? nothing
-        : this._hint("mdi:flower-pollen-outline", this.config.name ?? "Pollen", "Add grass / tree / weed pollen sensors");
+        : this._hint("mdi:flower-pollen-outline", this.config.name ?? "Pollen", "Add pollen sensors");
     }
-    const max = this.config.max ?? 4;
     return html`
       <div class="rect-tile pollen">
         ${this._header("mdi:flower-pollen-outline", this.config.name ?? "Pollen")}
         <div class="gauges">
           ${kinds.map((k) => {
-            const frac = Math.min(1, Math.max(0, k.value / max));
             const start = -135;
-            const level = POLLEN_LEVELS[Math.min(POLLEN_LEVELS.length - 1, Math.round(frac * (POLLEN_LEVELS.length - 1)))];
             return html`
               <div class="gauge">
                 <svg viewBox="0 0 100 100">
                   <path d=${arcPath(50, 50, 40, -135, 135)} class="gauge-track" />
-                  ${frac > 0.01 ? svg`<path d=${arcPath(50, 50, 40, start, start + 270 * frac)} class="gauge-fill green" />` : ""}
+                  ${k.frac > 0.01
+                    ? svg`<path d=${arcPath(50, 50, 40, start, start + 270 * k.frac)} class="gauge-fill" style="stroke:${k.color || "var(--wm-accent, #7bc96a)"}" />`
+                    : ""}
                 </svg>
                 <div class="gauge-center">
                   <ha-icon icon=${k.icon}></ha-icon>
                   <span class="gauge-label">${k.label}</span>
                 </div>
-                <div class="gauge-sub">${k.value}/${max}<br />${level}</div>
+                <div class="gauge-sub">${k.levelLabel}</div>
               </div>
             `;
           })}
