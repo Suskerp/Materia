@@ -21,7 +21,7 @@ export const styles = [
       gap: clamp(12px, 4cqi, 20px);
       background: var(--wg-bg, var(--ha-card-background, var(--card-background-color)));
       color: var(--wg-fg, var(--md-sys-color-on-surface, var(--primary-text-color)));
-      border-radius: 999px;
+      border-radius: 28px; /* match the materia-card family, not a full pill */
       padding: clamp(12px, 4cqi, 18px) clamp(18px, 6cqi, 28px);
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;

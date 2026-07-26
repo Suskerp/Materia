@@ -192,9 +192,12 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
           }
         }
         if (!worst) return null;
+        // Labeled so the subtitle reads "Pollen Grass High", not a bare
+        // species name floating in the line.
+        const prefix = entry.label ?? this.config.pollen_label ?? "Pollen";
         text = worst.v === 0
-          ? (this.config.no_pollen_label ?? "No pollen")
-          : `${worst.label} ${LABELS[worst.v + 1] ?? worst.v}`;
+          ? (this.config.no_pollen_label ?? `${prefix} none`)
+          : `${prefix} ${worst.label} ${LABELS[worst.v + 1] ?? worst.v}`;
         sev = worst.v;
         break;
       }
@@ -224,9 +227,10 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
     return { text, sev, icon, type: entry.type };
   }
 
-  /** All configured metrics resolved, optionally sorted worst-first.
-   *  `priority` (config) lists metric types most-important-first and breaks
-   *  ties between equal severities — e.g. [precipitation, pollen, aqi]. */
+  /** All configured metrics resolved. The FIRST configured metric is the
+   *  title line and never moves; severity sorting (with the configurable
+   *  `priority` tie-break, e.g. [precipitation, pollen, aqi]) only orders
+   *  the subtitle metrics. */
   _metricItems(stateObj) {
     const order = this.config.priority ?? ["precipitation", "pollen", "aqi"];
     const weight = (t) => {
@@ -235,8 +239,10 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
     };
     const entries = (this.config.metrics || []).map((e) => (typeof e === "string" ? { type: e } : e));
     const items = entries.map((e) => this._metricData(e, stateObj)).filter(Boolean);
-    if (this.config.sort_by_severity) {
-      items.sort((x, y) => (y.sev + weight(y.type)) - (x.sev + weight(x.type)));
+    if (this.config.sort_by_severity && items.length > 2) {
+      const [first, ...rest] = items;
+      rest.sort((x, y) => (y.sev + weight(y.type)) - (x.sev + weight(x.type)));
+      return [first, ...rest];
     }
     return items;
   }
