@@ -1,5 +1,6 @@
 import { css } from "lit";
 import { hostStyles, haCardReset } from "../../styles/card-styles.js";
+import { motionTokens } from "../../utils/motion.js";
 
 export const PRESETS = {
   primary:        { active: "var(--md-sys-color-primary)",                          onActive: "var(--md-sys-color-on-primary)" },
@@ -23,6 +24,7 @@ export const SIZES = {
 export const styles = [
   hostStyles,
   haCardReset,
+  motionTokens,
   css`
     .group {
       display: flex;
@@ -46,7 +48,10 @@ export const styles = [
       justify-content: center;
       gap: 8px;
       padding: 0 16px;
-      transition: background-color 0.2s ease, color 0.2s ease;
+      transition:
+        border-radius var(--md-sys-motion-expressive-fast-spatial),
+        background-color var(--md-sys-motion-fast-effects),
+        color var(--md-sys-motion-fast-effects);
       font-family: inherit;
       white-space: nowrap;
       position: relative;
@@ -61,7 +66,7 @@ export const styles = [
       background: currentColor;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.2s;
+      transition: opacity var(--md-sys-motion-fast-effects);
     }
 
     button:hover::before {
@@ -92,7 +97,10 @@ export const styles = [
     .group.multi button {
       flex: 1 0 calc(100% / var(--btn-columns, 4) - 4px);
       height: var(--btn-height);
-      transition: border-radius 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+      transition:
+        border-radius var(--md-sys-motion-expressive-fast-spatial),
+        background-color var(--md-sys-motion-fast-effects),
+        color var(--md-sys-motion-fast-effects);
     }
 
     button ha-icon {

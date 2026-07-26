@@ -1,0 +1,156 @@
+import { LitElement, html, svg } from "lit";
+import { ActionMixin } from "../../utils/action-handler.js";
+import { coloredWeatherIcon } from "../weather-tile/icons.js";
+import { styles } from "./styles.js";
+import "./editor.js";
+
+/**
+ * Pixel-style daily forecast: a horizontally scrollable row of stadium pills,
+ * each with high/low, a colored condition glyph, precipitation chance and the
+ * weekday. Tapping a pill selects (highlights) it.
+ */
+class MateriaForecastDaily extends ActionMixin(LitElement) {
+  static properties = {
+    hass: { attribute: false },
+    config: { state: true },
+    _forecast: { state: true },
+    _selected: { state: true },
+  };
+
+  static styles = styles;
+
+  static getConfigElement() {
+    return document.createElement("materia-forecast-daily-editor");
+  }
+
+  static getStubConfig(hass) {
+    const entity = Object.keys(hass?.states || {}).find((e) => e.startsWith("weather.")) || "";
+    return { entity };
+  }
+
+  setConfig(config) {
+    if (!config.entity) throw new Error("entity is required");
+    this.config = { ...config };
+    this._fcEntity = undefined; // (re)subscribe forecast for the (new) entity
+    this._selected = 0;
+  }
+
+  updated(changedProps) {
+    if (changedProps.has("hass") && this.hass) {
+      this._subscribeForecast();
+    }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._unsubForecast();
+  }
+
+  _subscribeForecast() {
+    const entity = this.config?.entity;
+    if (!this.hass || !entity || this._fcEntity === entity) return;
+    this._unsubForecast();
+    this._fcEntity = entity;
+    this._forecast = [];
+    const p = this.hass.connection.subscribeMessage(
+      (ev) => {
+        this._forecast = ev?.forecast || [];
+      },
+      { type: "weather/subscribe_forecast", forecast_type: "daily", entity_id: entity }
+    );
+    this._fcUnsub = p;
+    p.catch(() => {}); // entity may not support forecasts — fall back gracefully
+  }
+
+  _unsubForecast() {
+    if (this._fcUnsub) {
+      this._fcUnsub.then((u) => u && u()).catch(() => {});
+      this._fcUnsub = null;
+    }
+  }
+
+  _num(v) {
+    if (v == null || v === "" || v === "unknown" || v === "unavailable") return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? Math.round(n) : null;
+  }
+
+  _dayLabel(datetime, index) {
+    const d = new Date(datetime);
+    if (Number.isNaN(d.getTime())) return "";
+    const today = new Date();
+    if (index === 0 && d.toDateString() === today.toDateString()) {
+      return this.config.today_label ?? "Today";
+    }
+    const locale = this.hass?.locale?.language || navigator.language || "en";
+    return d.toLocaleDateString(locale, { weekday: "short" });
+  }
+
+  _select(i, day) {
+    this._selected = i;
+    // Let dashboards react to the selection (e.g. a detail card) if they want.
+    this.dispatchEvent(new CustomEvent("materia-forecast-day-selected", {
+      detail: { index: i, day },
+      bubbles: true,
+      composed: true,
+    }));
+  }
+
+  render() {
+    if (!this.hass || !this.config) return html``;
+
+    const stateObj = this.hass.states[this.config.entity];
+    const unavailable = this._isUnavailable(stateObj);
+    const days = (this._forecast || stateObj?.attributes?.forecast || [])
+      .slice(0, this.config.days ?? 10);
+    if (!days.length) return html``;
+
+    const showPrecip = this.config.show_precipitation !== false;
+    const minPrecip = this.config.min_precipitation ?? 10; // hide noise below 10%
+
+    return html`
+      <ha-card>
+        <div class="row ${unavailable ? "unavailable" : ""}">
+          ${days.map((day, i) => {
+            const hi = this._num(day.temperature);
+            const lo = this._num(day.templow);
+            const precip = this._num(day.precipitation_probability);
+            const selected = i === this._selected;
+            return html`
+              <button
+                class="pill ${selected ? "selected" : ""}"
+                @click=${() => this._select(i, day)}
+              >
+                <span class="hi">${hi != null ? `${hi}°` : "—"}</span>
+                <span class="lo">${lo != null ? `${lo}°` : "—"}</span>
+                <svg class="glyph" viewBox="0 0 24 24">${coloredWeatherIcon(day.condition)}</svg>
+                ${showPrecip && precip != null && precip >= minPrecip
+                  ? html`<span class="precip">${precip}%</span>`
+                  : html`<span class="precip empty"></span>`}
+                <span class="day">${this._dayLabel(day.datetime, i)}</span>
+              </button>
+            `;
+          })}
+        </div>
+      </ha-card>
+    `;
+  }
+
+  getGridOptions() {
+    return { columns: 12, rows: "auto" };
+  }
+
+  getCardSize() {
+    return 3;
+  }
+}
+
+customElements.define("materia-forecast-daily", MateriaForecastDaily);
+
+window.customCards = window.customCards || [];
+window.customCards.push({
+  type: "materia-forecast-daily",
+  name: "Materia Forecast Daily",
+  description: "Pixel-style daily forecast pill row with colored glyphs and precipitation chance.",
+  preview: true,
+});

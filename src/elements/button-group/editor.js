@@ -115,7 +115,8 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
   get _optionSchema() {
     return [
       { name: "label", selector: { text: {} } },
-      { name: "value", required: true, selector: { text: {} } },
+      { name: "entity", label: "Entity (optional — this button's own state)", selector: { entity: {} } },
+      { name: "value", label: "Value (state that = active; blank = on/truthy)", selector: { text: {} } },
       { name: "icon", selector: { icon: {} } },
       { name: "tap_action", label: "Action", selector: { ui_action: { default_action: "call-service" } } },
     ];

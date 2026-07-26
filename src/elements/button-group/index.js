@@ -9,6 +9,7 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     hass: { attribute: false },
     config: { state: true },
     _optimisticValue: { state: true },
+    _optimisticEntities: { state: true },
     _resolvedColorActive: { state: true },
     _resolvedColorOnActive: { state: true },
   };
@@ -64,7 +65,31 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     return entity?.state ?? "";
   }
 
+  /** States that read as "off"/inactive for a truthy per-button toggle. */
+  _truthy(state) {
+    const s = String(state ?? "").toLowerCase();
+    return s !== "" && !["off", "closed", "idle", "standby", "unavailable",
+      "unknown", "not_home", "false", "0", "none", "auto_off"].includes(s);
+  }
+
+  /** Active state of an option that carries its OWN entity. */
+  _entityOptionActive(opt) {
+    const eid = opt.entity;
+    const optim = this._optimisticEntities?.[eid];
+    const st = this.hass?.states[eid]?.state;
+    if (opt.value != null) {
+      const target = String(opt.value).toLowerCase();
+      if (optim && optim.value != null) return optim.value === target;
+      return String(st ?? "").toLowerCase() === target;
+    }
+    if (optim && optim.active != null) return optim.active;
+    return this._truthy(st);
+  }
+
   _isOptionActive(opt) {
+    // Per-button entity wins over the group entity, so related controls with
+    // their own state can be combined in one group.
+    if (opt.entity) return this._entityOptionActive(opt);
     if (this.config.multi_select) {
       const stateStr = this._activeValue;
       const values = stateStr.split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
@@ -164,7 +189,20 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
   }
 
   _handleOptionTap(opt) {
-    if (!this.config.multi_select) {
+    if (opt.entity) {
+      // Optimistically flip just this button's own entity.
+      const eid = opt.entity;
+      const next = opt.value != null
+        ? { value: String(opt.value).toLowerCase() }
+        : { active: !this._truthy(this.hass?.states[eid]?.state) };
+      this._optimisticEntities = { ...this._optimisticEntities, [eid]: next };
+      this._optEntityTimers = this._optEntityTimers || {};
+      clearTimeout(this._optEntityTimers[eid]);
+      this._optEntityTimers[eid] = setTimeout(() => {
+        const { [eid]: _, ...rest } = this._optimisticEntities || {};
+        this._optimisticEntities = rest;
+      }, 10000);
+    } else if (!this.config.multi_select) {
       this._optimisticValue = String(opt.value);
       clearTimeout(this._optimisticTimer);
       this._optimisticTimer = setTimeout(() => { this._optimisticValue = null; }, 10000);
@@ -172,6 +210,8 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
 
     if (opt.tap_action) {
       this._handleAction(opt.tap_action);
+    } else if (opt.entity) {
+      this._fireMoreInfo(opt.entity);
     } else if (this.config.entity) {
       this._fireMoreInfo(this.config.entity);
     }
@@ -191,6 +231,23 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
         this._optimisticValue = null;
         clearTimeout(this._optimisticTimer);
       }
+    }
+    // Clear per-entity optimism once HA reflects the real state.
+    if (changedProps.has("hass") && this._optimisticEntities) {
+      let changed = false;
+      const next = { ...this._optimisticEntities };
+      for (const [eid, optim] of Object.entries(next)) {
+        const st = this.hass?.states[eid]?.state;
+        const settled = optim.value != null
+          ? String(st ?? "").toLowerCase() === optim.value
+          : this._truthy(st) === optim.active;
+        if (settled) {
+          delete next[eid];
+          clearTimeout(this._optEntityTimers?.[eid]);
+          changed = true;
+        }
+      }
+      if (changed) this._optimisticEntities = next;
     }
   }
 

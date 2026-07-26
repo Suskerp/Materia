@@ -72,6 +72,26 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     font-size: 12px;
     opacity: 0.7;
     white-space: nowrap;
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    overflow: hidden;
+  }
+
+  .value-main {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .value-sep {
+    opacity: 0.55;
+    flex-shrink: 0;
+  }
+
+  .value-sub {
+    opacity: 0.9;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .chevron-btn {

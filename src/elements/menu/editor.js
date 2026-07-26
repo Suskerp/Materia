@@ -81,6 +81,20 @@ class MateriaMenuEditor extends SmartEditorBase {
         ],
       },
       {
+        title: "Substate",
+        icon: "mdi:format-text-variant-outline",
+        fields: [
+          { name: "substate", label: "Substate text / template", template: true, selector: { text: {} } },
+          { name: "substate_entity", label: "…or from entity", selector: { entity: {} } },
+          { name: "substate_attribute", label: "Entity attribute (optional)", selector: { text: {} } },
+          { name: "substate_separator", label: "Separator", selector: { select: { mode: "dropdown", custom_value: true, options: [
+            { value: "•", label: "Dot •" },
+            { value: "–", label: "Dash –" },
+            { value: "/", label: "Slash /" },
+          ] } } },
+        ],
+      },
+      {
         title: "Appearance",
         icon: "mdi:palette-outline",
         fields: [

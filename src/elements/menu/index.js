@@ -11,6 +11,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
     _optimisticValue: { state: true },
     _resolvedIcon: { state: true },
     _resolvedName: { state: true },
+    _resolvedSubstate: { state: true },
     _resolvedColor: { state: true },
     _resolvedColorOn: { state: true },
   };
@@ -49,6 +50,22 @@ class MateriaMenu extends ActionMixin(LitElement) {
   get _currentValue() {
     if (this._optimisticValue != null) return this._optimisticValue;
     return this.hass?.states[this.config.entity]?.state ?? "";
+  }
+
+  /** Optional secondary text shown after the state, e.g. "Playing • Spotify".
+   *  Source order: substate (literal/template) → substate_entity(+attribute). */
+  get _substate() {
+    const cfg = this.config;
+    if (cfg.substate != null && cfg.substate !== "") {
+      return this._isTemplate(cfg.substate) ? (this._resolvedSubstate ?? "") : cfg.substate;
+    }
+    if (cfg.substate_entity) {
+      const so = this.hass?.states[cfg.substate_entity];
+      if (!so) return "";
+      const raw = cfg.substate_attribute ? so.attributes?.[cfg.substate_attribute] : so.state;
+      return raw == null ? "" : String(raw);
+    }
+    return "";
   }
 
   _toggle() {
@@ -99,6 +116,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("icon", "_resolvedIcon");
       this._resolveField("name", "_resolvedName");
+      this._resolveField("substate", "_resolvedSubstate");
       this._resolveField("color", "_resolvedColor");
       this._resolveField("color_on", "_resolvedColorOn");
     }
@@ -294,6 +312,7 @@ class MateriaMenu extends ActionMixin(LitElement) {
     const currentValue = this._currentValue;
     const options = this._resolvedOptions;
     const currentLabel = options.find((o) => o.value === currentValue)?.label || this._capitalize(currentValue);
+    const substate = this._substate;
     const name = this._isTemplate(this.config.name)
       ? this._resolvedName
       : (this.config.name || stateObj?.attributes?.friendly_name || "");
@@ -310,7 +329,12 @@ class MateriaMenu extends ActionMixin(LitElement) {
           ` : ""}
           <div class="text-container">
             ${name ? html`<div class="label">${name}</div>` : ""}
-            <div class="value">${currentLabel}</div>
+            <div class="value">
+              <span class="value-main">${currentLabel}</span>
+              ${substate
+                ? html`<span class="value-sep">${this.config.substate_separator || "•"}</span><span class="value-sub">${substate}</span>`
+                : ""}
+            </div>
           </div>
           <div class="chevron-btn" @click=${(e) => { e.stopPropagation(); this._toggle(); }}>
             <ha-icon class="chevron" icon=${this._open ? "m3of:arrow-drop-up" : "m3of:arrow-drop-down"}></ha-icon>
