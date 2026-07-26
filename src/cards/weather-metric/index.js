@@ -238,21 +238,16 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
       ? this._numRaw(this.hass.states[this.config.bearing_entity]?.state)
       : this._numRaw(this._weatherAttr("wind_bearing"));
     const from = bearing != null ? `${this.config.from_label ?? "From"} ${compass(bearing)}` : "";
-    // The blob IS the indicator: its point aims where the wind blows toward
-    // (bearing is the direction it comes FROM), and it sharpens with strength
-    // — soft roundness in calm air, a defined arrowhead in a gale.
-    const flowDeg = bearing != null ? (bearing + 180) % 360 : 180; // default: point down
+    // The arrowhead IS the indicator: always the PRONOUNCED canonical
+    // MaterialShapes Triangle (rounding .2), rotated to where the wind blows
+    // toward (bearing is the direction it comes FROM) — like the Pixel tile.
+    // No strength modulation: the number carries the magnitude.
+    const flowDeg = bearing != null ? (bearing + 180) % 360 : 0; // default: point up
     const rotate = ((flowDeg - 90) * Math.PI) / 180; // compass → SVG angle (0=N=up)
-    const kmh = this._convertWind(speed, srcUnit, "km/h").v;
-    const strength = Math.min(kmh, 60) / 60;
-    const rounding = Math.max(0.2, 0.42 - strength * 0.2);
-    // Mass scales with strength too: calm breeze = small soft blob, strong
-    // wind = a bigger, sharper arrowhead (bounded so the text always fits).
-    const radius = 40 + strength * 8;
     return html`
       <div class="rect-tile clip wind">
         <svg class="blob-bg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <path d=${windBlobPath(50, 50, radius, rotate, rounding)} class="blob-fill" />
+          <path d=${windBlobPath(50, 50, 46, rotate, 0.2)} class="blob-fill" />
         </svg>
         <div class="overlay">
           ${this._header("mdi:weather-windy", this.config.name ?? "Wind")}
