@@ -303,11 +303,14 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
         : this._hint("mdi:eye-outline", this.config.name ?? "Visibility", "Weather entity has no visibility — add a sensor");
     }
     const unit = this.config.unit ?? this._weatherAttr("visibility_unit") ?? "km";
-    // One edge-to-edge cookie, same as UV — matching the reference.
+    // Two layers — a plain circle backdrop with a smaller cookie inset in it.
+    // Unlike UV (one edge-to-edge cookie), visibility's reference really is
+    // "a circle with a cookie inside", so the two tiles differ on purpose.
     return html`
       <div class="shape-tile">
         <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <path d=${materialCookiePath(50, 52, 44, 12)} class="shape-fill visibility-fill" />
+          <circle cx="50" cy="52" r="45" class="shape-fill-c" />
+          <path d=${materialCookiePath(50, 52, 32, 12)} class="shape-fill visibility-fill" />
         </svg>
         <div class="overlay">
           ${this._header("mdi:eye-outline", this.config.name ?? "Visibility")}
