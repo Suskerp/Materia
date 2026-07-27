@@ -71,7 +71,42 @@ class MateriaCarousel extends ActionMixin(LitElement) {
     return (this.config.items || []).map((i) => (typeof i === "string" ? { label: i, value: i } : i));
   }
 
+  /* Mouse drag-to-scroll — touch already pans natively. Same construction as
+     materia-forecast-hourly: nothing is captured until the pointer has moved
+     past a small threshold, so a plain click still reaches the tile. */
+  _onPointerDown(e) {
+    if (e.pointerType !== "mouse") return;
+    this._dragStartX = e.clientX;
+    this._dragStartScroll = e.currentTarget.scrollLeft;
+    this._captured = false;
+    this._didDrag = false;
+    this._dragPointerId = e.pointerId;
+  }
+
+  _onPointerMove(e) {
+    if (this._dragStartX == null) return;
+    const dx = e.clientX - this._dragStartX;
+    if (!this._captured && Math.abs(dx) > 4) {
+      this._captured = true;
+      this._didDrag = true;
+      e.currentTarget.setPointerCapture(this._dragPointerId);
+    }
+    if (this._captured) e.currentTarget.scrollLeft = this._dragStartScroll - dx;
+  }
+
+  _onPointerUp(e) {
+    if (this._dragStartX == null) return;
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
+    this._dragStartX = null;
+    this._captured = false;
+  }
+
   _tap(item) {
+    // A drag that happens to end on a tile must not toggle it.
+    if (this._didDrag) {
+      this._didDrag = false;
+      return;
+    }
     this._fireHaptic?.("light");
     if (item.tap_action) {
       this._handleAction(item.tap_action);
@@ -95,7 +130,13 @@ class MateriaCarousel extends ActionMixin(LitElement) {
 
     return html`
       <ha-card style="--mcar-bg:${bg};--mcar-fg:${fg};">
-        <div class="rail">
+        <div
+          class="rail"
+          @pointerdown=${this._onPointerDown}
+          @pointermove=${this._onPointerMove}
+          @pointerup=${this._onPointerUp}
+          @pointercancel=${this._onPointerUp}
+        >
           ${this._items().map((item) => {
             const value = item.value ?? item.label;
             const on = selected.some((s) => s === String(value));

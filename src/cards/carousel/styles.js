@@ -24,6 +24,15 @@ export const styles = [
       margin-right: -14px;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
+      /* Drag affordance for pointer users; without user-select the drag would
+         start selecting the tile labels instead of scrolling. */
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .rail:active {
+      cursor: grabbing;
     }
 
     .rail::-webkit-scrollbar {
