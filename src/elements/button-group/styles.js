@@ -43,9 +43,9 @@ export const styles = [
 
     button {
       /* Content-sized, then grows to share leftover width — and never shrinks.
-         `flex: 1` (zero basis) divided the row equally regardless of label
-         length, so the longest label was hard-clipped. M3 sizes connected
-         buttons to their content. */
+         A zero flex-basis divided the row equally regardless of label length,
+         so the longest label was hard-clipped. M3 sizes connected buttons to
+         their content. */
       flex: 1 0 auto;
       min-width: 0;
       border: none;
