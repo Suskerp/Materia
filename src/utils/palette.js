@@ -46,6 +46,7 @@ export const COLOR_GROUPS = [
       cust("climate-heat", "Heat", "#FFDFD4"),
       cust("climate-heat-container", "Heat container", "#FFEEE9"),
       cust("on-climate-heat", "On heat", "#A14614"),
+      cust("climate-heat-accent", "Heat accent", "#A14614"),
     ],
   },
   {
@@ -54,6 +55,7 @@ export const COLOR_GROUPS = [
       cust("climate-cool", "Cool", "#D3E8FF"),
       cust("climate-cool-container", "Cool container", "#EAF3FF"),
       cust("on-climate-cool", "On cool", "#327EA7"),
+      cust("climate-cool-accent", "Cool accent", "#327EA7"),
     ],
   },
   {
@@ -62,6 +64,7 @@ export const COLOR_GROUPS = [
       cust("climate-auto", "Auto", "#D4EBDD"),
       cust("climate-auto-container", "Auto container", "#EAF6EE"),
       cust("on-climate-auto", "On auto", "#2E5E44"),
+      cust("climate-auto-accent", "Auto accent", "#2E5E44"),
     ],
   },
   {
@@ -86,6 +89,18 @@ export const COLOR_GROUPS = [
       cust("warning", "Warning", "#D9A000"),
       cust("warning-container", "Warning container", "#FEEFCA"),
       cust("on-warning", "On warning", "#FFFFFF"),
+      cust("on-warning-container", "On warning container", "#745D00"),
+    ],
+  },
+  {
+    title: "Weather",
+    options: [
+      cust("weather-sun", "Sun", "#F2B500"),
+      cust("weather-cloud", "Cloud", "#9FA9B7"),
+      cust("weather-cloud-dark", "Cloud (dark)", "#6F7A8A"),
+      cust("weather-rain", "Rain", "#2E86E0"),
+      cust("weather-snow", "Snow", "#AEB8C4"),
+      cust("weather-moon", "Moon", "#5961C2"),
     ],
   },
   {
