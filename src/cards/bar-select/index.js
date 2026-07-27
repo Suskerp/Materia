@@ -148,7 +148,7 @@ class MateriaBarSelect extends ActionMixin(LitElement) {
                 aria-pressed=${isOff ? "true" : "false"}
                 title=${this._fmt(off)}
               >
-                <ha-icon .icon=${this.config.off_icon ?? "m3o:water-drop"}></ha-icon>
+                <ha-icon .icon=${this.config.off_icon ?? "mdi:water"}></ha-icon>
               </button>`
             : nothing}
 
