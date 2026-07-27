@@ -284,7 +284,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
       <div class="shape-tile">
         <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
           <circle cx="50" cy="52" r="45" class="shape-fill-c" />
-          <path d=${materialCookiePath(50, 52, 32, 12)} class="shape-fill" />
+          <path d=${materialCookiePath(50, 52, 32, 12)} class="shape-fill uv-fill" />
           ${dots}
         </svg>
         <div class="overlay">

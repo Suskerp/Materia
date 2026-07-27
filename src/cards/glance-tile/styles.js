@@ -132,8 +132,11 @@ export const styles = [
       font-weight: 700;
       /* 1.05 clipped the tops of tall digits on this bold display font — the
          line box computed from font-size × line-height came in shorter than
-         the glyph's actual ink extent. */
-      line-height: 1.25;
+         the glyph's actual ink extent. Padding is the belt to line-height's
+         suspenders: guarantees headroom regardless of how the browser
+         computes this variable font's line box. */
+      line-height: 1.3;
+      padding-top: 0.08em;
       letter-spacing: -0.02em;
       font-variant-numeric: tabular-nums;
     }

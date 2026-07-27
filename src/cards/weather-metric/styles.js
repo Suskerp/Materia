@@ -62,7 +62,8 @@ export const styles = [
        own by default rather than reading flat/matching the background. Same
        theme-safe wash the wind blob uses (on-surface mixed into a container
        tone — guaranteed contrast step in both light and dark). */
-    .visibility-fill {
+    .visibility-fill,
+    .uv-fill {
       fill: var(--wm-color, color-mix(in srgb, var(--md-sys-color-on-surface, #1c1b1f) 12%, var(--md-sys-color-secondary-container, var(--ha-card-background))));
     }
 
@@ -82,8 +83,11 @@ export const styles = [
       font-weight: 700;
       /* 1.05 clipped the tops of tall digits (e.g. "6") on this bold display
          font — the line box computed from font-size × line-height came in
-         shorter than the glyph's actual ink extent. */
-      line-height: 1.25;
+         shorter than the glyph's actual ink extent. Padding is the belt to
+         line-height's suspenders: it guarantees headroom regardless of how
+         the browser computes this variable font's line box. */
+      line-height: 1.3;
+      padding-top: 0.08em;
       letter-spacing: -0.02em;
       font-variant-numeric: tabular-nums;
     }
