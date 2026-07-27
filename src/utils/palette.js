@@ -93,6 +93,15 @@ export const COLOR_GROUPS = [
     ],
   },
   {
+    title: "Error",
+    options: [
+      cust("error", "Error", "#B3261E"),
+      cust("error-container", "Error container", "#F9DEDC"),
+      cust("on-error", "On error", "#FFFFFF"),
+      cust("on-error-container", "On error container", "#410E0B"),
+    ],
+  },
+  {
     title: "Weather",
     options: [
       cust("weather-sun", "Sun", "#F2B500"),

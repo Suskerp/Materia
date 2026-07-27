@@ -18,6 +18,14 @@ export const styles = [
       container-type: inline-size;
     }
 
+    /* Connected group: a 2dp seam, and the members' facing corners tighten so
+       the hero and its alert strip read as ONE object. */
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
     /* Asymmetric expressive container — three big corners and one small,
        which is what stops it reading as a plain rounded rectangle. */
     .hero {
@@ -29,6 +37,43 @@ export const styles = [
       color: var(--mh-fg);
       transition: background-color var(--md-sys-motion-default-effects),
         color var(--md-sys-motion-default-effects);
+    }
+
+    /* Bottom corners tighten only while something is attached below. */
+    .hero.attached {
+      border-radius: 32px 32px 8px 8px;
+    }
+
+    .alert {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px clamp(16px, 4.5cqi, 22px);
+      /* Mirror of the hero: small where they meet, large on the outside, and
+         the one tight corner kept at bottom-right so the silhouette still has
+         the family's asymmetry. */
+      border-radius: 8px 8px 14px 32px;
+      background: var(--mh-alert-bg);
+      color: var(--mh-alert-fg);
+      cursor: pointer;
+      box-sizing: border-box;
+      font-size: clamp(13px, 3.7cqi, 15px);
+      font-weight: 600;
+      -webkit-tap-highlight-color: transparent;
+      transition: background-color var(--md-sys-motion-default-effects),
+        color var(--md-sys-motion-default-effects);
+    }
+
+    .alert ha-icon {
+      --mdc-icon-size: clamp(18px, 5cqi, 22px);
+      flex-shrink: 0;
+    }
+
+    .alert span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .burst {
