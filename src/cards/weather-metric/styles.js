@@ -57,6 +57,15 @@ export const styles = [
       fill: var(--wm-color, var(--ha-card-background, var(--card-background-color)));
     }
 
+    /* Visibility: unlike UV/pressure (whose dots/gauge carry the color), this
+       tile has no other colored element, so it needs an inner fill of its
+       own by default rather than reading flat/matching the background. Same
+       theme-safe wash the wind blob uses (on-surface mixed into a container
+       tone — guaranteed contrast step in both light and dark). */
+    .visibility-fill {
+      fill: var(--wm-color, color-mix(in srgb, var(--md-sys-color-on-surface, #1c1b1f) 12%, var(--md-sys-color-secondary-container, var(--ha-card-background))));
+    }
+
     .overlay {
       position: relative;
       display: flex;
@@ -160,6 +169,18 @@ export const styles = [
       line-height: 1.4;
     }
 
+    /* Generic left-aligned tile (AQI, humidity) — visually differentiates
+       from the centered shape tiles (UV, pressure, visibility). */
+    .rect-tile.left {
+      align-items: flex-start;
+      text-align: left;
+      justify-content: space-between;
+    }
+
+    .rect-tile.left .header {
+      justify-content: flex-start;
+    }
+
     /* Precipitation: left-aligned value/subtitle, rainy glyph bottom-right. */
     .rect-tile.precip {
       align-items: flex-start;
@@ -218,11 +239,12 @@ export const styles = [
       position: relative;
     }
 
-    /* AQI bar */
+    /* AQI bar — full width now that the tile is left-aligned (matches the
+       reference layout: value left, bar spans edge to edge below it). */
     .aqi-bar {
       position: relative;
       display: flex;
-      width: 82%;
+      width: 100%;
       height: 6px;
       border-radius: 3px;
       overflow: visible;
@@ -291,13 +313,17 @@ export const styles = [
       font-weight: 500;
     }
 
+    /* Guaranteed-contrast pair (same trick as the wind blob): the chip's own
+       background/text no longer depend on the ambient --wm-color-on, which
+       was reading too close to the wave-fill behind it in some themes. */
     .dew-chip {
       display: inline-grid;
       place-items: center;
       min-width: 34px;
       height: 34px;
       border-radius: 50%;
-      background: color-mix(in srgb, var(--md-sys-cust-color-weather-rain, #5fa8f5) 35%, var(--ha-card-background));
+      background: var(--md-sys-color-secondary-container, #5fa8f5);
+      color: var(--md-sys-color-on-secondary-container, #000);
       font-weight: 700;
       font-size: 13px;
     }

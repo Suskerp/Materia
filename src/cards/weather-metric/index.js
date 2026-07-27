@@ -1,7 +1,7 @@
 import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { cookiePath, arrowPath, moonPath, materialCookiePath, arcPath } from "../../utils/shapes.js";
-import { coloredWeatherIcon } from "../weather-tile/icons.js";
+import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -300,7 +300,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     return html`
       <div class="shape-tile">
         <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <path d=${materialCookiePath(50, 52, 44, 12)} class="shape-fill" />
+          <path d=${materialCookiePath(50, 52, 44, 12)} class="shape-fill visibility-fill" />
         </svg>
         <div class="overlay">
           ${this._header("mdi:eye-outline", this.config.name ?? "Visibility")}
@@ -352,7 +352,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     // Clamp so the marker never hangs off the bar's rounded ends.
     const frac = Math.min(0.96, Math.max(0.04, aqi / 300));
     return html`
-      <div class="rect-tile">
+      <div class="rect-tile left">
         ${this._header("mdi:waves", this.config.name ?? "Air quality")}
         <div class="big">${Math.round(aqi)}</div>
         <div class="aqi-bar">
@@ -408,7 +408,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     const y = 100 - level * 78; // wave crest height inside the tile
     const wave = this._scallopWave(y);
     return html`
-      <div class="rect-tile clip">
+      <div class="rect-tile left clip">
         <svg class="wave" viewBox="0 0 200 100" preserveAspectRatio="none">
           <path d=${wave} class="wave-fill" />
         </svg>
@@ -463,10 +463,13 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     const dayNow = (nowH - riseH + 24) % 24 <= dayLen;
     const mx = x(nowH);
     const my = yAt(nowH);
-    // Moon phase → lit-region geometry.
-    const PHASES = { new_moon: 0, waxing_crescent: 0.125, first_quarter: 0.25, waxing_gibbous: 0.375, full_moon: 0.5, waning_gibbous: 0.625, last_quarter: 0.75, waning_crescent: 0.875 };
-    const moonSt = this.config.moon_entity ? this.hass.states[this.config.moon_entity] : null;
-    const phase = moonSt && moonSt.state in PHASES ? PHASES[moonSt.state] : 0.5;
+    // Moon phase → lit-region geometry. Defaults to sensor.moon_phase / the
+    // legacy sensor.moon (same auto-detection as the condition glyphs) — no
+    // config needed unless you want a different sensor.
+    const moonEntity = this.config.moon_entity ?? (this.hass.states["sensor.moon_phase"] ? "sensor.moon_phase" : "sensor.moon");
+    const moonSt = this.hass.states[moonEntity];
+    const phaseFrac = moonPhaseFrac(this.hass, this.config.moon_entity);
+    const phase = phaseFrac ?? 0.5;
     return html`
       <div class="rect-tile sun">
         ${this._header("mdi:weather-sunset", this.config.name ?? "Sunrise & sunset")}
@@ -485,7 +488,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
         <div class="sun-times">
           <div><ha-icon icon="mdi:weather-sunset-up"></ha-icon> ${fmt(rising)}</div>
           <div><ha-icon icon="mdi:weather-sunset-down"></ha-icon> ${fmt(setting)}</div>
-          ${moonSt ? html`<div class="moon-row"><ha-icon icon=${moonSt.attributes?.icon || `mdi:moon-${String(moonSt.state).replace(/_/g, "-").replace("-moon", "")}`}></ha-icon> ${this.hass.formatEntityState?.(moonSt) ?? moonSt.state}</div>` : ""}
+          ${moonSt && phaseFrac != null ? html`<div class="moon-row"><ha-icon icon=${moonSt.attributes?.icon || `mdi:moon-${String(moonSt.state).replace(/_/g, "-").replace("-moon", "")}`}></ha-icon> ${this.hass.formatEntityState?.(moonSt) ?? moonSt.state}</div>` : ""}
         </div>
       </div>
     `;
