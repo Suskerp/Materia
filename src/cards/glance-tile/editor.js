@@ -8,6 +8,7 @@ const VARIANTS = [
   { value: "energy", label: "Energy" },
   { value: "binary", label: "On/off (spinning star)" },
   { value: "plain", label: "Plain value" },
+  { value: "vacuum", label: "Robot vacuum (state + room + battery bar)" },
 ];
 
 class MateriaGlanceTileEditor extends SmartEditorBase {
@@ -46,6 +47,13 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
     }
     if (v === "plain") {
       extras.fields.push({ name: "battery_entity", label: "Paired battery sensor (adds the vertical bar)", selector: { entity: { domain: "sensor" } } });
+    }
+    if (v === "vacuum") {
+      extras.fields.push(
+        { name: "status_entity", label: "Detailed status sensor (shown as the state)", selector: { entity: { domain: "sensor" } } },
+        { name: "room_entity", label: "Current room sensor (shown while cleaning)", selector: { entity: { domain: "sensor" } } },
+        { name: "battery_entity", label: "Battery sensor (adds the vertical bar)", selector: { entity: { domain: "sensor" } } },
+      );
     }
     // Only meaningful for device_class: moisture (soil sensors) — harmless
     // no-ops for battery/humidity/other percent entities.

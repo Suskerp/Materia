@@ -209,6 +209,47 @@ export const styles = [
       min-height: 128px;
     }
 
+    /* Vacuum: name (header) top, state centered, room at the bottom, battery
+       bar on the right — no cookie/thermo graphic needing a square canvas. */
+    .rect-tile.vacuum {
+      aspect-ratio: auto;
+      min-height: 128px;
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    .rect-tile.vacuum .header {
+      justify-content: flex-start;
+    }
+
+    .rect-tile.vacuum.active {
+      background: color-mix(in srgb, var(--ms-accent, var(--md-sys-color-primary, #6750a4)) 22%, var(--ms-color, var(--ha-card-background, var(--card-background-color))));
+    }
+
+    .vacuum-row {
+      flex: 1;
+      display: flex;
+      gap: 10px;
+      min-height: 0;
+      width: 100%;
+    }
+
+    .vacuum-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .vacuum-state {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      min-height: 0;
+      padding-block: 0.15em;
+    }
+
     .rect-tile.left .header {
       justify-content: flex-start;
     }

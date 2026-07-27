@@ -33,6 +33,10 @@ const ACTIVE_STATES = ["on", "open", "running", "playing", "heat", "heating", "h
  *                  entity is active (pumps, motion…), still + muted when off;
  *                  the whole tile washes with the accent color when active.
  *   plain        — icon + formatted state, for everything else.
+ *   vacuum       — name top-left, state centered, current room at the bottom
+ *                  while actively cleaning, battery bar on the right. Pairs
+ *                  the vacuum entity with optional status_entity (richer
+ *                  state text) / room_entity / battery_entity sensors.
  *
  * View only: tap opens more-info (or any configured tap_action).
  */
@@ -126,6 +130,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
       energy: () => this._energy(),
       binary: () => this._binary(),
       plain: () => this._plain(),
+      vacuum: () => this._vacuum(),
     }[this._variant]();
     const bg = this._isTemplate(this.config.color) ? this._resolvedColor : this.config.color;
     const fg = this._isTemplate(this.config.color_on) ? this._resolvedColorOn : this.config.color_on;
@@ -385,6 +390,46 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
         ${this._header("mdi:eye-outline")}
         ${value}
         ${this._label ? html`<div class="sub">${this._label}</div>` : ""}
+      </div>
+    `;
+  }
+
+  /* ---- vacuum: name top-left, state centered, room at the bottom while
+     cleaning, battery bar on the right. Pairs the vacuum entity with optional
+     status_entity (richer state text) / room_entity / battery_entity — direct
+     entity lookups, not templates, since the room should only show while the
+     vacuum is actually cleaning. --------------------------------------------- */
+  _fmtObj(stateObj) {
+    return this.hass.formatEntityState?.(stateObj) ?? stateObj.state;
+  }
+
+  _vacuum() {
+    const st = this._stateObj;
+    const active = st.state === "cleaning";
+
+    const statusSt = this.config.status_entity ? this.hass.states[this.config.status_entity] : null;
+    const stateText = statusSt ? this._fmtObj(statusSt) : this._fmtState();
+
+    const roomSt = this.config.room_entity ? this.hass.states[this.config.room_entity] : null;
+    const roomText = active && roomSt ? this._fmtObj(roomSt) : "";
+
+    const battSt = this.config.battery_entity ? this.hass.states[this.config.battery_entity] : null;
+    const battVal = battSt ? this._num(battSt.state) : null;
+    const battFrac = battVal != null ? Math.min(1, Math.max(0, battVal / 100)) : null;
+    const battColor = battFrac != null ? this._batteryColor(battFrac) : null;
+
+    return html`
+      <div class="rect-tile vacuum ${active ? "active" : ""}">
+        ${this._header(this._icon("mdi:robot-vacuum"))}
+        <div class="vacuum-row">
+          <div class="vacuum-main">
+            <div class="vacuum-state"><div class="big small-big">${stateText}</div></div>
+            <div class="sub">${roomText}</div>
+          </div>
+          ${battFrac != null
+            ? html`<div class="thermo"><i style="height:${Math.max(8, battFrac * 100)}%;background:${battColor}"></i></div>`
+            : ""}
+        </div>
       </div>
     `;
   }
