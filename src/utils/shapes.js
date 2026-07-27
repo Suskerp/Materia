@@ -214,11 +214,31 @@ export function arrowPath(cx, cy, r, rotate = 0) {
  *
  *  rotate is in radians; r is the outer-spike radius. */
 export function boomPath(cx, cy, r, rotate = 0) {
-  const PAIR = [
+  return repeatedPairPath(cx, cy, r, rotate, [
     { x: 0.457, y: 0.296, r: 0.007 },
     { x: 0.5, y: -0.051, r: 0.007 },
-  ];
-  const REPS = 15;
+  ], 15);
+}
+
+/** Canonical MaterialShapes SOFT BURST — Boom's gentle sibling.
+ *
+ *    SoftBurst = customPolygon([(0.193, 0.277) r .053, (0.176, 0.055) r .053], reps 10)
+ *
+ *  Same construction as Boom, softer numbers: relative to the (0.5, 0.5)
+ *  centre the pair sits at radius .38 and .55 — a .69 inner/outer ratio against
+ *  Boom's .38 — and the rounding is .053 rather than .007, so the lobes are
+ *  round instead of spiked. Ten reps, so twenty vertices. */
+export function softBurstPath(cx, cy, r, rotate = 0) {
+  return repeatedPairPath(cx, cy, r, rotate, [
+    { x: 0.193, y: 0.277, r: 0.053 },
+    { x: 0.176, y: 0.055, r: 0.053 },
+  ], 10);
+}
+
+/** Shared engine for MaterialShapes' `customPolygon(points, reps)` shapes:
+ *  point offsets are unit-square coords about a (0.5, 0.5) centre, and `reps`
+ *  spins the set around the circle. */
+function repeatedPairPath(cx, cy, r, rotate, PAIR, REPS) {
   const raw = [];
   for (let k = 0; k < REPS; k++) {
     const a = rotate + (k / REPS) * Math.PI * 2;

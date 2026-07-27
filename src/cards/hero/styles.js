@@ -87,10 +87,17 @@ export const styles = [
       pointer-events: none;
     }
 
-    .burst.spin {
+    /* Always turning, never idle — but the pace says what's going on:
+       75s at rest (you notice it only if you look), 9s while working, 45s in
+       alert where the extra weight comes from the swell instead of speed. */
+    .burst {
       transform-box: fill-box;
       transform-origin: center;
-      animation: mh-spin 9s linear infinite;
+      animation: mh-spin 75s linear infinite;
+    }
+
+    .burst.working {
+      animation-duration: 9s;
     }
 
     /* Alert: ominously slow rather than urgent. 45s per revolution on a
@@ -107,6 +114,20 @@ export const styles = [
       animation: mh-loom 7s ease-in-out infinite alternate;
     }
 
+    /* Calm counterpart to .loom: slower and shallower, so the resting card
+       breathes without ever competing with the content. */
+    .drift {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: mh-drift 13s ease-in-out infinite alternate;
+    }
+
+    @keyframes mh-drift {
+      to {
+        transform: scale(1.03);
+      }
+    }
+
     @keyframes mh-loom {
       to {
         transform: scale(1.05);
@@ -120,8 +141,9 @@ export const styles = [
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .burst.spin,
-      .loom {
+      .burst,
+      .loom,
+      .drift {
         animation: none;
       }
     }
