@@ -23,8 +23,8 @@ export const styles = [
     .hero {
       position: relative;
       overflow: hidden;
-      border-radius: 44px 44px 16px 44px;
-      padding: clamp(18px, 6cqi, 26px);
+      border-radius: 32px 32px 14px 32px;
+      padding: clamp(16px, 4.5cqi, 22px);
       background: var(--mh-bg);
       color: var(--mh-fg);
       transition: background-color var(--md-sys-motion-default-effects),
@@ -35,10 +35,10 @@ export const styles = [
       position: absolute;
       right: -8cqi;
       top: -8cqi;
-      width: 44cqi;
-      height: 44cqi;
+      width: 36cqi;
+      height: 36cqi;
       /* Sits in the container tint, never competing with the text. */
-      fill: color-mix(in srgb, currentColor 14%, transparent);
+      fill: color-mix(in srgb, currentColor 9%, transparent);
       pointer-events: none;
     }
 
@@ -91,11 +91,11 @@ export const styles = [
 
     .title {
       font-family: var(--materia-font-display, inherit);
-      font-size: clamp(26px, 11cqi, 46px);
+      font-size: clamp(21px, 7.6cqi, 32px);
       font-weight: 700;
       letter-spacing: -0.03em;
       line-height: 1.15;
-      margin-top: 8px;
+      margin-top: 6px;
     }
 
     .figure {
@@ -108,7 +108,7 @@ export const styles = [
 
     .value {
       font-family: var(--materia-font-display, inherit);
-      font-size: clamp(56px, 26cqi, 108px);
+      font-size: clamp(40px, 17cqi, 70px);
       font-weight: 700;
       letter-spacing: -0.06em;
       /* Generous enough that the display face's tall digits never clip. */
@@ -117,14 +117,14 @@ export const styles = [
     }
 
     .unit {
-      font-size: clamp(18px, 7cqi, 30px);
+      font-size: clamp(14px, 4.6cqi, 20px);
       font-weight: 600;
-      padding-bottom: clamp(8px, 4.4cqi, 18px);
+      padding-bottom: clamp(6px, 2.8cqi, 11px);
     }
 
     .caption {
       font-size: clamp(12px, 3.4cqi, 14px);
-      padding-bottom: clamp(12px, 6cqi, 24px);
+      padding-bottom: clamp(8px, 3.6cqi, 15px);
       opacity: 0.62;
       overflow: hidden;
       text-overflow: ellipsis;

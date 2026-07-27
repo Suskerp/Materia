@@ -22,61 +22,59 @@ export const styles = [
     .chip {
       display: flex;
       align-items: center;
-      gap: 8px;
-      height: 52px;
-      padding: 0 18px;
+      gap: 7px;
+      height: 44px;
+      padding: 0 15px;
       box-sizing: border-box;
       cursor: pointer;
       font-family: inherit;
       font-size: 14px;
       font-weight: 500;
-      /* Unselected: outlined chip on the surface, per the M3 filter chip. */
-      background: color-mix(in srgb, var(--md-sys-color-on-surface, #1c1b1f) 5%, transparent);
-      border: 1px solid var(--md-sys-color-outline-variant, var(--md-sys-color-outline, rgba(0, 0, 0, 0.25)));
+      /* Unselected is a quiet filled surface with NO outline — an outlined
+         chip next to filled neighbours read as disabled rather than
+         unselected, and it matches the tonal button groups elsewhere. */
+      background: color-mix(in srgb, var(--md-sys-color-on-surface, #1c1b1f) 6%, transparent);
+      border: none;
       color: var(--md-sys-color-on-surface, var(--primary-text-color));
       border-radius: 999px;
       position: relative;
       overflow: hidden;
       -webkit-tap-highlight-color: transparent;
-      /* The corner tightening rides the springy spatial easing; color is a
-         plain effects fade so it never overshoots. */
-      transition: border-radius var(--md-sys-motion-expressive-fast-spatial),
-        transform var(--md-sys-motion-expressive-fast-spatial),
+      /* Radius rides the NON-overshooting effects curve. On the springy
+         spatial curve it overshot past its target, and with overflow:hidden
+         that briefly clipped the corners square mid-transition. */
+      transition: border-radius var(--md-sys-motion-default-effects),
         background-color var(--md-sys-motion-fast-effects),
-        color var(--md-sys-motion-fast-effects),
-        border-color var(--md-sys-motion-fast-effects),
-        font-weight var(--md-sys-motion-fast-effects);
-      transform: scale(0.97);
+        color var(--md-sys-motion-fast-effects);
     }
 
     .chip.on {
       background: var(--mc-bg);
       color: var(--mc-fg);
-      border-color: transparent;
-      border-radius: 18px;
-      font-weight: 700;
-      transform: scale(1);
+      border-radius: 14px;
+      font-weight: 600;
     }
 
     /* Check collapses to zero width when unselected — the chip closes up
-       around the label instead of holding an empty slot. */
+       around the label instead of holding an empty slot. Width only, so
+       nothing can overshoot the chip's own bounds. */
     .check {
-      --mdc-icon-size: 18px;
+      --mdc-icon-size: 17px;
       width: 0;
       opacity: 0;
       overflow: hidden;
       flex-shrink: 0;
-      transition: width var(--md-sys-motion-expressive-fast-spatial),
+      transition: width var(--md-sys-motion-default-effects),
         opacity var(--md-sys-motion-fast-effects);
     }
 
     .chip.on .check {
-      width: 18px;
+      width: 17px;
       opacity: 1;
     }
 
     .lead {
-      --mdc-icon-size: 18px;
+      --mdc-icon-size: 17px;
       flex-shrink: 0;
     }
 

@@ -17,11 +17,11 @@ export const styles = [
 
     .tile {
       background: var(--ha-card-background, var(--card-background-color));
-      border-radius: 30px;
-      padding: 18px 20px;
+      border-radius: 24px;
+      padding: 14px 16px;
       display: flex;
       align-items: flex-end;
-      gap: 16px;
+      gap: 13px;
       box-sizing: border-box;
       color: var(--md-sys-color-on-surface, var(--primary-text-color));
     }
@@ -30,7 +30,7 @@ export const styles = [
       display: flex;
       flex-direction: column;
       gap: 2px;
-      width: clamp(72px, 26cqi, 96px);
+      width: clamp(66px, 23cqi, 86px);
       flex-shrink: 0;
     }
 
@@ -46,7 +46,7 @@ export const styles = [
 
     .value {
       font-family: var(--materia-font-display, inherit);
-      font-size: clamp(18px, 7cqi, 24px);
+      font-size: clamp(16px, 5.6cqi, 20px);
       font-weight: 700;
       letter-spacing: -0.02em;
       line-height: 1.25;
@@ -54,8 +54,8 @@ export const styles = [
 
     /* The "off" choice — a round button, because off isn't a rung. */
     .off {
-      width: 56px;
-      height: 56px;
+      width: 46px;
+      height: 46px;
       flex: none;
       border: none;
       border-radius: 50%;
@@ -73,7 +73,7 @@ export const styles = [
     }
 
     .off ha-icon {
-      --mdc-icon-size: 24px;
+      --mdc-icon-size: 21px;
       opacity: 0.55;
       transition: opacity var(--md-sys-motion-fast-effects);
     }
@@ -92,7 +92,7 @@ export const styles = [
       display: flex;
       align-items: flex-end;
       gap: 6px;
-      height: clamp(56px, 22cqi, 74px);
+      height: clamp(40px, 15cqi, 54px);
       min-width: 0;
     }
 
@@ -101,7 +101,7 @@ export const styles = [
       min-width: 0;
       border: none;
       padding: 0;
-      border-radius: 12px;
+      border-radius: 9px;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       background: color-mix(in srgb, currentColor 12%, transparent);

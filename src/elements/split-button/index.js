@@ -44,7 +44,11 @@ class MateriaSplitButton extends ActionMixin(LitElement) {
   updated(changed) {
     // icon-row sets `.config` directly (bypassing setConfig), so reflect `wide`
     // on every config change too.
-    if (changed.has("config")) this.toggleAttribute("wide", !!this.config?.wide);
+    if (changed.has("config")) {
+      this.toggleAttribute("wide", !!this.config?.wide);
+      // Uneven row shares — see materia-button's note.
+      if (this.config?.flex != null) this.style.flex = String(this.config.flex);
+    }
     if (changed.has("_open") && this._open) {
       requestAnimationFrame(() => this._clampMenu());
     }

@@ -66,6 +66,10 @@ class MateriaButton extends ActionMixin(LitElement) {
     // icon-row sets the `.config` property directly (bypassing setConfig).
     if (changedProps.has("config")) {
       this.toggleAttribute("wide", !!this.config?.wide);
+      // `flex` lets a row hand out uneven shares — the M3 connected-group idea
+      // where the primary action is visibly wider than its neighbours. Set on
+      // the host because that's the flex item inside materia-icon-row.
+      if (this.config?.flex != null) this.style.flex = String(this.config.flex);
     }
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("icon", "_resolvedIcon");
