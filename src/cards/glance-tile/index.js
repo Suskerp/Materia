@@ -145,24 +145,48 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     return html`<div class="header"><ha-icon icon=${this._icon(fallbackIcon)}></ha-icon><span>${this._name}</span></div>`;
   }
 
+  /** Soil moisture is a SWEET SPOT, not a monotonic scale (unlike battery) —
+   *  too little AND too much are both bad, for different reasons, so they
+   *  get different hues: red (critical dry) → orange (water soon) → green
+   *  (optimal) → blue (overwatered). Thresholds are plant-specific and
+   *  configurable; defaults suit a typical houseplant. */
+  _moistureZone(v) {
+    const critDry = this.config.critical_dry ?? 10;
+    const dryBelow = this.config.dry_below ?? 20;
+    const soggyAbove = this.config.soggy_above ?? 60;
+    if (v <= critDry) return { fill: SCALE.red, status: this.config.dry_label ?? "Needs water now" };
+    if (v <= dryBelow) return { fill: SCALE.orange, status: this.config.soon_label ?? "Water soon" };
+    if (v <= soggyAbove) return { fill: SCALE.green, status: this.config.optimal_label ?? "Optimal" };
+    return { fill: SCALE.blue, status: this.config.wet_label ?? "Overwatered" };
+  }
+
   /* ---- percent: cookie that fills with the value -------------------------- */
   _percent() {
     const v = this._num(this._stateObj.state);
     if (v == null) return this._plain();
     const frac = Math.min(1, Math.max(0, v / 100));
     const dc = this._stateObj.attributes.device_class;
+    const isMoisture = dc === "moisture";
     // Battery drains through the severity scale; everything else stays accent.
     // Always a translucent WASH (like the weather humidity wave) — a solid
     // fill drowns the card and the text sitting in it.
     let fill = null;
-    if (dc === "battery") fill = frac > 0.4 ? SCALE.green : frac > 0.15 ? SCALE.orange : SCALE.red;
-    else if (dc === "humidity" || dc === "moisture") fill = SCALE.blue;
+    let status = null;
+    if (dc === "battery") {
+      fill = frac > 0.4 ? SCALE.green : frac > 0.15 ? SCALE.orange : SCALE.red;
+    } else if (isMoisture) {
+      const zone = this._moistureZone(v);
+      fill = zone.fill;
+      status = zone.status;
+    } else if (dc === "humidity") {
+      fill = SCALE.blue;
+    }
     if (fill) fill = `color-mix(in srgb, ${fill} 30%, transparent)`;
     const y = 100 - frac * 100; // square tile: the fill level maps edge to edge
     // Liquid surface. Water-like values (humidity/moisture) get a gentle wave
     // that drifts almost imperceptibly; everything else (battery…) stays a
     // still soft dome. Deliberately calmer than the weather tile's scallops.
-    const liquid = dc === "humidity" || dc === "moisture";
+    const liquid = dc === "humidity" || isMoisture;
     let surface;
     if (liquid) {
       // Low sine-ish wave, period 50 — drifting by one period loops seamlessly.
@@ -175,7 +199,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     } else {
       surface = `M-2 ${y + 2.5} Q 50 ${y - 2.5} 102 ${y + 2.5} V102 H-2 Z`;
     }
-    const icon = dc === "battery" ? "mdi:battery" : "mdi:water-percent";
+    const icon = dc === "battery" ? "mdi:battery" : isMoisture ? "mdi:sprout" : "mdi:water-percent";
     return html`
       <div class="rect-tile clip">
         <svg class="fill-bg" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -187,7 +211,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
         <div class="overlay">
           ${this._header(icon)}
           <div class="big">${Math.round(v)}<span class="unit">%</span></div>
-          ${this.config.label ? html`<div class="sub">${this.config.label}</div>` : ""}
+          ${(this.config.label ?? status) ? html`<div class="sub">${this.config.label ?? status}</div>` : ""}
         </div>
       </div>
     `;

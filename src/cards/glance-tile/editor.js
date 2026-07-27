@@ -44,6 +44,19 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
     if (v === "power") {
       extras.fields.push({ name: "max", label: "Full-load watts (default 3000)", selector: { number: { mode: "box" } } });
     }
+    // Only applies to device_class: moisture (soil sensors) — harmless
+    // no-ops elsewhere, so shown whenever the variant COULD resolve there.
+    if (!v || v === "auto" || v === "percent") {
+      extras.fields.push(
+        { name: "critical_dry", label: "Critical dry, ≤% (default 10 — red)", selector: { number: { min: 0, max: 100, mode: "box" } } },
+        { name: "dry_below", label: "Water soon, ≤% (default 20 — orange)", selector: { number: { min: 0, max: 100, mode: "box" } } },
+        { name: "soggy_above", label: "Overwatered, >% (default 60 — blue)", selector: { number: { min: 0, max: 100, mode: "box" } } },
+        { name: "dry_label", label: '"Needs water now" label', selector: { text: {} } },
+        { name: "soon_label", label: '"Water soon" label', selector: { text: {} } },
+        { name: "optimal_label", label: '"Optimal" label', selector: { text: {} } },
+        { name: "wet_label", label: '"Overwatered" label', selector: { text: {} } },
+      );
+    }
 
     const appearance = {
       title: "Appearance",
