@@ -184,22 +184,32 @@ class MateriaHero extends ActionMixin(LitElement) {
     // Token-mapped color pairs: the accent pair takes over while active. The
     // "device" custom color is the same family materia-card gives switches,
     // vacuums and plugs when they're doing something.
-    const bg = active
+    const alert = this._activeAlert;
+    const alertBg = alert?.color
+      || "var(--md-sys-cust-color-error-container, var(--md-sys-color-error-container))";
+    const alertFg = alert?.color_on
+      || "var(--md-sys-cust-color-on-error-container, var(--md-sys-color-on-error-container))";
+
+    // An active alert takes the WHOLE object into its colour, hero included —
+    // a red strip under an otherwise-calm hero is easy to miss. The 2dp seam
+    // still shows the page through, so the two parts stay articulated even
+    // when they share a tone. Opt out with alert_tints_hero: false.
+    const tinted = alert && this.config.alert_tints_hero !== false;
+
+    const bg = tinted
+      ? alertBg
+      : active
       ? (this._field("active_color", "_resolvedActiveColor") ?? "var(--md-sys-cust-color-device, var(--md-sys-color-primary-container))")
       : (this._field("color", "_resolvedColor") ?? "var(--md-sys-color-secondary-container)");
-    const fg = active
+    const fg = tinted
+      ? alertFg
+      : active
       ? (this._field("active_color_on", "_resolvedActiveColorOn") ?? "var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container))")
       : (this._field("color_on", "_resolvedColorOn") ?? "var(--md-sys-color-on-secondary-container)");
 
     // Burst: two rounded squares, one turned 45° — the eight-lobed expressive
     // motif from the concept. Turns only while active.
     const sq = roundedPolygonPath(90, 90, 86, { vertices: 4, rounding: 0.5 });
-
-    const alert = this._activeAlert;
-    const alertBg = alert?.color
-      || "var(--md-sys-cust-color-error-container, var(--md-sys-color-error-container))";
-    const alertFg = alert?.color_on
-      || "var(--md-sys-cust-color-on-error-container, var(--md-sys-color-on-error-container))";
 
     return html`
       <ha-card style="--mh-bg:${bg};--mh-fg:${fg};--mh-alert-bg:${alertBg};--mh-alert-fg:${alertFg};">
