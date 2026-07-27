@@ -22,7 +22,7 @@ export const styles = [
          free scroll, not a pager. */
       /* Bleed to the card edge so tiles scroll out under the padding rather
          than stopping short of it. */
-      padding: 2px 14px 2px 0;
+      padding: 5px 14px 5px 0;
       margin-right: -14px;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;

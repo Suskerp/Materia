@@ -71,6 +71,49 @@ class MateriaCarousel extends ActionMixin(LitElement) {
     return (this.config.items || []).map((i) => (typeof i === "string" ? { label: i, value: i } : i));
   }
 
+  updated(changedProps) {
+    super.updated?.(changedProps);
+    const sel = new Set(this._selected.map(String));
+    if (this._prevSel) {
+      // Only the tiles whose membership actually flipped are origins.
+      const flipped = [...new Set([...sel, ...this._prevSel])]
+        .filter((v) => sel.has(v) !== this._prevSel.has(v));
+      if (flipped.length) this._ripple(flipped, sel);
+    }
+    this._prevSel = sel;
+  }
+
+  /** Neighbours react to a selection instead of it happening in isolation:
+   *  the toggled tile swells, the tiles beside it recoil, and the reaction
+   *  weakens and lags with distance. M3 choreography, applied across the row
+   *  rather than along one control. */
+  _ripple(flipped, sel) {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+    const tiles = Array.from(this.shadowRoot?.querySelectorAll(".tile") || []);
+    if (!tiles.length) return;
+    const items = this._items();
+    const origins = flipped
+      .map((v) => items.findIndex((it) => String(it.value ?? it.label) === v))
+      .filter((i) => i >= 0);
+    if (!origins.length) return;
+
+    tiles.forEach((el, i) => {
+      const d = Math.min(...origins.map((o) => Math.abs(o - i)));
+      if (d > 2) return;
+      // Origin pushes outward; neighbours give way, faintly and later.
+      const peak = d === 0 ? 1.045 : d === 1 ? 0.975 : 0.99;
+      el.animate(
+        [{ transform: "scale(1)" }, { transform: `scale(${peak})`, offset: 0.45 }, { transform: "scale(1)" }],
+        {
+          duration: 260 + d * 50,
+          delay: d * 55,
+          easing: "cubic-bezier(.2,1.4,.3,1)",
+          fill: "none",
+        }
+      );
+    });
+  }
+
   /* Mouse drag-to-scroll with a kinetic release — touch pans natively. Built
      on materia-forecast-hourly's construction (nothing captured until the
      pointer passes a small threshold, so plain clicks still reach the tile),
