@@ -93,22 +93,23 @@ export const styles = [
       animation: mh-spin 9s linear infinite;
     }
 
-    /* Alert: the spike turns markedly faster AND swells toward the viewer.
-       Rotation and scale can't share one transform, so the swell lives on a
-       nested group — together they read as looming rather than merely turning. */
+    /* Alert: ominously slow rather than urgent. 45s per revolution on a
+       15-point star means the silhouette only repeats every 3s of symmetry —
+       present when you look at it, not waving for attention. Rotation and
+       scale can't share one transform, so the swell rides a nested group. */
     .burst.alarm {
-      animation-duration: 3.6s;
+      animation-duration: 45s;
     }
 
     .loom {
       transform-box: fill-box;
       transform-origin: center;
-      animation: mh-loom 2s ease-in-out infinite alternate;
+      animation: mh-loom 7s ease-in-out infinite alternate;
     }
 
     @keyframes mh-loom {
       to {
-        transform: scale(1.12);
+        transform: scale(1.05);
       }
     }
 
