@@ -119,11 +119,11 @@ export const styles = [
     .variant-outlined {
       background: transparent;
       border: 1px solid var(--md-sys-color-outline);
-      color: var(--primary-text-color);
+      color: var(--md-sys-color-on-surface, var(--primary-text-color));
     }
     .variant-text {
       background: transparent;
-      color: var(--primary-text-color);
+      color: var(--md-sys-color-on-surface, var(--primary-text-color));
     }
     .variant-elevated {
       background: var(--ha-card-background, var(--card-background-color));

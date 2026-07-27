@@ -99,7 +99,9 @@ class MateriaClimate extends ActionMixin(LitElement) {
       case "heat": return "var(--md-sys-cust-color-climate-heat)";
       case "cool": return "var(--md-sys-cust-color-climate-cool)";
       case "auto": return "var(--md-sys-cust-color-climate-auto)";
-      default: return "rgba(68,68,68,0.7)";
+      // Off: a real surface role, like every other branch. Was a bare
+      // rgba(68,68,68,.7) with no token behind it.
+      default: return "var(--md-sys-color-surface-container-highest, var(--md-sys-color-surface-variant))";
     }
   }
 
@@ -108,7 +110,10 @@ class MateriaClimate extends ActionMixin(LitElement) {
       case "heat": return "var(--md-sys-cust-color-on-climate-heat)";
       case "cool": return "var(--md-sys-cust-color-on-climate-cool, #fff)";
       case "auto": return "var(--md-sys-cust-color-on-climate-auto, #000)";
-      default: return "var(--md-sys-color-surface-variant-light, #45464f)";
+      // --md-sys-color-surface-variant-light is not an M3 role and exists
+      // nowhere else, so this always fell through to #45464f: dark grey on
+      // a dark translucent grey, around 2:1.
+      default: return "var(--md-sys-color-on-surface)";
     }
   }
 
