@@ -47,10 +47,24 @@ class MateriaBarSelect extends ActionMixin(LitElement) {
       this._resolveField("accent", "_resolvedAccent");
       this._resolveField("accent_on", "_resolvedAccentOn");
     }
+    // Recorded AFTER paint so the next change can tell which direction it
+    // travelled and stagger accordingly. Plain field, not reactive state —
+    // it must not itself trigger a re-render.
+    this._prevIndex = this._index;
   }
 
   get _stateObj() {
     return this.hass?.states[this.config.entity];
+  }
+
+  /** Rungs (the off choice lives in its own button, never on the ladder). */
+  get _rungs() {
+    const off = this.config.off_option != null ? String(this.config.off_option) : null;
+    return this._options.filter((o) => off == null || o !== off);
+  }
+
+  get _index() {
+    return this._rungs.indexOf(String(this._current));
   }
 
   /** Current value — an attribute when configured, else the state. */
@@ -134,10 +148,22 @@ class MateriaBarSelect extends ActionMixin(LitElement) {
     const current = this._current;
     const off = this.config.off_option != null ? String(this.config.off_option) : null;
     const isOff = off != null && current === off;
-    // The off choice is its own button, so it never occupies a rung.
-    const rungs = this._options.filter((o) => off == null || o !== off);
-    const idx = rungs.indexOf(String(current));
+    const rungs = this._rungs;
+    const idx = this._index;
     const n = rungs.length;
+
+    // M3 choreography: the bars that actually changed animate in sequence
+    // rather than together, and the sequence runs the way the value moved —
+    // outward when raising, back inward when lowering. Bars that didn't
+    // change get no delay, so nothing lags for no reason.
+    const prev = this._prevIndex == null ? idx : this._prevIndex;
+    const dir = idx > prev ? 1 : idx < prev ? -1 : 0;
+    const STAGGER = 45;
+    const delayFor = (i) => {
+      if (dir > 0) return i > prev && i <= idx ? (i - prev - 1) * STAGGER : 0;
+      if (dir < 0) return i > idx && i <= prev ? (prev - i) * STAGGER : 0;
+      return 0;
+    };
 
     const label = this.config.label ?? st.attributes?.friendly_name ?? this.config.entity;
 
@@ -167,7 +193,7 @@ class MateriaBarSelect extends ActionMixin(LitElement) {
               const h = n > 1 ? 34 + (i * 66) / (n - 1) : 100;
               return html`<button
                 class="bar ${idx >= i ? "lit" : ""}"
-                style="height:${h}%"
+                style="height:${h}%;transition-delay:${delayFor(i)}ms"
                 @click=${() => this._set(option)}
                 aria-pressed=${idx === i ? "true" : "false"}
                 title=${this._fmt(option)}

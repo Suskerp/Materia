@@ -105,13 +105,20 @@ export const styles = [
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       background: color-mix(in srgb, currentColor 12%, transparent);
-      /* Height changes ride the springy spatial curve; color is a flat fade. */
+      /* Lit bars stand fully up; unlit sit a hair lower. The scale rides the
+         springy EXPRESSIVE spatial curve, so it overshoots slightly on the way
+         up — that overshoot is the pop. Colour stays on the non-overshooting
+         effects curve, per the spatial-vs-effects split. */
+      transform-origin: bottom;
+      transform: scaleY(0.94);
       transition: background-color var(--md-sys-motion-fast-effects),
+        transform var(--md-sys-motion-expressive-default-spatial),
         height var(--md-sys-motion-expressive-default-spatial);
     }
 
     .bar.lit {
       background: var(--bs-accent);
+      transform: scaleY(1);
     }
 
     /* M3 state layer on both control types */
@@ -145,6 +152,12 @@ export const styles = [
       .bar,
       .off {
         transition: none;
+      }
+      /* No staggered choreography either — the inline delay would otherwise
+         still hold each bar back. */
+      .bar {
+        transition-delay: 0ms !important;
+        transform: scaleY(1);
       }
     }
   `,
