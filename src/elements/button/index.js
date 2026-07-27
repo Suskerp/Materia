@@ -139,13 +139,14 @@ class MateriaButton extends ActionMixin(LitElement) {
     const label = this._isTemplate(this.config.label)
       ? (this._resolvedLabel || "")
       : this.config.label;
-    // Optional second line (e.g. a split button's selected preset). Stacks the
-    // icon above the text so the substate has somewhere to sit; `layout:
-    // stacked` forces that column arrangement even without a subtitle.
+    // Optional second line. M3 buttons are single-line, so this is an opt-in
+    // extra rather than something to reach for by default. The icon stays IN
+    // FRONT of the text either way — only an explicit `layout: stacked` puts
+    // it above, since a subtitle alone is not a reason to restack the button.
     const subtitle = this._isTemplate(this.config.subtitle)
       ? (this._resolvedSubtitle || "")
       : this.config.subtitle;
-    const stacked = this.config.layout === "stacked" || !!subtitle;
+    const stacked = this.config.layout === "stacked";
     const iconOnly = !label && !subtitle;
 
     return html`
