@@ -37,6 +37,7 @@ export const styles = [
     .header ha-icon {
       --mdc-icon-size: clamp(14px, 7cqi, 18px);
       flex-shrink: 0;
+      transition: color var(--md-sys-motion-default-effects);
     }
 
     /* Always a translucent wash — the level should tint the card, not bury it. */
@@ -116,13 +117,16 @@ export const styles = [
     }
 
     .rect-tile.binary.active .binary-star path {
-      fill: color-mix(in srgb, var(--ms-accent, var(--md-sys-color-primary, #6750a4)) 55%, transparent);
+      fill: color-mix(in srgb, var(--ms-accent, var(--md-sys-cust-color-device, var(--md-sys-color-primary, #6750a4))) 55%, transparent);
     }
 
     /* Active: the whole tile takes a translucent wash of the accent (same
-       convention as the percent tile's fill), not just the corner glyph. */
+       convention as the percent tile's fill), not just the corner glyph.
+       Defaults to the "device" custom color — the same family materia-card
+       already uses for switch/fan/input_boolean/vacuum active states —
+       falling back to primary if custom colors aren't configured. */
     .rect-tile.binary.active {
-      background: color-mix(in srgb, var(--ms-accent, var(--md-sys-color-primary, #6750a4)) 30%, var(--ms-color, var(--ha-card-background, var(--card-background-color))));
+      background: color-mix(in srgb, var(--ms-accent, var(--md-sys-cust-color-device, var(--md-sys-color-primary, #6750a4))) 30%, var(--ms-color, var(--ha-card-background, var(--card-background-color))));
       transition: background-color var(--md-sys-motion-default-effects);
     }
 
@@ -218,8 +222,14 @@ export const styles = [
       justify-content: flex-start;
     }
 
+    /* Defaults to the "device" custom color — vacuums get device colors
+       while cleaning in materia-card too — falling back to primary. */
     .rect-tile.vacuum.active {
-      background: color-mix(in srgb, var(--ms-accent, var(--md-sys-color-primary, #6750a4)) 22%, var(--ms-color, var(--ha-card-background, var(--card-background-color))));
+      background: color-mix(in srgb, var(--ms-accent, var(--md-sys-cust-color-device, var(--md-sys-color-primary, #6750a4))) 22%, var(--ms-color, var(--ha-card-background, var(--card-background-color))));
+    }
+
+    .rect-tile.vacuum.active .header ha-icon {
+      color: var(--ms-accent, var(--md-sys-cust-color-device, var(--md-sys-color-primary, #6750a4)));
     }
 
     .vacuum-row {
