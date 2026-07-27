@@ -17,7 +17,9 @@ export const styles = [
       display: flex;
       gap: 6px;
       overflow-x: auto;
-      scroll-snap-type: x proximity;
+      /* No scroll-snap: proximity snapping caught fast flicks and settled them
+         on the nearest tile, which killed the native fling. A room rail is a
+         free scroll, not a pager. */
       /* Bleed to the card edge so tiles scroll out under the padding rather
          than stopping short of it. */
       padding: 2px 14px 2px 0;
@@ -49,7 +51,6 @@ export const styles = [
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      scroll-snap-align: start;
       cursor: pointer;
       border: none;
       font-family: inherit;
