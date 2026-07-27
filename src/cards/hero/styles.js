@@ -87,38 +87,38 @@ export const styles = [
       pointer-events: none;
     }
 
-    /* Always turning, never idle — but the pace says what's going on:
-       75s at rest (you notice it only if you look), 9s while working, 45s in
-       alert where the extra weight comes from the swell instead of speed. */
+    /* Static at rest. Motion means the robot is doing something, so a docked
+       machine gets a still shape — nothing moving for no reason. */
     .burst {
       transform-box: fill-box;
       transform-origin: center;
-      animation: mh-spin 75s linear infinite;
     }
 
     .burst.working {
-      animation-duration: 9s;
+      animation: mh-spin 9s linear infinite;
     }
 
-    /* Alert: ominously slow rather than urgent. 45s per revolution on a
-       15-point star means the silhouette only repeats every 3s of symmetry —
-       present when you look at it, not waving for attention. Rotation and
-       scale can't share one transform, so the swell rides a nested group. */
     .burst.alarm {
-      animation-duration: 45s;
+      animation: mh-spin 45s linear infinite;
     }
 
+    /* Alert is the one exception to "only when running": a fault should keep
+       drawing the eye. Ominously slow rather than urgent — 45s per revolution
+       on a 15-point star repeats only every ~3s of symmetry. Rotation and
+       scale can't share one transform, so the swell rides a nested group. */
     .loom {
       transform-box: fill-box;
       transform-origin: center;
       animation: mh-loom 7s ease-in-out infinite alternate;
     }
 
-    /* Calm counterpart to .loom: slower and shallower, so the resting card
-       breathes without ever competing with the content. */
+    /* Calm counterpart to .loom — and, like the rotation, only while working. */
     .drift {
       transform-box: fill-box;
       transform-origin: center;
+    }
+
+    .burst.working .drift {
       animation: mh-drift 13s ease-in-out infinite alternate;
     }
 
