@@ -94,11 +94,17 @@ export const styles = [
       --mdc-icon-size: 18px;
       opacity: 0;
       flex-shrink: 0;
-      transition: opacity var(--md-sys-motion-fast-effects);
+      /* Scales in with the corner morph instead of only fading, so the tile
+         reads as one gesture. Springy curve on the transform (it moves),
+         flat curve on the opacity. */
+      transform: scale(0.6);
+      transition: opacity var(--md-sys-motion-fast-effects),
+        transform var(--md-sys-motion-expressive-fast-spatial);
     }
 
     .tile.on .check {
       opacity: 1;
+      transform: scale(1);
     }
 
     .bottom {

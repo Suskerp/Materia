@@ -36,7 +36,12 @@ export const styles = [
       background: var(--md-sys-color-surface-container-high, color-mix(in srgb, var(--md-sys-color-on-surface, #1c1b1f) 5%, transparent));
       border: none;
       color: var(--md-sys-color-on-surface-variant, var(--primary-text-color));
-      border-radius: 999px;
+      /* EXACTLY half the height, not 999px. Both look like a pill at rest, but
+         999px is unanimatable: on a 44px chip every value above 22px renders
+         identically, so interpolating 999 -> 14 sits visually still for ~97% of
+         the duration and then snaps at the end. Starting at the real half-height
+         makes the morph perceptually linear. */
+      border-radius: 22px;
       position: relative;
       overflow: hidden;
       -webkit-tap-highlight-color: transparent;

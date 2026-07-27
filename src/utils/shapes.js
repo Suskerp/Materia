@@ -201,6 +201,66 @@ export function arrowPath(cx, cy, r, rotate = 0) {
   })));
 }
 
+/** Canonical MaterialShapes BOOM — an explosive 15-point starburst.
+ *
+ *  Straight from MaterialShapes.kt:
+ *    Boom = customPolygon([(0.457, 0.296) r .007, (0.500, -0.051) r .007], reps 15)
+ *
+ *  customPolygon points are unit-square coordinates about a (0.5, 0.5) centre,
+ *  and `reps` repeats the point pair around the circle. Relative to centre the
+ *  pair sits at radius .21 and .55, so repeating it 15 times gives 30 vertices
+ *  alternating inner/outer — the spike. The .007 rounding is deliberately tiny:
+ *  the tips stay almost sharp, which is what separates Boom from a Cookie.
+ *
+ *  rotate is in radians; r is the outer-spike radius. */
+export function boomPath(cx, cy, r, rotate = 0) {
+  const PAIR = [
+    { x: 0.457, y: 0.296, r: 0.007 },
+    { x: 0.5, y: -0.051, r: 0.007 },
+  ];
+  const REPS = 15;
+  const raw = [];
+  for (let k = 0; k < REPS; k++) {
+    const a = rotate + (k / REPS) * Math.PI * 2;
+    const cosA = Math.cos(a);
+    const sinA = Math.sin(a);
+    for (const p of PAIR) {
+      // Offset from the (0.5, 0.5) centre, then spun into this repetition.
+      const dx = p.x - 0.5;
+      const dy = p.y - 0.5;
+      raw.push({ x: 0.5 + dx * cosA - dy * sinA, y: 0.5 + dx * sinA + dy * cosA, r: p.r });
+    }
+  }
+
+  // Fillet in raw units, then scale off the TRUE filleted outline (same
+  // reasoning as arrowPath: vertex distance overstates the extent once the
+  // corner arcs pull the outline in).
+  const segs = filletSegments(raw);
+  const pts = [];
+  for (const sg of segs) {
+    const a1 = Math.atan2(sg.T1[1] - sg.C[1], sg.T1[0] - sg.C[0]);
+    const a2 = Math.atan2(sg.T2[1] - sg.C[1], sg.T2[0] - sg.C[0]);
+    let delta = a2 - a1;
+    if (sg.sweep === 1) { while (delta < 0) delta += Math.PI * 2; }
+    else { while (delta > 0) delta -= Math.PI * 2; }
+    for (let i = 0; i <= 8; i++) {
+      const a = a1 + (delta * i) / 8;
+      pts.push([sg.C[0] + sg.rEff * Math.cos(a), sg.C[1] + sg.rEff * Math.sin(a)]);
+    }
+  }
+  // Radially symmetric, so the centroid is the construction centre.
+  const maxDist = Math.max(...pts.map(([x, y]) => Math.hypot(x - 0.5, y - 0.5)));
+  const sc = r / maxDist;
+  const t = (pt) => [cx + (pt[0] - 0.5) * sc, cy + (pt[1] - 0.5) * sc];
+  return segmentsToPath(segs.map((sg) => ({
+    T1: t(sg.T1),
+    T2: t(sg.T2),
+    C: t(sg.C),
+    rEff: sg.rEff * sc,
+    sweep: sg.sweep,
+  })));
+}
+
 /** SVG arc path (for gauges), angles in degrees, 0° = 12 o'clock, clockwise. */
 export function arcPath(cx, cy, r, startDeg, endDeg) {
   const toXY = (deg) => {

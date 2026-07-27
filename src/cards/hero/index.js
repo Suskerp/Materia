@@ -1,6 +1,6 @@
 import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { roundedPolygonPath } from "../../utils/shapes.js";
+import { roundedPolygonPath, boomPath } from "../../utils/shapes.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -207,9 +207,12 @@ class MateriaHero extends ActionMixin(LitElement) {
       ? (this._field("active_color_on", "_resolvedActiveColorOn") ?? "var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container))")
       : (this._field("color_on", "_resolvedColorOn") ?? "var(--md-sys-color-on-secondary-container)");
 
-    // Burst: two rounded squares, one turned 45° — the eight-lobed expressive
-    // motif from the concept. Turns only while active.
+    // Decoration: normally two rounded squares turned 45° — the calm eight-lobed
+    // motif from the concept. While an alert is live it becomes MaterialShapes'
+    // BOOM, a 15-point starburst with near-sharp tips, so the silhouette itself
+    // signals the fault rather than only the colour.
     const sq = roundedPolygonPath(90, 90, 86, { vertices: 4, rounding: 0.5 });
+    const boom = boomPath(90, 90, 88);
 
     return html`
       <ha-card style="--mh-bg:${bg};--mh-fg:${fg};--mh-alert-bg:${alertBg};--mh-alert-fg:${alertFg};">
@@ -220,9 +223,10 @@ class MateriaHero extends ActionMixin(LitElement) {
         >
           ${this.config.burst === false
             ? nothing
-            : html`<svg class="burst ${active ? "spin" : ""}" viewBox="0 0 180 180" aria-hidden="true">
-                <path d=${sq} />
-                <path d=${sq} transform="rotate(45 90 90)" />
+            : html`<svg class="burst ${active || alert ? "spin" : ""}" viewBox="0 0 180 180" aria-hidden="true">
+                ${alert
+                  ? svg`<path d=${boom} />`
+                  : svg`<path d=${sq} /><path d=${sq} transform="rotate(45 90 90)" />`}
               </svg>`}
           <div class="content">
             <div class="eyebrow">
