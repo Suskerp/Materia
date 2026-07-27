@@ -42,7 +42,12 @@ export const styles = [
     }
 
     button {
-      flex: 1;
+      /* Content-sized, then grows to share leftover width — and never shrinks.
+         `flex: 1` (zero basis) divided the row equally regardless of label
+         length, so the longest label was hard-clipped. M3 sizes connected
+         buttons to their content. */
+      flex: 1 0 auto;
+      min-width: 0;
       border: none;
       font-size: 14px;
       font-weight: 500;
@@ -63,6 +68,13 @@ export const styles = [
       position: relative;
       overflow: hidden;
       -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Safety net if the row is genuinely too cramped: ellipsis beats a cut. */
+    button > span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     button::before {
