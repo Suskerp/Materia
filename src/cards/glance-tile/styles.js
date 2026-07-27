@@ -200,20 +200,9 @@ export const styles = [
       justify-content: space-between;
     }
 
-    /* Binary tiles hold a state word + a corner glyph — no cookie/thermo
-       graphic that needs a square canvas, so don't force the 1:1 aspect
-       ratio; a shorter, content-fit height reads better next to other
-       glance tiles that aren't square either. */
-    .rect-tile.binary {
-      aspect-ratio: auto;
-      min-height: 128px;
-    }
-
     /* Vacuum: name (header) top, state centered, room at the bottom, battery
-       bar on the right — no cookie/thermo graphic needing a square canvas. */
+       bar on the right. Same square canvas as every other variant. */
     .rect-tile.vacuum {
-      aspect-ratio: auto;
-      min-height: 128px;
       align-items: flex-start;
       text-align: left;
     }
