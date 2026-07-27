@@ -33,10 +33,10 @@ const ACTIVE_STATES = ["on", "open", "running", "playing", "heat", "heating", "h
  *                  entity is active (pumps, motion…), still + muted when off;
  *                  the whole tile washes with the accent color when active.
  *   plain        — icon + formatted state, for everything else.
- *   vacuum       — name top-left, state centered, current room at the bottom
- *                  while actively cleaning, battery bar on the right. Pairs
- *                  the vacuum entity with optional status_entity (richer
- *                  state text) / room_entity / battery_entity sensors.
+ *   vacuum       — name top-left, state right below it, current room at the
+ *                  bottom while actively cleaning, battery bar on the right.
+ *                  Pairs the vacuum entity with optional status_entity
+ *                  (richer state text) / room_entity / battery_entity.
  *
  * View only: tap opens more-info (or any configured tap_action).
  */

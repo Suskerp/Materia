@@ -200,8 +200,9 @@ export const styles = [
       justify-content: space-between;
     }
 
-    /* Vacuum: name (header) top, state centered, room at the bottom, battery
-       bar on the right. Same square canvas as every other variant. */
+    /* Vacuum: name (header) top, state right below it (same position as the
+       binary variant's state word), room at the bottom, battery bar on the
+       right. Same square canvas as every other variant. */
     .rect-tile.vacuum {
       align-items: flex-start;
       text-align: left;
@@ -231,12 +232,11 @@ export const styles = [
       justify-content: space-between;
     }
 
+    /* Sits at its natural flow position right after the header — same
+       vertical position as the binary variant's state word — not centered
+       in the remaining space. */
     .vacuum-state {
-      flex: 1;
-      display: flex;
-      align-items: center;
       min-height: 0;
-      padding-block: 0.15em;
     }
 
     .rect-tile.left .header {
