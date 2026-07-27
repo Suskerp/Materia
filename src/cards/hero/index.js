@@ -1,0 +1,189 @@
+import { LitElement, html, svg, nothing } from "lit";
+import { ActionMixin } from "../../utils/action-handler.js";
+import { roundedPolygonPath } from "../../utils/shapes.js";
+import { styles } from "./styles.js";
+import "./editor.js";
+
+/** Default "active" state per domain — the state that flips the hero to its
+ *  accent pair and starts the burst turning. */
+const DOMAIN_ACTIVE = {
+  vacuum: "cleaning",
+  light: "on",
+  switch: "on",
+  fan: "on",
+  input_boolean: "on",
+  lock: ["locked", "locking"],
+  cover: "open",
+  climate: "heat",
+  media_player: "playing",
+  binary_sensor: "on",
+};
+
+/**
+ * Expressive headline hero (materia-hero): an eyebrow row, a big state title,
+ * one enormous numeral with a unit + caption, and a sub-line — on an
+ * asymmetric expressive container that swaps to an accent color pair while the
+ * entity is active, with a slow-turning decorative burst behind it.
+ *
+ * Deliberately generic: every text slot is a template, so the same card is the
+ * vacuum's "Cleaning / 34% cleaned", the laundry's remaining time, or solar's
+ * live output. `value`/`title`/`caption`/`secondary` default to sensible reads
+ * of the entity so a bare `entity` already renders something useful.
+ */
+class MateriaHero extends ActionMixin(LitElement) {
+  static properties = {
+    hass: { attribute: false },
+    config: { state: true },
+    _resolvedTitle: { state: true },
+    _resolvedValue: { state: true },
+    _resolvedCaption: { state: true },
+    _resolvedSecondary: { state: true },
+    _resolvedColor: { state: true },
+    _resolvedColorOn: { state: true },
+    _resolvedActiveColor: { state: true },
+    _resolvedActiveColorOn: { state: true },
+  };
+
+  static styles = styles;
+
+  static getConfigElement() {
+    return document.createElement("materia-hero-editor");
+  }
+
+  static getStubConfig(hass) {
+    const entity = Object.keys(hass?.states || {}).find((e) => e.startsWith("sensor.")) || "";
+    return { entity };
+  }
+
+  setConfig(config) {
+    if (!config.entity) throw new Error("Materia Hero: entity is required");
+    this.config = { ...config };
+  }
+
+  updated(changedProps) {
+    if (changedProps.has("hass") && this.hass) {
+      this._resolveField("title", "_resolvedTitle");
+      this._resolveField("value", "_resolvedValue");
+      this._resolveField("caption", "_resolvedCaption");
+      this._resolveField("secondary", "_resolvedSecondary");
+      this._resolveField("color", "_resolvedColor");
+      this._resolveField("color_on", "_resolvedColorOn");
+      this._resolveField("active_color", "_resolvedActiveColor");
+      this._resolveField("active_color_on", "_resolvedActiveColorOn");
+    }
+  }
+
+  /** Literal config value or its resolved template. */
+  _field(key, resolved) {
+    const raw = this.config[key];
+    if (raw == null) return null;
+    const v = this._isTemplate(raw) ? this[resolved] : raw;
+    return v == null || v === "" ? null : v;
+  }
+
+  get _stateObj() {
+    return this.hass?.states[this.config.entity];
+  }
+
+  _isActive(st) {
+    if (!st) return false;
+    const domain = st.entity_id.split(".")[0];
+    const active = this.config.active_state ?? DOMAIN_ACTIVE[domain] ?? "on";
+    const list = Array.isArray(active) ? active : [active];
+    return list.some((a) => String(a) === st.state);
+  }
+
+  _num(v) {
+    if (v == null || v === "" || v === "unknown" || v === "unavailable") return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  render() {
+    if (!this.hass || !this.config) return html``;
+    const st = this._stateObj;
+    const unavailable = this._isUnavailable(st);
+    const active = !unavailable && this._isActive(st);
+
+    const name = this.config.name ?? st?.attributes?.friendly_name ?? this.config.entity;
+    const icon = this.config.icon ?? st?.attributes?.icon;
+
+    // Title defaults to the localized state ("Cleaning", "Charging").
+    const title = this._field("title", "_resolvedTitle")
+      ?? (st ? (this.hass.formatEntityState?.(st) ?? st.state) : "—");
+
+    // Value defaults to the entity's own numeric state; a non-numeric state
+    // simply leaves the big numeral out rather than printing a word at 108px.
+    let value = this._field("value", "_resolvedValue");
+    if (value == null && st) {
+      const n = this._num(st.state);
+      if (n != null) value = String(Math.round(n));
+    }
+    const unit = this.config.unit ?? (value != null ? st?.attributes?.unit_of_measurement : null);
+    const caption = this._field("caption", "_resolvedCaption");
+    const secondary = this._field("secondary", "_resolvedSecondary");
+
+    // Token-mapped color pairs: the accent pair takes over while active. The
+    // "device" custom color is the same family materia-card gives switches,
+    // vacuums and plugs when they're doing something.
+    const bg = active
+      ? (this._field("active_color", "_resolvedActiveColor") ?? "var(--md-sys-cust-color-device, var(--md-sys-color-primary-container))")
+      : (this._field("color", "_resolvedColor") ?? "var(--md-sys-color-secondary-container)");
+    const fg = active
+      ? (this._field("active_color_on", "_resolvedActiveColorOn") ?? "var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container))")
+      : (this._field("color_on", "_resolvedColorOn") ?? "var(--md-sys-color-on-secondary-container)");
+
+    // Burst: two rounded squares, one turned 45° — the eight-lobed expressive
+    // motif from the concept. Turns only while active.
+    const sq = roundedPolygonPath(90, 90, 86, { vertices: 4, rounding: 0.5 });
+
+    return html`
+      <ha-card
+        style="--mh-bg:${bg};--mh-fg:${fg};"
+        @click=${() => this._handleAction(this.config.tap_action || { action: "more-info", entity: this.config.entity })}
+      >
+        <div class="hero ${unavailable ? "unavailable" : ""}">
+          ${this.config.burst === false
+            ? nothing
+            : html`<svg class="burst ${active ? "spin" : ""}" viewBox="0 0 180 180" aria-hidden="true">
+                <path d=${sq} />
+                <path d=${sq} transform="rotate(45 90 90)" />
+              </svg>`}
+          <div class="content">
+            <div class="eyebrow">
+              ${icon ? html`<ha-icon .icon=${icon}></ha-icon>` : nothing}
+              <span>${name}</span>
+            </div>
+            <div class="title">${unavailable ? "Unavailable" : title}</div>
+            ${value != null
+              ? html`<div class="figure">
+                  <span class="value">${value}</span>
+                  ${unit ? html`<span class="unit">${unit}</span>` : nothing}
+                  ${caption ? html`<span class="caption">${caption}</span>` : nothing}
+                </div>`
+              : nothing}
+            ${secondary ? html`<div class="secondary">${secondary}</div>` : nothing}
+          </div>
+        </div>
+      </ha-card>
+    `;
+  }
+
+  getGridOptions() {
+    return { columns: 12, rows: "auto" };
+  }
+
+  getCardSize() {
+    return 4;
+  }
+}
+
+customElements.define("materia-hero", MateriaHero);
+
+window.customCards = window.customCards || [];
+window.customCards.push({
+  type: "materia-hero",
+  name: "Materia Hero",
+  description: "Expressive headline block — big state title, one enormous numeral, and an accent swap while active.",
+  preview: true,
+});

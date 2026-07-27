@@ -25,6 +25,9 @@ import "./cards/weather-glance/index.js";
 import "./cards/list/index.js";
 import "./cards/switch/index.js";
 import "./cards/glance-tile/index.js";
+import "./cards/hero/index.js";
+import "./cards/chips/index.js";
+import "./cards/bar-select/index.js";
 import "./cards/climate-panel/index.js";
 import "./cards/icon-row/index.js";
 
@@ -45,7 +48,7 @@ import "./elements/clock/index.js";
 injectFonts();
 
 // Version info
-const VERSION = "0.5.173";
+const VERSION = "0.5.174";
 console.info(
   `%c MATERIA %c v${VERSION} `,
   "color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;",

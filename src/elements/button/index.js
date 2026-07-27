@@ -28,6 +28,7 @@ class MateriaButton extends ActionMixin(LitElement) {
     config: { state: true },
     _resolvedIcon: { state: true },
     _resolvedLabel: { state: true },
+    _resolvedSubtitle: { state: true },
     _resolvedDisabled: { state: true },
   };
 
@@ -69,6 +70,7 @@ class MateriaButton extends ActionMixin(LitElement) {
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("icon", "_resolvedIcon");
       this._resolveField("label", "_resolvedLabel");
+      this._resolveField("subtitle", "_resolvedSubtitle");
       this._resolveField("disabled", "_resolvedDisabled");
     }
   }
@@ -133,16 +135,28 @@ class MateriaButton extends ActionMixin(LitElement) {
     const label = this._isTemplate(this.config.label)
       ? (this._resolvedLabel || "")
       : this.config.label;
-    const iconOnly = !label;
+    // Optional second line (e.g. a split button's selected preset). Stacks the
+    // icon above the text so the substate has somewhere to sit; `layout:
+    // stacked` forces that column arrangement even without a subtitle.
+    const subtitle = this._isTemplate(this.config.subtitle)
+      ? (this._resolvedSubtitle || "")
+      : this.config.subtitle;
+    const stacked = this.config.layout === "stacked" || !!subtitle;
+    const iconOnly = !label && !subtitle;
 
     return html`
       <button
-        class="btn variant-${variant} ${sizeClass} shape-${shape} ${this.config.connected ? `connected-${this.config.connected}` : ""} ${iconOnly ? "icon-only" : ""} ${disabled ? "disabled" : ""} ${unavailable ? "unavailable" : ""}"
+        class="btn variant-${variant} ${sizeClass} shape-${shape} ${this.config.connected ? `connected-${this.config.connected}` : ""} ${iconOnly ? "icon-only" : ""} ${stacked ? "stacked" : ""} ${disabled ? "disabled" : ""} ${unavailable ? "unavailable" : ""}"
         style=${sizeStyle}
         @click=${this._handleTap}
       >
         ${icon ? html`<ha-icon .icon=${icon}></ha-icon>` : nothing}
-        ${label ? html`<span class="label">${label}</span>` : nothing}
+        ${label || subtitle
+          ? html`<span class="text">
+              ${label ? html`<span class="label">${label}</span>` : nothing}
+              ${subtitle ? html`<span class="sub">${subtitle}</span>` : nothing}
+            </span>`
+          : nothing}
       </button>
     `;
   }

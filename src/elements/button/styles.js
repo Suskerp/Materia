@@ -50,8 +50,39 @@ export const styles = [
       display: flex;
     }
 
+    .text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      line-height: 1.2;
+      min-width: 0;
+    }
+
+    /* Stacked: icon above the text block, everything centered — the tall
+       "Clean / Vac + mop" shape. Text stays centered as a column. */
+    .btn.stacked {
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .btn.stacked .text {
+      align-items: center;
+    }
+
     .label {
       white-space: nowrap;
+    }
+
+    /* Substate line: the selected preset on a split button, the mode on a
+       tall action button. Deliberately quieter than the label. */
+    .sub {
+      white-space: nowrap;
+      font-size: 0.72em;
+      font-weight: 500;
+      opacity: 0.75;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
     }
 
     /* ---- sizes (M3 expressive) ---- */

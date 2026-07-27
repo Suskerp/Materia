@@ -87,6 +87,20 @@ class MateriaSplitButton extends ActionMixin(LitElement) {
     if (opt.tap_action) this._handleAction(opt.tap_action);
   }
 
+  /** Which menu option is currently in effect. An option is selected when its
+   *  `value` matches the tracked entity's state (or `attribute`) — the same
+   *  matching materia-button-group/menu use — so a split button can present a
+   *  set of presets and show which one is live. */
+  _isSelected(opt) {
+    if (opt.selected != null) return !!opt.selected;
+    if (opt.value == null || !this.config.entity) return false;
+    const st = this.hass?.states?.[this.config.entity];
+    if (!st) return false;
+    const current = this.config.attribute ? st.attributes?.[this.config.attribute] : st.state;
+    const vals = Array.isArray(opt.value) ? opt.value : [opt.value];
+    return vals.some((v) => String(v) === String(current));
+  }
+
   render() {
     if (!this.config) return html``;
     const variant = this.config.variant || "tonal";
@@ -123,14 +137,16 @@ class MateriaSplitButton extends ActionMixin(LitElement) {
         </div>
 
         <div class="menu dir-${this.config.menu_position || "bottom-right"} ${this._open ? "open" : ""}" role="menu">
-          ${options.map(
-            (opt) => html`
-              <div class="menu-item" role="menuitem" @click=${(e) => this._selectOption(opt, e)}>
+          ${options.map((opt) => {
+            const sel = this._isSelected(opt);
+            return html`
+              <div class="menu-item ${sel ? "selected" : ""}" role="menuitem" aria-checked=${sel ? "true" : "false"} @click=${(e) => this._selectOption(opt, e)}>
                 ${opt.icon ? html`<ha-icon .icon=${opt.icon}></ha-icon>` : ""}
                 <span class="item-text">${opt.label || ""}</span>
+                ${sel ? html`<ha-icon class="item-check" icon="m3of:check"></ha-icon>` : ""}
               </div>
-            `
-          )}
+            `;
+          })}
         </div>
       </div>
     `;

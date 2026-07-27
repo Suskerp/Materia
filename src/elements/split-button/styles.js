@@ -206,5 +206,20 @@ export const styles = [
     }
     .menu-item:hover::before { opacity: 0.08; }
     .menu-item:active::before { opacity: 0.12; }
+
+    /* Selected preset: M3 uses a container fill for the selected menu item,
+       plus a trailing check. The text block pushes the check to the edge. */
+    .menu-item .item-text { flex: 1; }
+
+    .menu-item.selected {
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+      font-weight: 600;
+    }
+
+    .menu-item .item-check {
+      --mdc-icon-size: 20px;
+      opacity: 0.9;
+    }
   `,
 ];
