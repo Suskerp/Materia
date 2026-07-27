@@ -88,6 +88,13 @@ export const styles = [
       color: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
     }
 
+    /* Standard group: a spaced row of independent buttons. */
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .group.multi {
       flex-wrap: wrap;
       gap: 4px;

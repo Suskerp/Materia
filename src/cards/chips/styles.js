@@ -33,9 +33,9 @@ export const styles = [
       /* Unselected is a quiet filled surface with NO outline — an outlined
          chip next to filled neighbours read as disabled rather than
          unselected, and it matches the tonal button groups elsewhere. */
-      background: color-mix(in srgb, var(--md-sys-color-on-surface, #1c1b1f) 6%, transparent);
+      background: var(--md-sys-color-surface-container-high, color-mix(in srgb, var(--md-sys-color-on-surface, #1c1b1f) 5%, transparent));
       border: none;
-      color: var(--md-sys-color-on-surface, var(--primary-text-color));
+      color: var(--md-sys-color-on-surface-variant, var(--primary-text-color));
       border-radius: 999px;
       position: relative;
       overflow: hidden;

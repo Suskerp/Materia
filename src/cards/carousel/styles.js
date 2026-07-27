@@ -59,8 +59,8 @@ export const styles = [
       -webkit-tap-highlight-color: transparent;
       /* Quiet filled surface when unselected — same treatment as the chips, so
          an unselected tile never reads as disabled. */
-      background: color-mix(in srgb, var(--md-sys-color-on-surface, #1c1b1f) 6%, transparent);
-      color: var(--md-sys-color-on-surface, var(--primary-text-color));
+      background: var(--md-sys-color-surface-container-high, color-mix(in srgb, var(--md-sys-color-on-surface, #1c1b1f) 5%, transparent));
+      color: var(--md-sys-color-on-surface-variant, var(--primary-text-color));
       border-radius: 28px;
       /* Non-overshooting curve: a spring here overshoots the radius and, with
          overflow:hidden, flashes square corners mid-transition. */

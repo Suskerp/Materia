@@ -272,34 +272,62 @@ second_dot: true
 
 ---
 
-#### `materia-icon-row`
+#### `materia-button-group`
 
-A horizontal row of `materia-button`s -- handy for media transport or volume controls. Buttons auto-center; mark a button `wide: true` to let it grow.
+The M3 **button group**. The spec describes one component with two configurations, so both live here behind `group`:
+
+- **`connected`** (default) — buttons joined with 2dp seams into a segmented control, driven by an entity's state/attribute. Configured with `options`.
+- **`standard`** — buttons spaced in a row, each with its own action and variant. Configured with `buttons`; an entry carrying `options` renders as a `materia-split-button`.
+
+`size` applies to the **whole group** — M3 sizes a group as one unit, so a per-button `size` inside `buttons` is ignored. Note `variant` is the *surface* style (filled/tonal), which is why the configuration axis is `group`.
 
 ```yaml
-type: custom:materia-icon-row
-gap: 8
-padding: 4
+# connected — segmented selector
+type: custom:materia-button-group
+entity: input_select.hvac_mode
+group: connected
+size: m
+options:
+  - label: Heat
+    value: heat
+    icon: mdi:fire
+
+# standard — spaced row, with a split button leading it
+type: custom:materia-button-group
+group: standard
+size: l
+gap: 4
 buttons:
-  - icon: mdi:skip-previous
-    variant: filled-tonal
-    tap_action:
-      action: call-service
-      service: media_player.media_previous_track
-      service_data: { entity_id: media_player.living_room }
-  - icon: mdi:play-pause
-    variant: filled
-    entity: media_player.living_room
+  - type: split
+    icon: m3o:play-arrow
+    label: Clean
+    subtitle: Vac + mop
+    wide: true
+    flex: 2.4
+    options:
+      - label: Vac only
+        value: "off"
+  - icon: m3o:stop
+    variant: tonal
+    wide: true
+    flex: 1
 ```
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `gap` | number | `8` | Horizontal gap between buttons (px) |
-| `padding` | number | `4` | Vertical padding of the row (px) |
-| `buttons` | array | **required** | Array of `materia-button` configs (`icon`, `label`, `variant`, `size`, `shape`, `wide`, `entity`, `disabled`, `tap_action`, …) |
+| `group` | `connected` \| `standard` | `connected` | Which spec configuration to render |
+| `size` | `xs`…`xl` | `m` | Sizes the whole group (`standard` uses `materia-button`'s scale, `connected` its own) |
+| `variant` | `filled` \| `tonal` | `tonal` | Surface style |
+| `options` | array | | **connected** — `{label, value, icon, entity, active, tap_action}` |
+| `buttons` | array | | **standard** — `materia-button` configs; `options` on one makes it a split button |
+| `gap` / `padding` | number | 8 / 4 | **standard** — spacing (px) |
+| `entity` / `attribute` | string | | **connected** — what drives selection |
+| `preset` | string | `secondary` | **connected** — color preset, or `custom` |
+| `multi_select` / `columns` | boolean / number | | **connected** — allow several active, wrap into a grid |
+| `active_shape` | `square` | | **connected** — selected segment morphs square |
+| `color_active` / `color_on_active` | string | | **connected** — with `preset: custom`. *Templatable* |
 
----
-
+> `custom:materia-icon-row` is **deprecated** — it forwards to `group: standard`. Existing dashboards keep working; write new cards with the canonical name.
 
 #### `materia-climate-panel`
 
@@ -503,47 +531,6 @@ ranges:
 
 ---
 
-#### `materia-button-group`
-
-An M3 connected button group rendered as a segmented pill. Selection is driven by an entity's state or attribute. Supports single- or multi-select.
-
-```yaml
-type: custom:materia-button-group
-entity: input_select.hvac_mode
-preset: climate-heat
-size: m
-variant: filled
-options:
-  - label: Heat
-    value: heat
-    icon: mdi:fire
-    tap_action:
-      action: call-service
-      service: climate.set_hvac_mode
-      service_data: { entity_id: climate.living_room, hvac_mode: heat }
-  - label: Cool
-    value: cool
-    icon: mdi:snowflake
-    tap_action:
-      action: call-service
-      service: climate.set_hvac_mode
-      service_data: { entity_id: climate.living_room, hvac_mode: cool }
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `options` | array | **required** | Button options `{ label, value, icon, tap_action }` |
-| `entity` | string | | Entity whose state/attribute determines the active button |
-| `attribute` | string | | Entity attribute to read instead of state |
-| `preset` | string | | Color preset: `primary`, `secondary`, `tertiary`, `light`, `device`, or `custom` |
-| `size` | string | `m` | Button height: `xs`, `s`, `m`, `l`, `xl` |
-| `variant` | string | `filled` | Surface style: `filled` or `tonal` |
-| `multi_select` | boolean | `false` | Allow multiple active buttons (wraps into a grid) |
-| `columns` | number | | Max columns when `multi_select` is on |
-| `color_active` | string | | Active background (when `preset: custom`). *Templatable* |
-| `color_on_active` | string | | Active text color (when `preset: custom`). *Templatable* |
-
----
 
 #### `materia-checkbox`
 

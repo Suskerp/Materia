@@ -23,6 +23,7 @@ class MateriaBarSelectEditor extends SmartEditorBase {
         icon: "mdi:palette-outline",
         fields: [
           { name: "accent", label: "Lit bar color", color: true, template: true, selector: { text: {} } },
+          { name: "accent_on", label: "Glyph color on the accent fill", color: true, template: true, selector: { text: {} } },
         ],
       },
       {

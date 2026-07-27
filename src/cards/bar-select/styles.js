@@ -80,7 +80,7 @@ export const styles = [
 
     .off.on {
       background: var(--bs-accent);
-      color: var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary));
+      color: var(--bs-accent-on);
     }
 
     .off.on ha-icon {

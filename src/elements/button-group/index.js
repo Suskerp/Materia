@@ -2,9 +2,31 @@ import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { unavailableStyles } from "../../styles/card-styles.js";
 import { styles, PRESETS, SIZES } from "./styles.js";
+import "../button/index.js";
+import "../split-button/index.js";
 import "./editor.js";
 
-class MateriaButtonGroup extends ActionMixin(LitElement) {
+/** A button entry that should render as a split button rather than a plain one. */
+const SPLIT_TYPES = new Set(["split", "split-button", "materia-split-button"]);
+
+/**
+ * M3 button group. The spec describes ONE component with two configurations,
+ * so both live here behind `group`:
+ *
+ *   connected (default) — buttons joined with 2dp seams into a segmented
+ *                control, driven by an entity's state/attribute. Configured
+ *                with `options`.
+ *   standard  — buttons spaced in a row, each with its own action and variant;
+ *                entries with `options` render as split buttons. Configured
+ *                with `buttons`.
+ *
+ * `group` defaults to `connected` so every existing config keeps working, and
+ * the old `materia-icon-row` type forwards here as `group: standard`.
+ *
+ * Note `variant` is the SURFACE style (filled/tonal) — it predates this merge,
+ * which is why the configuration axis is `group` and not `variant`.
+ */
+export class MateriaButtonGroup extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -128,8 +150,36 @@ class MateriaButtonGroup extends ActionMixin(LitElement) {
     return PRESETS.secondary;
   }
 
+  /** Standard group: a spaced row of independent buttons.
+   *
+   *  Size is the GROUP's, not each button's — M3 sizes a button group as one
+   *  unit, so a per-button `size` is deliberately dropped here. Everything
+   *  else (variant, icon, disabled, tap_action_map, …) stays per-button. */
+  _renderStandard() {
+    const gap = this.config.gap ?? 8;
+    const padding = this.config.padding ?? 4;
+    const size = this.config.size || "m";
+
+    return html`
+      <ha-card>
+        <div class="row" style="gap: ${gap}px; padding: ${padding}px 0;">
+          ${(this.config.buttons || []).map((btn) => {
+            const isSplit =
+              SPLIT_TYPES.has(btn.type) || (Array.isArray(btn.options) && btn.options.length > 0);
+            const { size: _perButtonSize, type: _t, ...rest } = btn;
+            const cfg = { variant: "filled", ...rest, size };
+            return isSplit
+              ? html`<materia-split-button .hass=${this.hass} .config=${cfg}></materia-split-button>`
+              : html`<materia-button .hass=${this.hass} .config=${cfg}></materia-button>`;
+          })}
+        </div>
+      </ha-card>
+    `;
+  }
+
   render() {
     if (!this.hass || !this.config) return html``;
+    if (this.config.group === "standard") return this._renderStandard();
 
     const stateObj = this.config.entity ? this.hass.states[this.config.entity] : undefined;
     const unavailable = stateObj ? this._isUnavailable(stateObj) : false;
@@ -319,6 +369,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-button-group",
   name: "Materia Button Group",
-  description: "M3 connected button group with presets and sizes.",
+  description: "M3 button group — connected (segmented, entity-driven) or standard (a spaced row of buttons).",
   preview: true,
 });

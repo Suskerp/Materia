@@ -59,10 +59,11 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
   }
 
   _sectionsSignature() {
-    return `${this._config?.preset || ""}|${this._config?.multi_select ? 1 : 0}`;
+    return `${this._config?.group || ""}|${this._config?.preset || ""}|${this._config?.multi_select ? 1 : 0}`;
   }
 
   get _sections() {
+    const standard = this._config?.group === "standard";
     const presetOptions = [
       ...Object.keys(PRESETS).map((k) => ({
         value: k,
@@ -75,22 +76,40 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
       title: "Setup",
       icon: "mdi:tune",
       fields: [
-        { name: "entity", selector: { entity: {} } },
-        { name: "attribute", selector: { text: {} } },
-        { name: "preset", label: "Color preset", selector: { select: { mode: "dropdown", options: presetOptions } } },
-        { name: "size", selector: { select: { mode: "dropdown", options: [
-          { value: "xs", label: "XS (32dp)" },
-          { value: "s", label: "S (36dp)" },
-          { value: "m", label: "M (40dp)" },
-          { value: "l", label: "L (48dp)" },
-          { value: "xl", label: "XL (56dp)" },
+        { name: "group", label: "Configuration", selector: { select: { mode: "dropdown", options: [
+          { value: "connected", label: "Connected (segmented, entity-driven)" },
+          { value: "standard", label: "Standard (spaced row of buttons)" },
         ] } } },
+        ...(standard ? [] : [
+          { name: "entity", selector: { entity: {} } },
+          { name: "attribute", selector: { text: {} } },
+          { name: "preset", label: "Color preset", selector: { select: { mode: "dropdown", options: presetOptions } } },
+        ]),
+        { name: "size", label: "Size (applies to the whole group)", selector: { select: { mode: "dropdown", options: standard
+          ? [
+            { value: "xs", label: "XS (32dp)" },
+            { value: "s", label: "S (40dp)" },
+            { value: "m", label: "M (56dp)" },
+            { value: "l", label: "L (96dp)" },
+            { value: "xl", label: "XL (136dp)" },
+          ]
+          : [
+            { value: "xs", label: "XS (32dp)" },
+            { value: "s", label: "S (36dp)" },
+            { value: "m", label: "M (40dp)" },
+            { value: "l", label: "L (48dp)" },
+            { value: "xl", label: "XL (56dp)" },
+          ] } } },
         { name: "variant", label: "Style", selector: { select: { mode: "dropdown", options: [
           { value: "filled", label: "Filled" },
           { value: "tonal", label: "Tonal" },
         ] } } },
-        { name: "multi_select", label: "Multi-select", selector: { boolean: {} } },
-        ...(this._config?.multi_select
+        ...(standard ? [
+          { name: "gap", label: "Gap between buttons (px)", selector: { number: { min: 0, max: 32, mode: "box" } } },
+          { name: "padding", label: "Vertical padding (px)", selector: { number: { min: 0, max: 32, mode: "box" } } },
+        ] : []),
+        ...(standard ? [] : [{ name: "multi_select", label: "Multi-select", selector: { boolean: {} } }]),
+        ...(!standard && this._config?.multi_select
           ? [{ name: "columns", label: "Max columns", selector: { number: { min: 1, max: 8, mode: "box" } } }]
           : []),
       ],

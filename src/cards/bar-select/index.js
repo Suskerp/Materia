@@ -23,6 +23,7 @@ class MateriaBarSelect extends ActionMixin(LitElement) {
     hass: { attribute: false },
     config: { state: true },
     _resolvedAccent: { state: true },
+    _resolvedAccentOn: { state: true },
   };
 
   static styles = styles;
@@ -44,6 +45,7 @@ class MateriaBarSelect extends ActionMixin(LitElement) {
   updated(changedProps) {
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("accent", "_resolvedAccent");
+      this._resolveField("accent_on", "_resolvedAccentOn");
     }
   }
 
@@ -122,6 +124,12 @@ class MateriaBarSelect extends ActionMixin(LitElement) {
 
     const accent = (this._isTemplate(this.config.accent) ? this._resolvedAccent : this.config.accent)
       || "var(--md-sys-cust-color-device, var(--md-sys-color-primary))";
+    // Foreground for anything sitting ON the accent (the off button's glyph).
+    // A caller-supplied accent has no knowable paired "on" colour, so this is
+    // configurable and defaults to the on-primary role, which reads against
+    // the saturated *-accent tokens these bars are usually given.
+    const accentOn = (this._isTemplate(this.config.accent_on) ? this._resolvedAccentOn : this.config.accent_on)
+      || "var(--md-sys-color-on-primary, #fff)";
 
     const current = this._current;
     const off = this.config.off_option != null ? String(this.config.off_option) : null;
@@ -134,7 +142,7 @@ class MateriaBarSelect extends ActionMixin(LitElement) {
     const label = this.config.label ?? st.attributes?.friendly_name ?? this.config.entity;
 
     return html`
-      <ha-card style="--bs-accent:${accent};">
+      <ha-card style="--bs-accent:${accent};--bs-accent-on:${accentOn};">
         <div class="tile">
           <div class="meta">
             <span class="label">${label}</span>
@@ -148,7 +156,7 @@ class MateriaBarSelect extends ActionMixin(LitElement) {
                 aria-pressed=${isOff ? "true" : "false"}
                 title=${this._fmt(off)}
               >
-                <ha-icon .icon=${this.config.off_icon ?? "mdi:water"}></ha-icon>
+                <ha-icon .icon=${this.config.off_icon ?? "mdi:water-off"}></ha-icon>
               </button>`
             : nothing}
 
