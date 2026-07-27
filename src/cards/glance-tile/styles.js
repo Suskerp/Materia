@@ -130,7 +130,10 @@ export const styles = [
       font-family: var(--materia-font-display, inherit);
       font-size: clamp(28px, 24cqi, 52px);
       font-weight: 700;
-      line-height: 1.05;
+      /* 1.05 clipped the tops of tall digits on this bold display font — the
+         line box computed from font-size × line-height came in shorter than
+         the glyph's actual ink extent. */
+      line-height: 1.25;
       letter-spacing: -0.02em;
       font-variant-numeric: tabular-nums;
     }
