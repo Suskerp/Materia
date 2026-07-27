@@ -119,6 +119,13 @@ export const styles = [
       fill: color-mix(in srgb, var(--ms-accent, var(--md-sys-color-primary, #6750a4)) 55%, transparent);
     }
 
+    /* Active: the whole tile takes a translucent wash of the accent (same
+       convention as the percent tile's fill), not just the corner glyph. */
+    .rect-tile.binary.active {
+      background: color-mix(in srgb, var(--ms-accent, var(--md-sys-color-primary, #6750a4)) 30%, var(--ms-color, var(--ha-card-background, var(--card-background-color))));
+      transition: background-color var(--md-sys-motion-default-effects);
+    }
+
     .big {
       font-family: var(--materia-font-display, inherit);
       font-size: clamp(28px, 24cqi, 52px);

@@ -40,6 +40,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     config: { state: true },
     _resolvedColor: { state: true },
     _resolvedColorOn: { state: true },
+    _resolvedLabel: { state: true },
   };
 
   static styles = styles;
@@ -63,7 +64,14 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("color", "_resolvedColor");
       this._resolveField("color_on", "_resolvedColorOn");
+      this._resolveField("label", "_resolvedLabel");
     }
+  }
+
+  /** Subtitle: literal text or a live Jinja template (e.g. battery level,
+   *  current room while cleaning) — same templating every other field uses. */
+  get _label() {
+    return this._isTemplate(this.config.label) ? this._resolvedLabel : this.config.label;
   }
 
   get _stateObj() {
@@ -200,7 +208,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
         <div class="overlay">
           ${this._header(icon)}
           <div class="big">${Math.round(v)}<span class="unit">%</span></div>
-          ${(this.config.label ?? status) ? html`<div class="sub">${this.config.label ?? status}</div>` : ""}
+          ${(this._label ?? status) ? html`<div class="sub">${this._label ?? status}</div>` : ""}
         </div>
       </div>
     `;
@@ -229,7 +237,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
         <div class="split-row">
           <div class="split-main">
             <div class="big">${Math.round(v * 10) / 10}<span class="unit">${unit}</span></div>
-            ${this.config.label ? html`<div class="sub">${this.config.label}</div>` : ""}
+            ${this._label ? html`<div class="sub">${this._label}</div>` : ""}
           </div>
           <div class="thermo">
             <i style="height:${Math.max(8, frac * 100)}%;background:${color}"></i>
@@ -257,7 +265,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
         <div class="split-row">
           <div class="split-main">
             <div class="big">${display}<span class="unit"> ${dUnit}</span></div>
-            ${this.config.label ? html`<div class="sub">${this.config.label}</div>` : ""}
+            ${this._label ? html`<div class="sub">${this._label}</div>` : ""}
           </div>
           <div class="bars">
             ${heights.map((h, i) => html`<i class=${i < lit ? "lit" : ""} style="height:${h}%"></i>`)}
@@ -278,7 +286,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
         ${this._header("mdi:lightning-bolt")}
         <div class="big">${display}<span class="unit"> ${this._unit}</span></div>
         <div class="energy-bottom">
-          ${this.config.label ? html`<div class="sub">${this.config.label}</div>` : html`<span></span>`}
+          ${this._label ? html`<div class="sub">${this._label}</div>` : html`<span></span>`}
           <ha-icon class="glyph" icon="mdi:lightning-bolt"></ha-icon>
         </div>
       </div>
@@ -295,7 +303,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
         ${this._header("mdi:power")}
         <div class="big small-big">${this._fmtState()}</div>
         <div class="binary-bottom">
-          ${this.config.label ? html`<div class="sub">${this.config.label}</div>` : html`<span></span>`}
+          ${this._label ? html`<div class="sub">${this._label}</div>` : html`<span></span>`}
           <svg class="binary-star" viewBox="0 0 100 100">
             <g class=${active ? "spin" : ""}><path d=${sunny} /></g>
           </svg>
@@ -314,7 +322,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
         ${n != null
           ? html`<div class="big">${Math.round(n * 10) / 10}<span class="unit"> ${this._unit}</span></div>`
           : html`<div class="big small-big">${this._fmtState()}</div>`}
-        ${this.config.label ? html`<div class="sub">${this.config.label}</div>` : ""}
+        ${this._label ? html`<div class="sub">${this._label}</div>` : ""}
       </div>
     `;
   }
