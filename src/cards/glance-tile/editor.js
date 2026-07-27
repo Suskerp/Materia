@@ -1,7 +1,6 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 const VARIANTS = [
-  { value: "auto", label: "Auto (from device class)" },
   { value: "percent", label: "Percent (filling cookie)" },
   { value: "temperature", label: "Temperature (thermometer)" },
   { value: "power", label: "Power (load bars)" },
@@ -12,7 +11,7 @@ const VARIANTS = [
 
 class MateriaGlanceTileEditor extends SmartEditorBase {
   _formData() {
-    return { variant: "auto", ...this._config };
+    return { variant: "percent", ...this._config };
   }
 
   _sectionsSignature() {
@@ -27,7 +26,7 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
       icon: "mdi:card-text-outline",
       fields: [
         { name: "entity", required: true, selector: { entity: {} } },
-        { name: "variant", label: "Visualization", selector: { select: { mode: "dropdown", options: VARIANTS } } },
+        { name: "variant", label: "Category", required: true, selector: { select: { mode: "dropdown", options: VARIANTS } } },
         { name: "name", label: "Title", selector: { text: {} } },
         { name: "icon", label: "Icon (overrides entity icon)", selector: { icon: {} } },
         { name: "label", label: "Subtitle", selector: { text: {} } },
@@ -44,9 +43,9 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
     if (v === "power") {
       extras.fields.push({ name: "max", label: "Full-load watts (default 3000)", selector: { number: { mode: "box" } } });
     }
-    // Only applies to device_class: moisture (soil sensors) — harmless
-    // no-ops elsewhere, so shown whenever the variant COULD resolve there.
-    if (!v || v === "auto" || v === "percent") {
+    // Only meaningful for device_class: moisture (soil sensors) — harmless
+    // no-ops for battery/humidity/other percent entities.
+    if (v === "percent") {
       extras.fields.push(
         { name: "critical_dry", label: "Critical dry, ≤% (default 10 — red)", selector: { number: { min: 0, max: 100, mode: "box" } } },
         { name: "dry_below", label: "Water soon, ≤% (default 20 — orange)", selector: { number: { min: 0, max: 100, mode: "box" } } },

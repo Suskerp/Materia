@@ -50,11 +50,12 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
 
   static getStubConfig(hass) {
     const entity = Object.keys(hass?.states || {}).find((e) => e.startsWith("sensor.")) || "";
-    return { entity };
+    return { entity, variant: "percent" };
   }
 
   setConfig(config) {
     if (!config.entity) throw new Error("Materia Glance Tile: entity is required");
+    if (!config.variant) throw new Error("Materia Glance Tile: variant is required — pick the value category");
     this.config = { ...config };
   }
 
@@ -87,22 +88,10 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     return this.config.icon || this._stateObj?.attributes?.icon || fallback;
   }
 
-  /** device class / unit / domain → visualization variant. */
+  /** The category is an explicit config choice — like weather-metric's
+   *  `metric` field — never inferred from device_class/unit/domain. */
   get _variant() {
-    if (this.config.variant && this.config.variant !== "auto") return this.config.variant;
-    const st = this._stateObj;
-    if (!st) return "plain";
-    const domain = this.config.entity.split(".")[0];
-    const dc = st.attributes.device_class;
-    const unit = st.attributes.unit_of_measurement;
-    if (domain === "binary_sensor" || domain === "switch" || ACTIVE_STATES.includes(st.state) || st.state === "off") {
-      if (this._num(st.state) == null) return "binary";
-    }
-    if (unit === "%" || dc === "humidity" || dc === "battery" || dc === "moisture") return "percent";
-    if (dc === "temperature" || unit === "°C" || unit === "°F") return "temperature";
-    if (dc === "power" || unit === "W" || unit === "kW") return "power";
-    if (dc === "energy" || unit === "kWh" || unit === "Wh" || unit === "MWh") return "energy";
-    return "plain";
+    return this.config.variant;
   }
 
   _fmtState() {
