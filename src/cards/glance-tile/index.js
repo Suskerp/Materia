@@ -17,19 +17,21 @@ const ACTIVE_STATES = ["on", "open", "running", "playing", "heat", "heating", "h
 
 /**
  * Expressive view-only sensor tile (materia-glance-tile): the weather-metric look
- * for ANY entity. One entity per card; the visualization is picked from the
- * device class (override with `variant`):
+ * for ANY entity. One entity per card; `variant` is an explicit, required
+ * category — like weather-metric's `metric` field, never inferred:
  *
  *   percent      — the square tile FILLS bottom-up with the value (humidity,
- *                  battery, valve position, any 0–100%); humidity gets a
- *                  gently drifting liquid surface, battery drains green→red.
+ *                  valve position, any 0–100%); humidity gets a gently
+ *                  drifting liquid surface; moisture gets sweet-spot zones.
+ *   battery      — value + a vertical bar, battery-tiered green→orange→red.
  *   temperature  — value + a vertical thermometer pill, colored along a
  *                  cool→comfort→warm scale (min/max configurable).
  *   power        — value + equalizer bars that light up with load (max
  *                  configurable, default 3000 W).
  *   energy       — value with a quiet bolt glyph (cumulative kWh).
  *   binary       — a MaterialShapes sunny star that slowly ROTATES while the
- *                  entity is active (pumps, motion…), still + muted when off.
+ *                  entity is active (pumps, motion…), still + muted when off;
+ *                  the whole tile washes with the accent color when active.
  *   plain        — icon + formatted state, for everything else.
  *
  * View only: tap opens more-info (or any configured tap_action).
@@ -118,6 +120,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     }
     const body = {
       percent: () => this._percent(),
+      battery: () => this._battery(),
       temperature: () => this._temperature(),
       power: () => this._power(),
       energy: () => this._energy(),
@@ -237,6 +240,33 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
         <div class="split-row">
           <div class="split-main">
             <div class="big">${Math.round(v * 10) / 10}<span class="unit">${unit}</span></div>
+            ${this._label ? html`<div class="sub">${this._label}</div>` : ""}
+          </div>
+          <div class="thermo">
+            <i style="height:${Math.max(8, frac * 100)}%;background:${color}"></i>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ---- battery: value + the SAME vertical thermometer pill, battery-tiered
+     coloring (green → orange → red) instead of temperature's cool→warm ---- */
+  _batteryColor(frac) {
+    return frac > 0.4 ? SCALE.green : frac > 0.15 ? SCALE.orange : SCALE.red;
+  }
+
+  _battery() {
+    const v = this._num(this._stateObj.state);
+    if (v == null) return this._plain();
+    const frac = Math.min(1, Math.max(0, v / 100));
+    const color = this._batteryColor(frac);
+    return html`
+      <div class="rect-tile left">
+        ${this._header("mdi:battery")}
+        <div class="split-row">
+          <div class="split-main">
+            <div class="big">${Math.round(v)}<span class="unit">%</span></div>
             ${this._label ? html`<div class="sub">${this._label}</div>` : ""}
           </div>
           <div class="thermo">

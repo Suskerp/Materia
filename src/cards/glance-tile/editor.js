@@ -2,6 +2,7 @@ import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 const VARIANTS = [
   { value: "percent", label: "Percent (filling cookie)" },
+  { value: "battery", label: "Battery (vertical bar)" },
   { value: "temperature", label: "Temperature (thermometer)" },
   { value: "power", label: "Power (load bars)" },
   { value: "energy", label: "Energy" },
