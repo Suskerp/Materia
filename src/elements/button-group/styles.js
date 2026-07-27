@@ -13,12 +13,17 @@ export const PRESETS = {
   device:         { active: "var(--md-sys-cust-color-device)",                      onActive: "var(--md-sys-cust-color-on-device)" },
 };
 
+/* Heights are the M3 button size scale (32/40/56/96/136dp). A connected group
+   is BUILT from buttons, so it must use the same ladder as materia-button —
+   the old 32/36/40/48/56 scale here was invented and made the same `size`
+   token mean two different heights depending on the group configuration.
+   innerCorner is the connected seam radius and is left as-is. */
 export const SIZES = {
-  xs: { height: 32, innerCorner: 4 },
-  s:  { height: 36, innerCorner: 8 },
-  m:  { height: 40, innerCorner: 8 },
-  l:  { height: 48, innerCorner: 16 },
-  xl: { height: 56, innerCorner: 20 },
+  xs: { height: 32,  innerCorner: 4 },
+  s:  { height: 40,  innerCorner: 8 },
+  m:  { height: 56,  innerCorner: 8 },
+  l:  { height: 96,  innerCorner: 16 },
+  xl: { height: 136, innerCorner: 20 },
 };
 
 export const styles = [

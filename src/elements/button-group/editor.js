@@ -85,21 +85,13 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
           { name: "attribute", selector: { text: {} } },
           { name: "preset", label: "Color preset", selector: { select: { mode: "dropdown", options: presetOptions } } },
         ]),
-        { name: "size", label: "Size (applies to the whole group)", selector: { select: { mode: "dropdown", options: standard
-          ? [
-            { value: "xs", label: "XS (32dp)" },
-            { value: "s", label: "S (40dp)" },
-            { value: "m", label: "M (56dp)" },
-            { value: "l", label: "L (96dp)" },
-            { value: "xl", label: "XL (136dp)" },
-          ]
-          : [
-            { value: "xs", label: "XS (32dp)" },
-            { value: "s", label: "S (36dp)" },
-            { value: "m", label: "M (40dp)" },
-            { value: "l", label: "L (48dp)" },
-            { value: "xl", label: "XL (56dp)" },
-          ] } } },
+        { name: "size", label: "Size (applies to the whole group)", selector: { select: { mode: "dropdown", options: [
+          { value: "xs", label: "XS (32dp)" },
+          { value: "s", label: "S (40dp)" },
+          { value: "m", label: "M (56dp)" },
+          { value: "l", label: "L (96dp)" },
+          { value: "xl", label: "XL (136dp)" },
+        ] } } },
         { name: "variant", label: "Style", selector: { select: { mode: "dropdown", options: [
           { value: "filled", label: "Filled" },
           { value: "tonal", label: "Tonal" },
