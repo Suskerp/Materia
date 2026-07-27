@@ -112,7 +112,6 @@ export const styles = [
       transform-origin: bottom;
       transform: scaleY(0.94);
       transition: background-color var(--md-sys-motion-fast-effects),
-        transform var(--md-sys-motion-expressive-default-spatial),
         height var(--md-sys-motion-expressive-default-spatial);
     }
 

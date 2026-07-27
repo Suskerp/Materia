@@ -50,7 +50,11 @@ class MateriaBarSelect extends ActionMixin(LitElement) {
     // Recorded AFTER paint so the next change can tell which direction it
     // travelled and stagger accordingly. Plain field, not reactive state —
     // it must not itself trigger a re-render.
-    this._prevIndex = this._index;
+    const idx = this._index;
+    if (this._prevIndex != null && idx !== this._prevIndex) {
+      this._choreograph(this._prevIndex, idx);
+    }
+    this._prevIndex = idx;
   }
 
   get _stateObj() {
@@ -124,6 +128,43 @@ class MateriaBarSelect extends ActionMixin(LitElement) {
     if (domain === "select" || domain === "input_select") {
       this._callService(domain, "select_option", { entity_id: st.entity_id, option });
     }
+  }
+
+  /** The pop, driven imperatively so BOTH directions get a real gesture.
+   *
+   *  A CSS transition can only interpolate between two values, so growing read
+   *  as a pop (the springy curve overshoots past scaleY(1)) while shrinking was
+   *  a ~3px fade with nothing to overshoot into. Keyframes give the downward
+   *  move its own dip below rest, and the Web Animations API restarts cleanly
+   *  on every change — which a CSS class toggle does not. */
+  _choreograph(prev, idx) {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+    const bars = Array.from(this.shadowRoot?.querySelectorAll(".bar") || []);
+    if (!bars.length) return;
+
+    const rising = idx > prev;
+    const changed = [];
+    for (let i = Math.min(prev, idx) + 1; i <= Math.max(prev, idx); i++) {
+      if (bars[i]) changed.push(bars[i]);
+    }
+    // Sequence follows the direction of travel: outward when raising, back
+    // inward when lowering.
+    const order = rising ? changed : changed.reverse();
+
+    const frames = rising
+      ? [{ transform: "scaleY(0.94)" }, { transform: "scaleY(1.07)", offset: 0.5 }, { transform: "scaleY(1)" }]
+      : [{ transform: "scaleY(1)" }, { transform: "scaleY(0.84)", offset: 0.5 }, { transform: "scaleY(0.94)" }];
+
+    order.forEach((el, n) => {
+      el.animate(frames, {
+        duration: 300,
+        delay: n * 45,
+        // Springy on the way up, settling on the way down.
+        easing: rising ? "cubic-bezier(.2,1.5,.3,1)" : "cubic-bezier(.3,0,.2,1)",
+        // fill:none so CSS owns the resting state once the gesture finishes.
+        fill: "none",
+      });
+    });
   }
 
   render() {
