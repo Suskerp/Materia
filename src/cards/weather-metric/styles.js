@@ -62,8 +62,7 @@ export const styles = [
        own by default rather than reading flat/matching the background. Same
        theme-safe wash the wind blob uses (on-surface mixed into a container
        tone — guaranteed contrast step in both light and dark). */
-    .visibility-fill,
-    .uv-fill {
+    .visibility-fill {
       fill: var(--wm-color, color-mix(in srgb, var(--md-sys-color-on-surface, #1c1b1f) 12%, var(--md-sys-color-secondary-container, var(--ha-card-background))));
     }
 

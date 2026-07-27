@@ -268,14 +268,13 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     if (uv == null) return nothing;
     const level = UV_LEVELS.find((l) => uv <= l.max);
     // Scale dots along the lower inside of the cookie (Pixel-style): faint
-    // markers left→right, the active level enlarged and fully opaque.
-    // Two layers, matching pressure's construction: a plain outer circle
-    // backdrop (r=45) with a smaller inset cookie (r=32) carrying the dots —
-    // not one edge-to-edge cookie, which read as a different shape entirely.
+    // markers left→right, the active level enlarged and fully opaque. One
+    // edge-to-edge cookie, matching the reference — not a backdrop circle
+    // with a smaller inset cookie (that read as a different shape entirely).
     const dots = UV_LEVELS.map((l, i) => {
       const ang = ((160 - i * 35) * Math.PI) / 180; // 160°..20° across the bottom
-      const x = 50 + 23.5 * Math.cos(ang);
-      const y = 52 + 23.5 * Math.sin(ang);
+      const x = 50 + 33 * Math.cos(ang);
+      const y = 52 + 33 * Math.sin(ang);
       const active = l === level;
       return svg`<circle cx=${x} cy=${y} r=${active ? 4.5 : 2.6}
         fill=${l.color} opacity=${active ? 1 : 0.3} />`;
@@ -283,8 +282,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     return html`
       <div class="shape-tile">
         <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <circle cx="50" cy="52" r="45" class="shape-fill-c" />
-          <path d=${materialCookiePath(50, 52, 32, 12)} class="shape-fill uv-fill" />
+          <path d=${materialCookiePath(50, 52, 45, 12)} class="shape-fill" />
           ${dots}
         </svg>
         <div class="overlay">
@@ -305,14 +303,11 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
         : this._hint("mdi:eye-outline", this.config.name ?? "Visibility", "Weather entity has no visibility — add a sensor");
     }
     const unit = this.config.unit ?? this._weatherAttr("visibility_unit") ?? "km";
-    // Same two-layer construction as UV/pressure: plain outer circle backdrop
-    // (r=45) with a smaller colored inset cookie (r=32) — not one edge-to-edge
-    // shape, which read as a completely different silhouette from the family.
+    // One edge-to-edge cookie, same as UV — matching the reference.
     return html`
       <div class="shape-tile">
         <svg class="shape" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <circle cx="50" cy="52" r="45" class="shape-fill-c" />
-          <path d=${materialCookiePath(50, 52, 32, 12)} class="shape-fill visibility-fill" />
+          <path d=${materialCookiePath(50, 52, 44, 12)} class="shape-fill visibility-fill" />
         </svg>
         <div class="overlay">
           ${this._header("mdi:eye-outline", this.config.name ?? "Visibility")}
