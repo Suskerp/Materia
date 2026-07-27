@@ -181,12 +181,16 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     const bg = this._isTemplate(this.config.color) ? this._resolvedColor : this.config.color;
     const fg = this._isTemplate(this.config.color_on) ? this._resolvedColorOn : this.config.color_on;
     // Global size 1–10 caps the tile width (10 = fill the cell), matching the
-    // weather-tile's scale so mixed grids line up.
+    // weather-tile's scale so mixed grids line up. Unset stays a fixed,
+    // consistent 200px regardless of grid column width (centered via auto
+    // margins) — the tile should always read the same size, not stretch to
+    // fill a wide section. Set size: 10 explicitly to opt back into filling.
     const sizes = ["120px", "150px", "185px", "225px", "270px", "320px", "380px", "460px", "560px", "none"];
-    const size = Math.min(10, Math.max(1, this.config.size ?? 10));
+    const size = this.config.size != null ? Math.min(10, Math.max(1, this.config.size)) : null;
+    const sizeVar = size != null ? sizes[size - 1] : "200px";
     return html`
       <ha-card
-        style="--wm-size:${sizes[size - 1]};${bg ? `--wm-color:${bg};` : ""}${fg ? `--wm-color-on:${fg};` : ""}${this.config.shape_color ? `--wm-shape:${this.config.shape_color};` : ""}"
+        style="--wm-size:${sizeVar};${bg ? `--wm-color:${bg};` : ""}${fg ? `--wm-color-on:${fg};` : ""}${this.config.shape_color ? `--wm-shape:${this.config.shape_color};` : ""}"
         @click=${() => this._handleAction(this.config.tap_action || (this.config.sensor || this.config.entity ? { action: "more-info", entity: this.config.sensor || this.config.entity } : undefined))}
       >
         ${body}

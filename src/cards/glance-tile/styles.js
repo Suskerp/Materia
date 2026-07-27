@@ -174,7 +174,7 @@ export const styles = [
       justify-content: center;
       text-align: center;
       box-sizing: border-box;
-      max-width: var(--ms-size, 225px);
+      max-width: var(--ms-size, 200px);
       margin-inline: auto;
       width: 100%;
     }

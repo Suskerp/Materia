@@ -40,7 +40,7 @@ export const styles = [
       aspect-ratio: 1;
       display: grid;
       place-items: center;
-      max-width: var(--wm-size, 225px);
+      max-width: var(--wm-size, 200px);
       margin-inline: auto;
       width: 100%;
     }
@@ -143,7 +143,7 @@ export const styles = [
       justify-content: center;
       text-align: center;
       box-sizing: border-box;
-      max-width: var(--wm-size, 225px);
+      max-width: var(--wm-size, 200px);
       margin-inline: auto;
       width: 100%;
     }
@@ -159,7 +159,7 @@ export const styles = [
          soft look with corners that never reach the content. */
       border-radius: clamp(36px, 9cqi, 64px);
       padding: clamp(14px, 4cqi, 20px) clamp(22px, 7cqi, 40px) clamp(22px, 6cqi, 30px);
-      max-width: calc(var(--wm-size, 225px) * 2 + 16px);
+      max-width: calc(var(--wm-size, 200px) * 2 + 16px);
       gap: clamp(4px, 2cqi, 10px);
     }
 

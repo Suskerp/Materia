@@ -27,7 +27,7 @@ export const styles = [
       gap: clamp(6px, 4cqi, 10px);
       color: var(--ms-color-on, var(--md-sys-color-on-surface, var(--primary-text-color)));
       box-sizing: border-box;
-      max-width: var(--ms-size, 225px);
+      max-width: var(--ms-size, 200px);
       margin-inline: auto;
       width: 100%;
       min-height: 128px;
