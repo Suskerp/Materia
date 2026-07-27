@@ -30,7 +30,7 @@ export const styles = [
       max-width: var(--ms-size, 225px);
       margin-inline: auto;
       width: 100%;
-      aspect-ratio: 1;
+      min-height: 128px;
       transition: background-color var(--md-sys-motion-default-effects);
     }
 
@@ -85,19 +85,17 @@ export const styles = [
       display: flex;
       align-items: center;
       min-height: 0;
+      padding-block: 0.15em;
     }
 
     .state .big {
       font-family: var(--materia-font-display, inherit);
-      font-size: clamp(18px, 14cqi, 32px);
+      font-size: clamp(16px, 11cqi, 28px);
       font-weight: 700;
-      line-height: 1.1;
+      line-height: 1.3;
       letter-spacing: -0.01em;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
+      overflow-wrap: break-word;
+      max-width: 100%;
     }
 
     .substate {

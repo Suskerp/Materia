@@ -200,6 +200,15 @@ export const styles = [
       justify-content: space-between;
     }
 
+    /* Binary tiles hold a state word + a corner glyph — no cookie/thermo
+       graphic that needs a square canvas, so don't force the 1:1 aspect
+       ratio; a shorter, content-fit height reads better next to other
+       glance tiles that aren't square either. */
+    .rect-tile.binary {
+      aspect-ratio: auto;
+      min-height: 128px;
+    }
+
     .rect-tile.left .header {
       justify-content: flex-start;
     }
