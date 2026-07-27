@@ -342,16 +342,43 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     `;
   }
 
-  /* ---- plain fallback ------------------------------------------------------- */
+  /* ---- plain fallback -------------------------------------------------------
+     Optional `battery_entity`: a SECOND entity (any device's paired battery
+     sensor — locks, remotes, vacuums…) rendered as the same vertical bar
+     battery/temperature use, name top-left / state in the middle / label at
+     the bottom. Generic pairing, not specific to any one device type. */
   _plain() {
     const st = this._stateObj;
     const n = this._num(st.state);
+    const value = n != null
+      ? html`<div class="big">${Math.round(n * 10) / 10}<span class="unit"> ${this._unit}</span></div>`
+      : html`<div class="big small-big">${this._fmtState()}</div>`;
+
+    const battSt = this.config.battery_entity ? this.hass.states[this.config.battery_entity] : null;
+    const battVal = battSt ? this._num(battSt.state) : null;
+    if (battVal != null) {
+      const frac = Math.min(1, Math.max(0, battVal / 100));
+      const color = this._batteryColor(frac);
+      return html`
+        <div class="rect-tile left">
+          ${this._header("mdi:eye-outline")}
+          <div class="split-row">
+            <div class="split-main">
+              ${value}
+              ${this._label ? html`<div class="sub">${this._label}</div>` : ""}
+            </div>
+            <div class="thermo">
+              <i style="height:${Math.max(8, frac * 100)}%;background:${color}"></i>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     return html`
       <div class="rect-tile">
         ${this._header("mdi:eye-outline")}
-        ${n != null
-          ? html`<div class="big">${Math.round(n * 10) / 10}<span class="unit"> ${this._unit}</span></div>`
-          : html`<div class="big small-big">${this._fmtState()}</div>`}
+        ${value}
         ${this._label ? html`<div class="sub">${this._label}</div>` : ""}
       </div>
     `;

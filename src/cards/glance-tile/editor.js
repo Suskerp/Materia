@@ -44,6 +44,9 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
     if (v === "power") {
       extras.fields.push({ name: "max", label: "Full-load watts (default 3000)", selector: { number: { mode: "box" } } });
     }
+    if (v === "plain") {
+      extras.fields.push({ name: "battery_entity", label: "Paired battery sensor (adds the vertical bar)", selector: { entity: { domain: "sensor" } } });
+    }
     // Only meaningful for device_class: moisture (soil sensors) — harmless
     // no-ops for battery/humidity/other percent entities.
     if (v === "percent") {
