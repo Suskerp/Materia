@@ -90,13 +90,21 @@ class MateriaSplitButton extends ActionMixin(LitElement) {
   /** Which menu option is currently in effect. An option is selected when its
    *  `value` matches the tracked entity's state (or `attribute`) — the same
    *  matching materia-button-group/menu use — so a split button can present a
-   *  set of presets and show which one is live. */
+   *  set of presets and show which one is live.
+   *
+   *  `preset_entity` exists because the two halves usually watch DIFFERENT
+   *  things: the leading button follows the thing being controlled (a vacuum's
+   *  cleaning state, for play/pause), while the menu follows whatever holds the
+   *  chosen preset (a mop-intensity select). Falls back to `entity`. */
   _isSelected(opt) {
     if (opt.selected != null) return !!opt.selected;
-    if (opt.value == null || !this.config.entity) return false;
-    const st = this.hass?.states?.[this.config.entity];
+    const entityId = this.config.preset_entity || this.config.entity;
+    if (opt.value == null || !entityId) return false;
+    const st = this.hass?.states?.[entityId];
     if (!st) return false;
-    const current = this.config.attribute ? st.attributes?.[this.config.attribute] : st.state;
+    const attr = this.config.preset_attribute
+      || (this.config.preset_entity ? null : this.config.attribute);
+    const current = attr ? st.attributes?.[attr] : st.state;
     const vals = Array.isArray(opt.value) ? opt.value : [opt.value];
     return vals.some((v) => String(v) === String(current));
   }
@@ -104,10 +112,14 @@ class MateriaSplitButton extends ActionMixin(LitElement) {
   render() {
     if (!this.config) return html``;
     const variant = this.config.variant || "tonal";
+    // size is a named token (xs/s/m/l/xl) or a custom height in px — the same
+    // contract materia-button honours. Without the numeric branch a custom
+    // height sized the inner button correctly but left this wrapper at 40px.
     const size = this.config.size || "s";
-    const h = HEIGHTS[size] || 40;
-    const inner = INNER[size] ?? 12;
-    const ticon = TICON[size] ?? 20;
+    const numeric = typeof size === "number" || /^\d+$/.test(String(size));
+    const h = numeric ? Number(size) : HEIGHTS[size] || 40;
+    const inner = numeric ? Math.round(h * 0.28) : INNER[size] ?? 12;
+    const ticon = numeric ? Math.round(h * 0.32) : TICON[size] ?? 20;
     const options = this.config.options || [];
 
     // The leading button is a full materia-button — it inherits ALL button
