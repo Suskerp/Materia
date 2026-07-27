@@ -62,7 +62,7 @@ export const styles = [
     /* Liquid drift: slide by exactly one wave period (50 units) to loop.
        Slow enough to read as water settling, not a marquee. */
     .level-fill.drift {
-      animation: ms-drift 11s linear infinite;
+      animation: ms-drift 7s linear infinite;
     }
 
     @keyframes ms-drift {
