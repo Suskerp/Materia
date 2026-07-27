@@ -223,9 +223,9 @@ class MateriaHero extends ActionMixin(LitElement) {
         >
           ${this.config.burst === false
             ? nothing
-            : html`<svg class="burst ${active || alert ? "spin" : ""}" viewBox="0 0 180 180" aria-hidden="true">
+            : html`<svg class="burst ${active || alert ? "spin" : ""} ${alert ? "alarm" : ""}" viewBox="0 0 180 180" aria-hidden="true">
                 ${alert
-                  ? svg`<path d=${boom} />`
+                  ? svg`<g class="loom"><path d=${boom} /></g>`
                   : svg`<path d=${sq} /><path d=${sq} transform="rotate(45 90 90)" />`}
               </svg>`}
           <div class="content">

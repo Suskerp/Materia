@@ -93,6 +93,25 @@ export const styles = [
       animation: mh-spin 9s linear infinite;
     }
 
+    /* Alert: the spike turns markedly faster AND swells toward the viewer.
+       Rotation and scale can't share one transform, so the swell lives on a
+       nested group — together they read as looming rather than merely turning. */
+    .burst.alarm {
+      animation-duration: 3.6s;
+    }
+
+    .loom {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: mh-loom 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes mh-loom {
+      to {
+        transform: scale(1.12);
+      }
+    }
+
     @keyframes mh-spin {
       to {
         transform: rotate(360deg);
@@ -100,7 +119,8 @@ export const styles = [
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .burst.spin {
+      .burst.spin,
+      .loom {
         animation: none;
       }
     }
