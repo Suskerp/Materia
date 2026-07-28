@@ -255,14 +255,21 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
       }
     }
 
-    // Colour: working is POSITIVE. It was on climate-heat, a warm peach that
-    // reads as a fault — wrong regardless of colour vision, and doubly so now
-    // that a real error family exists.
-    let bg = this.config.color ?? "var(--md-sys-cust-color-climate-cool)";
-    let fg = this.config.color_on ?? "var(--md-sys-cust-color-on-climate-cool)";
+    // Colour, per M3: roles encode EMPHASIS, not subject matter. primary /
+    // secondary / tertiary express prominence, and `error` is the only role
+    // carrying inherent meaning — there is deliberately no "success" role, so
+    // green-means-good would be inventing semantics the spec doesn't have.
+    //
+    // Working therefore uses `device`, the palette's existing "this device is
+    // doing something" token, which is what materia-card has always given a
+    // vacuum in `cleaning`. Resting uses a neutral surface tone. Borrowing
+    // water-eco or climate-cool here was the mistake: domain tokens lent to an
+    // unrelated domain, which misleads anyone reading the config later.
+    let bg = this.config.color ?? "var(--md-sys-color-secondary-container)";
+    let fg = this.config.color_on ?? "var(--md-sys-color-on-secondary-container)";
     if (working) {
-      bg = this.config.working_color ?? "var(--md-sys-cust-color-water-eco)";
-      fg = this.config.working_color_on ?? "var(--md-sys-cust-color-on-water-eco)";
+      bg = this.config.working_color ?? "var(--md-sys-cust-color-device, var(--md-sys-color-primary-container))";
+      fg = this.config.working_color_on ?? "var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container))";
     }
     let alertBg = null;
     let alertFg = null;
