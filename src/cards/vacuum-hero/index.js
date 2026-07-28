@@ -3,6 +3,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { boomPath, softBurstPath } from "../../utils/shapes.js";
 import { styles } from "../hero/styles.js";
 import { CAPABILITY_KEYS, CONSUMABLE_KEYS, profileFor } from "./profiles.js";
+import { explainConsumable, explainError } from "./explanations.js";
 import "./editor.js";
 
 /**
@@ -164,7 +165,15 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
     const err = (id, icon, label) => {
       const v = this._stateOf(id);
       if (v == null || ["none", "ok", "off", "no_error", "0"].includes(String(v).toLowerCase())) return null;
-      return { icon, text: `${label}: ${this._pretty(v)}`, severity: "error", entity: id };
+      // Say what to DO. An unmatched code still shows its raw value rather than
+      // being hidden, so anything unknown stays visible and reportable.
+      const how = explainError(v, this.hass.locale?.language);
+      return {
+        icon,
+        text: how ? `${label}: ${how}` : `${label}: ${this._pretty(v)}`,
+        severity: "error",
+        entity: id,
+      };
     };
     const flag = (id, icon, text, severity) =>
       this._stateOf(id) === "on" ? { icon, text, severity, entity: id } : null;
@@ -177,7 +186,8 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
       flag(c.dirty_water, "mdi:water-off-outline", "Dirty water tank needs emptying", "warning"),
       ...this._lowConsumables().map((id) => ({
         icon: "mdi:wrench-outline",
-        text: `${this.hass.states[id]?.attributes?.friendly_name ?? id} needs attention`,
+        text: explainConsumable(id, this.hass.locale?.language)
+          ?? `${this.hass.states[id]?.attributes?.friendly_name ?? id} needs attention`,
         severity: "warning",
         entity: id,
       })),

@@ -1,5 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { MOTION } from "../../utils/motion.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -101,17 +102,19 @@ class MateriaCarousel extends ActionMixin(LitElement) {
       const d = Math.min(...origins.map((o) => Math.abs(o - i)));
       if (d > 2) return;
       // Origin pushes outward; neighbours give way, faintly and later.
-      // Far bigger travel, and the tapped tile starts on the SAME frame as the
-      // tap — the old 55ms-per-step delay applied to the origin too, which is
-      // what made it feel laggy. Neighbours still trail, just sooner.
-      const peak = d === 0 ? 1.12 : d === 1 ? 0.93 : 0.97;
+      // The spec's spatial spring ALREADY overshoots — its curve peaks at ~1.15
+      // of the value change. Adding an exaggerated keyframe peak on top of a
+      // hand-rolled bouncy bezier double-counted that, which is what made it
+      // aggressive. Modest targets, two keyframes, and the androidx token
+      // supplies the spring.
+      const target = d === 0 ? 1.04 : d === 1 ? 0.985 : 0.995;
+      const spring = MOTION["expressive-fast-spatial"];
       el.animate(
-        [{ transform: "scale(1)" }, { transform: `scale(${peak})`, offset: 0.42 }, { transform: "scale(1)" }],
+        [{ transform: "scale(1)" }, { transform: `scale(${target})` }, { transform: "scale(1)" }],
         {
-          duration: d === 0 ? 340 : 300,
+          duration: spring.ms,
           delay: d * 30,
-          // Overshooting spring, so it arrives with a snap rather than easing in.
-          easing: "cubic-bezier(.18,1.9,.28,1)",
+          easing: spring.easing,
           fill: "none",
         }
       );
