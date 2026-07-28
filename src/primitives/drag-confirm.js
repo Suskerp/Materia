@@ -378,8 +378,6 @@ class MateriaDragConfirm extends LitElement {
     };
     document.addEventListener("visibilitychange", this._onVisibilityRef);
 
-    this._haptic("selection");
-
     if (this.gesture === "hold") {
       this._tick = this._tick.bind(this);
       this._raf = requestAnimationFrame(this._tick);

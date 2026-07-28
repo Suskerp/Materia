@@ -297,6 +297,12 @@ export class MateriaButtonGroup extends ActionMixin(LitElement) {
       return;
     }
 
+    // A connected group IS a picker, so choosing in it is a SELECTION change
+    // rather than an impact — the subtle effect, per Google's "frequent
+    // interactions should be very subtle". _handleAction's own `light` is
+    // swallowed by the de-dupe, so this replaces it rather than adding to it.
+    this._fireHaptic("selection");
+
     if (opt.entity) {
       // Optimistically flip just this button's own entity. `baseline` is the
       // state at tap time: the moment the REAL state moves at all, the pin is

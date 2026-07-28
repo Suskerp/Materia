@@ -110,7 +110,7 @@ class MateriaBarSelect extends ActionMixin(LitElement) {
     const st = this._stateObj;
     if (!st) return;
     const domain = st.entity_id.split(".")[0];
-    this._fireHaptic?.("light");
+    this._fireHaptic?.("selection");
 
     // Explicit override wins.
     if (this.config.service) {

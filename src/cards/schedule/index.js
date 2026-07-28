@@ -554,7 +554,6 @@ class MateriaSchedule extends ActionMixin(LitElement) {
               this._seedCustom();
               this._pick = "custom";
             }
-            this._fireHaptic("selection");
           }}
         >
           <ha-icon icon="m3o:event"></ha-icon>

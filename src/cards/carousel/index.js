@@ -211,7 +211,7 @@ class MateriaCarousel extends ActionMixin(LitElement) {
       this._didDrag = false;
       return;
     }
-    this._fireHaptic?.("light");
+    this._fireHaptic?.("selection");
     if (item.tap_action) {
       this._handleAction(item.tap_action);
       return;

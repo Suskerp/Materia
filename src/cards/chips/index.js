@@ -80,7 +80,8 @@ class MateriaChips extends ActionMixin(LitElement) {
   }
 
   _tap(chip) {
-    this._fireHaptic?.("light");
+    // Picking from a set is a SELECTION change, not an impact.
+    this._fireHaptic?.("selection");
     if (chip.tap_action) {
       this._handleAction(chip.tap_action);
       return;

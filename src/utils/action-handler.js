@@ -7,6 +7,26 @@
  *   class MyCard extends ActionMixin(LitElement) { ... }
  */
 
+/** Timestamp of the last haptic fired anywhere in the library.
+ *
+ *  One user action must produce ONE haptic. Nested Materia elements each own a
+ *  slice of a single gesture — a chip fires its selection, then delegates to
+ *  _handleAction, which used to fire again — so a tap on a room chip buzzed
+ *  twice. Because the `haptic` event bubbles to the document, HA cannot tell the
+ *  two apart; the only place to collapse them is here. */
+let _lastHapticAt = 0;
+const HAPTIC_DEDUPE_MS = 120;
+
+/** Actions that actually CHANGE something.
+ *
+ *  Google's haptic principles list exactly one relevant use for a tap: "to
+ *  confirm a state change in the device following a user action". Opening a
+ *  more-info dialog, navigating to another view or firing a dom-event changes no
+ *  device state, so those are silent — and on a dashboard where most tiles
+ *  navigate, that is the difference between haptics meaning something and
+ *  buzzing on every touch. */
+const STATE_CHANGING_ACTIONS = new Set(["toggle", "perform-action", "call-service"]);
+
 export const ActionMixin = (superClass) =>
   class extends superClass {
     /**
@@ -15,6 +35,9 @@ export const ActionMixin = (superClass) =>
      * type: light | medium | heavy | success | warning | failure | selection
      */
     _fireHaptic(type = "light") {
+      const now = Date.now();
+      if (now - _lastHapticAt < HAPTIC_DEDUPE_MS) return;
+      _lastHapticAt = now;
       this.dispatchEvent(
         new CustomEvent("haptic", {
           detail: type,
@@ -31,7 +54,7 @@ export const ActionMixin = (superClass) =>
      */
     _handleAction(actionConfig) {
       if (!actionConfig || actionConfig.action === "none") return;
-      this._fireHaptic("light");
+      if (STATE_CHANGING_ACTIONS.has(actionConfig.action)) this._fireHaptic("light");
 
       switch (actionConfig.action) {
         case "toggle": {
@@ -130,6 +153,12 @@ export const ActionMixin = (superClass) =>
       return this.hass
         .callService(domain, service, data, target)
         .catch((err) => {
+          // A failure MUST feel different from a success. Without this a lock
+          // that refused the call is indistinguishable by touch from one that
+          // threw the bolt — Apple's notification generator exists precisely to
+          // "communicate successes, failures, and warnings".
+          _lastHapticAt = 0; // never let the de-dupe swallow a failure
+          this._fireHaptic("failure");
           const ev = new Event("hass-notification", { bubbles: true, composed: true });
           ev.detail = { message: err?.message || `Failed: ${domain}.${service}` };
           this.dispatchEvent(ev);
