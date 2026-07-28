@@ -1,8 +1,32 @@
-import { LitElement, html, nothing } from "lit";
+import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { materialCookiePath, pillPath, gemPath } from "../../utils/shapes.js";
 import { styles } from "./styles.js";
 import "../../primitives/drag-confirm.js";
 import "./editor.js";
+
+/** Silhouettes the shape can take, drawn in a 180x180 box.
+ *
+ *  `rot` is HALF the shape's rotational-symmetry period — the largest turn that
+ *  still reads as movement before the silhouette maps back onto itself. Deriving
+ *  it per shape is why cookie9 turns 20 degrees and gem turns 90: a flat 45 for
+ *  everything would be nearly invisible on a 9-pointed cookie (whose period is
+ *  40) and would stop well short on a 2-fold gem.
+ *
+ *  `squircle` is the CSS-box original and stays the default — a border-radius
+ *  morph is the only one of these that can animate its OUTLINE continuously,
+ *  since CSS cannot interpolate an SVG path. The vector styles change silhouette
+ *  by turning, not by morphing. */
+const SHAPE_STYLES = {
+  squircle: { vector: false, rot: 45 },
+  // star(9, innerRadius .8, rounding .5) rotated -90 — MaterialShapes.Cookie9Sided.
+  cookie9: { vector: true, rot: 360 / 9 / 2, path: () => materialCookiePath(90, 90, 86, 9) },
+  // reps 2 + mirroring -> 4-fold, so its period is 90. Measured aspect 1.000:
+  // despite the name this is a squircle with concave sides, not a capsule.
+  pill: { vector: true, rot: 45, path: () => pillPath(90, 90, 172) },
+  // reps 1 + mirroring -> 2-fold, period 180.
+  gem: { vector: true, rot: 90, path: () => gemPath(90, 90, 172) },
+};
 
 /**
  * Lock control (materia-lock) — the morphing lock shape and the commit gesture,
@@ -201,6 +225,8 @@ class MateriaLock extends ActionMixin(LitElement) {
       ? (this.config.locked_icon ?? "m3o:lock")
       : (this.config.unlocked_icon ?? "m3o:lock-open-right");
 
+    const style = SHAPE_STYLES[this.config.shape_style] ?? SHAPE_STYLES.squircle;
+
     // Locking is a backward motion and unlocking a forward one, so the gesture
     // mirrors rather than always sweeping the same way — the handle ends each
     // commit resting where the next one starts.
@@ -230,7 +256,15 @@ class MateriaLock extends ActionMixin(LitElement) {
                         : { action: "none" })
                   )}
               >
-                <div class="shape ${locked ? "" : "unlocked"}">
+                <div
+                  class="shape ${locked ? "" : "unlocked"} ${style.vector ? "vector" : ""}"
+                  style="--ml-rot:${style.rot}deg"
+                >
+                  ${style.vector
+                    ? html`<svg class="silhouette" viewBox="0 0 180 180" aria-hidden="true">
+                        ${svg`<path d=${style.path()} />`}
+                      </svg>`
+                    : nothing}
                   <ha-icon .icon=${icon}></ha-icon>
                 </div>
               </div>`}

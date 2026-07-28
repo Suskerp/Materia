@@ -7,7 +7,7 @@ class MateriaLockEditor extends SmartEditorBase {
      is actually on, and merely opening the editor and saving would turn it off
      for real. Config still wins, so an explicit false survives. */
   _formData() {
-    return { gesture: "slide", shape: true, initial_locked: true, ...this._config };
+    return { gesture: "slide", shape: true, shape_style: "squircle", initial_locked: true, ...this._config };
   }
 
   /* Fields appear and disappear with the gesture and with whether an entity is
@@ -40,6 +40,17 @@ class MateriaLockEditor extends SmartEditorBase {
             ] } },
           },
           { name: "shape", label: "Show the morphing lock shape", selector: { boolean: {} } },
+          {
+            name: "shape_style",
+            label: "Silhouette",
+            helper: "Squircle morphs its outline continuously; the MaterialShapes silhouettes change state by turning instead, since CSS cannot interpolate an SVG path.",
+            selector: { select: { mode: "dropdown", options: [
+              { value: "squircle", label: "Squircle — morphs square → circle" },
+              { value: "cookie9", label: "Cookie, 9-sided" },
+              { value: "pill", label: "Pill (square-aspect, not a capsule)" },
+              { value: "gem", label: "Gem" },
+            ] } },
+          },
         ],
       },
       {

@@ -66,9 +66,12 @@ export const styles = [
          that overshoots its endpoint would sit visually still for most of its
          duration and then snap. */
       border-radius: 30%;
-      /* The 45deg turn is what makes the morph legible. A circle rotating is
-         invisible; a rounded square rotating 45deg is unmistakable, so the
-         rotation and the corner change reveal each other. */
+      /* The turn is what makes the change legible. A circle rotating is
+         invisible; a cornered shape rotating is unmistakable, so the rotation
+         and the corner change reveal each other. The angle is not a magic 45 —
+         it is HALF each shape's rotational-symmetry period (see --ml-rot in
+         index.js), which is the largest turn that still reads as movement
+         before the silhouette repeats itself. */
       transform: rotate(0deg);
       transition: border-radius var(--md-sys-motion-expressive-default-spatial),
         transform var(--md-sys-motion-expressive-default-spatial),
@@ -78,7 +81,56 @@ export const styles = [
 
     .shape.unlocked {
       border-radius: 50%;
-      transform: rotate(45deg);
+      transform: rotate(var(--ml-rot, 45deg));
+    }
+
+    /* A MaterialShapes silhouette replaces the CSS box: the container goes
+       transparent and an SVG path carries the fill, so the shape can be one of
+       the real catalogue entries rather than whatever border-radius can
+       describe. */
+    .shape.vector {
+      background: none;
+      border-radius: 0;
+      position: relative;
+    }
+
+    .shape .silhouette {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      fill: var(--ml-shape-bg);
+      transition: fill var(--md-sys-motion-default-effects);
+      pointer-events: none;
+    }
+
+    /* The glyph sits above the silhouette and, unlike the CSS box, does NOT
+       need counter-rotating — the vector container itself never turns, only the
+       path inside it does. */
+    .shape .silhouette path {
+      transform-box: fill-box;
+      transform-origin: center;
+      transform: rotate(0deg);
+      transition: transform var(--md-sys-motion-expressive-default-spatial);
+    }
+
+    .shape.unlocked .silhouette path {
+      transform: rotate(var(--ml-rot, 45deg));
+    }
+
+    .shape.vector ha-icon {
+      position: relative;
+    }
+
+    /* In vector mode the PATH turns, so the container must not — otherwise the
+       rotation is applied twice and the glyph's counter-rotation cancels the
+       wrong one. */
+    .shape.vector.unlocked {
+      transform: none;
+    }
+
+    .shape.vector.unlocked ha-icon {
+      transform: none;
     }
 
     /* Counter-rotation keeps the glyph upright while its container turns. */

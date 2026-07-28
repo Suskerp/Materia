@@ -281,6 +281,167 @@ function repeatedPairPath(cx, cy, r, rotate, PAIR, REPS) {
   })));
 }
 
+/* ------------------------------------------------------------------ */
+/*  customPolygon with MIRRORING                                       */
+/*                                                                     */
+/*  repeatedPairPath above only spins a point set around the circle,    */
+/*  which is MaterialShapes' `customPolygon(points, reps)`. A good half  */
+/*  of the catalogue instead uses `customPolygon(..., mirroring = true)`,*/
+/*  where every other repetition is REFLECTED rather than rotated —     */
+/*  that is what gives Pill, Gem, Clover and friends their reflective   */
+/*  symmetry, and without it they cannot be drawn at all.               */
+/* ------------------------------------------------------------------ */
+
+/** Faithful port of MaterialShapes.kt's private `doRepeat`.
+ *
+ *  The mirroring branch is not a geometric reflection of the points — it works
+ *  in POLAR space about the centre. Each point becomes (angle, distance); even
+ *  repetitions replay the angles forward, odd repetitions replay them BACKWARD
+ *  and reflected within their section:
+ *
+ *      even:  a = section*it + angles[i]
+ *      odd:   a = section*it + section - angles[i] + 2*angles[0]
+ *
+ *  The `2*angles[0]` term is what pins the seam: it re-anchors the reflected
+ *  run to the first point's angle, so the mirrored half meets the original
+ *  half exactly instead of at an arbitrary offset. Odd repetitions also SKIP
+ *  index 0 (`i > 0 || it % 2 == 0`), because that vertex is the seam itself and
+ *  would otherwise be emitted twice — a duplicate point that makes the fillet
+ *  at the join degenerate.
+ *
+ *  Angles are degrees, y-down (Compose and SVG agree here, so no flip). */
+function doRepeat(points, reps, mirroring, cx = 0.5, cy = 0.5) {
+  const out = [];
+
+  if (!mirroring) {
+    const np = points.length;
+    for (let i = 0; i < np * reps; i++) {
+      const p = points[i % np];
+      const a = ((Math.floor(i / np) * 360) / reps) * (Math.PI / 180);
+      const dx = p.x - cx;
+      const dy = p.y - cy;
+      out.push({
+        x: cx + dx * Math.cos(a) - dy * Math.sin(a),
+        y: cy + dx * Math.sin(a) + dy * Math.cos(a),
+        r: p.r,
+      });
+    }
+    return out;
+  }
+
+  const angles = points.map((p) => (Math.atan2(p.y - cy, p.x - cx) * 180) / Math.PI);
+  const dists = points.map((p) => Math.hypot(p.x - cx, p.y - cy));
+  const actualReps = reps * 2;
+  const section = 360 / actualReps;
+
+  for (let it = 0; it < actualReps; it++) {
+    const even = it % 2 === 0;
+    for (let index = 0; index < points.length; index++) {
+      const i = even ? index : points.length - 1 - index;
+      if (!(i > 0 || even)) continue; // the seam vertex, already emitted
+      const deg = section * it + (even ? angles[i] : section - angles[i] + 2 * angles[0]);
+      const a = deg * (Math.PI / 180);
+      out.push({ x: cx + Math.cos(a) * dists[i], y: cy + Math.sin(a) * dists[i], r: points[i].r });
+    }
+  }
+  return out;
+}
+
+/** Generic MaterialShapes `customPolygon`, normalised into a square box.
+ *
+ *  androidx publishes these shapes through `.normalized()`, which fits the
+ *  outline to a unit box — so the scale comes from the TRUE filleted bounds,
+ *  not from vertex distance, and the box (not the centroid) is what gets
+ *  centred. Aspect ratio is preserved: the longer axis is fitted to `size` and
+ *  the shorter one is centred inside it, so a non-square shape stays itself
+ *  instead of being stretched to fill a square tile. */
+export function customPolygonPath(cx, cy, size, { points, reps = 1, mirroring = false, rotate = 0 }) {
+  const verts = doRepeat(points, reps, mirroring);
+
+  // Rotate about the construction centre before filleting, so the corner radii
+  // stay attached to their own vertices.
+  const cosR = Math.cos(rotate);
+  const sinR = Math.sin(rotate);
+  const spun = verts.map((p) => {
+    const dx = p.x - 0.5;
+    const dy = p.y - 0.5;
+    return { x: 0.5 + dx * cosR - dy * sinR, y: 0.5 + dx * sinR + dy * cosR, r: p.r };
+  });
+
+  const segs = filletSegments(spun);
+  const b = segmentsBounds(segs);
+  const w = b.maxX - b.minX;
+  const h = b.maxY - b.minY;
+  const sc = size / Math.max(w, h);
+  const mx = (b.minX + b.maxX) / 2;
+  const my = (b.minY + b.maxY) / 2;
+  const t = (p) => [cx + (p[0] - mx) * sc, cy + (p[1] - my) * sc];
+
+  return segmentsToPath(segs.map((sg) => ({
+    T1: t(sg.T1),
+    T2: t(sg.T2),
+    C: t(sg.C),
+    rEff: sg.rEff * sc,
+    sweep: sg.sweep,
+  })));
+}
+
+/** Canonical MaterialShapes PILL.
+ *
+ *    Pill = customPolygon([
+ *             (0.961, 0.039) r .426,
+ *             (1.001, 0.428),            // unrounded
+ *             (1.000, 0.609) r 1.000,
+ *           ], reps = 2, mirroring = true)
+ *
+ *  reps 2 + mirroring gives four 90° sections and TEN vertices (3 on each even
+ *  repetition, 2 on each odd one once the seam is skipped). Despite the name it
+ *  is not a stadium — the CSS `border-radius: 999px` pill in forecast-daily is
+ *  a different object that happens to share the word. */
+export function pillPath(cx, cy, size, rotate = 0) {
+  return customPolygonPath(cx, cy, size, {
+    points: [
+      { x: 0.961, y: 0.039, r: 0.426 },
+      { x: 1.001, y: 0.428, r: 0 },
+      { x: 1.0, y: 0.609, r: 1.0 },
+    ],
+    reps: 2,
+    mirroring: true,
+    rotate,
+  });
+}
+
+/** Canonical MaterialShapes GEM.
+ *
+ *    Gem = customPolygon([
+ *            (0.499, 1.023) r .241 smoothing .778,
+ *            (-0.005, 0.792) r .208,
+ *            (0.073, 0.258) r .228,
+ *            (0.433, -0.000) r .491,
+ *          ], reps = 1, mirroring = true)
+ *
+ *  reps 1 + mirroring gives two 180° sections and SEVEN vertices.
+ *
+ *  CAVEAT — the first vertex carries CornerRounding(radius, SMOOTHING = .778),
+ *  and filletSegments draws a bare circular arc with no smoothing support. That
+ *  corner therefore renders as a pure r=.241 fillet rather than androidx's
+ *  arc-flanked-by-two-cubics. The radius is the real published value, so this is
+ *  a missing feature rather than an invented number, but it is a real deviation
+ *  on that one corner. Everything else is exact. */
+export function gemPath(cx, cy, size, rotate = 0) {
+  return customPolygonPath(cx, cy, size, {
+    points: [
+      { x: 0.499, y: 1.023, r: 0.241 }, // smoothing .778 not yet implemented
+      { x: -0.005, y: 0.792, r: 0.208 },
+      { x: 0.073, y: 0.258, r: 0.228 },
+      { x: 0.433, y: -0.0, r: 0.491 },
+    ],
+    reps: 1,
+    mirroring: true,
+    rotate,
+  });
+}
+
 /** SVG arc path (for gauges), angles in degrees, 0° = 12 o'clock, clockwise. */
 export function arcPath(cx, cy, r, startDeg, endDeg) {
   const toXY = (deg) => {
