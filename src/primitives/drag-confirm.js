@@ -1,5 +1,24 @@
-import { LitElement, html, css, nothing } from "lit";
+import { LitElement, html, css, svg, nothing } from "lit";
 import { motionTokens } from "../utils/motion.js";
+
+/** The handle's arrow, drawn inline rather than fetched from an icon set.
+ *
+ *  This started as an `ha-icon` and did not render. Rather than keep guessing at
+ *  icon names, the arrow is now the primitive's own geometry: a shaft plus a
+ *  head on the 24dp grid, stroked in currentColor so it picks up the handle's
+ *  ink automatically and stays crisp at any handle size. A self-contained
+ *  control should not silently lose its only directional affordance because a
+ *  separately-installed icon pack names things differently.
+ *
+ *  One path, mirrored with scaleX for the backward direction. */
+const ARROW = svg`<path
+  d="M4 12h13M11 6l6 6-6 6"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2.4"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+/>`;
 
 /**
  * <materia-drag-confirm> — a deliberate COMMIT gesture.
@@ -46,7 +65,8 @@ class MateriaDragConfirm extends LitElement {
     gesture: { type: String, reflect: true },
     /** Hint text shown across the track. */
     label: { type: String },
-    /** mdi icon for the slide handle. */
+    /** Optional glyph for the slide handle, replacing the built-in arrow.
+     *  Empty by default: the arrow is drawn inline so it cannot go missing. */
     icon: { type: String },
     /** "forward" (handle rests left, travels right) | "backward" (mirrored). */
     direction: { type: String },
@@ -188,6 +208,18 @@ class MateriaDragConfirm extends LitElement {
       .handle ha-icon {
         --mdc-icon-size: var(--mdc-icon);
       }
+
+      .handle .arrow {
+        width: var(--mdc-icon);
+        height: var(--mdc-icon);
+        display: block;
+      }
+
+      /* Backward travel reuses the same path, mirrored — one geometry, both
+         directions, so the two arrows can never drift apart. */
+      .handle .arrow.flip {
+        transform: scaleX(-1);
+      }
     `,
   ];
 
@@ -195,7 +227,7 @@ class MateriaDragConfirm extends LitElement {
     super();
     this.gesture = "slide";
     this.label = "";
-    this.icon = "mdi:arrow-right";
+    this.icon = "";
     this.direction = "forward";
     this.threshold = 0.55;
     /* Must clearly exceed the platform long-press timeout (500ms on Android,
@@ -491,7 +523,13 @@ class MateriaDragConfirm extends LitElement {
         ${hold
           ? nothing
           : html`<div class="handle ${settle}">
-              <ha-icon .icon=${this.icon}></ha-icon>
+              ${this.icon
+                ? html`<ha-icon .icon=${this.icon}></ha-icon>`
+                : html`<svg
+                    class="arrow ${backward ? "flip" : ""}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >${ARROW}</svg>`}
             </div>`}
       </div>
     `;

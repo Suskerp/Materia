@@ -13,10 +13,12 @@ import "./editor.js";
  *  everything would be nearly invisible on a 9-pointed cookie (whose period is
  *  40) and would stop well short on a 2-fold gem.
  *
- *  `squircle` is the CSS-box original and stays the default — a border-radius
- *  morph is the only one of these that can animate its OUTLINE continuously,
- *  since CSS cannot interpolate an SVG path. The vector styles change silhouette
- *  by turning, not by morphing. */
+ *  cookie9 is the DEFAULT. `squircle` is the CSS-box original and is kept
+ *  because it is the only one of these that can animate its OUTLINE
+ *  continuously — CSS cannot interpolate an SVG path, so every vector silhouette
+ *  changes state by turning rather than by morphing. Choosing a vector shape is
+ *  therefore a deliberate trade of that continuous morph for a real
+ *  MaterialShapes outline. */
 const SHAPE_STYLES = {
   squircle: { vector: false, rot: 45 },
   // star(9, innerRadius .8, rounding .5) rotated -90 — MaterialShapes.Cookie9Sided.
@@ -225,7 +227,7 @@ class MateriaLock extends ActionMixin(LitElement) {
       ? (this.config.locked_icon ?? "m3o:lock")
       : (this.config.unlocked_icon ?? "m3o:lock-open-right");
 
-    const style = SHAPE_STYLES[this.config.shape_style] ?? SHAPE_STYLES.squircle;
+    const style = SHAPE_STYLES[this.config.shape_style] ?? SHAPE_STYLES.cookie9;
 
     // Locking is a backward motion and unlocking a forward one, so the gesture
     // mirrors rather than always sweeping the same way — the handle ends each
@@ -272,7 +274,6 @@ class MateriaLock extends ActionMixin(LitElement) {
           <materia-drag-confirm
             .gesture=${isHold ? "hold" : "slide"}
             .label=${isHold ? holdHint : hint}
-            .icon=${locked ? "m3o:arrow-forward" : "m3o:arrow-back"}
             .direction=${locked ? "forward" : "backward"}
             .threshold=${this.config.threshold ?? 0.55}
             .holdMs=${this.config.hold_ms ?? 800}
