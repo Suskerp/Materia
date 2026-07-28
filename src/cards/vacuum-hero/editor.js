@@ -51,10 +51,11 @@ class MateriaVacuumHeroEditor extends SmartEditorBase {
         title: "Behaviour",
         icon: "mdi:cog-outline",
         fields: [
+          { name: "consumable_hours", label: "Warn when a consumable has this many hours left (default 1)", selector: { number: { min: 0, max: 200, mode: "box" } } },
           { name: "consumable_percent", label: "Warn when a % lifespan drops to (default 5)", selector: { number: { min: 0, max: 100, mode: "box" } } },
           { name: "docked_label", label: 'Label at a full battery (default "Docked")', selector: { text: {} } },
           { name: "drying_label", label: 'Drying sub-line (default "Drying the mop")', selector: { text: {} } },
-          { name: "alert_tints_hero", label: "An alert colours the whole hero", selector: { boolean: {} } },
+          { name: "alert_tints_hero", label: "An ERROR colours the whole hero (warnings never do)", selector: { boolean: {} } },
           { name: "burst", label: "Show the decorative shape", selector: { boolean: {} } },
         ],
       },

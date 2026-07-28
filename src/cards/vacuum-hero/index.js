@@ -162,15 +162,23 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
     ) ?? null;
   }
 
-  /** Consumables at or under their threshold — the invisible-warning fix. */
+  /** Consumables due soon.
+   *
+   *  Duration sensors are unit-aware: Roborock reports SECONDS, so a bare
+   *  "<= 0" rule left a strainer sitting at 60s silent when it was plainly due.
+   *  Everything is normalised to hours and compared against one window.
+   *  Percentage lifespans (Ecovacs) use their own threshold. */
   _lowConsumables() {
-    const limit = this.config.consumable_threshold ?? 0;
+    const hoursLimit = this.config.consumable_hours ?? 1;
+    const pctLimit = this.config.consumable_percent ?? 5;
+    const TO_HOURS = { s: 1 / 3600, sec: 1 / 3600, seconds: 1 / 3600, min: 1 / 60, minutes: 1 / 60, h: 1, hours: 1, d: 24 };
     return (this._caps.consumables || []).filter((id) => {
       const v = this._numOf(id);
       if (v == null) return false;
-      const unit = this.hass.states[id]?.attributes?.unit_of_measurement;
-      // Percent-style lifespans warn near zero; hour-style time-left at zero.
-      return unit === "%" ? v <= (this.config.consumable_percent ?? 5) : v <= limit;
+      const unit = String(this.hass.states[id]?.attributes?.unit_of_measurement ?? "").toLowerCase();
+      if (unit === "%") return v <= pctLimit;
+      const factor = TO_HOURS[unit] ?? 1;
+      return v * factor <= hoursLimit;
     });
   }
 
@@ -214,6 +222,12 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
     return list;
   }
 
+  /** Severity is a difference in EMPHASIS, per M3, not only in hue — which
+   *  matters when hue alone may not be distinguishable.
+   *
+   *  error   -> the SOLID error role. Highest emphasis, the way a filled button
+   *             outranks a tonal one. Fix this now.
+   *  warning -> a tonal container. Present, legible, ignorable. */
   _severityPair(sev) {
     if (sev === "warning") {
       return [
@@ -222,8 +236,8 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
       ];
     }
     return [
-      "var(--md-sys-cust-color-error-container, var(--md-sys-color-error-container))",
-      "var(--md-sys-cust-color-on-error-container, var(--md-sys-color-on-error-container))",
+      "var(--md-sys-cust-color-error, var(--md-sys-color-error))",
+      "var(--md-sys-cust-color-on-error, var(--md-sys-color-on-error))",
     ];
   }
 
@@ -299,13 +313,17 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
       bg = this.config.working_color ?? "var(--md-sys-cust-color-device, var(--md-sys-color-primary-container))";
       fg = this.config.working_color_on ?? "var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container))";
     }
+    // A warning stays in its strip: it does NOT repaint the hero and does not
+    // swap the decoration for the spiked Boom. Ignoring a warning is fine, so
+    // it must not look like the machine is broken. Only an error escalates.
+    const isError = alert != null && alert.severity !== "warning";
     let alertBg = null;
     let alertFg = null;
     if (alert) {
       const [ab, af] = this._severityPair(alert.severity);
       alertBg = alert.color ?? ab;
       alertFg = alert.color_on ?? af;
-      if (this.config.alert_tints_hero !== false) {
+      if (isError && this.config.alert_tints_hero !== false) {
         bg = alertBg;
         fg = alertFg;
       }
@@ -325,8 +343,8 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
           >
             ${this.config.burst === false
               ? nothing
-              : html`<svg class="burst ${alert ? "alarm" : working ? "working" : ""}" viewBox="0 0 180 180" aria-hidden="true">
-                  ${alert
+              : html`<svg class="burst ${isError ? "alarm" : working ? "working" : ""}" viewBox="0 0 180 180" aria-hidden="true">
+                  ${isError
                     ? svg`<g class="loom"><path d=${boom} /></g>`
                     : svg`<g class="drift"><path d=${calm} /></g>`}
                 </svg>`}
