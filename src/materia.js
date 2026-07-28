@@ -10,6 +10,7 @@ import { injectFonts } from "./styles/shared.js";
 
 // Primitives
 import "./primitives/slider.js";
+import "./primitives/drag-confirm.js";
 
 // Cards
 import "./cards/card/index.js";
@@ -32,6 +33,7 @@ import "./cards/bar-select/index.js";
 import "./cards/carousel/index.js";
 import "./cards/climate-panel/index.js";
 import "./cards/icon-row/index.js";
+import "./cards/lock/index.js";
 
 // Elements (native Lit)
 import "./elements/badge/index.js";
@@ -50,7 +52,7 @@ import "./elements/clock/index.js";
 injectFonts();
 
 // Version info
-const VERSION = "0.6.6";
+const VERSION = "0.7.0";
 console.info(
   `%c MATERIA %c v${VERSION} `,
   "color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;",

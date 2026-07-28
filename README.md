@@ -460,6 +460,56 @@ entity: weather.home
 
 Home-card weather pill: condition + temperature plus the worst metrics first (priority configurable and drag-sortable in the editor), with a chevron when it navigates.
 
+#### `materia-lock`
+
+A lock shape that morphs square -> circle as it turns 45 degrees, over a **commit gesture** -- drag the handle across, or press and hold. There is deliberately **no tap**: the one thing a lock card must never do is throw a bolt on a mis-tap while you scroll past.
+
+`entity` is **optional**. With no entity the card is self-contained and flips its own state, so you can lay it out and feel the gesture before a lock integration exists.
+
+Unlocked is the **high-emphasis** state (filled surface), locked the quiet one -- the state you need to notice from the doorway is the open one. The two states differ in fill *and* in silhouette, so the card does not lean on hue.
+
+```yaml
+# self-contained -- nothing to control, just the interaction
+type: custom:materia-lock
+gesture: slide
+```
+
+Pair it with `materia-hero` for the title block. The hero's default active state for a lock is `locked`, so flip it to `unlocked` and match the colours for the two to read as one object:
+
+```yaml
+- type: custom:materia-hero
+  entity: lock.front_door
+  name: Appartment door
+  active_state: unlocked          # hero defaults to `locked` for locks
+  title: "{{ 'Locked' if is_state('lock.front_door','locked') else 'Open' }}"
+  burst: false
+- type: custom:materia-lock
+  entity: lock.front_door
+  gesture: slide
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `entity` | string | | `lock`, `switch` or `input_boolean`. **Optional** -- omit to run self-contained |
+| `gesture` | string | `slide` | `slide` (drag the handle across) or `hold` (press and hold) |
+| `shape` | boolean | `true` | Show the morphing lock shape |
+| `threshold` | number | `0.55` | Fraction of the track a slide must pass to commit |
+| `hold_ms` | number | `800` | Hold duration. Keep above 500ms -- the platform long-press timeout -- or a long-press commits by accident |
+| `locked_state` | string | `locked` / `off` | Which state counts as locked. Defaults to `off` for a switch: a relay strike is energised to *release* the door |
+| `initial_locked` | boolean | `true` | Starting state when self-contained |
+| `pending_timeout_ms` | number | `10000` | Give up on the optimistic state if the entity never answers |
+| `unlock_hint` / `lock_hint` | string | `Slide to unlock` / `Slide to lock` | Track hint per state |
+| `unlock_hold_hint` / `lock_hold_hint` | string | `Hold to unlock` / `Hold to lock` | Track hint in `hold` mode |
+| `locking_label` / `unlocking_label` / `jammed_label` | string | `Locking…` / `Unlocking…` / `Jammed — check the door` | In-flight and fault lines |
+| `demo_label` | string | `Demo · no entity` | Note shown while self-contained |
+| `unlocked_color` / `unlocked_color_on` | string | `device` / `on-device` | Surface pair while unlocked |
+| `locked_color` / `locked_color_on` | string | `surface-container-low` / `on-surface` | Surface pair while locked |
+| `accent` / `accent_on` | string | `primary` / `on-primary` | Locked glyph and slide handle |
+| `locked_icon` / `unlocked_icon` | string | `m3o:lock` / `m3o:lock-open-right` | Icons per state |
+| `tap_action` | action | `more-info` | Tapping **the shape only** -- never the gesture track |
+
+The gesture itself is a reusable primitive, `<materia-drag-confirm>`, so a garage door or an alarm can take the same treatment.
+
 ---
 
 ### Elements
