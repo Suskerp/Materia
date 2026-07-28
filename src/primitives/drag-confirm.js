@@ -149,16 +149,12 @@ class MateriaDragConfirm extends LitElement {
       }
 
       /* In hold mode there is no travelling handle, so the label owns the whole
-         track and the icon sits with it. */
+         track and needs no clearance. It carries NO icon: whatever the gesture
+         acts on is already depicted above it, and repeating that glyph inside
+         the track just adds a second thing to read. */
       :host([gesture="hold"]) .label {
         padding: 0 16px;
-        gap: 10px;
-        grid-auto-flow: column;
         opacity: 1;
-      }
-
-      :host([gesture="hold"]) .label ha-icon {
-        --mdc-icon-size: 24px;
       }
 
       .handle {
@@ -491,10 +487,7 @@ class MateriaDragConfirm extends LitElement {
         ${hold
           ? html`<div class="fill ${backward ? "backward" : ""} ${settle}"></div>`
           : nothing}
-        <div class="label">
-          ${hold ? html`<ha-icon .icon=${this.icon}></ha-icon>` : nothing}
-          <span>${this.label}</span>
-        </div>
+        <div class="label"><span>${this.label}</span></div>
         ${hold
           ? nothing
           : html`<div class="handle ${settle}">

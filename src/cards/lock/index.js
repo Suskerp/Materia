@@ -238,7 +238,7 @@ class MateriaLock extends ActionMixin(LitElement) {
           <materia-drag-confirm
             .gesture=${isHold ? "hold" : "slide"}
             .label=${isHold ? holdHint : hint}
-            .icon=${isHold ? icon : locked ? "m3o:arrow-forward" : "m3o:arrow-back"}
+            .icon=${locked ? "m3o:arrow-forward" : "m3o:arrow-back"}
             .direction=${locked ? "forward" : "backward"}
             .threshold=${this.config.threshold ?? 0.55}
             .holdMs=${this.config.hold_ms ?? 800}
