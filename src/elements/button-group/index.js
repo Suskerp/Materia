@@ -30,6 +30,14 @@ export class MateriaButtonGroup extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
+    /** UNCONTROLLED mode. With no `entity` in config the group has nothing to
+     *  read, so it keeps its own selection and reports it as `option-selected`
+     *  instead. That is what lets a card compose a real M3 button group for
+     *  state it owns itself — a picker's tabs, a mocked control — rather than
+     *  hand-rolling a lookalike row that then drifts from this element's
+     *  shape, sizes and motion. `value` seeds it; the group owns it after. */
+    value: { type: String },
+    _localValue: { state: true },
     _optimisticValue: { state: true },
     _optimisticEntities: { state: true },
     _resolvedColorActive: { state: true },
@@ -81,6 +89,8 @@ export class MateriaButtonGroup extends ActionMixin(LitElement) {
   }
 
   get _activeValue() {
+    // Uncontrolled: no entity to read, so the local selection IS the value.
+    if (!this.config?.entity) return this._localValue ?? String(this.value ?? "");
     if (this._optimisticValue != null) return this._optimisticValue;
     const entity = this.hass?.states[this.config.entity];
     if (this.config.attribute) return String(entity?.attributes?.[this.config.attribute] ?? "");
@@ -265,6 +275,28 @@ export class MateriaButtonGroup extends ActionMixin(LitElement) {
   }
 
   _handleOptionTap(opt) {
+    // Uncontrolled: own the selection and announce it. Returns early, because
+    // there is no entity to be optimistic about and no service to call.
+    if (!this.config.entity && !opt.entity && !opt.tap_action) {
+      const v = String(opt.value);
+      if (this.config.multi_select) {
+        const cur = this._activeValue.split(",").map((x) => x.trim()).filter(Boolean);
+        const i = cur.findIndex((x) => x.toLowerCase() === v.toLowerCase());
+        if (i >= 0) cur.splice(i, 1);
+        else cur.push(v);
+        this._localValue = cur.join(",");
+      } else {
+        this._localValue = v;
+      }
+      this._fireHaptic("selection");
+      this.dispatchEvent(new CustomEvent("option-selected", {
+        detail: { value: this._localValue, option: opt },
+        bubbles: true,
+        composed: true,
+      }));
+      return;
+    }
+
     if (opt.entity) {
       // Optimistically flip just this button's own entity. `baseline` is the
       // state at tap time: the moment the REAL state moves at all, the pin is

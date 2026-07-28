@@ -39,8 +39,8 @@ export const styles = [
     /* Armed gets a FILLED tonal treatment, not quiet grey text: a timer that is
        going to fire must never be able to hide. */
     .strip .glyph {
-      width: 52px;
-      height: 52px;
+      width: 56px;
+      height: 56px;
       flex: none;
       display: grid;
       place-items: center;
@@ -129,11 +129,6 @@ export const styles = [
 
     /* ---- rows of choices ---- */
 
-    .tabs,
-    .row {
-      display: flex;
-      gap: 4px;
-    }
 
     .chips {
       display: flex;
@@ -149,53 +144,26 @@ export const styles = [
       color: inherit;
     }
 
-    /* Connected segmented pair. The selected one GROWS, which is the expressive
-       button-group behaviour already used elsewhere in Materia. */
-    .tab {
-      flex: 1;
-      height: 52px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      background: var(--md-sys-color-surface-container-high, rgba(0, 0, 0, 0.08));
-      color: var(--md-sys-color-on-surface-variant, inherit);
-      transition: flex var(--md-sys-motion-expressive-default-spatial),
-        background-color var(--md-sys-motion-fast-effects),
-        color var(--md-sys-motion-fast-effects);
-    }
 
-    .tab:first-child {
-      border-radius: 26px 6px 6px 26px;
-    }
+    /* Two-line selectable cells, NOT M3 chips — verified: FilterChipTokens is
+       ContainerHeight 32dp with ContainerShape CornerSmall (8dp) and a LabelLarge
+       label, which cannot hold a name plus a resolved time. So these are sized
+       off the M3 button ladder instead: 56px is the medium rung, 28px is half of
+       it (the pill), and 16px is that rung's square corner, giving a morph whose
+       every value traces to something. The previous 60px/30px/18px was on no
+       scale at all.
 
-    .tab:last-child {
-      border-radius: 6px 26px 26px 6px;
-    }
-
-    .tab.on {
-      flex: 1.5;
-      background: var(--md-sys-color-primary);
-      color: var(--md-sys-color-on-primary);
-    }
-
-    .tab ha-icon {
-      --mdc-icon-size: 20px;
-    }
-
-    /* Quick chips: 60px tall, so the pill radius is 30px and the morph to 18px
-       is a real, visible change. A 999px radius here would be identical to 30px
-       and the morph would appear to do nothing for most of its duration. */
+       28px rather than 999px matters: above half the height every radius renders
+       identically, so a 999 -> 16 morph would sit visually still for most of its
+       duration and then snap. */
     .quick {
-      height: 60px;
+      height: 56px;
       padding: 0 20px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       flex-grow: 1;
-      border-radius: 30px;
+      border-radius: 28px;
       background: var(--md-sys-color-surface-container-high, rgba(0, 0, 0, 0.06));
       transition: border-radius var(--md-sys-motion-expressive-fast-spatial),
         background-color var(--md-sys-motion-fast-effects),
@@ -203,7 +171,7 @@ export const styles = [
     }
 
     .quick.on {
-      border-radius: 18px;
+      border-radius: 16px;
       background: var(--md-sys-color-primary);
       color: var(--md-sys-color-on-primary);
     }
@@ -285,7 +253,7 @@ export const styles = [
     /* ---- the unfolding custom picker ---- */
 
     .custom {
-      border-radius: 30px;
+      border-radius: 28px;
       background: var(--md-sys-color-surface-container-high, rgba(0, 0, 0, 0.06));
       overflow: hidden;
     }
@@ -372,31 +340,9 @@ export const styles = [
       flex: none;
     }
 
-    .min {
-      width: 40px;
-      height: 40px;
-      display: grid;
-      place-items: center;
-      font-size: 13px;
-      font-weight: 600;
-      background: var(--md-sys-color-surface-container-highest, rgba(0, 0, 0, 0.1));
-      border-radius: 6px;
-      transition: background-color var(--md-sys-motion-fast-effects),
-        color var(--md-sys-motion-fast-effects);
-    }
 
-    .min:first-child {
-      border-radius: 20px 6px 6px 20px;
-    }
 
-    .min:last-child {
-      border-radius: 6px 20px 20px 6px;
-    }
 
-    .min.on {
-      background: var(--md-sys-color-primary);
-      color: var(--md-sys-color-on-primary);
-    }
 
     /* 24 hours on a drag-free scroll rail — a 24-wide grid would crush each
        cell below the 40px minimum touch target. */
@@ -414,14 +360,14 @@ export const styles = [
 
     .hour {
       flex: none;
-      width: 52px;
-      height: 52px;
+      width: 56px;
+      height: 56px;
       display: grid;
       place-items: center;
       font-size: 15px;
       font-weight: 500;
       background: var(--md-sys-color-surface-container-highest, rgba(0, 0, 0, 0.1));
-      border-radius: 26px;
+      border-radius: 28px;
       font-variant-numeric: tabular-nums;
       transition: border-radius var(--md-sys-motion-expressive-fast-spatial),
         background-color var(--md-sys-motion-fast-effects),
@@ -491,30 +437,8 @@ export const styles = [
       background: var(--md-sys-color-on-primary);
     }
 
-    .days {
-      display: flex;
-      gap: 3px;
-    }
 
-    .dayb {
-      flex: 1;
-      height: 48px;
-      display: grid;
-      place-items: center;
-      font-size: 13px;
-      font-weight: 600;
-      border-radius: 24px;
-      background: var(--md-sys-color-surface-container-high, rgba(0, 0, 0, 0.06));
-      transition: border-radius var(--md-sys-motion-expressive-fast-spatial),
-        background-color var(--md-sys-motion-fast-effects),
-        color var(--md-sys-motion-fast-effects);
-    }
 
-    .dayb.on {
-      border-radius: 14px;
-      background: var(--md-sys-color-primary);
-      color: var(--md-sys-color-on-primary);
-    }
 
     /* ---- actions ---- */
 
@@ -550,6 +474,49 @@ export const styles = [
 
     .confirm ha-icon {
       --mdc-icon-size: 24px;
+    }
+
+    /* Composed button groups. They bring their own ha-card, so the wrapper is
+       flattened to sit in this sheet rather than reading as a card-in-a-card. */
+    materia-button-group {
+      display: block;
+    }
+
+    materia-button-group.mins {
+      flex: none;
+    }
+
+    /* STAGGERED ENTER. The gap the picker had was not missing transitions on
+       selection — those were there — it was that whole GROUPS appeared with no
+       motion at all: switching tab swapped one block for another instantly, and
+       the weekday row popped into existence. Each item now rises with a 45ms
+       step, the same cadence materia-bar-select uses, so a set reads as arriving
+       rather than being replaced.
+
+       This is an ANIMATION, not a transition, because the elements are created
+       and destroyed by the mode switch — there is no previous value to
+       interpolate from. */
+    @keyframes ms-rise {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.97);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .rise {
+      animation: ms-rise var(--md-sys-motion-expressive-default-spatial) both;
+    }
+
+    /* Respect the user's setting: the stagger is decorative, and a vestibular
+       trigger is not worth a flourish. */
+    @media (prefers-reduced-motion: reduce) {
+      .rise {
+        animation: none;
+      }
     }
 
     .mock {

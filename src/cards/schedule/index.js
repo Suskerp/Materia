@@ -2,6 +2,7 @@ import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
 import "../../primitives/calendar.js";
+import "../../elements/button-group/index.js";
 import "./editor.js";
 
 /**
@@ -73,7 +74,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     this._open = false;
     this._armed = null; // { head, sub, repeating } once confirmed
     this._mode = "clock";
-    this._pick = "1h";
+    this._pick = null; // resolved lazily to the first preset
     this._event = null;
     this._customOpen = false;
     this._viewY = now.getFullYear();
@@ -84,6 +85,13 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     this._repeating = false;
     // Mon-Fri, matching the design's default. Index 0 is Monday.
     this._days = [true, true, true, true, true, false, false];
+  }
+
+  /** Selected shortcut, defaulting to the first configured one. Deferred rather
+   *  than hardcoded in the constructor, because `presets` may not be set yet and
+   *  its keys are generated. */
+  get _pickKey() {
+    return this._pick ?? this._quick[0]?.key ?? null;
   }
 
   get _lang() {
@@ -104,42 +112,102 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     return `${wd} ${this._hhmm(d)}`;
   }
 
-  /** The six shortcuts, resolved against the current clock. */
-  get _quick() {
-    const now = new Date();
-    const plus = (h) => new Date(now.getTime() + h * 3600000);
-    const at = (dayOffset, hh, mm = 0) => {
-      const d = new Date(now);
-      d.setDate(d.getDate() + dayOffset);
-      d.setHours(hh, mm, 0, 0);
-      return d;
-    };
-    const in1 = plus(1);
-    const in4 = plus(4);
-    const tonight = at(now.getHours() >= 23 ? 1 : 0, 23);
-    const tomorrow = at(1, 9);
-    const noon = at(now.getHours() >= 12 ? 1 : 0, 12);
-    // Days until Saturday, Monday-indexed; today only counts before 10:00.
-    const toSat = (5 - ((now.getDay() + 6) % 7) + 7) % 7;
-    const sat = at(toSat === 0 && now.getHours() >= 10 ? 7 : toSat, 10);
+  /** Built-in shortcut set, used when `presets` is not configured. Each entry
+   *  is the same declarative shape a user writes, so the default IS an example
+   *  of the config format rather than a hardcoded special case. */
+  static DEFAULT_PRESETS = [
+    { label: "In 1 hour", offset: "1h" },
+    { label: "In 4 hours", offset: "4h" },
+    { label: "Tonight", at: "23:00" },
+    { label: "Tomorrow", at: "09:00", days: 1, grow: 1.4 },
+    { label: "Noon", at: "12:00" },
+    { label: "Saturday", at: "10:00", weekday: 6, grow: 1.4 },
+  ];
 
-    return [
-      { key: "1h", name: "In 1 hour", at: this._hhmm(in1), grow: 1 },
-      { key: "4h", name: "In 4 hours", at: this._hhmm(in4), grow: 1 },
-      { key: "tonight", name: "Tonight", at: this._hhmm(tonight), grow: 1 },
-      { key: "tomorrow", name: "Tomorrow", at: this._dayTime(tomorrow), grow: 1.4 },
-      { key: "noon", name: "Noon", at: this._dayTime(noon), grow: 1 },
-      { key: "weekend", name: "Saturday", at: this._dayTime(sat), grow: 1.4 },
-    ];
+  /** Resolve one declarative preset against the clock.
+   *
+   *    offset: "90m" | "2h" | "1d"   — relative to now
+   *    at: "23:00"                    — clock time today
+   *    at + days: 1                   — clock time N days out
+   *    at + weekday: 6                — clock time on the next given weekday
+   *                                     (1 = Monday .. 7 = Sunday, ISO)
+   *
+   *  A resolved moment is NEVER in the past. `at` alone rolls to tomorrow once
+   *  it has passed, and `weekday` rolls a whole week if today already qualifies
+   *  but the time has gone. A shortcut that offers a moment you cannot schedule
+   *  is worse than not offering it. */
+  _resolvePreset(p, now) {
+    if (p.offset) {
+      const m = /^(\d+(?:\.\d+)?)\s*(m|h|d)$/i.exec(String(p.offset).trim());
+      if (!m) return null;
+      const mult = { m: 60000, h: 3600000, d: 86400000 }[m[2].toLowerCase()];
+      return new Date(now.getTime() + parseFloat(m[1]) * mult);
+    }
+    const hm = /^(\d{1,2}):(\d{2})$/.exec(String(p.at ?? "").trim());
+    if (!hm) return null;
+    const [hh, mm] = [Number(hm[1]), Number(hm[2])];
+
+    const d = new Date(now);
+    d.setSeconds(0, 0);
+    d.setHours(hh, mm);
+
+    if (p.weekday != null) {
+      // ISO 1..7 (Mon..Sun) -> JS 0..6 (Sun..Sat).
+      const targetJs = Number(p.weekday) % 7;
+      let delta = (targetJs - now.getDay() + 7) % 7;
+      if (delta === 0 && d <= now) delta = 7;
+      d.setDate(d.getDate() + delta);
+      return d;
+    }
+    if (p.days != null) {
+      d.setDate(d.getDate() + Number(p.days));
+      return d;
+    }
+    if (d <= now) d.setDate(d.getDate() + 1);
+    return d;
   }
 
+  /** Configured shortcuts, resolved. Anything unresolvable is dropped rather
+   *  than rendered as a dead chip. */
+  get _quick() {
+    const now = new Date();
+    const list = this.config.presets ?? MateriaSchedule.DEFAULT_PRESETS;
+    return list
+      .map((p, i) => {
+        const when = this._resolvePreset(p, now);
+        if (!when) return null;
+        const sameDay = when.toDateString() === now.toDateString();
+        return {
+          key: p.key ?? `p${i}`,
+          name: p.label ?? "—",
+          // Show a weekday too once the moment is not today, or "Tomorrow 09:00"
+          // and "Sat 09:00" would be indistinguishable.
+          at: sameDay ? this._hhmm(when) : this._dayTime(when),
+          grow: p.grow ?? 1,
+          when,
+        };
+      })
+      .filter(Boolean);
+  }
+
+  static DEFAULT_TRIGGERS = [
+    { key: "leave", label: "When I leave", secondary: "My phone leaves home", icon: "m3o:directions-walk" },
+    { key: "empty", label: "When everyone's out", secondary: "All trackers away for 10 min", icon: "m3o:person-off" },
+    { key: "night", label: "When the house sleeps", secondary: "All lights off after 22:00", icon: "m3o:bedtime" },
+    { key: "sunset", label: "At sunset", secondary: "Around 21:48 today", icon: "m3o:wb-twilight" },
+  ];
+
+  /** Configured triggers. `label`/`secondary` are the documented keys; `name`
+   *  and `sub` are accepted as aliases so a config written against the earlier
+   *  shape keeps working. */
   get _events() {
-    return this.config.triggers ?? [
-      { key: "leave", name: "When I leave", sub: "My phone leaves home", icon: "m3o:directions-walk" },
-      { key: "empty", name: "When everyone's out", sub: "All trackers away for 10 min", icon: "m3o:person-off" },
-      { key: "night", name: "When the house sleeps", sub: "All lights off after 22:00", icon: "m3o:bedtime" },
-      { key: "sunset", name: "At sunset", sub: "Around 21:48 today", icon: "m3o:wb-twilight" },
-    ];
+    const list = this.config.triggers ?? MateriaSchedule.DEFAULT_TRIGGERS;
+    return list.map((t, i) => ({
+      key: t.key ?? `t${i}`,
+      name: t.label ?? t.name ?? "—",
+      sub: t.secondary ?? t.sub ?? "",
+      icon: t.icon ?? "m3o:sensors",
+    }));
   }
 
   /** What the header echoes, and what the strip shows once armed. */
@@ -155,7 +223,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
         .format(new Date(this._viewY, this._viewM, this._date));
       return { head: `${this._pad(this._hour)}:${this._pad(this._minute)}`, sub: date };
     }
-    const q = this._quick.find((x) => x.key === this._pick);
+    const q = this._quick.find((x) => x.key === this._pickKey);
     return q ? { head: q.name, sub: `Starts at ${q.at}` } : { head: "When?", sub: "Pick a moment" };
   }
 
@@ -163,6 +231,49 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     const fmt = new Intl.DateTimeFormat(this._lang, { weekday: "narrow" });
     // 2024-01-01 was a Monday, so index 0 lands on Monday.
     return Array.from({ length: 7 }, (_, i) => fmt.format(new Date(2024, 0, 1 + i)));
+  }
+
+  /* ---- composed button-group configs -------------------------------------
+     These are real materia-button-group instances in UNCONTROLLED mode, not
+     lookalike rows. Hand-rolling them was the mistake: the segmented shape,
+     the ladder heights, the connected-corner maths and the selected-state morph
+     all already live in that element, and a copy drifts from it the moment
+     either side changes.
+
+     `preset: "primary"` deliberately overrides the element's M3 guardrail
+     (which defaults an unstyled group to the SECONDARY toggle family, one
+     primary per surface). Here the whole picker's selected state is primary —
+     chips, hours, the echoed headline — so a secondary tab would be the only
+     thing disagreeing. */
+
+  get _tabConfig() {
+    return {
+      size: "m", // 56px, the M3 button ladder's medium rung
+      preset: "primary",
+      options: [
+        { label: this.config.time_tab_label ?? "At a time", value: "clock", icon: "m3o:schedule" },
+        { label: this.config.trigger_tab_label ?? "When…", value: "event", icon: "m3o:sensors" },
+      ],
+    };
+  }
+
+  get _minuteConfig() {
+    const mins = this.config.minutes ?? [0, 15, 30, 45];
+    return {
+      size: "s", // 40px
+      preset: "primary",
+      options: mins.map((m) => ({ label: this._pad(m), value: String(m) })),
+    };
+  }
+
+  get _weekdayConfig() {
+    return {
+      size: "s",
+      preset: "primary",
+      multi_select: true,
+      active_shape: "square", // the M3E selected-toggle morph
+      options: this._dayNames.map((n, i) => ({ label: n, value: String(i) })),
+    };
   }
 
   /** The fold animates from a MEASURED height: CSS cannot interpolate to auto,
@@ -238,14 +349,12 @@ class MateriaSchedule extends ActionMixin(LitElement) {
             <span class="subline">${d.sub}</span>
           </div>
 
-          <div class="tabs">
-            <button class="tab ${isClock ? "on" : ""}" @click=${() => { this._mode = "clock"; }}>
-              <ha-icon icon="m3o:schedule"></ha-icon>At a time
-            </button>
-            <button class="tab ${isClock ? "" : "on"}" @click=${() => { this._mode = "event"; }}>
-              <ha-icon icon="m3o:sensors"></ha-icon>When…
-            </button>
-          </div>
+          <materia-button-group
+            .hass=${this.hass}
+            .value=${this._mode}
+            .config=${this._tabConfig}
+            @option-selected=${(e) => { this._mode = e.detail.value; }}
+          ></materia-button-group>
 
           ${isClock ? this._renderClock() : this._renderTriggers()}
 
@@ -266,18 +375,16 @@ class MateriaSchedule extends ActionMixin(LitElement) {
           </div>
 
           ${this._repeating
-            ? html`<div class="days">
-                ${this._dayNames.map(
-                  (n, i) => html`<button
-                    class="dayb ${this._days[i] ? "on" : ""}"
-                    @click=${() => {
-                      const next = [...this._days];
-                      next[i] = !next[i];
-                      this._days = next;
-                    }}
-                  >${n}</button>`
-                )}
-              </div>`
+            ? html`<materia-button-group
+                class="days rise"
+                .hass=${this.hass}
+                .value=${this._days.map((on, i) => (on ? String(i) : null)).filter(Boolean).join(",")}
+                .config=${this._weekdayConfig}
+                @option-selected=${(e) => {
+                  const on = new Set(String(e.detail.value).split(",").filter((x) => x !== ""));
+                  this._days = this._days.map((_, i) => on.has(String(i)));
+                }}
+              ></materia-button-group>`
             : nothing}
 
           <div class="actions">
@@ -298,7 +405,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     return html`
       <div class="chips">
         ${this._quick.map(
-          (q) => html`<button
+          (q, i) => html`<button
             class="quick ${this._pick === q.key ? "on" : ""}"
             style="flex-grow:${q.grow}"
             @click=${() => {
@@ -349,17 +456,16 @@ class MateriaSchedule extends ActionMixin(LitElement) {
             <div class="timerow">
               <span class="clock">${this._pad(this._hour)}:${this._pad(this._minute)}</span>
               <span class="spacer"></span>
-              <div class="mins">
-                ${[0, 15, 30, 45].map(
-                  (m) => html`<button
-                    class="min ${this._minute === m ? "on" : ""}"
-                    @click=${() => {
-                      this._minute = m;
-                      this._pick = "custom";
-                    }}
-                  >${this._pad(m)}</button>`
-                )}
-              </div>
+              <materia-button-group
+                class="mins"
+                .hass=${this.hass}
+                .value=${String(this._minute)}
+                .config=${this._minuteConfig}
+                @option-selected=${(e) => {
+                  this._minute = Number(e.detail.value);
+                  this._pick = "custom";
+                }}
+              ></materia-button-group>
             </div>
 
             <div class="hours">
@@ -381,8 +487,9 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     return html`
       <div class="list">
         ${this._events.map(
-          (e) => html`<button
-            class="trigger ${this._event === e.key ? "on" : ""}"
+          (e, i) => html`<button
+            class="trigger rise ${this._event === e.key ? "on" : ""}"
+            style="animation-delay:${i * 45}ms"
             @click=${() => { this._event = e.key; }}
           >
             <ha-icon .icon=${e.icon}></ha-icon>
