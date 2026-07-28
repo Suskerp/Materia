@@ -1,8 +1,13 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaVacuumHeroEditor extends SmartEditorBase {
+  /* Switches must be seeded with the card's own defaults. An option that
+     defaults to TRUE but is absent from config renders as `undefined`, which
+     ha-form draws as OFF — so the toggle claims the feature is disabled when it
+     is actually on, and merely opening the editor and saving would turn it off
+     for real. Config still wins, so an explicit false is preserved. */
   _formData() {
-    return { brand: "roborock", ...this._config };
+    return { brand: "roborock", burst: true, alert_tints_hero: true, ...this._config };
   }
 
   _sectionsSignature() {

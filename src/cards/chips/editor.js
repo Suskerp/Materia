@@ -1,8 +1,13 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaChipsEditor extends SmartEditorBase {
+  /* Switches must be seeded with the card's own defaults. An option that
+     defaults to TRUE but is absent from config renders as `undefined`, which
+     ha-form draws as OFF — so the toggle claims the feature is disabled when it
+     is actually on, and merely opening the editor and saving would turn it off
+     for real. Config still wins, so an explicit false is preserved. */
   _formData() {
-    return { ...this._config };
+    return { show_check: true, ...this._config };
   }
 
   get _sections() {
