@@ -101,13 +101,17 @@ class MateriaCarousel extends ActionMixin(LitElement) {
       const d = Math.min(...origins.map((o) => Math.abs(o - i)));
       if (d > 2) return;
       // Origin pushes outward; neighbours give way, faintly and later.
-      const peak = d === 0 ? 1.045 : d === 1 ? 0.975 : 0.99;
+      // Far bigger travel, and the tapped tile starts on the SAME frame as the
+      // tap — the old 55ms-per-step delay applied to the origin too, which is
+      // what made it feel laggy. Neighbours still trail, just sooner.
+      const peak = d === 0 ? 1.12 : d === 1 ? 0.93 : 0.97;
       el.animate(
-        [{ transform: "scale(1)" }, { transform: `scale(${peak})`, offset: 0.45 }, { transform: "scale(1)" }],
+        [{ transform: "scale(1)" }, { transform: `scale(${peak})`, offset: 0.42 }, { transform: "scale(1)" }],
         {
-          duration: 260 + d * 50,
-          delay: d * 55,
-          easing: "cubic-bezier(.2,1.4,.3,1)",
+          duration: d === 0 ? 340 : 300,
+          delay: d * 30,
+          // Overshooting spring, so it arrives with a snap rather than easing in.
+          easing: "cubic-bezier(.18,1.9,.28,1)",
           fill: "none",
         }
       );
