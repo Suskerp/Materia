@@ -147,6 +147,21 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
     return t.charAt(0).toUpperCase() + t.slice(1);
   }
 
+  /** The reset button that clears a given consumable, if the device has one.
+   *
+   *  Roborock exposes button.*_reset_sensor_consumable and friends; Ecovacs
+   *  button.*_reset_filter_lifespan. Paired by part keyword so both work.
+   *  Order matters: the specific two-word parts must be tested before anything
+   *  that could substring-match them. */
+  _resetButtonFor(consumableId) {
+    const PARTS = ["main_brush", "side_brush", "maintenance_brush", "strainer", "filter", "sensor", "mop"];
+    const part = PARTS.find((pt) => consumableId.includes(pt));
+    if (!part) return null;
+    return this._siblings().find(
+      (id) => id.startsWith("button.") && id.includes("reset") && id.includes(part)
+    ) ?? null;
+  }
+
   /** Consumables at or under their threshold — the invisible-warning fix. */
   _lowConsumables() {
     const limit = this.config.consumable_threshold ?? 0;
@@ -190,6 +205,9 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
           ?? `${this.hass.states[id]?.attributes?.friendly_name ?? id} needs attention`,
         severity: "warning",
         entity: id,
+        // Once you've done the chore, clearing the counter is the next thing
+        // you want — so offer it inline rather than sending you to the device.
+        reset: this._resetButtonFor(id),
       })),
       ...(this.config.alerts || []),
     ].filter(Boolean);
@@ -334,6 +352,20 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
               >
                 <ha-icon .icon=${alert.icon ?? "mdi:alert-circle-outline"}></ha-icon>
                 <span>${alert.text}</span>
+                ${alert.reset
+                  ? html`<button
+                      class="alert-action"
+                      title="Reset"
+                      @click=${(e) => {
+                        // The strip itself opens more-info; the button must not.
+                        e.stopPropagation();
+                        this._fireHaptic?.("light");
+                        this._callService("button", "press", { entity_id: alert.reset });
+                      }}
+                    >
+                      <ha-icon icon="mdi:restart"></ha-icon>
+                    </button>`
+                  : nothing}
               </div>`
             : nothing}
         </div>

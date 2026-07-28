@@ -16,10 +16,10 @@
 /** Consumable chores, keyed by a fragment of the entity id. */
 const CONSUMABLES = [
   { match: ["sensor_time_left", "sensor_lifespan"], en: "Clean the sensors", nl: "Maak de sensoren schoon" },
-  { match: ["main_brush"], en: "Replace the main brush", nl: "Vervang de hoofdrolborstel" },
+  { match: ["main_brush"], en: "Replace the main brush", nl: "Vervang de hoofdborstel" },
   { match: ["side_brush"], en: "Replace the side brush", nl: "Vervang de zijborstel" },
-  { match: ["filter"], en: "Replace the filter", nl: "Vervang de filter" },
-  { match: ["strainer"], en: "Clean the dock strainer", nl: "Maak de zeef van het dock schoon" },
+  { match: ["filter"], en: "Replace the filter", nl: "Vervang het filter" },
+  { match: ["strainer"], en: "Clean the dock strainer", nl: "Reinig de dockzeef" },
   { match: ["maintenance_brush"], en: "Clean the dock brush", nl: "Maak de dockborstel schoon" },
   { match: ["mop_life", "mop_time"], en: "Replace the mop pad", nl: "Vervang de dweil" },
 ];
@@ -32,15 +32,15 @@ const ERRORS = [
   { match: ["dustbin_full", "bin_full", "dust_bin_full"], en: "Empty the dustbin", nl: "Leeg de stofbak" },
   { match: ["water_box_empty", "low_water", "no_water"], en: "Refill the water tank", nl: "Vul het waterreservoir bij" },
   { match: ["waste_water_tank_full", "dirty_water_full"], en: "Empty the dirty water tank", nl: "Leeg het vuilwaterreservoir" },
-  { match: ["main_brush_stuck", "main_brush_jammed"], en: "Free the main brush", nl: "Maak de hoofdrolborstel vrij" },
+  { match: ["main_brush_stuck", "main_brush_jammed"], en: "Free the main brush", nl: "Maak de hoofdborstel vrij" },
   { match: ["side_brush_stuck", "side_brush_jammed"], en: "Free the side brush", nl: "Maak de zijborstel vrij" },
-  { match: ["wheel_stuck", "wheels_stuck", "stuck"], en: "The wheels are stuck - move it clear", nl: "De wielen zitten vast - zet hem vrij" },
+  { match: ["wheel_stuck", "wheels_stuck", "stuck"], en: "The wheels are stuck - move it clear", nl: "De wielen zitten vast — haal het obstakel weg" },
   { match: ["cliff_sensor", "cliff"], en: "Clean the cliff sensors", nl: "Maak de valsensoren schoon" },
-  { match: ["filter_blocked", "filter_dirty"], en: "Clean or replace the filter", nl: "Maak de filter schoon of vervang hem" },
+  { match: ["filter_blocked", "filter_dirty"], en: "Clean or replace the filter", nl: "Reinig of vervang het filter" },
   { match: ["bumper_stuck", "bumper"], en: "Free the bumper", nl: "Maak de bumper vrij" },
   { match: ["dock", "charger"], en: "Check the dock connection", nl: "Controleer de verbinding met het dock" },
   { match: ["low_battery", "battery_low"], en: "Battery too low - let it charge", nl: "Accu te laag - laat hem opladen" },
-  { match: ["trapped", "cannot_move", "stuck_in_place"], en: "It is trapped - move it clear", nl: "Hij zit vast - zet hem vrij" },
+  { match: ["trapped", "cannot_move", "stuck_in_place"], en: "It is trapped - move it clear", nl: "De robot zit vast — haal hem los" },
   { match: ["mop_missing", "no_mop"], en: "Attach the mop pad", nl: "Bevestig de dweil" },
   { match: ["full", "container_full"], en: "Empty the container", nl: "Leeg het reservoir" },
 ];

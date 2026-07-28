@@ -70,10 +70,39 @@ export const styles = [
     }
 
     .alert span {
+      flex: 1;
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    /* Inline "I've done it" affordance. Inherits the strip's own foreground so
+       it reads at the right severity without a second colour decision. */
+    .alert-action {
+      flex: none;
+      width: 32px;
+      height: 32px;
+      margin: -4px -6px -4px 0;
+      border: none;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      color: inherit;
+      background: color-mix(in srgb, currentColor 12%, transparent);
+      position: relative;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      transition: background-color var(--md-sys-motion-fast-effects);
+    }
+
+    .alert-action ha-icon {
+      --mdc-icon-size: 18px;
+    }
+
+    .alert-action:hover {
+      background: color-mix(in srgb, currentColor 22%, transparent);
     }
 
     .burst {
