@@ -94,6 +94,14 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     return this._pick ?? this._quick[0]?.key ?? null;
   }
 
+  /** True once anything is wired, so the card stops advertising itself as a mock
+   *  the moment it can actually do something. */
+  get _isWired() {
+    return !!(this.config.confirm_action || this.config.trigger_action
+      || (this.config.presets ?? []).some((p) => p.tap_action)
+      || (this.config.triggers ?? []).some((t) => t.tap_action));
+  }
+
   get _lang() {
     return this.hass?.locale?.language || undefined;
   }
@@ -185,6 +193,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
           at: sameDay ? this._hhmm(when) : this._dayTime(when),
           grow: p.grow ?? 1,
           when,
+          tap_action: p.tap_action,
         };
       })
       .filter(Boolean);
@@ -207,6 +216,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       name: t.label ?? t.name ?? "—",
       sub: t.secondary ?? t.sub ?? "",
       icon: t.icon ?? "m3o:sensors",
+      tap_action: t.tap_action,
     }));
   }
 
@@ -276,6 +286,84 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     };
   }
 
+  /* ---- the resolved moment, and the wiring seam ---------------------------
+
+     The card deliberately knows NOTHING about vacuums, timers or schedulers. It
+     resolves the moment the user picked and hands it to a configured action,
+     substituting $placeholders into the service data. That keeps every branch of
+     "what should actually happen" in Home Assistant — a script with a choose —
+     rather than in a Lovelace card, which is where HA's own guidance puts it.
+
+     These are NOT Jinja templates: templates are not allowed inside actions, and
+     the card performs the substitution itself before calling the service. The $
+     syntax is deliberately different from {{ }} so the two are not confused.
+
+        $datetime  2026-07-29 09:00:00   local, input_datetime.set_datetime shape
+        $date      2026-07-29
+        $time      09:00
+        $duration  01:00:00              now -> the moment, for timer.start
+        $weekdays  [mon, tue, wed]       array when repeating, else empty
+        $repeat    true | false
+        $trigger   leave                 the chosen trigger's key
+        $label     Tomorrow 09:00        what the strip will show
+  */
+
+  /** The absolute moment currently described, or null in trigger mode. */
+  get _resolvedWhen() {
+    if (this._mode === "event") return null;
+    if (this._pickKey === "custom") {
+      return new Date(this._viewY, this._viewM, this._date, this._hour, this._minute, 0, 0);
+    }
+    return this._quick.find((x) => x.key === this._pickKey)?.when ?? null;
+  }
+
+  _actionContext() {
+    const when = this._resolvedWhen;
+    const two = (n) => String(n).padStart(2, "0");
+    const DOW = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+    let datetime = "";
+    let date = "";
+    let time = "";
+    let duration = "";
+    if (when) {
+      date = `${when.getFullYear()}-${two(when.getMonth() + 1)}-${two(when.getDate())}`;
+      time = `${two(when.getHours())}:${two(when.getMinutes())}`;
+      // LOCAL, not ISO/UTC: input_datetime and scheduler both take wall-clock,
+      // and handing them a Z-suffixed UTC string silently shifts the run.
+      datetime = `${date} ${time}:00`;
+      const secs = Math.max(0, Math.round((when.getTime() - Date.now()) / 1000));
+      duration = `${two(Math.floor(secs / 3600))}:${two(Math.floor((secs % 3600) / 60))}:${two(secs % 60)}`;
+    }
+
+    return {
+      datetime,
+      date,
+      time,
+      duration,
+      weekdays: this._repeating ? DOW.filter((_, i) => this._days[i]) : [],
+      repeat: !!this._repeating,
+      trigger: this._event ?? "",
+      label: this._describe.head,
+    };
+  }
+
+  /** Substitute $placeholders through a nested action object. A string that is
+   *  EXACTLY one placeholder yields the raw typed value, so $weekdays arrives as
+   *  an array and $repeat as a boolean rather than as "mon,tue" and "true". */
+  _fill(value, ctx) {
+    if (typeof value === "string") {
+      const solo = /^\$(\w+)$/.exec(value.trim());
+      if (solo && solo[1] in ctx) return ctx[solo[1]];
+      return value.replace(/\$(\w+)/g, (m, k) => (k in ctx ? String(ctx[k]) : m));
+    }
+    if (Array.isArray(value)) return value.map((v) => this._fill(v, ctx));
+    if (value && typeof value === "object") {
+      return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, this._fill(v, ctx)]));
+    }
+    return value;
+  }
+
   /** The fold animates from a MEASURED height: CSS cannot interpolate to auto,
    *  and a hardcoded max-height would either clip a 6-row month or leave a gap
    *  under a 5-row one. */
@@ -286,11 +374,48 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     body.style.height = this._customOpen && inner ? `${inner.scrollHeight}px` : "0px";
   }
 
+  /** Opening the calendar should CONTINUE from the moment already on screen,
+   *  not jump to an arbitrary 09:00. Anything else throws away the choice the
+   *  user just made one row above. */
+  _seedCustom() {
+    const when = this._quick.find((x) => x.key === this._pickKey)?.when
+      ?? new Date(Date.now() + 3600000);
+    this._viewY = when.getFullYear();
+    this._viewM = when.getMonth();
+    this._date = when.getDate();
+
+    // Snap UP to the next offered minute, never down: rounding backwards can
+    // land the default in the past, which is the one thing the preset roll rules
+    // exist to prevent.
+    const mins = [...(this.config.minutes ?? [0, 15, 30, 45])].sort((a, b) => a - b);
+    const m = when.getMinutes();
+    const next = mins.find((x) => x >= m);
+    this._minute = next ?? mins[0];
+    this._hour = next == null ? (when.getHours() + 1) % 24 : when.getHours();
+  }
+
   _commit() {
-    // MOCK — the single method a real backend would replace.
     this._armed = { ...this._describe, repeating: this._repeating, mode: this._mode };
     this._open = false;
-    this._fireHaptic("success");
+
+    // Per-preset / per-trigger action wins over the card-level one, so a single
+    // picker can drive several different backends — a timer for the relative
+    // shortcuts, a scheduler entry for a weekly repeat, an automation toggle for
+    // a trigger — without the card knowing which is which.
+    const chosen = this._mode === "event"
+      ? this._events.find((e) => e.key === this._event)
+      : this._quick.find((q) => q.key === this._pickKey);
+    const action = chosen?.tap_action
+      ?? (this._mode === "event" ? this.config.trigger_action : null)
+      ?? this.config.confirm_action;
+
+    if (!action) {
+      // No action configured: stays a mock, and says so on the face of the card.
+      this._fireHaptic("success");
+      return;
+    }
+    // _handleAction fires its own haptic, so firing one here too would buzz twice.
+    this._handleAction(this._fill(action, this._actionContext()));
   }
 
   _renderStrip() {
@@ -395,7 +520,9 @@ class MateriaSchedule extends ActionMixin(LitElement) {
             </button>
           </div>
 
-          <div class="mock">Mocked · nothing is scheduled</div>
+          ${this._isWired
+            ? nothing
+            : html`<div class="mock">Mocked · nothing is scheduled</div>`}
         </div>
       </ha-card>
     `;
@@ -423,7 +550,11 @@ class MateriaSchedule extends ActionMixin(LitElement) {
           class="custom-head"
           @click=${() => {
             this._customOpen = !this._customOpen;
-            if (this._customOpen) this._pick = "custom";
+            if (this._customOpen) {
+              this._seedCustom();
+              this._pick = "custom";
+            }
+            this._fireHaptic("selection");
           }}
         >
           <ha-icon icon="m3o:event"></ha-icon>
