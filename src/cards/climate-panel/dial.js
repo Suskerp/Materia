@@ -198,12 +198,12 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
   /** Memoized config for the embedded mode button-group — a fresh object per
    *  render would force a child re-render on every parent update. */
   _modeGroupConfig(modes, accent, accentOn) {
-    const key = `${this.config.entity}|${modes.join()}|${accent}|${accentOn}|${this.config.mode_size ?? "l"}`;
+    const key = `${this.config.entity}|${modes.join()}|${accent}|${accentOn}|${this.config.mode_size ?? "m"}`;
     if (this._mgKey !== key) {
       this._mgKey = key;
       this._mgConfig = {
         entity: this.config.entity,
-        size: this.config.mode_size ?? "l",
+        size: this.config.mode_size ?? "m",
         variant: "tonal",
         active_shape: "square", // M3 Expressive: selected toggles morph square
         color_active: accent,

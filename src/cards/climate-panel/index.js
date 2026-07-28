@@ -83,7 +83,8 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
         .hass=${this.hass}
         .config=${{
           entity: this.config.entity,
-          size: "l",
+          // m == 56dp on the M3 button ladder, nearest the 48dp this used to be.
+          size: "m",
           variant: "tonal",
           active_shape: "square",
           color_active: act,
