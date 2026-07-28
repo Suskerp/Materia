@@ -360,7 +360,11 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
                         // The strip itself opens more-info; the button must not.
                         e.stopPropagation();
                         this._fireHaptic?.("light");
-                        this._callService("button", "press", { entity_id: alert.reset });
+                        // Entity goes in TARGET, not data. button.press is an
+                        // entity service with no fields, so an entity_id passed
+                        // as service data lands nowhere and the call silently
+                        // does nothing.
+                        this._callService("button", "press", {}, { entity_id: alert.reset });
                       }}
                     >
                       <ha-icon icon="mdi:restart"></ha-icon>
