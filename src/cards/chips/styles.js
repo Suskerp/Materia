@@ -22,9 +22,16 @@ export const styles = [
     .chip {
       display: flex;
       align-items: center;
-      gap: 7px;
-      height: 44px;
-      padding: 0 15px;
+      gap: 8px;
+      /* ON THE LADDER. 44px was on no scale at all: M3's FilterChipTokens is
+         ContainerHeight 32dp with ContainerShape CornerSmall (8dp), and the M3
+         Expressive button ladder is 32/40/56/96/136 — 44 is neither. These
+         behave like M3E selected-toggle buttons rather than filter chips (they
+         morph shape on selection, which a filter chip does not), so they take the
+         button ladder's SMALL rung: 40px tall, 16px padding, 8px gap, 14px label
+         — all four straight from .size-s in elements/button/styles.js. */
+      height: 40px;
+      padding: 0 16px;
       box-sizing: border-box;
       cursor: pointer;
       font-family: inherit;
@@ -37,11 +44,11 @@ export const styles = [
       border: none;
       color: var(--md-sys-color-on-surface-variant, var(--primary-text-color));
       /* EXACTLY half the height, not 999px. Both look like a pill at rest, but
-         999px is unanimatable: on a 44px chip every value above 22px renders
-         identically, so interpolating 999 -> 14 sits visually still for ~97% of
+         999px is unanimatable: on a 40px chip every value above 20px renders
+         identically, so interpolating 999 -> 12 sits visually still for ~97% of
          the duration and then snaps at the end. Starting at the real half-height
          makes the morph perceptually linear. */
-      border-radius: 22px;
+      border-radius: 20px;
       position: relative;
       overflow: hidden;
       -webkit-tap-highlight-color: transparent;
@@ -59,7 +66,9 @@ export const styles = [
     .chip.on {
       background: var(--mc-bg);
       color: var(--mc-fg);
-      border-radius: 14px;
+      /* .size-s's square-shape corner, so the morph lands on a real token
+         instead of a number picked to look right. */
+      border-radius: 12px;
       font-weight: 600;
     }
 
@@ -67,7 +76,8 @@ export const styles = [
        around the label instead of holding an empty slot. Width only, so
        nothing can overshoot the chip's own bounds. */
     .check {
-      --mdc-icon-size: 17px;
+      /* FilterChipTokens.IconSize. */
+      --mdc-icon-size: 18px;
       width: 0;
       opacity: 0;
       overflow: hidden;
@@ -82,7 +92,8 @@ export const styles = [
     }
 
     .lead {
-      --mdc-icon-size: 17px;
+      /* FilterChipTokens.IconSize. */
+      --mdc-icon-size: 18px;
       flex-shrink: 0;
     }
 
