@@ -1,4 +1,5 @@
 import { LitElement, html, nothing } from "lit";
+import { keyed } from "lit/directives/keyed.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
 import "../../primitives/calendar.js";
@@ -66,7 +67,11 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   }
 
   setConfig(config) {
-    this.config = { presentation: "inline", ...config };
+    this.config = { presentation: "inline", default_mode: "clock", ...config };
+    // Follow config until the user actually switches tabs themselves — after that
+    // their choice wins, so re-entering the editor cannot yank the tab out from
+    // under them mid-edit.
+    if (!this._modeTouched) this._mode = this._modes[0];
   }
 
   /** "sheet" drops the collapsed strip and renders the picker directly, for
@@ -142,6 +147,24 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     const v = this._isTemplate(raw) ? this._resolvedPending : raw;
     const t = v == null ? "" : String(v).trim();
     return t.length ? t : null;
+  }
+
+  /** Which tabs exist, in display order.
+   *
+   *  `default_mode` decides which is FIRST, not merely which is preselected —
+   *  "first page" means leftmost as well as initially active, and a default that
+   *  sat in the second position would read as arbitrary. Either tab can also be
+   *  dropped entirely, and with only one left the tab row is not rendered at all:
+   *  a segmented control with a single segment is just a label. */
+  get _modes() {
+    const wanted = [];
+    if (this.config.show_time !== false) wanted.push("clock");
+    if (this.config.show_triggers !== false) wanted.push("event");
+    if (!wanted.length) wanted.push("clock"); // never leave the sheet with nothing
+    if (this.config.default_mode === "event" && wanted.includes("event")) {
+      return ["event", ...wanted.filter((m) => m !== "event")];
+    }
+    return wanted;
   }
 
   get _lang() {
@@ -299,13 +322,14 @@ class MateriaSchedule extends ActionMixin(LitElement) {
      thing disagreeing. */
 
   get _tabConfig() {
+    const LABELS = {
+      clock: { label: this.config.time_tab_label ?? "At a time", value: "clock", icon: "m3o:schedule" },
+      event: { label: this.config.trigger_tab_label ?? "When…", value: "event", icon: "m3o:sensors" },
+    };
     return {
       size: "m", // 56px, the M3 button ladder's medium rung
       preset: "primary",
-      options: [
-        { label: this.config.time_tab_label ?? "At a time", value: "clock", icon: "m3o:schedule" },
-        { label: this.config.trigger_tab_label ?? "When…", value: "event", icon: "m3o:sensors" },
-      ],
+      options: this._modes.map((m) => LABELS[m]),
     };
   }
 
@@ -538,15 +562,44 @@ class MateriaSchedule extends ActionMixin(LitElement) {
         <div class="sheet">
           <div class="echo">
             <span class="eyebrow">${this.config.name ?? "Schedule"}</span>
-            <span class="headline">${d.head}</span>
-            <span class="subline">${d.sub}</span>
+            ${(() => {
+              // With nothing picked yet, the headline shows what is ALREADY
+              // scheduled rather than an empty prompt — the armed strip below no
+              // longer repeats it, so this is the only place the time appears.
+              const head = this._hasSelection ? d.head : (pending ?? d.head);
+              const sub = this._hasSelection
+                ? d.sub
+                : pending
+                ? (this.config.pending_sub ?? "Pick again to move it, or clear it.")
+                : d.sub;
+              // keyed() so the element is REPLACED when the text changes, which is
+              // what lets the animation replay — swapping a text node in place
+              // leaves a running animation untouched, so the headline used to
+              // change instantly while everything around it eased.
+              return html`
+                ${keyed(head, html`<span class="headline swap">${head}</span>`)}
+                ${keyed(sub, html`<span class="subline swap">${sub}</span>`)}
+              `;
+            })()}
           </div>
+
+          ${this._modes.length > 1
+            ? html`<materia-button-group
+                .hass=${this.hass}
+                .value=${this._mode}
+                .config=${this._tabConfig}
+                @option-selected=${(e) => {
+                  this._modeTouched = true;
+                  this._mode = e.detail.value;
+                }}
+              ></materia-button-group>`
+            : nothing}
 
           ${pending
             ? html`<div class="strip pending-strip">
                 <div class="glyph"><ha-icon icon="m3o:alarm"></ha-icon></div>
                 <div class="text">
-                  <span class="head">${pending}</span>
+                  <span class="head">${this.config.pending_label ?? "Scheduled"}</span>
                   <span class="sub">
                     ${this.config.pending_sub ?? "Pick again to move it, or clear it."}
                   </span>
@@ -562,13 +615,6 @@ class MateriaSchedule extends ActionMixin(LitElement) {
                 >${this.config.clear_label ?? "Clear"}</button>
               </div>`
             : nothing}
-
-          <materia-button-group
-            .hass=${this.hass}
-            .value=${this._mode}
-            .config=${this._tabConfig}
-            @option-selected=${(e) => { this._mode = e.detail.value; }}
-          ></materia-button-group>
 
           ${isClock ? this._renderClock() : this._renderTriggers()}
 

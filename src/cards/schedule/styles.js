@@ -133,6 +133,32 @@ export const styles = [
       color: var(--md-sys-color-primary);
     }
 
+    /* The headline and sub-line SWAP rather than cut. Everything else in the sheet
+       eases, so an instant text change on the largest element read as a glitch.
+       Paired with keyed() in index.js, which replaces the element so the animation
+       actually replays — restarting one on a text change is otherwise impossible
+       without touching animation-name. */
+    @keyframes ms-swap {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .echo .swap {
+      animation: ms-swap var(--md-sys-motion-expressive-default-spatial) both;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .echo .swap {
+        animation: none;
+      }
+    }
+
     .echo .subline {
       font-size: clamp(12px, 3.6cqi, 14px);
       opacity: 0.62;
