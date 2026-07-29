@@ -76,6 +76,14 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     return this.config.presentation === "sheet";
   }
 
+  updated(changed) {
+    super.updated?.(changed);
+    // Reflected as an attribute so the stylesheet can flatten the surface —
+    // a config value alone is invisible to CSS.
+    this.toggleAttribute("sheet", this._isSheet);
+    this._syncFoldHeight();
+  }
+
   constructor() {
     super();
     const now = new Date();
@@ -375,7 +383,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   /** The fold animates from a MEASURED height: CSS cannot interpolate to auto,
    *  and a hardcoded max-height would either clip a 6-row month or leave a gap
    *  under a 5-row one. */
-  updated() {
+  _syncFoldHeight() {
     const body = this.shadowRoot?.querySelector(".custom-body");
     if (!body) return;
     const inner = this.shadowRoot.querySelector(".custom-inner");

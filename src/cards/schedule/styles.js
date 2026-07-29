@@ -519,6 +519,16 @@ export const styles = [
       }
     }
 
+    /* SHEET MODE IS FLUSH. Hosted in a popup, the dialog already supplies the
+       surface, the radius and the elevation — drawing them again here is what
+       produced the card-in-a-card look. The card keeps only its padding, and even
+       that is trimmed because the dialog contributes its own. */
+    :host([sheet]) .sheet {
+      background: none;
+      border-radius: 0;
+      padding: 0;
+    }
+
     .mock {
       font-size: clamp(11px, 3.2cqi, 12px);
       font-weight: 600;
