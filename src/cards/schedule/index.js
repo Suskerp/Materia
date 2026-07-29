@@ -52,6 +52,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     _minute: { state: true },
     _repeating: { state: true },
     _days: { state: true },
+    _resolvedPending: { state: true },
   };
 
   static styles = styles;
@@ -78,6 +79,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
   updated(changed) {
     super.updated?.(changed);
+    if (changed.has("hass") && this.hass) this._resolveField("pending", "_resolvedPending");
     // Reflected as an attribute so the stylesheet can flatten the surface —
     // a config value alone is invisible to CSS.
     this.toggleAttribute("sheet", this._isSheet);
@@ -116,6 +118,19 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     return !!(this.config.confirm_action || this.config.trigger_action
       || (this.config.presets ?? []).some((p) => p.tap_action)
       || (this.config.triggers ?? []).some((t) => t.tap_action));
+  }
+
+  /** Whatever is already scheduled, as a TEMPLATE that renders empty when nothing
+   *  is pending. A template rather than an entity because the backend decides what
+   *  "pending" means — here it is a scheduler switch whose entity_id is generated,
+   *  which no static config could name. Uses the same _resolveField machinery every
+   *  other templatable field in Materia uses. */
+  get _pending() {
+    const raw = this.config.pending;
+    if (!raw) return null;
+    const v = this._isTemplate(raw) ? this._resolvedPending : raw;
+    const t = v == null ? "" : String(v).trim();
+    return t.length ? t : null;
   }
 
   get _lang() {
@@ -502,6 +517,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       return html`<ha-card><div class="sheet">${this._renderStrip()}</div></ha-card>`;
     }
 
+    const pending = this._pending;
     const d = this._describe;
     const isClock = this._mode === "clock";
 
@@ -513,6 +529,27 @@ class MateriaSchedule extends ActionMixin(LitElement) {
             <span class="headline">${d.head}</span>
             <span class="subline">${d.sub}</span>
           </div>
+
+          ${pending
+            ? html`<div class="strip pending-strip">
+                <div class="glyph"><ha-icon icon="m3o:alarm"></ha-icon></div>
+                <div class="text">
+                  <span class="head">${pending}</span>
+                  <span class="sub">
+                    ${this.config.pending_sub ?? "Pick again to move it, or clear it."}
+                  </span>
+                </div>
+                <button
+                  class="strip-cancel"
+                  @click=${() => {
+                    const clear = this.config.clear_action;
+                    if (clear) this._handleAction(clear);
+                    else this._fireHaptic("success");
+                    this._dismiss();
+                  }}
+                >${this.config.clear_label ?? "Clear"}</button>
+              </div>`
+            : nothing}
 
           <materia-button-group
             .hass=${this.hass}

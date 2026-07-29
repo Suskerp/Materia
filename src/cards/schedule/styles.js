@@ -95,6 +95,17 @@ export const styles = [
       background: color-mix(in srgb, var(--md-sys-color-on-surface) 18%, transparent);
     }
 
+    /* The armed strip when something is already scheduled. Filled tonal, because
+       a pending run must not be able to read as quiet grey text — and it sits
+       ABOVE the picker rather than replacing it, so the run can be moved by
+       picking again or cleared outright, both without leaving the sheet. */
+    .pending-strip {
+      cursor: default;
+      padding: 10px 12px;
+      border-radius: 24px;
+      background: color-mix(in srgb, var(--md-sys-color-primary) 14%, transparent);
+    }
+
     /* ---- header echo (design 7a) ---- */
 
     .echo {
