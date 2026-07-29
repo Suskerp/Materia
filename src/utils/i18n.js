@@ -95,6 +95,14 @@ const STRINGS = {
   sched_trigger_sunset: { en: "At sunset", nl: "Bij zonsondergang" },
   sched_trigger_sunset_sub: { en: "Around 21:48 today", nl: "Rond 21:48 vandaag" },
 
+  /* ---- materia-schedule: sheet chrome and the 7b summary ------------- */
+  sched_close: { en: "Close", nl: "Sluiten" },
+  sched_clear: { en: "Clear", nl: "Wissen" },
+  sched_scheduled: { en: "Scheduled", nl: "Ingepland" },
+  sched_pending_sub: { en: "Pick again to move it, or clear it.", nl: "Kies opnieuw om het te verplaatsen, of wis het." },
+  sched_skip: { en: "Skip", nl: "Overslaan" },
+  sched_add: { en: "Add a schedule", nl: "Een planning toevoegen" },
+
   /* ---- weather condition labels (materia-weather / -glance / -hero) - */
   cond_clear_night: { en: "Clear night", nl: "Heldere nacht" },
   cond_partly_cloudy: { en: "Partly cloudy", nl: "Half bewolkt" },

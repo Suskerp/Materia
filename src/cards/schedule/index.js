@@ -1,5 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import { keyed } from "lit/directives/keyed.js";
+import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
 import "../../primitives/calendar.js";
@@ -214,14 +215,18 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   /** Built-in shortcut set, used when `presets` is not configured. Each entry
    *  is the same declarative shape a user writes, so the default IS an example
    *  of the config format rather than a hardcoded special case. */
-  static DEFAULT_PRESETS = [
-    { label: "In 1 hour", offset: "1h" },
-    { label: "In 4 hours", offset: "4h" },
-    { label: "Tonight", at: "23:00" },
-    { label: "Tomorrow", at: "09:00", days: 1, grow: 1.4 },
-    { label: "Noon", at: "12:00" },
-    { label: "Saturday", at: "10:00", weekday: 6, grow: 1.4 },
-  ];
+  /** An instance getter, not a static field: a static cannot call t(), because
+   *  there is no hass at class-definition time. */
+  get _defaultPresets() {
+    return [
+      { label: t("sched_preset_1h", this.hass), offset: "1h" },
+      { label: t("sched_preset_4h", this.hass), offset: "4h" },
+      { label: t("sched_preset_tonight", this.hass), at: "23:00" },
+      { label: t("sched_preset_tomorrow", this.hass), at: "09:00", days: 1, grow: 1.4 },
+      { label: t("sched_preset_noon", this.hass), at: "12:00" },
+      { label: t("sched_preset_saturday", this.hass), at: "10:00", weekday: 6, grow: 1.4 },
+    ];
+  }
 
   /** Resolve one declarative preset against the clock.
    *
@@ -270,7 +275,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  than rendered as a dead chip. */
   get _quick() {
     const now = new Date();
-    const list = this.config.presets ?? MateriaSchedule.DEFAULT_PRESETS;
+    const list = this.config.presets ?? this._defaultPresets;
     return list
       .map((p, i) => {
         const when = this._resolvePreset(p, now);
@@ -290,24 +295,28 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       .filter(Boolean);
   }
 
-  static DEFAULT_TRIGGERS = [
-    { key: "leave", label: "When I leave", secondary: "My phone leaves home", icon: "m3o:directions-walk" },
-    { key: "empty", label: "When everyone's out", secondary: "All trackers away for 10 min", icon: "m3o:person-off" },
-    { key: "night", label: "When the house sleeps", secondary: "All lights off after 22:00", icon: "m3o:bedtime" },
-    { key: "sunset", label: "At sunset", secondary: "Around 21:48 today", icon: "m3o:wb-twilight" },
-  ];
+  get _defaultTriggers() {
+    return [
+      { key: "leave", label: t("sched_trigger_leave", this.hass), secondary: t("sched_trigger_leave_sub", this.hass), icon: "m3o:directions-walk" },
+      { key: "empty", label: t("sched_trigger_empty", this.hass), secondary: t("sched_trigger_empty_sub", this.hass), icon: "m3o:person-off" },
+      { key: "night", label: t("sched_trigger_night", this.hass), secondary: t("sched_trigger_night_sub", this.hass), icon: "m3o:bedtime" },
+      { key: "sunset", label: t("sched_trigger_sunset", this.hass), secondary: t("sched_trigger_sunset_sub", this.hass), icon: "m3o:wb-twilight" },
+    ];
+  }
 
   /** Configured triggers. `label`/`secondary` are the documented keys; `name`
    *  and `sub` are accepted as aliases so a config written against the earlier
    *  shape keeps working. */
   get _events() {
-    const list = this.config.triggers ?? MateriaSchedule.DEFAULT_TRIGGERS;
-    return list.map((t, i) => ({
-      key: t.key ?? `t${i}`,
-      name: t.label ?? t.name ?? "—",
-      sub: t.secondary ?? t.sub ?? "",
-      icon: t.icon ?? "m3o:sensors",
-      tap_action: t.tap_action,
+    const list = this.config.triggers ?? this._defaultTriggers;
+    // NOT named `t`: that is the imported translate function, and shadowing it
+    // inside this callback would silently break any t() added here later.
+    return list.map((trig, i) => ({
+      key: trig.key ?? `t${i}`,
+      name: trig.label ?? trig.name ?? "—",
+      sub: trig.secondary ?? trig.sub ?? "",
+      icon: trig.icon ?? "m3o:sensors",
+      tap_action: trig.tap_action,
     }));
   }
 
@@ -317,7 +326,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       const e = this._events.find((x) => x.key === this._event);
       return e
         ? { head: e.name, sub: `${e.sub} · trigger` }
-        : { head: "Pick a trigger", sub: "Runs whenever it happens" };
+        : { head: t("sched_pick_trigger", this.hass), sub: t("sched_runs_whenever", this.hass) };
     }
     if (this._pick === "custom") {
       const date = new Intl.DateTimeFormat(this._lang, { day: "numeric", month: "long" })
@@ -325,7 +334,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       return { head: `${this._pad(this._hour)}:${this._pad(this._minute)}`, sub: date };
     }
     const q = this._quick.find((x) => x.key === this._pickKey);
-    return q ? { head: q.name, sub: `Starts at ${q.at}` } : { head: "When?", sub: "Pick a moment" };
+    return q ? { head: q.name, sub: t("sched_starts_at", this.hass, { time: q.at }) } : { head: t("sched_when_question", this.hass), sub: t("sched_pick_moment", this.hass) };
   }
 
   get _dayNames() {
@@ -349,8 +358,8 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
   get _tabConfig() {
     const LABELS = {
-      clock: { label: this.config.time_tab_label ?? "At a time", value: "clock", icon: "m3o:schedule" },
-      event: { label: this.config.trigger_tab_label ?? "When…", value: "event", icon: "m3o:sensors" },
+      clock: { label: this.config.time_tab_label ?? t("sched_at_a_time", this.hass), value: "clock", icon: "m3o:schedule" },
+      event: { label: this.config.trigger_tab_label ?? t("sched_when_ellipsis", this.hass), value: "event", icon: "m3o:sensors" },
     };
     return {
       size: "m", // 56px, the M3 button ladder's medium rung
@@ -537,8 +546,8 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
   _renderStrip() {
     const a = this._armed;
-    const head = a ? a.head : (this.config.empty_label ?? "Not scheduled");
-    const sub = a ? a.sub : (this.config.empty_sub ?? "Tap to pick a time or a trigger");
+    const head = a ? a.head : (this.config.empty_label ?? t("sched_not_scheduled", this.hass));
+    const sub = a ? a.sub : (this.config.empty_sub ?? t("sched_tap_to_pick", this.hass));
     const icon = a ? (a.mode === "event" ? "m3o:sensors" : "m3o:alarm") : "m3o:add";
 
     return html`
@@ -566,7 +575,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
                 this._armed = null;
                 this._fireHaptic("light");
               }}
-            >${this.config.clear_label ?? "Clear"}</button>`
+            >${this.config.clear_label ?? t("sched_clear", this.hass)}</button>`
           : nothing}
       </div>
     `;
@@ -589,7 +598,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       <ha-card>
         <div class="sheet">
           <div class="echo">
-            <span class="eyebrow">${this.config.name ?? "Schedule"}</span>
+            <span class="eyebrow">${this.config.name ?? t("sched_name_default", this.hass)}</span>
             ${(() => {
               // With nothing picked yet, the headline shows what is ALREADY
               // scheduled rather than an empty prompt — the armed strip below no
@@ -598,7 +607,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
               const sub = this._hasSelection
                 ? d.sub
                 : pending
-                ? (this.config.pending_sub ?? "Pick again to move it, or clear it.")
+                ? (this.config.pending_sub ?? t("sched_pending_sub", this.hass))
                 : d.sub;
               // keyed() so the element is REPLACED when the text changes, which is
               // what lets the animation replay — swapping a text node in place
@@ -627,9 +636,9 @@ class MateriaSchedule extends ActionMixin(LitElement) {
             ? html`<div class="strip pending-strip">
                 <div class="glyph"><ha-icon icon="m3o:alarm"></ha-icon></div>
                 <div class="text">
-                  <span class="head">${this.config.pending_label ?? "Scheduled"}</span>
+                  <span class="head">${this.config.pending_label ?? t("sched_scheduled", this.hass)}</span>
                   <span class="sub">
-                    ${this.config.pending_sub ?? "Pick again to move it, or clear it."}
+                    ${this.config.pending_sub ?? t("sched_pending_sub", this.hass)}
                   </span>
                 </div>
                 <button
@@ -640,7 +649,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
                     else this._fireHaptic("success");
                     this._dismiss();
                   }}
-                >${this.config.clear_label ?? "Clear"}</button>
+                >${this.config.clear_label ?? t("sched_clear", this.hass)}</button>
               </div>`
             : nothing}
 
@@ -660,15 +669,15 @@ class MateriaSchedule extends ActionMixin(LitElement) {
                    "Just once" — which parses as "just-once is disabled", the exact
                    opposite of the truth. The label is now constant and only the
                    sub-line describes the consequence. -->
-              <span class="n">${this.config.repeat_label ?? "Repeat weekly"}</span>
+              <span class="n">${this.config.repeat_label ?? t("sched_repeat_weekly", this.hass)}</span>
               <!-- The off line says what HAPPENS, not what does not: "back to
                    normal" named a state that does not exist, so it explained
                    nothing. The on line points at the weekday chips that appear
                    directly below rather than describing them in the abstract,
                    which would just restate what is already on screen. -->
               <span class="s">${this._repeating
-                ? (this.config.repeat_sub_on ?? "Runs on the days below")
-                : (this.config.repeat_sub_off ?? "One run only")}</span>
+                ? (this.config.repeat_sub_on ?? t("sched_repeat_sub_on", this.hass))
+                : (this.config.repeat_sub_off ?? t("sched_repeat_sub_off", this.hass))}</span>
             </div>
           </div>
 
@@ -687,7 +696,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
           <div class="actions">
             <button class="cancel" @click=${this._dismiss}>
-              ${this.config.close_label ?? "Close"}
+              ${this.config.close_label ?? t("sched_close", this.hass)}
             </button>
             <button
               class="confirm"
@@ -695,13 +704,13 @@ class MateriaSchedule extends ActionMixin(LitElement) {
               @click=${this._commit}
             >
               <ha-icon icon="m3o:alarm-on"></ha-icon>
-              <span>${this._repeating ? "Save schedule" : "Set timer"}</span>
+              <span>${this._repeating ? t("sched_save_schedule", this.hass) : t("sched_set_timer", this.hass)}</span>
             </button>
           </div>
 
           ${this._isWired
             ? nothing
-            : html`<div class="mock">Mocked · nothing is scheduled</div>`}
+            : html`<div class="mock">${t("sched_mocked_note", this.hass)}</div>`}
         </div>
       </ha-card>
     `;
@@ -726,7 +735,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
                   ? html`<button
                       class="strip-cancel"
                       @click=${() => this._handleAction(this.config.skip_action)}
-                    >${this.config.skip_label ?? "Skip"}</button>`
+                    >${this.config.skip_label ?? t("sched_skip", this.hass)}</button>`
                   : nothing}
               </div>`
             : nothing}
@@ -745,7 +754,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
                 ${this.config.add_action
                   ? html`<button
                       class="row-add"
-                      aria-label=${this.config.add_label ?? "Add a schedule"}
+                      aria-label=${this.config.add_label ?? t("sched_add", this.hass)}
                       @click=${() => this._handleAction(this.config.add_action)}
                     >
                       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -790,7 +799,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
           }}
         >
           <ha-icon icon="m3o:event"></ha-icon>
-          <span class="lbl">Pick a date &amp; time</span>
+          <span class="lbl">${t("sched_pick_date_time", this.hass)}</span>
           <svg class="chev" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
               stroke-linecap="round" stroke-linejoin="round" />
