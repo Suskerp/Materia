@@ -105,11 +105,22 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     this._days = [true, true, true, true, true, false, false];
   }
 
-  /** Selected shortcut, defaulting to the first configured one. Deferred rather
-   *  than hardcoded in the constructor, because `presets` may not be set yet and
-   *  its keys are generated. */
+  /** Selected shortcut, or null. DELIBERATELY NOT defaulted to the first preset:
+   *  pre-selecting one put "In 1 hour" in the 44px headline before the user had
+   *  chosen anything, which reads as a decision already made. Nothing is selected
+   *  until it is picked. */
   get _pickKey() {
-    return this._pick ?? this._quick[0]?.key ?? null;
+    return this._pick;
+  }
+
+  /** Whether the user has actually chosen something to commit.
+   *
+   *  Guards the confirm button, and that guard is not cosmetic: with nothing
+   *  selected _resolvedWhen is null, so $datetime substitutes empty, and
+   *  as_timestamp('', 0) is 0 — which sails through the backend's "is this
+   *  effectively now" check and STARTS THE VACUUM. */
+  get _hasSelection() {
+    return this._mode === "event" ? this._event != null : this._pick != null;
   }
 
   /** True once anything is wired, so the card stops advertising itself as a mock
@@ -448,6 +459,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   }
 
   _commit() {
+    if (!this._hasSelection) return;
     this._armed = { ...this._describe, repeating: this._repeating, mode: this._mode };
     this._open = false;
 
@@ -596,7 +608,11 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
           <div class="actions">
             <button class="cancel" @click=${this._dismiss}>Cancel</button>
-            <button class="confirm" @click=${this._commit}>
+            <button
+              class="confirm"
+              ?disabled=${!this._hasSelection}
+              @click=${this._commit}
+            >
               <ha-icon icon="m3o:alarm-on"></ha-icon>
               <span>${this._repeating ? "Save schedule" : "Set timer"}</span>
             </button>

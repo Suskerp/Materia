@@ -483,6 +483,14 @@ export const styles = [
       font-weight: 700;
     }
 
+    /* Nothing chosen yet, so there is nothing to confirm. Disabled at 38% per the
+       M3 disabled-content opacity. */
+    .confirm[disabled] {
+      opacity: 0.38;
+      cursor: default;
+      pointer-events: none;
+    }
+
     .confirm ha-icon {
       --mdc-icon-size: 24px;
     }
