@@ -130,15 +130,54 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
     return this._stateOf(this._caps.mop_drying) === "on";
   }
 
-  /** Minutes remaining, derived from elapsed time and percent complete. */
+  /** States that are BUSY but have no completion figure.
+   *
+   *  `_working` is defined by negation, which is right for "is it doing
+   *  something" but wrong for "how far through the job is it". Returning home,
+   *  emptying the bin and washing or drying the mop are all work, and Roborock
+   *  reports progress 0 during them — so the headline read a confident "0% done"
+   *  while the machine was on its way back to the dock. Matched on keywords
+   *  rather than an enumerated list, for the same reason the idle set is: the
+   *  Qrevo alone reports 40-odd statuses.
+   *
+   *  `wash` and `dry` deliberately come BEFORE any mop matching, or
+   *  going_to_wash_the_mop would look like mopping. */
+  get _hasProgress() {
+    const s = String(this._stateOf(this._caps.status) ?? this._stateObj?.state ?? "").toLowerCase();
+    const skip = this.config.no_progress_states
+      ?? ["return", "empty", "wash", "dry", "charg", "dock", "locat", "seek", "idle"];
+    return !skip.some((w) => s.includes(w));
+  }
+
+  /** Minutes remaining, derived from elapsed time and percent complete.
+   *
+   *  The elapsed reading is UNIT-AWARE. It used to guess — "minutes on Roborock,
+   *  seconds if it looks too large (>600)" — and the Qrevo reports SECONDS, so a
+   *  131s run was read as 131 minutes and the card promised "about 736 min left".
+   *  The unit is on the sensor; there is no need to infer it. Same normalisation
+   *  the consumables already do.
+   *
+   *  Unknown unit falls back to seconds, which is what every duration sensor seen
+   *  on these devices actually reports. */
   get _minutesLeft() {
     const p = this._numOf(this._caps.progress);
     if (p == null || p <= 0 || p >= 100) return null;
-    const elapsed = this._numOf(this._caps.cleaning_time);
+
+    const id = this._caps.cleaning_time;
+    const elapsed = this._numOf(id);
     if (elapsed == null || elapsed <= 0) return null;
-    // cleaning_time is minutes on Roborock; seconds if it looks too large.
-    const mins = elapsed > 600 ? elapsed / 60 : elapsed;
-    return Math.max(1, Math.round((mins * (100 - p)) / p));
+
+    const unit = String(this.hass?.states[id]?.attributes?.unit_of_measurement ?? "").toLowerCase();
+    const TO_MIN = { s: 1 / 60, sec: 1 / 60, secs: 1 / 60, seconds: 1 / 60, min: 1, mins: 1, minutes: 1, h: 60, hr: 60, hours: 60 };
+    const mins = elapsed * (TO_MIN[unit] ?? 1 / 60);
+
+    const left = Math.round((mins * (100 - p)) / p);
+    // Very early in a run the extrapolation is mostly noise; a 6% sample can
+    // imply anything. Better to say nothing than to state a wrong number
+    // confidently.
+    const floor = this.config.eta_min_progress ?? 5;
+    if (p < floor) return null;
+    return Math.max(1, left);
   }
 
   _pretty(s) {
@@ -245,6 +284,34 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
     if (!this.hass || !this.config) return html``;
     const st = this._stateObj;
     if (!st) {
+      // A RESUMED APP briefly has no states at all while the websocket
+      // reconnects. Collapsing to this one-line card and springing back is the
+      // "card resizes when you come back to it" jump: the hero loses its numeral,
+      // its sub-line and its alert strip, then regains them a moment later.
+      //
+      // So a transient miss keeps the last good layout, greyed by the existing
+      // unavailable styling. Only an entity that was NEVER there gets the short
+      // card, because then there is no layout to preserve and the message is the
+      // whole point.
+      if (this._lastGood) {
+        const g = this._lastGood;
+        return html`
+          <ha-card class="unavailable" style="--mh-bg:${g.bg};--mh-fg:${g.fg};">
+            <div class="stack"><div class="hero">
+              <div class="content">
+                <div class="eyebrow"><ha-icon .icon=${g.icon}></ha-icon><span>${g.name}</span></div>
+                <div class="title">${g.title}</div>
+                ${g.value != null
+                  ? html`<div class="figure">
+                      <span class="value">${g.value}</span><span class="unit">%</span>
+                      <span class="caption">${g.caption}</span>
+                    </div>`
+                  : nothing}
+                ${g.secondary ? html`<div class="secondary">${g.secondary}</div>` : nothing}
+              </div>
+            </div></div>
+          </ha-card>`;
+      }
       return html`<ha-card><div class="stack"><div class="hero">
         <div class="content"><div class="title">Entity not found</div></div>
       </div></div></ha-card>`;
@@ -264,7 +331,7 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
     if (unavailable) title = "Unavailable";
 
     // Progress while working, battery otherwise.
-    const showProgress = working && progress != null;
+    const showProgress = working && progress != null && this._hasProgress;
     const value = showProgress ? Math.round(progress) : batt;
     const caption = showProgress
       ? (this.config.progress_caption ?? "done")
@@ -333,6 +400,10 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
     const boom = boomPath(90, 90, 88);
     const name = this.config.name ?? st.attributes?.friendly_name ?? this.config.entity;
     const icon = this.config.icon ?? "mdi:robot-vacuum";
+
+    // Kept for the reconnect path above. A plain field, not reactive state, so
+    // recording it cannot itself trigger another render.
+    this._lastGood = { title, value, caption, secondary, name, icon, bg, fg };
 
     return html`
       <ha-card style="--mh-bg:${bg};--mh-fg:${fg};--mh-alert-bg:${alertBg ?? bg};--mh-alert-fg:${alertFg ?? fg};">
