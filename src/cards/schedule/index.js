@@ -65,7 +65,15 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   }
 
   setConfig(config) {
-    this.config = { ...config };
+    this.config = { presentation: "inline", ...config };
+  }
+
+  /** "sheet" drops the collapsed strip and renders the picker directly, for
+   *  putting the card INSIDE a modal (browser_mod.popup) rather than expanding
+   *  it in place. The strip stays the default because a bare picker sitting on a
+   *  dashboard has nothing to summarise and no way to be dismissed. */
+  get _isSheet() {
+    return this.config.presentation === "sheet";
   }
 
   constructor() {
@@ -394,6 +402,26 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     this._hour = next == null ? (when.getHours() + 1) % 24 : when.getHours();
   }
 
+  /** Close: collapse when inline, dismiss the host modal when in sheet mode.
+   *
+   *  The close call is CONFIGURABLE rather than hardcoded to browser_mod, so the
+   *  card is not coupled to one popup implementation — but it defaults to
+   *  browser_mod.close_popup, because a Cancel button that leaves the modal open
+   *  is broken and defaulting to nothing would ship exactly that. */
+  _dismiss() {
+    this._open = false;
+    if (!this._isSheet) return;
+    // browser_id: THIS is browser_mod's "the browser that called this" token.
+    // Without it the service fans out to every registered browser, so dismissing
+    // the sheet on a phone would also close it on the wall tablet.
+    const close = this.config.close_action ?? {
+      action: "perform-action",
+      perform_action: "browser_mod.close_popup",
+      data: { browser_id: "THIS" },
+    };
+    this._handleAction(close);
+  }
+
   _commit() {
     this._armed = { ...this._describe, repeating: this._repeating, mode: this._mode };
     this._open = false;
@@ -409,13 +437,15 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       ?? (this._mode === "event" ? this.config.trigger_action : null)
       ?? this.config.confirm_action;
 
-    if (!action) {
-      // No action configured: stays a mock, and says so on the face of the card.
+    if (action) {
+      this._handleAction(this._fill(action, this._actionContext()));
+    } else {
+      // Nothing wired: stays a mock, and says so on the face of the card.
       this._fireHaptic("success");
-      return;
     }
-    // _handleAction fires its own haptic, so firing one here too would buzz twice.
-    this._handleAction(this._fill(action, this._actionContext()));
+    // Committing from inside a modal should close it — otherwise the sheet sits
+    // there after the job is done and reads as though nothing happened.
+    if (this._isSheet) this._dismiss();
   }
 
   _renderStrip() {
@@ -458,7 +488,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   render() {
     if (!this.config) return html``;
 
-    if (!this._open) {
+    if (!this._open && !this._isSheet) {
       return html`<ha-card><div class="sheet">${this._renderStrip()}</div></ha-card>`;
     }
 
@@ -513,7 +543,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
             : nothing}
 
           <div class="actions">
-            <button class="cancel" @click=${() => { this._open = false; }}>Cancel</button>
+            <button class="cancel" @click=${this._dismiss}>Cancel</button>
             <button class="confirm" @click=${this._commit}>
               <ha-icon icon="m3o:alarm-on"></ha-icon>
               <span>${this._repeating ? "Save schedule" : "Set timer"}</span>
@@ -638,7 +668,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   }
 
   getCardSize() {
-    return this._open ? 10 : 2;
+    return this._open || this._isSheet ? 10 : 2;
   }
 }
 

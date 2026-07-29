@@ -9,6 +9,7 @@ class MateriaScheduleEditor extends SmartEditorBase {
       name: "Schedule",
       empty_label: "Not scheduled",
       empty_sub: "Tap to pick a time or a trigger",
+      presentation: "inline",
       ...this._config,
     };
   }
@@ -25,8 +26,56 @@ class MateriaScheduleEditor extends SmartEditorBase {
             helper: 'What is being scheduled — e.g. "Start cleaning".',
             selector: { text: {} },
           },
+          {
+            name: "presentation",
+            label: "Presentation",
+            helper: "Sheet drops the collapsed strip and renders the picker directly — for putting the card inside a browser_mod popup.",
+            selector: { select: { mode: "dropdown", options: [
+              { value: "inline", label: "Inline — collapsed strip that expands" },
+              { value: "sheet", label: "Sheet — always open, for a modal" },
+            ] } },
+          },
           { name: "empty_label", label: "Strip title when nothing is set", selector: { text: {} } },
           { name: "empty_sub", label: "Strip sub-line when nothing is set", selector: { text: {} } },
+        ],
+      },
+      {
+        title: "Wiring",
+        icon: "mdi:transit-connection-variant",
+        // $placeholders are substituted by the card before the service is
+        // called — see the note in index.js on why this is not Jinja.
+        fields: [
+          {
+            name: "confirm_action",
+            label: "On confirm",
+            helper: "Use $datetime, $date, $time, $duration, $weekdays, $repeat, $trigger, $label in the data.",
+            selector: { ui_action: { default_action: "none" } },
+          },
+          {
+            name: "trigger_action",
+            label: "On confirm, trigger tab",
+            helper: "Falls back to the confirm action when unset.",
+            selector: { ui_action: { default_action: "none" } },
+          },
+          {
+            name: "close_action",
+            label: "How to dismiss the modal",
+            helper: "Sheet presentation only. Defaults to browser_mod.close_popup.",
+            selector: { ui_action: { default_action: "none" } },
+          },
+        ],
+      },
+      {
+        title: "Shortcuts",
+        icon: "mdi:clock-fast",
+        fields: [
+          {
+            name: "presets",
+            label: 'The "At a time" shortcuts',
+            helper: "List of { label, offset: 90m|2h|1d } or { label, at: \"09:00\", days: 1 } or { label, at, weekday: 6 }. Each may carry its own tap_action. Empty for the built-in six.",
+            selector: { object: {} },
+          },
+          { name: "minutes", label: "Minute options (default 0, 15, 30, 45)", selector: { object: {} } },
         ],
       },
       {
