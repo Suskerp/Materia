@@ -519,14 +519,18 @@ export const styles = [
       }
     }
 
-    /* SHEET MODE IS FLUSH. Hosted in a popup, the dialog already supplies the
-       surface, the radius and the elevation — drawing them again here is what
-       produced the card-in-a-card look. The card keeps only its padding, and even
-       that is trimmed because the dialog contributes its own. */
+    /* SHEET MODE: lose the ROUNDED EDGE, keep the surface.
+       The card-in-a-card look came from the inner radius reading as a second
+       card outline inside the dialog's own, so only that goes — the card then
+       fills the dialog edge to edge and becomes its surface.
+
+       Background and padding deliberately STAY. Dropping the background made the
+       chips disappear: they are surface-container-high, which is what the dialog
+       itself is, so they had nothing to contrast against. And the dialog supplies
+       no padding of its own, so removing the card's left the content flush
+       against the edges. */
     :host([sheet]) .sheet {
-      background: none;
       border-radius: 0;
-      padding: 0;
     }
 
     .mock {
