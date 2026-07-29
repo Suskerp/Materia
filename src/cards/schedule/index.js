@@ -719,7 +719,19 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   _renderSummary() {
     const next = this._tpl("next_label", "_resolvedNextLabel");
     const sub = this._tpl("next_sub", "_resolvedNextSub");
-    const rows = this.config.schedules || [];
+    // MULTIPLE SCHEDULES: an entry whose label renders EMPTY is an unused slot and
+    // is dropped, so the dashboard can declare a fixed set of slots and the row
+    // grows and shrinks with what is actually scheduled.
+    //
+    // Fixed slots rather than a discovered list on purpose: discovery means
+    // iterating a whole domain in a template, and HA rate-limits those to about
+    // once a minute — the exact reason a new schedule did not appear until the
+    // page was refreshed. Naming slots makes every read a specific-entity read.
+    const rows = (this.config.schedules || []).filter((sc, i) => {
+      if (sc.label == null) return true;
+      const v = this._isTemplate(sc.label) ? this._tplResults?.[`schedLabel${i}`] : sc.label;
+      return String(v ?? "").trim().length > 0;
+    });
 
     return html`
       <ha-card>
@@ -742,15 +754,18 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
           ${rows.length || this.config.add_action
             ? html`<div class="rows">
-                ${rows.map((sc, i) => html`<button
-                  class="row-item"
-                  @click=${() => sc.tap_action && this._handleAction(sc.tap_action)}
-                >
-                  <ha-icon .icon=${sc.icon ?? "m3o:event-repeat"}></ha-icon>
-                  <span>${this._isTemplate(sc.label)
-                    ? (this._tplResults?.[`schedLabel${i}`] ?? "")
-                    : sc.label}</span>
-                </button>`)}
+                ${rows.map((sc) => {
+                  const i = (this.config.schedules || []).indexOf(sc);
+                  return html`<button
+                    class="row-item"
+                    @click=${() => sc.tap_action && this._handleAction(sc.tap_action)}
+                  >
+                    <ha-icon .icon=${sc.icon ?? "m3o:event-repeat"}></ha-icon>
+                    <span>${this._isTemplate(sc.label)
+                      ? (this._tplResults?.[`schedLabel${i}`] ?? "")
+                      : sc.label}</span>
+                  </button>`;
+                })}
                 ${this.config.add_action
                   ? html`<button
                       class="row-add"
