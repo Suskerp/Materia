@@ -417,39 +417,63 @@ export const styles = [
       opacity: 0.66;
     }
 
-    /* M3 switch, per SwitchTokens (52x32 track, 24 thumb selected). */
+    /* M3 switch, per SwitchTokens. The previous version READ AS INVERTED and
+       deserved to: the unselected handle was the same 26px as the selected one and
+       the track had no outline, so "off" was a big dark knob on a plain light pill
+       — which is exactly what "on" looks like.
+
+       The spec carries the whole unselected/selected distinction in the handle
+       GROWING (16dp -> 24dp inside a 32dp track) plus the 2px outline that only
+       the unselected track has. cards/switch/styles.js already had this right;
+       these are its values at the spec's full 52x32 track. */
     .sw {
+      position: relative;
       width: 52px;
       height: 32px;
       flex: none;
-      border-radius: 16px;
-      padding: 3px;
       box-sizing: border-box;
-      display: flex;
-      justify-content: flex-start;
-      background: var(--md-sys-color-surface-container-highest, rgba(0, 0, 0, 0.2));
-      transition: background-color var(--md-sys-motion-fast-effects);
-    }
-
-    .sw.on {
-      justify-content: flex-end;
-      background: var(--md-sys-color-primary);
+      border-radius: 16px;
+      background: var(--md-sys-color-surface-container-highest, rgba(0, 0, 0, 0.1));
+      border: 2px solid var(--md-sys-color-outline, rgba(0, 0, 0, 0.35));
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background-color var(--md-sys-motion-fast-effects),
+        border-color var(--md-sys-motion-fast-effects);
     }
 
     .sw i {
-      width: 26px;
-      height: 26px;
+      position: absolute;
+      top: 50%;
+      left: 6px;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
       background: var(--md-sys-color-outline, #888);
-      transition: background-color var(--md-sys-motion-fast-effects);
+      transform: translateY(-50%);
+      transition: left var(--md-sys-motion-expressive-fast-spatial),
+        width var(--md-sys-motion-expressive-fast-spatial),
+        height var(--md-sys-motion-expressive-fast-spatial),
+        background-color var(--md-sys-motion-fast-effects);
     }
 
+    .sw.on {
+      background: var(--md-sys-color-primary);
+      border-color: transparent;
+    }
+
+    /* Selected: the handle grows to the spec's 24/32 and sits 4px from the edge. */
     .sw.on i {
+      left: 24px;
+      width: 24px;
+      height: 24px;
       background: var(--md-sys-color-on-primary);
     }
 
-
-
+    /* Pressed swells toward the spec's 28/32. */
+    .sw:active i {
+      width: 26px;
+      height: 26px;
+    }
 
     /* ---- actions ---- */
 
