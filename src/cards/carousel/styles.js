@@ -159,5 +159,13 @@ export const styles = [
         transition: none;
       }
     }
+  
+    /* Disabled tiles: 38% per the M3 disabled-content opacity. Note there is NO
+       pointer-events: none here — the rail stays scrollable on purpose, so a queue
+       that cannot be changed can still be read. The tap is blocked in _tap. */
+    .tile.disabled {
+      opacity: 0.38;
+      cursor: default;
+    }
   `,
 ];

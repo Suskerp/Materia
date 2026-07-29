@@ -20,6 +20,7 @@ class MateriaCarousel extends ActionMixin(LitElement) {
     config: { state: true },
     _resolvedColor: { state: true },
     _resolvedColorOn: { state: true },
+    _resolvedDisabled: { state: true },
   };
 
   static styles = styles;
@@ -41,6 +42,7 @@ class MateriaCarousel extends ActionMixin(LitElement) {
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("color", "_resolvedColor");
       this._resolveField("color_on", "_resolvedColorOn");
+      this._resolveField("disabled", "_resolvedDisabled");
     }
   }
 
@@ -205,12 +207,26 @@ class MateriaCarousel extends ActionMixin(LitElement) {
     this._stopMomentum();
   }
 
+  /** Templatable `disabled`, matching the convention materia-button already uses
+   *  (`disabled: "{{ ... }}"`), so a caller does not have to learn a second one. */
+  get _disabled() {
+    const val = this.config?.disabled;
+    if (val == null) return false;
+    const v = this._isTemplate(val) ? this._resolvedDisabled : val;
+    if (typeof v === "boolean") return v;
+    return ["true", "on", "yes", "1"].includes(String(v ?? "").trim().toLowerCase());
+  }
+
   _tap(item) {
     // A drag that happens to end on a tile must not toggle it.
     if (this._didDrag) {
       this._didDrag = false;
       return;
     }
+    // Disabled blocks the TAP only, deliberately not pointer events. The rail
+    // must still scroll while the vacuum is running: you cannot change the queue
+    // mid-run, but you should still be able to look at what is in it.
+    if (this._disabled) return;
     this._fireHaptic?.("selection");
     if (item.tap_action) {
       this._handleAction(item.tap_action);
@@ -245,7 +261,12 @@ class MateriaCarousel extends ActionMixin(LitElement) {
             const value = item.value ?? item.label;
             const on = selected.some((s) => s === String(value));
             return html`
-              <button class="tile ${on ? "on" : ""}" @click=${() => this._tap(item)} aria-pressed=${on ? "true" : "false"}>
+              <button
+                class="tile ${on ? "on" : ""} ${this._disabled ? "disabled" : ""}"
+                @click=${() => this._tap(item)}
+                aria-pressed=${on ? "true" : "false"}
+                aria-disabled=${this._disabled ? "true" : "false"}
+              >
                 <div class="top">
                   ${item.icon ? html`<ha-icon class="glyph" .icon=${item.icon}></ha-icon>` : html`<span></span>`}
                   <ha-icon class="check" icon="m3of:check-circle"></ha-icon>
