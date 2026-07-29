@@ -325,9 +325,19 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
     const progress = this._numOf(c.progress);
     const rawStatus = this._stateOf(c.status) ?? st.state;
 
-    // "Charging" at a full battery is a lie the sensor keeps telling.
+    // "Charging" at a full battery is a lie the sensor keeps telling, so a full
+    // battery relabels it "Docked".
+    //
+    // ONLY when the status is actually charging-ish, though. This used to fire for
+    // ANY non-working state, so a PAUSED robot sitting at 100% was relabelled
+    // "Docked" — the card flatly contradicting a machine that was paused mid-room.
+    // Paused, idle and error all reach this branch and none of them mean docked.
     let title = this._pretty(rawStatus);
-    if (!working && batt != null && batt >= 100) title = this.config.docked_label ?? "Docked";
+    const raw = String(rawStatus ?? "").toLowerCase();
+    const chargingIsh = raw.includes("charg") || raw.includes("dock");
+    if (!working && chargingIsh && batt != null && batt >= 100) {
+      title = this.config.docked_label ?? "Docked";
+    }
     if (unavailable) title = "Unavailable";
 
     // Progress while working, battery otherwise.
