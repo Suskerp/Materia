@@ -10,6 +10,7 @@ import {
 } from "../../styles/card-styles.js";
 import { styles as cardStyles } from "../card/styles.js";
 import { styles as roomStyles } from "./styles.js";
+import { t } from "../../utils/i18n.js";
 import "./editor.js";
 
 class MateriaRoom extends MateriaCard {
@@ -107,7 +108,7 @@ class MateriaRoom extends MateriaCard {
     const sliderColor = this._domainConfig.sliderColor || this._domainConfig.colorActive;
 
     const icon = this._icon;
-    const stateDisplay = unavailable ? "Unavailable" : this._stateDisplay;
+    const stateDisplay = unavailable ? t("unavailable", this.hass) : this._stateDisplay;
     const subtitle = this._subtitle;
     const inlineSubtitle = this.config.subtitle_inline !== false;
     const stateLine =

@@ -11,7 +11,13 @@
  *
  * Where Home Assistant already localises something (entity states via
  * formatEntityState), we defer to it. These strings only cover what HA does not.
+ *
+ * The EN/NL lookup itself (`pickLocalized`) lives in ../../utils/i18n.js, which
+ * every other card's UI text also goes through — this file only owns the
+ * vacuum-specific CONSUMABLES/ERRORS vocabulary, not a second copy of the
+ * language-resolution mechanism.
  */
+import { pickLocalized } from "../../utils/i18n.js";
 
 /** Consumable chores, keyed by a fragment of the entity id. */
 const CONSUMABLES = [
@@ -45,17 +51,11 @@ const ERRORS = [
   { match: ["full", "container_full"], en: "Empty the container", nl: "Leeg het reservoir" },
 ];
 
-/** HA gives us the user's locale; fall back to English. */
-function pick(entry, lang) {
-  const base = String(lang || "en").toLowerCase().split("-")[0];
-  return entry[base] || entry.en;
-}
-
 function lookup(table, haystack, lang) {
   const h = String(haystack || "").toLowerCase();
   if (!h) return null;
   const hit = table.find((e) => e.match.some((m) => h.includes(m)));
-  return hit ? pick(hit, lang) : null;
+  return hit ? pickLocalized(hit, lang) : null;
 }
 
 /** "Clean the sensors" for sensor.x_sensor_time_left, else null. */

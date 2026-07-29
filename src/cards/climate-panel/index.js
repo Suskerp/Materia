@@ -1,6 +1,7 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { loadCardHelpers } from "../../styles/shared.js";
+import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 import "./dial.js";
@@ -188,7 +189,7 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
       return {
         style: s.style,
         menuConfig: s.style === "menu" ? this._menuCardConfig(s) : null,
-        title: s.title ?? `Section ${i + 1}`,
+        title: s.title ?? t("cp_section_default", this.hass, { n: i + 1 }),
         icon: s.icon,
         info,
         actions,

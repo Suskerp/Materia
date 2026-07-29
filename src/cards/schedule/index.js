@@ -54,6 +54,8 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     _repeating: { state: true },
     _days: { state: true },
     _resolvedPending: { state: true },
+    _resolvedNextLabel: { state: true },
+    _resolvedNextSub: { state: true },
   };
 
   static styles = styles;
@@ -82,9 +84,33 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     return this.config.presentation === "sheet";
   }
 
+  /** Design 7b: the page-level summary. Not a picker at all — it shows what is
+   *  set and offers the three things you actually want from a glance: skip the
+   *  next run, open an existing schedule, or add another. The picker itself lives
+   *  behind `add_action`, which is why this stays a presentation of the same card
+   *  rather than a second card: same config surface, same wiring seam. */
+  get _isSummary() {
+    return this.config.presentation === "summary";
+  }
+
+  _tpl(key, resolved) {
+    const raw = this.config[key];
+    if (raw == null) return null;
+    const v = this._isTemplate(raw) ? this[resolved] : raw;
+    const t = v == null ? "" : String(v).trim();
+    return t.length ? t : null;
+  }
+
   updated(changed) {
     super.updated?.(changed);
-    if (changed.has("hass") && this.hass) this._resolveField("pending", "_resolvedPending");
+    if (changed.has("hass") && this.hass) {
+      this._resolveField("pending", "_resolvedPending");
+      this._resolveField("next_label", "_resolvedNextLabel");
+      this._resolveField("next_sub", "_resolvedNextSub");
+      (this.config.schedules || []).forEach((sc, i) => {
+        if (sc.label != null) this._resolveTemplateValue(`schedLabel${i}`, sc.label);
+      });
+    }
     // Reflected as an attribute so the stylesheet can flatten the surface —
     // a config value alone is invisible to CSS.
     this.toggleAttribute("sheet", this._isSheet);
@@ -549,6 +575,8 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   render() {
     if (!this.config) return html``;
 
+    if (this._isSummary) return this._renderSummary();
+
     if (!this._open && !this._isSheet) {
       return html`<ha-card><div class="sheet">${this._renderStrip()}</div></ha-card>`;
     }
@@ -633,9 +661,14 @@ class MateriaSchedule extends ActionMixin(LitElement) {
                    opposite of the truth. The label is now constant and only the
                    sub-line describes the consequence. -->
               <span class="n">${this.config.repeat_label ?? "Repeat weekly"}</span>
+              <!-- The off line says what HAPPENS, not what does not: "back to
+                   normal" named a state that does not exist, so it explained
+                   nothing. The on line points at the weekday chips that appear
+                   directly below rather than describing them in the abstract,
+                   which would just restate what is already on screen. -->
               <span class="s">${this._repeating
-                ? "Same time every selected day"
-                : "Runs once, then back to normal"}</span>
+                ? (this.config.repeat_sub_on ?? "Runs on the days below")
+                : (this.config.repeat_sub_off ?? "One run only")}</span>
             </div>
           </div>
 
@@ -669,6 +702,60 @@ class MateriaSchedule extends ActionMixin(LitElement) {
           ${this._isWired
             ? nothing
             : html`<div class="mock">Mocked · nothing is scheduled</div>`}
+        </div>
+      </ha-card>
+    `;
+  }
+
+  _renderSummary() {
+    const next = this._tpl("next_label", "_resolvedNextLabel");
+    const sub = this._tpl("next_sub", "_resolvedNextSub");
+    const rows = this.config.schedules || [];
+
+    return html`
+      <ha-card>
+        <div class="summary">
+          ${next
+            ? html`<div class="strip armed">
+                <div class="glyph"><ha-icon icon=${this.config.next_icon ?? "m3o:alarm"}></ha-icon></div>
+                <div class="text">
+                  <span class="head">${next}</span>
+                  ${sub ? html`<span class="sub">${sub}</span>` : nothing}
+                </div>
+                ${this.config.skip_action
+                  ? html`<button
+                      class="strip-cancel"
+                      @click=${() => this._handleAction(this.config.skip_action)}
+                    >${this.config.skip_label ?? "Skip"}</button>`
+                  : nothing}
+              </div>`
+            : nothing}
+
+          ${rows.length || this.config.add_action
+            ? html`<div class="rows">
+                ${rows.map((sc, i) => html`<button
+                  class="row-item"
+                  @click=${() => sc.tap_action && this._handleAction(sc.tap_action)}
+                >
+                  <ha-icon .icon=${sc.icon ?? "m3o:event-repeat"}></ha-icon>
+                  <span>${this._isTemplate(sc.label)
+                    ? (this._tplResults?.[`schedLabel${i}`] ?? "")
+                    : sc.label}</span>
+                </button>`)}
+                ${this.config.add_action
+                  ? html`<button
+                      class="row-add"
+                      aria-label=${this.config.add_label ?? "Add a schedule"}
+                      @click=${() => this._handleAction(this.config.add_action)}
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor"
+                          stroke-width="2.2" stroke-linecap="round" />
+                      </svg>
+                    </button>`
+                  : nothing}
+              </div>`
+            : nothing}
         </div>
       </ha-card>
     `;

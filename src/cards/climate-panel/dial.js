@@ -1,6 +1,7 @@
 import { LitElement, html, svg } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { materialCookiePath } from "../../utils/shapes.js";
+import { t } from "../../utils/i18n.js";
 import { styles } from "./dial-styles.js";
 
 const DIAL_START = -135; // degrees, 0 = 12 o'clock
@@ -440,7 +441,7 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
               ${target != null ? Math.round(target * 10) / 10 : current != null ? Math.round(current * 10) / 10 : "—"}<span class="deg">${unit}</span>
             </div>
             ${current != null && this.config.show_current !== false
-              ? html`<div class="current-label">${this.config.current_label ?? "Currently"} ${Math.round(current * 10) / 10}°</div>`
+              ? html`<div class="current-label">${this.config.current_label ?? t("cp_currently", this.hass)} ${Math.round(current * 10) / 10}°</div>`
               : ""}
           </div>
         </div>

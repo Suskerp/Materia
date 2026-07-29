@@ -7,6 +7,7 @@ import {
   fillBarStyles,
   unavailableStyles,
 } from "../../styles/card-styles.js";
+import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -299,34 +300,34 @@ export class MateriaCard extends ActionMixin(LitElement) {
 
     // Light
     if (domain === "light") {
-      if (stateObj.state !== "on") return this._capitalize("Off");
+      if (stateObj.state !== "on") return t("state_off", this.hass);
       if (this._isDimmable) {
         const pct = Math.round(
           ((stateObj.attributes?.brightness ?? 0) / 255) * 100
         );
         return `${pct}%`;
       }
-      return this._capitalize("On");
+      return t("state_on", this.hass);
     }
 
     // Cover
     if (domain === "cover") {
       const pos = stateObj.attributes?.current_position;
       if (pos === 0 || stateObj.state === "closed")
-        return this._capitalize("Closed");
-      if (pos === 100) return this._capitalize("Open");
-      if (pos != null) return `${this._capitalize("Open")} · ${pos}%`;
+        return t("state_closed", this.hass);
+      if (pos === 100) return t("state_open", this.hass);
+      if (pos != null) return `${t("state_open", this.hass)} · ${pos}%`;
       return this._capitalize(stateObj.state);
     }
 
     // Lock
     if (domain === "lock") {
       const map = {
-        locked: "Locked",
-        unlocked: "Unlocked",
-        locking: "Locking",
-        unlocking: "Unlocking",
-        jammed: "Jammed",
+        locked: t("state_locked", this.hass),
+        unlocked: t("state_unlocked", this.hass),
+        locking: t("state_locking", this.hass),
+        unlocking: t("state_unlocking", this.hass),
+        jammed: t("state_jammed", this.hass),
       };
       return map[stateObj.state] || this._capitalize(stateObj.state);
     }
@@ -781,7 +782,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
       this._domainConfig.sliderColor || this._domainConfig.colorActive;
 
     const icon = this._icon;
-    const stateDisplay = unavailable ? "Unavailable" : this._stateDisplay;
+    const stateDisplay = unavailable ? t("unavailable", this.hass) : this._stateDisplay;
 
     // Optionally merge the subtitle into the state line ("State · Subtitle")
     // instead of stacking it on its own row above the state.

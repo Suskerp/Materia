@@ -106,6 +106,88 @@ export const styles = [
       background: color-mix(in srgb, var(--md-sys-color-primary) 14%, transparent);
     }
 
+    /* ---- design 7b: the page summary ---- */
+
+    .summary {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* A pending run is FILLED, not quiet grey text. An armed timer that reads as
+       decoration is the one thing this strip exists to prevent. */
+    .strip.armed {
+      padding: 14px 16px;
+      border-radius: 28px;
+      background: var(--md-sys-cust-color-device, var(--md-sys-color-primary-container));
+      color: var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container));
+      cursor: default;
+    }
+
+    /* Connected group: round on the outside, small where they meet, so the
+       schedules and the add button read as one object rather than three tiles. */
+    .rows {
+      display: flex;
+      gap: 4px;
+      height: 66px;
+    }
+
+    .row-item {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 16px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 10px;
+      background: var(--md-sys-color-surface-container-high, rgba(0, 0, 0, 0.06));
+      transition: background-color var(--md-sys-motion-fast-effects);
+    }
+
+    .row-item:first-child {
+      border-radius: 28px 10px 10px 28px;
+    }
+
+    .row-item ha-icon {
+      --mdc-icon-size: 20px;
+      flex: none;
+    }
+
+    .row-item span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .row-add {
+      flex: none;
+      width: 66px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px 28px 28px 10px;
+      background: var(--md-sys-color-surface-container-high, rgba(0, 0, 0, 0.06));
+      color: var(--md-sys-color-on-surface-variant, inherit);
+      transition: background-color var(--md-sys-motion-fast-effects);
+    }
+
+    /* Sole child: it owns both outer edges. */
+    .row-add:first-child {
+      border-radius: 28px;
+    }
+
+    .row-add svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .row-item:hover,
+    .row-add:hover {
+      background: var(--md-sys-color-surface-container-highest, rgba(0, 0, 0, 0.12));
+    }
+
     /* ---- header echo (design 7a) ---- */
 
     .echo {

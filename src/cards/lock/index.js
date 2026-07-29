@@ -1,6 +1,7 @@
 import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { materialCookiePath, pillPath, gemPath } from "../../utils/shapes.js";
+import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
 import "../../primitives/drag-confirm.js";
 import "./editor.js";
@@ -187,7 +188,7 @@ class MateriaLock extends ActionMixin(LitElement) {
     const st = this._stateObj;
     if (this.config.entity && !st) {
       return html`<ha-card><div class="body">
-        <div class="pending">Entity not found: ${this.config.entity}</div>
+        <div class="pending">${t("entity_not_found_with_id", this.hass, { entity: this.config.entity })}</div>
       </div></ha-card>`;
     }
 
@@ -233,11 +234,11 @@ class MateriaLock extends ActionMixin(LitElement) {
     // mirrors rather than always sweeping the same way — the handle ends each
     // commit resting where the next one starts.
     const hint = locked
-      ? (this.config.unlock_hint ?? "Slide to unlock")
-      : (this.config.lock_hint ?? "Slide to lock");
+      ? (this.config.unlock_hint ?? t("lock_slide_to_unlock", this.hass))
+      : (this.config.lock_hint ?? t("lock_slide_to_lock", this.hass));
     const holdHint = locked
-      ? (this.config.unlock_hold_hint ?? "Hold to unlock")
-      : (this.config.lock_hold_hint ?? "Hold to lock");
+      ? (this.config.unlock_hold_hint ?? t("lock_hold_to_unlock", this.hass))
+      : (this.config.lock_hold_hint ?? t("lock_hold_to_lock", this.hass));
     const isHold = this.config.gesture === "hold";
 
     return html`
@@ -284,14 +285,14 @@ class MateriaLock extends ActionMixin(LitElement) {
           ${busy
             ? html`<div class="pending">
                 ${busy === "jammed"
-                  ? (this.config.jammed_label ?? "Jammed — check the door")
+                  ? (this.config.jammed_label ?? t("lock_jammed_hint", this.hass))
                   : busy === "locking"
-                  ? (this.config.locking_label ?? "Locking…")
-                  : (this.config.unlocking_label ?? "Unlocking…")}
+                  ? (this.config.locking_label ?? t("lock_locking", this.hass))
+                  : (this.config.unlocking_label ?? t("lock_unlocking", this.hass))}
               </div>`
             : this._selfContained
             ? html`<div class="demo-note">
-                ${this.config.demo_label ?? "Demo · no entity"}
+                ${this.config.demo_label ?? t("lock_demo_note", this.hass)}
               </div>`
             : nothing}
         </div>
