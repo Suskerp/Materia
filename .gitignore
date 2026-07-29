@@ -1,2 +1,5 @@
 node_modules/
 .DS_Store
+
+# Subagent worktrees — embedded git repos, never part of the library
+.claude/worktrees/
