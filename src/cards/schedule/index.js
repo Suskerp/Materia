@@ -411,13 +411,15 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   _dismiss() {
     this._open = false;
     if (!this._isSheet) return;
-    // browser_id: THIS is browser_mod's "the browser that called this" token.
-    // Without it the service fans out to every registered browser, so dismissing
-    // the sheet on a phone would also close it on the wall tablet.
+    // fire-dom-event rather than perform-action: browser_mod picks the ll-custom
+    // event up in the CALLING browser's own context, so the popup closes on the
+    // device you tapped without having to name it. Calling the service directly
+    // would fan out to every registered browser unless a browser_id were
+    // threaded through, and dismissing on a phone would also close it on the
+    // wall tablet.
     const close = this.config.close_action ?? {
-      action: "perform-action",
-      perform_action: "browser_mod.close_popup",
-      data: { browser_id: "THIS" },
+      action: "fire-dom-event",
+      browser_mod: { service: "browser_mod.close_popup", data: {} },
     };
     this._handleAction(close);
   }
