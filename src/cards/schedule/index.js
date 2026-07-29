@@ -532,10 +532,15 @@ class MateriaSchedule extends ActionMixin(LitElement) {
               @click=${() => { this._repeating = !this._repeating; }}
             ><i></i></div>
             <div class="text">
-              <span class="n">${this._repeating ? "Repeats weekly" : "Just once"}</span>
+              <!-- A switch labels WHAT IT TURNS ON; its position shows the state.
+                   The label used to flip with the state, so an off switch read
+                   "Just once" — which parses as "just-once is disabled", the exact
+                   opposite of the truth. The label is now constant and only the
+                   sub-line describes the consequence. -->
+              <span class="n">${this.config.repeat_label ?? "Repeat weekly"}</span>
               <span class="s">${this._repeating
                 ? "Same time every selected day"
-                : "One run, then back to normal"}</span>
+                : "Runs once, then back to normal"}</span>
             </div>
           </div>
 
