@@ -32,7 +32,7 @@ import "./editor.js";
  *
  * STATE IS MOCKED — entirely client-side, no entity, no service call. Nothing
  * here schedules anything, because nothing is wired to a device yet. Confirm arms
- * the strip, Cancel clears it. Swapping the mock for a real backend means
+ * the strip, Clear removes it. Swapping the mock for a real backend means
  * implementing _commit and nothing else.
  */
 class MateriaSchedule extends ActionMixin(LitElement) {
@@ -440,7 +440,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *
    *  The close call is CONFIGURABLE rather than hardcoded to browser_mod, so the
    *  card is not coupled to one popup implementation — but it defaults to
-   *  browser_mod.close_popup, because a Cancel button that leaves the modal open
+   *  browser_mod.close_popup, because a Close button that leaves the modal open
    *  is broken and defaulting to nothing would ship exactly that. */
   _dismiss() {
     this._open = false;
@@ -516,7 +516,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
                 this._armed = null;
                 this._fireHaptic("light");
               }}
-            >Cancel</button>`
+            >${this.config.clear_label ?? "Clear"}</button>`
           : nothing}
       </div>
     `;
@@ -607,7 +607,9 @@ class MateriaSchedule extends ActionMixin(LitElement) {
             : nothing}
 
           <div class="actions">
-            <button class="cancel" @click=${this._dismiss}>Cancel</button>
+            <button class="cancel" @click=${this._dismiss}>
+              ${this.config.close_label ?? "Close"}
+            </button>
             <button
               class="confirm"
               ?disabled=${!this._hasSelection}
