@@ -113,6 +113,11 @@ class MateriaButton extends ActionMixin(LitElement) {
     const disabled = this._disabled;
 
     const variant = VARIANT_ALIAS[this.config.variant] || this.config.variant || "filled";
+    // Color role — independent of variant, per the M3 expressive spec. Unset
+    // means each variant's own spec default (see styles.js), NOT primary.
+    const role = ["primary", "secondary", "tertiary", "error"].includes(this.config.role)
+      ? this.config.role
+      : "";
     // size may be a named token (xs/s/m/l/xl) or a custom height in px
     // (e.g. 72) for an in-between size.
     const sizeVal = this.config.size ?? "m";
@@ -151,7 +156,7 @@ class MateriaButton extends ActionMixin(LitElement) {
 
     return html`
       <button
-        class="btn variant-${variant} ${sizeClass} shape-${shape} ${this.config.connected ? `connected-${this.config.connected}` : ""} ${iconOnly ? "icon-only" : ""} ${stacked ? "stacked" : ""} ${disabled ? "disabled" : ""} ${unavailable ? "unavailable" : ""}"
+        class="btn variant-${variant} ${role ? `role-${role}` : ""} ${sizeClass} shape-${shape} ${this.config.connected ? `connected-${this.config.connected}` : ""} ${iconOnly ? "icon-only" : ""} ${stacked ? "stacked" : ""} ${disabled ? "disabled" : ""} ${unavailable ? "unavailable" : ""}"
         style=${sizeStyle}
         @click=${this._handleTap}
       >

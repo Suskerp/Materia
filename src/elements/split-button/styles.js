@@ -105,8 +105,10 @@ export const styles = [
     .outlined .trailing,
     .text .trailing {
       background: var(--sb-bg, transparent);
-      color: var(--sb-fg, var(--md-sys-color-primary, var(--primary-text-color)));
-      box-shadow: inset 0 0 0 1px var(--md-sys-color-outline, rgba(127, 127, 127, 0.4));
+      /* Expressive OutlinedButton/TextButtonTokens: neutral on-surface-variant
+         label with an outline-variant border — not primary/outline. */
+      color: var(--sb-fg, var(--md-sys-color-on-surface-variant, var(--primary-text-color)));
+      box-shadow: inset 0 0 0 1px var(--md-sys-color-outline-variant, var(--md-sys-color-outline, rgba(127, 127, 127, 0.4)));
     }
 
     /* ---- Menu ---- */

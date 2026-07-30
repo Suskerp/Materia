@@ -82,6 +82,17 @@ class MateriaButtonEditor extends SmartEditorBase {
             ] } },
           },
           {
+            name: "role",
+            label: "Color role",
+            helper: "Unset = each variant's spec default (filled → primary, tonal → secondary).",
+            selector: { select: { mode: "dropdown", options: [
+              { value: "primary", label: "Primary" },
+              { value: "secondary", label: "Secondary" },
+              { value: "tertiary", label: "Tertiary" },
+              { value: "error", label: "Error" },
+            ] } },
+          },
+          {
             name: "size",
             selector: { select: { mode: "dropdown", options: [
               { value: "xs", label: "XS (32)" },

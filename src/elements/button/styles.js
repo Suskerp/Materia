@@ -107,27 +107,73 @@ export const styles = [
       border-radius: var(--mb-rsq, 16px) calc(var(--mb-h) / 2) calc(var(--mb-h) / 2) var(--mb-rsq, 16px);
     }
 
+    /* ---- color roles × variants ----
+       Variant (emphasis) and color role (meaning) are independent axes, per the
+       M3 expressive button spec. The base declarations below ARE the spec's
+       per-variant defaults, straight from the androidx tokens (FilledButton /
+       FilledTonalButton / OutlinedButton / TextButton / ElevatedButtonTokens):
+       filled reads the ACCENT pair (primary), tonal the CONTAINER pair
+       (secondary-container — note the spec's default families deliberately
+       differ per variant), outlined/text a NEUTRAL label (on-surface-variant),
+       elevated an accent label on surface-container-low. A role-* class then
+       repoints all three channels at one family, so role: tertiary or
+       role: error colors any variant coherently. */
+    .btn {
+      --mb-accent: var(--md-sys-color-primary);
+      --mb-on-accent: var(--md-sys-color-on-primary);
+      --mb-container: var(--md-sys-color-secondary-container);
+      --mb-on-container: var(--md-sys-color-on-secondary-container);
+      --mb-label: var(--md-sys-color-on-surface-variant, var(--primary-text-color));
+    }
+    .role-primary {
+      --mb-container: var(--md-sys-color-primary-container);
+      --mb-on-container: var(--md-sys-color-on-primary-container);
+      --mb-label: var(--md-sys-color-primary);
+    }
+    .role-secondary {
+      --mb-accent: var(--md-sys-color-secondary);
+      --mb-on-accent: var(--md-sys-color-on-secondary);
+      --mb-label: var(--md-sys-color-secondary);
+    }
+    .role-tertiary {
+      --mb-accent: var(--md-sys-color-tertiary);
+      --mb-on-accent: var(--md-sys-color-on-tertiary);
+      --mb-container: var(--md-sys-color-tertiary-container);
+      --mb-on-container: var(--md-sys-color-on-tertiary-container);
+      --mb-label: var(--md-sys-color-tertiary);
+    }
+    .role-error {
+      --mb-accent: var(--md-sys-color-error);
+      --mb-on-accent: var(--md-sys-color-on-error);
+      --mb-container: var(--md-sys-color-error-container);
+      --mb-on-container: var(--md-sys-color-on-error-container);
+      --mb-label: var(--md-sys-color-error);
+    }
+
     /* ---- variants ---- */
     .variant-filled {
-      background: var(--md-sys-color-primary);
-      color: var(--md-sys-color-on-primary);
+      background: var(--mb-accent);
+      color: var(--mb-on-accent);
     }
     .variant-tonal {
-      background: var(--md-sys-color-secondary-container);
-      color: var(--md-sys-color-on-secondary-container);
+      background: var(--mb-container);
+      color: var(--mb-on-container);
     }
     .variant-outlined {
       background: transparent;
-      border: 1px solid var(--md-sys-color-outline);
-      color: var(--md-sys-color-on-surface, var(--primary-text-color));
+      /* Expressive spec: outline-variant, not outline — the border is a shape
+         cue, not a second ink. */
+      border: 1px solid var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
+      color: var(--mb-label);
     }
     .variant-text {
       background: transparent;
-      color: var(--md-sys-color-on-surface, var(--primary-text-color));
+      color: var(--mb-label);
     }
     .variant-elevated {
-      background: var(--ha-card-background, var(--card-background-color));
-      color: var(--md-sys-color-primary);
+      background: var(--md-sys-color-surface-container-low, var(--ha-card-background, var(--card-background-color)));
+      /* ElevatedButtonTokens.LabelTextColor = Primary — the accent channel. */
+      color: var(--mb-accent);
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
 
