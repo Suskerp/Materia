@@ -70,6 +70,14 @@ class MateriaDragConfirm extends LitElement {
     icon: { type: String },
     /** "forward" (handle rests left, travels right) | "backward" (mirrored). */
     direction: { type: String },
+    /** BUSY, which is not disabled: the commit was accepted and the machine is
+     *  working (a lock driving its bolt). Interaction is blocked, the handle
+     *  holds at the committed end, and the caller swaps the label to say what is
+     *  happening. When pending clears WITH a direction flip the existing
+     *  seamless handoff runs (success); when it clears WITHOUT one, the machine
+     *  refused or timed out and the handle springs home — the spring-back is the
+     *  refusal, visibly. */
+    pending: { type: Boolean, reflect: true },
     /** Fraction of the track the slide must pass to commit. */
     threshold: { type: Number },
     /** Milliseconds the hold must be sustained. */
@@ -104,6 +112,12 @@ class MateriaDragConfirm extends LitElement {
       :host([disabled]) {
         opacity: 0.38;
         pointer-events: none;
+      }
+
+      /* Busy is NOT disabled: full opacity, because the control is doing exactly
+         what was asked — it just is not ready for another instruction yet. */
+      :host([pending]) .track {
+        cursor: default;
       }
 
       .track {
@@ -235,6 +249,7 @@ class MateriaDragConfirm extends LitElement {
        on the card would commit by accident. */
     this.holdMs = 800;
     this.disabled = false;
+    this.pending = false;
     this._p = 0;
     this._armed = false;
     this._settling = false;
@@ -247,6 +262,19 @@ class MateriaDragConfirm extends LitElement {
   }
 
   willUpdate(changed) {
+    // Busy: hold the handle at the committed end while the machine works. The
+    // undefined-guard skips first render, so a card mounted mid-transition does
+    // not animate a commit nobody made.
+    if (changed.has("pending") && changed.get("pending") !== undefined) {
+      if (this.pending) {
+        this._p = 1;
+        this._settling = true;
+      } else if (!changed.has("direction")) {
+        // Cleared WITHOUT the state flipping — refused or timed out. Spring home.
+        this._p = 0;
+        this._settling = true;
+      }
+    }
     // The consumer flipped state, which makes the end the handle just travelled
     // to its new resting end. Progress goes back to 0 and, because `pos` is
     // mirrored for the new direction, 0 now resolves to the very position the
@@ -298,7 +326,7 @@ class MateriaDragConfirm extends LitElement {
   /* ---- pointer down: decide nothing yet ------------------------------- */
 
   _onPointerDown(ev) {
-    if (this.disabled) return;
+    if (this.disabled || this.pending) return;
     if (ev.button && ev.button !== 0) return;
     if (!ev.isPrimary) return; // secondary touch of a pinch
     // HA's mobile sidebar owns the left screen edge.
@@ -488,7 +516,7 @@ class MateriaDragConfirm extends LitElement {
   }
 
   _onKeyDown(ev) {
-    if (this.disabled) return;
+    if (this.disabled || this.pending) return;
     if (ev.key !== "Enter" && ev.key !== " " && ev.key !== "Spacebar") return;
     ev.preventDefault();
     this._commit();

@@ -124,8 +124,16 @@ class MateriaLock extends ActionMixin(LitElement) {
   }
 
   get _locked() {
-    if (this._pending != null) return this._pending;
     if (this._selfContained) return this._local ?? (this.config.initial_locked !== false);
+    // IN-FLIGHT DISPLAYS THE ORIGIN. Some locks report locking/unlocking for the
+    // seconds the bolt is driving, and the destination has not happened yet —
+    // the surface floods when the machine ARRIVES, not when the command is
+    // accepted. "unlocking" needs saying explicitly: it fails the === locked
+    // test and would read as already-unlocked, flipping the card at the moment
+    // of acceptance. ("locking" reads as still-unlocked for the same reason,
+    // which happens to be correct.) _pending no longer flips the display either;
+    // it only marks the wait.
+    if (String(this._stateObj?.state ?? "") === "unlocking") return true;
     const real = this._entityLocked;
     return real ?? (this._local ?? true);
   }
@@ -195,6 +203,7 @@ class MateriaLock extends ActionMixin(LitElement) {
     const unavailable = !!st && this._isUnavailable(st);
     const locked = this._locked;
     const busy = this._transitioning;
+    const inFlight = busy === "locking" || busy === "unlocking";
 
     // Colour: the flooded pair while unlocked, a quiet surface while locked.
     // `device` is the palette's existing "this device is in its active state"
@@ -274,7 +283,14 @@ class MateriaLock extends ActionMixin(LitElement) {
 
           <materia-drag-confirm
             .gesture=${isHold ? "hold" : "slide"}
-            .label=${isHold ? holdHint : hint}
+            .label=${inFlight
+              ? (busy === "locking"
+                  ? (this.config.locking_label ?? t("lock_locking", this.hass))
+                  : (this.config.unlocking_label ?? t("lock_unlocking", this.hass)))
+              : isHold
+              ? holdHint
+              : hint}
+            .pending=${inFlight}
             .direction=${locked ? "forward" : "backward"}
             .threshold=${this.config.threshold ?? 0.55}
             .holdMs=${this.config.hold_ms ?? 800}
@@ -282,13 +298,9 @@ class MateriaLock extends ActionMixin(LitElement) {
             @confirm=${this._confirm}
           ></materia-drag-confirm>
 
-          ${busy
+          ${busy === "jammed"
             ? html`<div class="pending">
-                ${busy === "jammed"
-                  ? (this.config.jammed_label ?? t("lock_jammed_hint", this.hass))
-                  : busy === "locking"
-                  ? (this.config.locking_label ?? t("lock_locking", this.hass))
-                  : (this.config.unlocking_label ?? t("lock_unlocking", this.hass))}
+                ${this.config.jammed_label ?? t("lock_jammed_hint", this.hass)}
               </div>`
             : this._selfContained
             ? html`<div class="demo-note">
