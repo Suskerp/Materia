@@ -205,8 +205,33 @@ export const styles = [
       flex-direction: column;
     }
 
+    /* OPENED wears materia-lock's unlocked pair — the device token, the
+       palette's "this device is in its active state" colour — so the popup
+       and the lock card below it flood the same way when the door is open.
+       Copy inverts to the pair's own ink, exactly like the lock's body. */
     .panel.open.done {
-      background: var(--md-sys-color-primary-container);
+      background: var(--md-sys-cust-color-device, var(--md-sys-color-primary-container));
+      color: var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container));
+    }
+
+    .panel.open.done .open-copy .big {
+      color: inherit;
+    }
+
+    .panel.open.done .open-copy .small {
+      color: inherit;
+      opacity: 0.75;
+    }
+
+    /* And the slider inverts against it, like the lock's unlocked handle:
+       the surface's ink becomes the handle, the surface becomes its glyph.
+       Named explicitly, not currentColor — same shadow-DOM resolution trap
+       materia-lock documents. */
+    .panel.open.done materia-drag-confirm {
+      --mdc-track: color-mix(in srgb, var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container)) 14%, transparent);
+      --mdc-ink: var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container));
+      --mdc-handle: var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container));
+      --mdc-handle-ink: var(--md-sys-cust-color-device, var(--md-sys-color-primary-container));
     }
 
     /* Stacked when the card is narrow (the mobile bottom sheet): the buzz
@@ -265,30 +290,46 @@ export const styles = [
       100% { transform: scale(1.42) rotate(38deg); opacity: 0; }
     }
 
+    /* The breathe NEVER stops and the spin rides a different element on a
+       different property, so entering and leaving the buzz can't hitch: the
+       design put breathe and spin on one transform, and swapping them
+       restarted both from frame zero — a visible jump. Here .cookie only ever
+       scales and its path only ever rotates. When the spin animation is
+       removed the rotation snaps home, and on a 9-lobe cookie (40 degree
+       symmetry) that snap is imperceptible — materia-lock's documented
+       insight, reused. */
     .cookie {
       transform-box: fill-box;
       transform-origin: center;
-      /* At rest the cookie breathes (an invitation); while buzzing it spins
-         (the machine is working) — vacuum-hero's motion rule again. */
       animation: mdb-breathe 5s ease-in-out infinite;
-      transition: transform 0.45s var(--md-sys-motion-expressive-default-spatial-easing, cubic-bezier(0.2, 1.5, 0.3, 1));
     }
 
-    .busy .cookie {
+    .cookie path {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .busy .cookie path {
       animation: mdb-spin 5s linear infinite;
     }
 
-    .panel.buzz:active .cookie {
-      transform: scale(0.92);
+    /* Press acknowledgement on the stage, not the cookie — the cookie's scale
+       belongs to the breathe. */
+    .cookie-stage {
+      transition: scale 0.3s var(--md-sys-motion-expressive-default-spatial-easing, cubic-bezier(0.2, 1.5, 0.3, 1));
+    }
+
+    .panel.buzz:active .cookie-stage {
+      scale: 0.93;
     }
 
     @keyframes mdb-spin {
-      to { transform: rotate(360deg); }
+      to { rotate: 360deg; }
     }
 
     @keyframes mdb-breathe {
-      0%, 100% { transform: rotate(0deg) scale(1); }
-      50% { transform: rotate(9deg) scale(1.04); }
+      0%, 100% { scale: 1; }
+      50% { scale: 1.04; }
     }
 
     .cookie path {
@@ -466,6 +507,7 @@ export const styles = [
     @media (prefers-reduced-motion: reduce) {
       .chip.ringing ha-icon,
       .cookie,
+      .busy .cookie path,
       .busy .wave.one,
       .busy .wave.two {
         animation: none;

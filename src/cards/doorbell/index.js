@@ -1,17 +1,15 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { materialCookiePath } from "../../utils/shapes.js";
 import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
-/* The design's 12-scallop cookie (viewBox 200), verbatim from the approved
- * Doorbell Alert design — twelve 22-radius arcs. The waves are the SAME path
- * scaled outward, so they read as the cookie's own sound. */
-const COOKIE =
-  "M178,100 A22,22 0 0 1 167.55,139 A22,22 0 0 1 139,167.55 A22,22 0 0 1 100,178 " +
-  "A22,22 0 0 1 61,167.55 A22,22 0 0 1 32.45,139 A22,22 0 0 1 22,100 " +
-  "A22,22 0 0 1 32.45,61 A22,22 0 0 1 61,32.45 A22,22 0 0 1 100,22 " +
-  "A22,22 0 0 1 139,32.45 A22,22 0 0 1 167.55,61 Z";
+/* NOT the design's literal 12-scallop blob: the buzz shape is Materia's own
+ * 9-lobe cookie — the exact silhouette materia-lock wears — so the two door
+ * controls read as one family. The waves are the SAME path scaled outward,
+ * so they stay the cookie's own sound. */
+const COOKIE = materialCookiePath(90, 90, 86, 9);
 
 /** How long "Buzzed" lingers after the buzzer stops before settling back. */
 const BUZZED_LINGER_MS = 6000;
@@ -141,29 +139,19 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     if (this.config.buzz_action) this._handleAction(this.config.buzz_action);
   }
 
-  _unlock() {
+  /** Slide is a TOGGLE, like materia-lock: unlocked slides back to lock. */
+  _slide() {
     if (!this.config.lock) return;
-    this.hass.callService("lock", "unlock", { entity_id: this.config.lock });
+    const service = this._opened ? "lock" : "unlock";
+    this.hass.callService("lock", service, { entity_id: this.config.lock });
   }
 
   _ignore() {
-    this._handleAction(
-      this.config.ignore_action ?? {
-        action: "perform-action",
-        perform_action: "homeassistant.turn_off",
-        target: { entity_id: this.config.entity },
-      }
-    );
+    if (this.config.ignore_action) this._handleAction(this.config.ignore_action);
   }
 
   _replay() {
-    this._handleAction(
-      this.config.replay_action ?? {
-        action: "perform-action",
-        perform_action: "homeassistant.turn_on",
-        target: { entity_id: this.config.entity },
-      }
-    );
+    if (this.config.replay_action) this._handleAction(this.config.replay_action);
   }
 
   _toggleMute() {
@@ -197,7 +185,9 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
         num: "···",
         numAccent: false,
         cap: t("db_count_buzzing", h),
-        icon: "m3o:graphic-eq",
+        // graphic-eq is not in the installed Material Symbols subset — blank
+        // glyphs, verified against the pack's file list. volume-up is.
+        icon: "m3o:volume-up",
         chip: "live",
       },
       buzzed: {
@@ -208,7 +198,7 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
         num: t("db_count_done", h),
         numAccent: false,
         cap: t("db_count_buzzed", h),
-        icon: "m3o:graphic-eq",
+        icon: "m3o:volume-up",
         chip: "soft",
       },
       opened: {
@@ -254,9 +244,9 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
       ? t("db_buzz_done", this.hass)
       : t("db_buzz_cta", this.hass);
     const cookieIcon = busy
-      ? "m3o:graphic-eq"
+      ? "m3o:volume-up"
       : phase === "buzzed"
-      ? "m3o:check"
+      ? "m3o:check-circle"
       : "m3o:campaign";
 
     const muted = this._on(this.config.mute_entity);
@@ -285,9 +275,9 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
               ? html`
                   <div class="panel buzz ${busy ? "busy" : ""}" @click=${this._buzz}>
                     <div class="cookie-stage">
-                      <svg class="wave one" viewBox="0 0 200 200"><path d=${COOKIE}></path></svg>
-                      <svg class="wave two" viewBox="0 0 200 200"><path d=${COOKIE}></path></svg>
-                      <svg class="cookie" viewBox="0 0 200 200"><path d=${COOKIE}></path></svg>
+                      <svg class="wave one" viewBox="0 0 180 180"><path d=${COOKIE}></path></svg>
+                      <svg class="wave two" viewBox="0 0 180 180"><path d=${COOKIE}></path></svg>
+                      <svg class="cookie" viewBox="0 0 180 180"><path d=${COOKIE}></path></svg>
                       <div class="cookie-face">
                         <ha-icon .icon=${cookieIcon}></ha-icon>
                         <span class="word">${cookieWord}</span>
@@ -305,7 +295,7 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
                   <div class="panel open ${opened ? "done" : ""}">
                     <div class="open-head">
                       <div class="open-glyph">
-                        <ha-icon .icon=${opened ? "m3o:lock-open-right" : "m3o:arrow-forward"}></ha-icon>
+                        <ha-icon .icon=${opened ? "m3o:lock-open-right" : "m3o:door-front"}></ha-icon>
                       </div>
                       <div class="open-copy">
                         <span class="big">${this.config.open_title ?? t("db_open_title", this.hass)}</span>
@@ -315,35 +305,43 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
                     <div class="open-spacer"></div>
                     <materia-drag-confirm
                       gesture="slide"
-                      .label=${this._unlocking
+                      .label=${this._lockState === "unlocking"
                         ? t("lock_unlocking", this.hass)
+                        : this._lockState === "locking"
+                        ? t("lock_locking", this.hass)
                         : opened
-                        ? t("db_slide_done", this.hass)
+                        ? t("lock_slide_to_lock", this.hass)
                         : t("db_slide_hint", this.hass)}
                       .pending=${this._unlocking}
-                      .disabled=${opened && !this._unlocking}
-                      @confirm=${this._unlock}
+                      .direction=${opened ? "backward" : "forward"}
+                      @confirm=${this._slide}
                     ></materia-drag-confirm>
                   </div>
                 `
               : nothing}
           </div>
 
-          <div class="row">
-            <button class="lead" @click=${this._ignore}>${t("db_ignore", this.hass)}</button>
-            ${this.config.mute_entity
-              ? html`
-                  <button class=${muted ? "muted" : ""} @click=${this._toggleMute}>
-                    <ha-icon .icon=${muted ? "m3o:volume-off" : "m3o:volume-up"}></ha-icon>
-                    ${muted ? t("db_muted", this.hass) : t("db_mute", this.hass)}
-                  </button>
-                `
-              : nothing}
-            <span class="gap"></span>
-            <button class="trail" @click=${this._replay}>
-              <ha-icon icon="m3o:replay"></ha-icon>${t("db_replay", this.hass)}
-            </button>
-          </div>
+          ${this.config.ignore_action || this.config.replay_action || this.config.mute_entity
+            ? html`
+                <div class="row">
+                  ${this.config.ignore_action
+                    ? html`<button class="lead" @click=${this._ignore}>${t("db_ignore", this.hass)}</button>`
+                    : nothing}
+                  ${this.config.mute_entity
+                    ? html`
+                        <button class=${muted ? "muted" : ""} @click=${this._toggleMute}>
+                          <ha-icon .icon=${muted ? "m3o:volume-off" : "m3o:volume-up"}></ha-icon>
+                          ${muted ? t("db_muted", this.hass) : t("db_mute", this.hass)}
+                        </button>
+                      `
+                    : nothing}
+                  <span class="gap"></span>
+                  ${this.config.replay_action
+                    ? html`<button class="trail" @click=${this._replay}>${t("db_replay", this.hass)}</button>`
+                    : nothing}
+                </div>
+              `
+            : nothing}
         </div>
       </ha-card>
     `;

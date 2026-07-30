@@ -7502,8 +7502,33 @@ const w=globalThis,k=e=>e,$=w.trustedTypes,C=$?$.createPolicy("lit-html",{create
       flex-direction: column;
     }
 
+    /* OPENED wears materia-lock's unlocked pair — the device token, the
+       palette's "this device is in its active state" colour — so the popup
+       and the lock card below it flood the same way when the door is open.
+       Copy inverts to the pair's own ink, exactly like the lock's body. */
     .panel.open.done {
-      background: var(--md-sys-color-primary-container);
+      background: var(--md-sys-cust-color-device, var(--md-sys-color-primary-container));
+      color: var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container));
+    }
+
+    .panel.open.done .open-copy .big {
+      color: inherit;
+    }
+
+    .panel.open.done .open-copy .small {
+      color: inherit;
+      opacity: 0.75;
+    }
+
+    /* And the slider inverts against it, like the lock's unlocked handle:
+       the surface's ink becomes the handle, the surface becomes its glyph.
+       Named explicitly, not currentColor — same shadow-DOM resolution trap
+       materia-lock documents. */
+    .panel.open.done materia-drag-confirm {
+      --mdc-track: color-mix(in srgb, var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container)) 14%, transparent);
+      --mdc-ink: var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container));
+      --mdc-handle: var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container));
+      --mdc-handle-ink: var(--md-sys-cust-color-device, var(--md-sys-color-primary-container));
     }
 
     /* Stacked when the card is narrow (the mobile bottom sheet): the buzz
@@ -7562,30 +7587,46 @@ const w=globalThis,k=e=>e,$=w.trustedTypes,C=$?$.createPolicy("lit-html",{create
       100% { transform: scale(1.42) rotate(38deg); opacity: 0; }
     }
 
+    /* The breathe NEVER stops and the spin rides a different element on a
+       different property, so entering and leaving the buzz can't hitch: the
+       design put breathe and spin on one transform, and swapping them
+       restarted both from frame zero — a visible jump. Here .cookie only ever
+       scales and its path only ever rotates. When the spin animation is
+       removed the rotation snaps home, and on a 9-lobe cookie (40 degree
+       symmetry) that snap is imperceptible — materia-lock's documented
+       insight, reused. */
     .cookie {
       transform-box: fill-box;
       transform-origin: center;
-      /* At rest the cookie breathes (an invitation); while buzzing it spins
-         (the machine is working) — vacuum-hero's motion rule again. */
       animation: mdb-breathe 5s ease-in-out infinite;
-      transition: transform 0.45s var(--md-sys-motion-expressive-default-spatial-easing, cubic-bezier(0.2, 1.5, 0.3, 1));
     }
 
-    .busy .cookie {
+    .cookie path {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .busy .cookie path {
       animation: mdb-spin 5s linear infinite;
     }
 
-    .panel.buzz:active .cookie {
-      transform: scale(0.92);
+    /* Press acknowledgement on the stage, not the cookie — the cookie's scale
+       belongs to the breathe. */
+    .cookie-stage {
+      transition: scale 0.3s var(--md-sys-motion-expressive-default-spatial-easing, cubic-bezier(0.2, 1.5, 0.3, 1));
+    }
+
+    .panel.buzz:active .cookie-stage {
+      scale: 0.93;
     }
 
     @keyframes mdb-spin {
-      to { transform: rotate(360deg); }
+      to { rotate: 360deg; }
     }
 
     @keyframes mdb-breathe {
-      0%, 100% { transform: rotate(0deg) scale(1); }
-      50% { transform: rotate(9deg) scale(1.04); }
+      0%, 100% { scale: 1; }
+      50% { scale: 1.04; }
     }
 
     .cookie path {
@@ -7763,12 +7804,13 @@ const w=globalThis,k=e=>e,$=w.trustedTypes,C=$?$.createPolicy("lit-html",{create
     @media (prefers-reduced-motion: reduce) {
       .chip.ringing ha-icon,
       .cookie,
+      .busy .cookie path,
       .busy .wave.one,
       .busy .wave.two {
         animation: none;
       }
     }
-  `];customElements.define("materia-doorbell-editor",class extends Be{_formData(){return{timeout:30,...this._config}}get _sections(){return[{title:"Doorbell",icon:"mdi:doorbell",fields:[{name:"entity",label:"Doorbell entity",helper:"on = ringing. The countdown runs from its last change.",selector:{entity:{domain:["input_boolean","binary_sensor","switch"]}}},{name:"timeout",label:"Ring timeout (seconds)",helper:"Match the popup timeout so the bar and the dialog agree.",selector:{number:{min:5,max:300,mode:"box"}}},{name:"name",label:"Eyebrow while ringing (default: Doorbell)",selector:{text:{}}},{name:"place",label:"Where the ring is from (default: Front door)",selector:{text:{}}}]},{title:"Buzz panel",icon:"mdi:bullhorn",fields:[{name:"buzz_action",label:"Tap-to-buzz action",helper:"The street-door buzzer. Leave empty to hide the panel.",selector:{ui_action:{default_action:"none"}}},{name:"buzz_entity",label:"Buzzing indicator",helper:"on = buzzing (usually the buzzer script itself).",selector:{entity:{}}},{name:"buzz_title",label:"Panel title (default: Buzz in)",selector:{text:{}}},{name:"buzz_sub",label:"Panel sub-line",selector:{text:{}}}]},{title:"Open panel",icon:"mdi:lock-open-variant-outline",fields:[{name:"lock",label:"Lock",helper:"Slide-to-open unlocks this. Leave empty to hide the panel.",selector:{entity:{domain:"lock"}}},{name:"open_title",label:"Panel title (default: Open the front door)",selector:{text:{}}},{name:"open_sub",label:"Panel sub-line",selector:{text:{}}}]},{title:"Bottom row",icon:"mdi:dots-horizontal",fields:[{name:"ignore_action",label:"Ignore",helper:"Defaults to turning the doorbell entity off.",selector:{ui_action:{default_action:"none"}}},{name:"replay_action",label:"Replay ring",helper:"Defaults to turning the doorbell entity back on.",selector:{ui_action:{default_action:"none"}}},{name:"mute_entity",label:"Mute toggle entity",helper:"input_boolean silencing the chime. Empty hides the button.",selector:{entity:{domain:"input_boolean"}}}]}]}});const vs="M178,100 A22,22 0 0 1 167.55,139 A22,22 0 0 1 139,167.55 A22,22 0 0 1 100,178 A22,22 0 0 1 61,167.55 A22,22 0 0 1 32.45,139 A22,22 0 0 1 22,100 A22,22 0 0 1 32.45,61 A22,22 0 0 1 61,32.45 A22,22 0 0 1 100,22 A22,22 0 0 1 139,32.45 A22,22 0 0 1 167.55,61 Z";class ys extends(xe(ce)){static properties={hass:{attribute:!1},config:{state:!0},_now:{state:!0},_buzzedUntil:{state:!0}};static styles=bs;static getConfigElement(){return document.createElement("materia-doorbell-editor")}static getStubConfig(){return{entity:"",timeout:30}}setConfig(e){if(!e.entity)throw new Error("entity is required (on = ringing)");this.config={timeout:30,...e}}connectedCallback(){super.connectedCallback(),this._syncTicker()}disconnectedCallback(){super.disconnectedCallback(),clearInterval(this._tick),this._tick=null,clearTimeout(this._lingerTimer)}_on(e){const t=e?this.hass?.states[e]:void 0;return!!t&&"on"===t.state}get _ringing(){return this._on(this.config.entity)}get _buzzing(){return this._on(this.config.buzz_entity)}get _lockState(){const e=this.config.lock;return e?String(this.hass?.states[e]?.state??""):""}get _opened(){return["unlocked","unlocking"].includes(this._lockState)}get _unlocking(){return["unlocking","locking"].includes(this._lockState)}get _left(){if(!this._ringing)return 0;const e=this.hass?.states[this.config.entity],t=e?new Date(e.last_changed).getTime():NaN;return Number.isNaN(t)?this.config.timeout:Math.max(0,Math.ceil(this.config.timeout-(Date.now()-t)/1e3))}get _phase(){return this._buzzing?"buzzing":this._buzzedUntil&&Date.now()<this._buzzedUntil?"buzzed":this._opened?"opened":this._ringing?"ringing":"lapsed"}updated(e){if(e.has("hass")){const e=this._buzzing;this._wasBuzzing&&!e&&(this._buzzedUntil=Date.now()+6e3,clearTimeout(this._lingerTimer),this._lingerTimer=setTimeout(()=>this.requestUpdate(),6050)),this._wasBuzzing=e,this._syncTicker()}}_syncTicker(){const e=this._ringing;e&&!this._tick?this._tick=setInterval(()=>{this._now=Date.now()},1e3):!e&&this._tick&&(clearInterval(this._tick),this._tick=null)}_buzz(){this.config.buzz_action&&this._handleAction(this.config.buzz_action)}_unlock(){this.config.lock&&this.hass.callService("lock","unlock",{entity_id:this.config.lock})}_ignore(){this._handleAction(this.config.ignore_action??{action:"perform-action",perform_action:"homeassistant.turn_off",target:{entity_id:this.config.entity}})}_replay(){this._handleAction(this.config.replay_action??{action:"perform-action",perform_action:"homeassistant.turn_on",target:{entity_id:this.config.entity}})}_toggleMute(){this.config.mute_entity&&this.hass.callService("homeassistant","toggle",{entity_id:this.config.mute_entity})}_copy(e){const t=this.hass,i=this.config.place??Me("db_eyebrow_front",t),s=this._left;return{ringing:{eyebrow:this.config.name??Me("db_eyebrow",t),accent:!0,title:Me("db_title_ringing",t),sub:Me("db_sub_ringing",t,{place:i}),num:`${s}s`,numAccent:!0,cap:Me("db_count_before_lapse",t),icon:"m3of:notifications-active",chip:"live ringing"},buzzing:{eyebrow:Me("db_eyebrow_street",t),accent:!0,title:Me("db_title_buzzing",t),sub:Me("db_sub_buzzing",t),num:"···",numAccent:!1,cap:Me("db_count_buzzing",t),icon:"m3o:graphic-eq",chip:"live"},buzzed:{eyebrow:Me("db_eyebrow_street",t),accent:!1,title:Me("db_title_buzzed",t),sub:Me("db_sub_buzzed",t),num:Me("db_count_done",t),numAccent:!1,cap:Me("db_count_buzzed",t),icon:"m3o:graphic-eq",chip:"soft"},opened:{eyebrow:Me("db_eyebrow_front",t),accent:!1,title:Me("db_title_opened",t),titleAccent:!0,sub:Me("db_sub_opened",t),num:Me("db_count_open",t),numAccent:!0,cap:Me("db_count_opened",t),icon:"m3o:lock-open-right",chip:"live"},lapsed:{eyebrow:this.config.name??Me("db_eyebrow",t),accent:!1,title:Me("db_title_lapsed",t),sub:Me("db_sub_lapsed",t),num:"—",numAccent:!1,cap:Me("db_count_lapsed",t),icon:"m3o:notifications-off",chip:""}}[e]}render(){if(!this.config||!this.hass)return I``;const e=this._phase,t=this._copy(e),i="buzzing"===e,s="opened"===e,o="ringing"===e?Math.round(this._left/this.config.timeout*100):"lapsed"===e?0:100,n=Me(i?"db_buzz_busy":"buzzed"===e?"db_buzz_done":"db_buzz_cta",this.hass),a=i?"m3o:graphic-eq":"buzzed"===e?"m3o:check":"m3o:campaign",r=this._on(this.config.mute_entity);return I`
+  `];customElements.define("materia-doorbell-editor",class extends Be{_formData(){return{timeout:30,...this._config}}get _sections(){return[{title:"Doorbell",icon:"mdi:doorbell",fields:[{name:"entity",label:"Doorbell entity",helper:"on = ringing. The countdown runs from its last change.",selector:{entity:{domain:["input_boolean","binary_sensor","switch"]}}},{name:"timeout",label:"Ring timeout (seconds)",helper:"Match the popup timeout so the bar and the dialog agree.",selector:{number:{min:5,max:300,mode:"box"}}},{name:"name",label:"Eyebrow while ringing (default: Doorbell)",selector:{text:{}}},{name:"place",label:"Where the ring is from (default: Front door)",selector:{text:{}}}]},{title:"Buzz panel",icon:"mdi:bullhorn",fields:[{name:"buzz_action",label:"Tap-to-buzz action",helper:"The street-door buzzer. Leave empty to hide the panel.",selector:{ui_action:{default_action:"none"}}},{name:"buzz_entity",label:"Buzzing indicator",helper:"on = buzzing (usually the buzzer script itself).",selector:{entity:{}}},{name:"buzz_title",label:"Panel title (default: Buzz in)",selector:{text:{}}},{name:"buzz_sub",label:"Panel sub-line",selector:{text:{}}}]},{title:"Open panel",icon:"mdi:lock-open-variant-outline",fields:[{name:"lock",label:"Lock",helper:"Slide-to-open unlocks this. Leave empty to hide the panel.",selector:{entity:{domain:"lock"}}},{name:"open_title",label:"Panel title (default: Open the front door)",selector:{text:{}}},{name:"open_sub",label:"Panel sub-line",selector:{text:{}}}]},{title:"Bottom row",icon:"mdi:dots-horizontal",fields:[{name:"ignore_action",label:"Ignore",helper:"Empty hides the button. The whole row hides when nothing in it is configured.",selector:{ui_action:{default_action:"none"}}},{name:"replay_action",label:"Replay ring",helper:"Empty hides the button.",selector:{ui_action:{default_action:"none"}}},{name:"mute_entity",label:"Mute toggle entity",helper:"input_boolean silencing the chime. Empty hides the button.",selector:{entity:{domain:"input_boolean"}}}]}]}});const vs=st(90,90,86,9);class ys extends(xe(ce)){static properties={hass:{attribute:!1},config:{state:!0},_now:{state:!0},_buzzedUntil:{state:!0}};static styles=bs;static getConfigElement(){return document.createElement("materia-doorbell-editor")}static getStubConfig(){return{entity:"",timeout:30}}setConfig(e){if(!e.entity)throw new Error("entity is required (on = ringing)");this.config={timeout:30,...e}}connectedCallback(){super.connectedCallback(),this._syncTicker()}disconnectedCallback(){super.disconnectedCallback(),clearInterval(this._tick),this._tick=null,clearTimeout(this._lingerTimer)}_on(e){const t=e?this.hass?.states[e]:void 0;return!!t&&"on"===t.state}get _ringing(){return this._on(this.config.entity)}get _buzzing(){return this._on(this.config.buzz_entity)}get _lockState(){const e=this.config.lock;return e?String(this.hass?.states[e]?.state??""):""}get _opened(){return["unlocked","unlocking"].includes(this._lockState)}get _unlocking(){return["unlocking","locking"].includes(this._lockState)}get _left(){if(!this._ringing)return 0;const e=this.hass?.states[this.config.entity],t=e?new Date(e.last_changed).getTime():NaN;return Number.isNaN(t)?this.config.timeout:Math.max(0,Math.ceil(this.config.timeout-(Date.now()-t)/1e3))}get _phase(){return this._buzzing?"buzzing":this._buzzedUntil&&Date.now()<this._buzzedUntil?"buzzed":this._opened?"opened":this._ringing?"ringing":"lapsed"}updated(e){if(e.has("hass")){const e=this._buzzing;this._wasBuzzing&&!e&&(this._buzzedUntil=Date.now()+6e3,clearTimeout(this._lingerTimer),this._lingerTimer=setTimeout(()=>this.requestUpdate(),6050)),this._wasBuzzing=e,this._syncTicker()}}_syncTicker(){const e=this._ringing;e&&!this._tick?this._tick=setInterval(()=>{this._now=Date.now()},1e3):!e&&this._tick&&(clearInterval(this._tick),this._tick=null)}_buzz(){this.config.buzz_action&&this._handleAction(this.config.buzz_action)}_slide(){if(!this.config.lock)return;const e=this._opened?"lock":"unlock";this.hass.callService("lock",e,{entity_id:this.config.lock})}_ignore(){this.config.ignore_action&&this._handleAction(this.config.ignore_action)}_replay(){this.config.replay_action&&this._handleAction(this.config.replay_action)}_toggleMute(){this.config.mute_entity&&this.hass.callService("homeassistant","toggle",{entity_id:this.config.mute_entity})}_copy(e){const t=this.hass,i=this.config.place??Me("db_eyebrow_front",t),s=this._left;return{ringing:{eyebrow:this.config.name??Me("db_eyebrow",t),accent:!0,title:Me("db_title_ringing",t),sub:Me("db_sub_ringing",t,{place:i}),num:`${s}s`,numAccent:!0,cap:Me("db_count_before_lapse",t),icon:"m3of:notifications-active",chip:"live ringing"},buzzing:{eyebrow:Me("db_eyebrow_street",t),accent:!0,title:Me("db_title_buzzing",t),sub:Me("db_sub_buzzing",t),num:"···",numAccent:!1,cap:Me("db_count_buzzing",t),icon:"m3o:volume-up",chip:"live"},buzzed:{eyebrow:Me("db_eyebrow_street",t),accent:!1,title:Me("db_title_buzzed",t),sub:Me("db_sub_buzzed",t),num:Me("db_count_done",t),numAccent:!1,cap:Me("db_count_buzzed",t),icon:"m3o:volume-up",chip:"soft"},opened:{eyebrow:Me("db_eyebrow_front",t),accent:!1,title:Me("db_title_opened",t),titleAccent:!0,sub:Me("db_sub_opened",t),num:Me("db_count_open",t),numAccent:!0,cap:Me("db_count_opened",t),icon:"m3o:lock-open-right",chip:"live"},lapsed:{eyebrow:this.config.name??Me("db_eyebrow",t),accent:!1,title:Me("db_title_lapsed",t),sub:Me("db_sub_lapsed",t),num:"—",numAccent:!1,cap:Me("db_count_lapsed",t),icon:"m3o:notifications-off",chip:""}}[e]}render(){if(!this.config||!this.hass)return I``;const e=this._phase,t=this._copy(e),i="buzzing"===e,s="opened"===e,o="ringing"===e?Math.round(this._left/this.config.timeout*100):"lapsed"===e?0:100,n=Me(i?"db_buzz_busy":"buzzed"===e?"db_buzz_done":"db_buzz_cta",this.hass),a=i?"m3o:volume-up":"buzzed"===e?"m3o:check-circle":"m3o:campaign",r=this._on(this.config.mute_entity);return I`
       <ha-card>
         <div class="countbar ${"lapsed"===e?"lapsed":""}">
           <div class="fill" style="width:${o}%"></div>
@@ -7791,9 +7833,9 @@ const w=globalThis,k=e=>e,$=w.trustedTypes,C=$?$.createPolicy("lit-html",{create
             ${this.config.buzz_action?I`
                   <div class="panel buzz ${i?"busy":""}" @click=${this._buzz}>
                     <div class="cookie-stage">
-                      <svg class="wave one" viewBox="0 0 200 200"><path d=${vs}></path></svg>
-                      <svg class="wave two" viewBox="0 0 200 200"><path d=${vs}></path></svg>
-                      <svg class="cookie" viewBox="0 0 200 200"><path d=${vs}></path></svg>
+                      <svg class="wave one" viewBox="0 0 180 180"><path d=${vs}></path></svg>
+                      <svg class="wave two" viewBox="0 0 180 180"><path d=${vs}></path></svg>
+                      <svg class="cookie" viewBox="0 0 180 180"><path d=${vs}></path></svg>
                       <div class="cookie-face">
                         <ha-icon .icon=${a}></ha-icon>
                         <span class="word">${n}</span>
@@ -7809,7 +7851,7 @@ const w=globalThis,k=e=>e,$=w.trustedTypes,C=$?$.createPolicy("lit-html",{create
                   <div class="panel open ${s?"done":""}">
                     <div class="open-head">
                       <div class="open-glyph">
-                        <ha-icon .icon=${s?"m3o:lock-open-right":"m3o:arrow-forward"}></ha-icon>
+                        <ha-icon .icon=${s?"m3o:lock-open-right":"m3o:door-front"}></ha-icon>
                       </div>
                       <div class="open-copy">
                         <span class="big">${this.config.open_title??Me("db_open_title",this.hass)}</span>
@@ -7819,28 +7861,28 @@ const w=globalThis,k=e=>e,$=w.trustedTypes,C=$?$.createPolicy("lit-html",{create
                     <div class="open-spacer"></div>
                     <materia-drag-confirm
                       gesture="slide"
-                      .label=${this._unlocking?Me("lock_unlocking",this.hass):Me(s?"db_slide_done":"db_slide_hint",this.hass)}
+                      .label=${"unlocking"===this._lockState?Me("lock_unlocking",this.hass):"locking"===this._lockState?Me("lock_locking",this.hass):Me(s?"lock_slide_to_lock":"db_slide_hint",this.hass)}
                       .pending=${this._unlocking}
-                      .disabled=${s&&!this._unlocking}
-                      @confirm=${this._unlock}
+                      .direction=${s?"backward":"forward"}
+                      @confirm=${this._slide}
                     ></materia-drag-confirm>
                   </div>
                 `:W}
           </div>
 
-          <div class="row">
-            <button class="lead" @click=${this._ignore}>${Me("db_ignore",this.hass)}</button>
-            ${this.config.mute_entity?I`
-                  <button class=${r?"muted":""} @click=${this._toggleMute}>
-                    <ha-icon .icon=${r?"m3o:volume-off":"m3o:volume-up"}></ha-icon>
-                    ${Me(r?"db_muted":"db_mute",this.hass)}
-                  </button>
-                `:W}
-            <span class="gap"></span>
-            <button class="trail" @click=${this._replay}>
-              <ha-icon icon="m3o:replay"></ha-icon>${Me("db_replay",this.hass)}
-            </button>
-          </div>
+          ${this.config.ignore_action||this.config.replay_action||this.config.mute_entity?I`
+                <div class="row">
+                  ${this.config.ignore_action?I`<button class="lead" @click=${this._ignore}>${Me("db_ignore",this.hass)}</button>`:W}
+                  ${this.config.mute_entity?I`
+                        <button class=${r?"muted":""} @click=${this._toggleMute}>
+                          <ha-icon .icon=${r?"m3o:volume-off":"m3o:volume-up"}></ha-icon>
+                          ${Me(r?"db_muted":"db_mute",this.hass)}
+                        </button>
+                      `:W}
+                  <span class="gap"></span>
+                  ${this.config.replay_action?I`<button class="trail" @click=${this._replay}>${Me("db_replay",this.hass)}</button>`:W}
+                </div>
+              `:W}
         </div>
       </ha-card>
     `}getCardSize(){return 5}}customElements.define("materia-doorbell",ys),window.customCards=window.customCards||[],window.customCards.push({type:"materia-doorbell",name:"Materia Doorbell",description:"Doorbell alert — countdown ring, tap-to-buzz, slide-to-unlock. Built for a browser_mod popup.",preview:!0});const xs={primary:["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],secondary:["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],tertiary:["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],error:["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],device:["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-container":["var(--md-sys-color-primary-container)","var(--md-sys-color-on-primary-container)"],"secondary-container":["var(--md-sys-color-secondary-container)","var(--md-sys-color-on-secondary-container)"],"error-container":["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"],"device-container":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-state":["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],"secondary-state":["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],"tertiary-state":["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],"error-state":["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],"device-state":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"]},ws=[$e,n`
@@ -8987,4 +9029,4 @@ const w=globalThis,k=e=>e,$=w.trustedTypes,C=$?$.createPolicy("lit-html",{create
           <circle class="pin" cx="50" cy="50" r="2.4"></circle>
         </svg>
       </ha-card>
-    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const e=document.createElement("style");e.id="materia-fonts",e.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Display voice: Outfit VARIABLE (true wght 100-900 axis) — hero\n       numerals & titles via --materia-font-display; the weight axis\n       interpolates smoothly, which flavor C's morphs animate. */\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJuktqUYLkn8BJ.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJtEtqUYLknw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Accent voice: Fraunces italic — ONE personality moment (clock date). */\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7frU9kMz3lR27gVA.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7RrU9kMz3lR24.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(e)}();console.info("%c MATERIA %c v0.28.0 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");
+    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const e=document.createElement("style");e.id="materia-fonts",e.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Display voice: Outfit VARIABLE (true wght 100-900 axis) — hero\n       numerals & titles via --materia-font-display; the weight axis\n       interpolates smoothly, which flavor C's morphs animate. */\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJuktqUYLkn8BJ.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJtEtqUYLknw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Accent voice: Fraunces italic — ONE personality moment (clock date). */\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7frU9kMz3lR27gVA.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7RrU9kMz3lR24.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(e)}();console.info("%c MATERIA %c v0.28.1 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");

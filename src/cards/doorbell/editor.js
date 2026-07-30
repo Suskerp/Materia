@@ -68,13 +68,13 @@ class MateriaDoorbellEditor extends SmartEditorBase {
           {
             name: "ignore_action",
             label: "Ignore",
-            helper: "Defaults to turning the doorbell entity off.",
+            helper: "Empty hides the button. The whole row hides when nothing in it is configured.",
             selector: { ui_action: { default_action: "none" } },
           },
           {
             name: "replay_action",
             label: "Replay ring",
-            helper: "Defaults to turning the doorbell entity back on.",
+            helper: "Empty hides the button.",
             selector: { ui_action: { default_action: "none" } },
           },
           {
