@@ -56,15 +56,22 @@ export const styles = [
       height: 44px;
     }
 
-    /* Selection on a NEUTRAL surface takes the secondary family — M3's selected
-       filter chip pair, and the same guardrail button-group encodes. The hero
-       variant keeps its ink inverse because its block is a coloured container;
-       the sidekick's fg is on-surface, a CONTENT role, and using it as a fill
-       was a role abuse whose symptom was a black blob in light mode that only
-       looked right in dark by accident. */
-    .block.sidekick .pill.on {
+    /* These pills ARE a single-select toggle set, so TonalButtonTokens'
+       toggle pair applies: selected = SOLID secondary, unselected =
+       secondary-container — the same family button-group encodes. The previous
+       fix stopped at secondary-container for SELECTED, which on this light
+       surface has LESS contrast than the neutral resting pills: the chosen
+       option read as the faded one. Selection must be the emphatic step of the
+       family, not the quiet one. (The hero variant keeps its ink-inverse pills
+       because its block is a coloured container, not a neutral surface.) */
+    .block.sidekick .pill {
       background: var(--md-sys-color-secondary-container);
       color: var(--md-sys-color-on-secondary-container);
+    }
+
+    .block.sidekick .pill.on {
+      background: var(--md-sys-color-secondary);
+      color: var(--md-sys-color-on-secondary);
     }
 
     .eyebrow {

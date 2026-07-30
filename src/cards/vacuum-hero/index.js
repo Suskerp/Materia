@@ -1,6 +1,6 @@
-import { LitElement, html, svg, nothing } from "lit";
+import { LitElement, html, svg, nothing, css } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { boomPath, softBurstPath } from "../../utils/shapes.js";
+import { boomPath, softBurstPath, liveBurstPath } from "../../utils/shapes.js";
 import { styles } from "../hero/styles.js";
 import { CAPABILITY_KEYS, CONSUMABLE_KEYS, profileFor } from "./profiles.js";
 import { explainConsumable, explainError } from "./explanations.js";
@@ -32,7 +32,33 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
     config: { state: true },
   };
 
-  static styles = styles;
+  static styles = [
+    styles,
+    /* The burst MORPHS between poses, like a toggle button's round-square
+       shape change: the slow spin alone was invisible as a state cue (a mop
+       wash went unnoticed). Both endpoints ride custom properties set inline
+       in render — this rule lives HERE and not in the shared hero styles
+       because materia-hero never defines the vars, and an unresolvable var()
+       would compute d to none and erase its burst entirely. The attribute d
+       stays the calm pose, so engines without the CSS d property keep a
+       correct static shape and simply skip the morph. */
+    css`
+      .burst .drift path {
+        d: var(--mh-calm-d);
+        transition: d var(--md-sys-motion-expressive-default-spatial);
+      }
+
+      .burst.working .drift path {
+        d: var(--mh-live-d);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .burst .drift path {
+          transition: none;
+        }
+      }
+    `,
+  ];
 
   static getConfigElement() {
     return document.createElement("materia-vacuum-hero-editor");
@@ -429,6 +455,7 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
     }
 
     const calm = softBurstPath(90, 90, 86);
+    const live = liveBurstPath(90, 90, 86);
     const boom = boomPath(90, 90, 88);
     const name = this.config.name ?? st.attributes?.friendly_name ?? this.config.entity;
     const icon = this.config.icon ?? "mdi:robot-vacuum";
@@ -438,7 +465,7 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
     this._lastGood = { title, value, caption, secondary, name, icon, bg, fg };
 
     return html`
-      <ha-card style="--mh-bg:${bg};--mh-fg:${fg};--mh-alert-bg:${alertBg ?? bg};--mh-alert-fg:${alertFg ?? fg};">
+      <ha-card style="--mh-bg:${bg};--mh-fg:${fg};--mh-alert-bg:${alertBg ?? bg};--mh-alert-fg:${alertFg ?? fg};--mh-calm-d:path('${calm}');--mh-live-d:path('${live}');">
         <div class="stack">
           <div
             class="hero ${unavailable ? "unavailable" : ""} ${alert ? "attached" : ""}"

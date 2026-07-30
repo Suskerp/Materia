@@ -235,6 +235,19 @@ export function softBurstPath(cx, cy, r, rotate = 0) {
   ], 10);
 }
 
+/** SoftBurst's WORKING pose: the inner vertex pulled toward the centre (.31
+ *  against SoftBurst's .38, a .56 ratio) so the lobes deepen — energetic, but
+ *  the .053 rounding keeps it a world away from Boom's spikes, which this card
+ *  family reserves for faults. Same pair count and reps as softBurstPath ON
+ *  PURPOSE: identical segment structure is what lets CSS interpolate the two
+ *  as a shape morph. Change one, change both. */
+export function liveBurstPath(cx, cy, r, rotate = 0) {
+  return repeatedPairPath(cx, cy, r, rotate, [
+    { x: 0.248, y: 0.317, r: 0.053 },
+    { x: 0.176, y: 0.055, r: 0.053 },
+  ], 10);
+}
+
 /** Shared engine for MaterialShapes' `customPolygon(points, reps)` shapes:
  *  point offsets are unit-square coords about a (0.5, 0.5) centre, and `reps`
  *  spins the set around the circle. */
