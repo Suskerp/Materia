@@ -30,6 +30,32 @@ export const styles = [
         color var(--md-sys-motion-default-effects);
     }
 
+    /* The sidekick tier: a peer of the level bars, not a second statement. The
+       asymmetric corner is the hero family's mark, so the sidekick takes the
+       bars' uniform radius, and every size steps down one rung. */
+    .block.sidekick {
+      border-radius: 26px;
+      padding: clamp(14px, 4cqi, 18px);
+      gap: clamp(10px, 3cqi, 14px);
+    }
+
+    .block.sidekick .title {
+      font-size: clamp(18px, 5.5cqi, 22px);
+    }
+
+    .block.sidekick .route {
+      width: clamp(38px, 11cqi, 46px);
+      height: clamp(26px, 8cqi, 32px);
+    }
+
+    .block.sidekick .gicon {
+      --mdc-icon-size: clamp(26px, 8cqi, 32px);
+    }
+
+    .block.sidekick .pills {
+      height: 44px;
+    }
+
     .eyebrow {
       font-size: clamp(11px, 3.2cqi, 13px);
       font-weight: 600;

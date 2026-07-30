@@ -21,6 +21,15 @@ class MateriaSelectHeroEditor extends SmartEditorBase {
         title: "Appearance",
         icon: "mdi:palette-outline",
         fields: [
+          {
+            name: "variant",
+            label: "Emphasis",
+            helper: "Hero is the filled statement block; sidekick is its quiet companion for pages that already have a hero.",
+            selector: { select: { mode: "dropdown", options: [
+              { value: "hero", label: "Hero — filled, owns the panel" },
+              { value: "sidekick", label: "Sidekick — quiet peer of the bars" },
+            ] } },
+          },
           { name: "color", label: "Block background", color: true, selector: { text: {} } },
           { name: "color_on", label: "Block text", color: true, selector: { text: {} } },
         ],

@@ -88,17 +88,27 @@ class MateriaSelectHero extends ActionMixin(LitElement) {
     const options = this._options;
     const active = options.find((o) => String(o.value) === cur) || null;
 
+    // Two emphasis tiers. HERO is the filled device block — the loudest thing
+    // on its panel. SIDEKICK is its quiet companion for pages that already have
+    // a hero: the same quiet surface the bar rows use, so it reads as their
+    // peer rather than a second statement. One hero per page; everything else
+    // is a sidekick.
+    const sidekick = this.config.variant === "sidekick";
     const bg = this.config.color
-      ?? "var(--md-sys-cust-color-device, var(--md-sys-color-primary-container))";
+      ?? (sidekick
+        ? "var(--md-sys-color-surface-container-high, rgba(0, 0, 0, 0.06))"
+        : "var(--md-sys-cust-color-device, var(--md-sys-color-primary-container))");
     const fg = this.config.color_on
-      ?? "var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container))";
+      ?? (sidekick
+        ? "var(--md-sys-color-on-surface)"
+        : "var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container))");
 
     const name = active?.label
       ?? (st ? (this.hass.formatEntityState?.(st) ?? this._capitalize(cur)) : "—");
 
     return html`
       <ha-card class=${unavailable ? "unavailable" : ""} style="--msh-bg:${bg};--msh-fg:${fg};">
-        <div class="block">
+        <div class="block ${sidekick ? "sidekick" : ""}">
           ${this.config.name ? html`<div class="eyebrow">${this.config.name}</div>` : nothing}
           <div class="head">
             ${active?.glyph
