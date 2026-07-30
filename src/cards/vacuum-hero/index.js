@@ -284,13 +284,6 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
    *             outranks a tonal one. Fix this now.
    *  warning -> a tonal container. Present, legible, ignorable. */
   _severityPair(sev) {
-    // info: present, quiet, ignorable — a scheduled run is news, not a fault.
-    if (sev === "info") {
-      return [
-        "color-mix(in srgb, var(--md-sys-color-on-surface) 8%, var(--ha-card-background, var(--card-background-color)))",
-        "var(--md-sys-color-on-surface)",
-      ];
-    }
     if (sev === "warning") {
       return [
         "var(--md-sys-cust-color-warning-container)",
@@ -423,7 +416,10 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
     let alertBg = null;
     let alertFg = null;
     if (alert) {
-      const [ab, af] = this._severityPair(alert.severity);
+      // info wears the HERO'S OWN surface: the 2dp seam already articulates the
+      // two parts, and a second tone read as contrast rather than attachment. A
+      // schedule strip is part of the same object, not a notice pinned to it.
+      const [ab, af] = alert.severity === "info" ? [bg, fg] : this._severityPair(alert.severity);
       alertBg = alert.color ?? ab;
       alertFg = alert.color_on ?? af;
       if (isError && this.config.alert_tints_hero !== false) {
