@@ -56,6 +56,17 @@ export const styles = [
       height: 44px;
     }
 
+    /* Selection on a NEUTRAL surface takes the secondary family — M3's selected
+       filter chip pair, and the same guardrail button-group encodes. The hero
+       variant keeps its ink inverse because its block is a coloured container;
+       the sidekick's fg is on-surface, a CONTENT role, and using it as a fill
+       was a role abuse whose symptom was a black blob in light mode that only
+       looked right in dark by accident. */
+    .block.sidekick .pill.on {
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+
     .eyebrow {
       font-size: clamp(11px, 3.2cqi, 13px);
       font-weight: 600;
