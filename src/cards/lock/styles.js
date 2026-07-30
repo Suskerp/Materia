@@ -124,6 +124,16 @@ export const styles = [
       transform: rotate(var(--ml-rot, 45deg));
     }
 
+    /* While the spin owns the rotation, the path's own state turn stands down:
+       two rotation systems landing in the same moment read as a sudden
+       speed-up right as the bolt lands. The pose snaps instead — on a spinning
+       9-lobe star an instant 20-degree change is imperceptible, because the
+       pose carries no absolute reference. The transition comes back the moment
+       the wind-down ends, so ordinary instant toggles keep their turn. */
+    .shape.spinning .silhouette path {
+      transition: none;
+    }
+
     .shape.vector ha-icon {
       position: relative;
     }

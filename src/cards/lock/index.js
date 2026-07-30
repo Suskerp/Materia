@@ -73,6 +73,9 @@ class MateriaLock extends ActionMixin(LitElement) {
     _pending: { state: true },
     /** Self-contained state, used when there is no entity. */
     _local: { state: true },
+    /** True from spin-up until the wind-down completes — drives the class that
+     *  stands the path's own state turn down while the spin owns rotation. */
+    _spinning: { state: true },
   };
 
   static styles = styles;
@@ -193,9 +196,13 @@ class MateriaLock extends ActionMixin(LitElement) {
 
   _spinUp() {
     if (this._spinMode === "ramp" || this._spinMode === "cruise") return;
+    const resuming = this._spinMode === "stop";
     this._spinMode = "ramp";
+    this._spinning = true;
     this._spinDeg = this._spinDeg ?? 0;
-    this._spinVel = this._spinVel ?? 0;
+    // Re-committing mid-wind-down: the braked speed is unknown, so ramp afresh
+    // from zero rather than jumping back to the stale cruise value.
+    this._spinVel = resuming ? 0 : (this._spinVel ?? 0);
     if (this._spinRaf) return; // a wind-down is mid-frame; the loop redirects
     const CRUISE = 40;
     let last = performance.now();
@@ -213,10 +220,11 @@ class MateriaLock extends ActionMixin(LitElement) {
         const k = 1 - (1 - t) * (1 - t); // quadratic ease-out
         this._spinDeg = this._stopFrom + (this._stopTo - this._stopFrom) * k;
         if (t >= 1) {
-          this._spinDeg = this._stopTo % 360; // symmetric pose; bounded growth
+          this._spinDeg = this._stopTo % 360; // bounded growth; pose is free
           this._applySpin();
           this._spinMode = null;
           this._spinVel = 0;
+          this._spinning = false;
           this._spinRaf = null;
           return;
         }
@@ -232,17 +240,19 @@ class MateriaLock extends ActionMixin(LitElement) {
 
   _spinDown() {
     if (this._spinMode !== "ramp" && this._spinMode !== "cruise") return;
-    const period = this._shapeStyle.rot * 2;
     const from = this._spinDeg ?? 0;
-    // The next symmetric pose at least 10 degrees on, so there is always room
-    // to decelerate rather than a sub-frame stop.
-    const to = Math.ceil((from + 10) / period) * period;
     const vel = Math.max(this._spinVel ?? 40, 8);
+    // NATURAL stop, no target pose. A 9-fold star reads identically at any
+    // resting angle — its tips have no absolute reference — so the earlier
+    // land-on-a-symmetric-pose rule bought nothing and cost a tail of up to
+    // 2.5s that kept turning long after the lock had landed. Fixed 550ms, the
+    // expressive-default morph's own beat, travelling only what momentum
+    // carries: to = from + vel*D/2 makes the quadratic-out's initial slope
+    // EXACTLY the cruise speed. Braking only; it can never speed up.
+    const D = 0.55;
     this._stopFrom = from;
-    this._stopTo = to;
-    // Quadratic-out's initial slope is 2*delta/D; solving D for slope == the
-    // current speed is what removes the kick at the seam.
-    this._stopDur = Math.min(2600, ((2 * (to - from)) / vel) * 1000);
+    this._stopTo = from + (vel * D) / 2;
+    this._stopDur = D * 1000;
     this._stopT0 = performance.now();
     this._spinMode = "stop";
   }
@@ -368,7 +378,7 @@ class MateriaLock extends ActionMixin(LitElement) {
                   )}
               >
                 <div
-                  class="shape ${locked ? "" : "unlocked"} ${style.vector ? "vector" : ""} ${inFlight && !this._spins ? "working" : ""}"
+                  class="shape ${locked ? "" : "unlocked"} ${style.vector ? "vector" : ""} ${inFlight && !this._spins ? "working" : ""} ${this._spinning ? "spinning" : ""}"
                   style="--ml-rot:${style.rot}deg"
                 >
                   ${style.vector
