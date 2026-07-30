@@ -51,6 +51,13 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
 
   updated(changedProps) {
     if (changedProps.has("config")) this._discovered = null;
+    if (changedProps.has("hass") && this.hass) {
+      // Appended alerts resolve templates like materia-hero's do — a schedule
+      // strip has to render a live "next run" without a helper per string.
+      (this.config.alerts || []).forEach((a, i) => {
+        if (a.text != null) this._resolveTemplateValue("alertText" + i, a.text);
+      });
+    }
   }
 
   get _profile() {
@@ -256,7 +263,16 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
         // you want — so offer it inline rather than sending you to the device.
         reset: this._resetButtonFor(id),
       })),
-      ...(this.config.alerts || []),
+      ...(this.config.alerts || []).map((a, i) => {
+        const raw = a.text != null && this._isTemplate(a.text)
+          ? this._tplResults?.["alertText" + i]
+          : a.text;
+        const text = raw == null ? "" : String(raw).trim();
+        // materia-hero's semantics: a templated entry that renders EMPTY is a
+        // condition that is not met — skipped, not shown as a blank strip.
+        if (a.text != null && text.length === 0) return null;
+        return { ...a, text };
+      }),
     ].filter(Boolean);
     return list;
   }
@@ -268,6 +284,13 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
    *             outranks a tonal one. Fix this now.
    *  warning -> a tonal container. Present, legible, ignorable. */
   _severityPair(sev) {
+    // info: present, quiet, ignorable — a scheduled run is news, not a fault.
+    if (sev === "info") {
+      return [
+        "color-mix(in srgb, var(--md-sys-color-on-surface) 8%, var(--ha-card-background, var(--card-background-color)))",
+        "var(--md-sys-color-on-surface)",
+      ];
+    }
     if (sev === "warning") {
       return [
         "var(--md-sys-cust-color-warning-container)",
@@ -393,7 +416,10 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
     // A warning stays in its strip: it does NOT repaint the hero and does not
     // swap the decoration for the spiked Boom. Ignoring a warning is fine, so
     // it must not look like the machine is broken. Only an error escalates.
-    const isError = alert != null && alert.severity !== "warning";
+    // Only a real error may repaint the hero. Unspecified severity still counts
+    // as error (every built-in entry that omits it IS one), but info must not —
+    // a quiet schedule strip tinting the whole hero red was the alternative.
+    const isError = alert != null && (alert.severity == null || alert.severity === "error");
     let alertBg = null;
     let alertFg = null;
     if (alert) {
