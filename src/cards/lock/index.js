@@ -147,18 +147,117 @@ class MateriaLock extends ActionMixin(LitElement) {
   }
 
   updated(changed) {
-    if (!changed.has("hass") || this._pending == null) return;
-    // The entity has agreed with what we asked for — drop the optimistic state
-    // and let the real one drive again.
-    if (this._entityLocked === this._pending) {
-      this._pending = null;
-      clearTimeout(this._pendingTimer);
+    if (changed.has("hass") && this._pending != null) {
+      // The entity has agreed with what we asked for — drop the optimistic state
+      // and let the real one drive again.
+      if (this._entityLocked === this._pending) {
+        this._pending = null;
+        clearTimeout(this._pendingTimer);
+      }
     }
+    this._syncSpin();
+  }
+
+  /* ---- the in-flight spin -------------------------------------------------
+     A CSS animation cannot stop gracefully: removing it snaps the shape back to
+     its resting angle, which is the opposite of graceful. So the spin is
+     integrated per frame — ramp up, cruise at 40 deg/s (one revolution in 9s,
+     the pace vacuum-hero's burst already established for "working"), and on
+     arrival decelerate to the NEXT SYMMETRIC POSE of the silhouette. The stop
+     duration is derived so the ease-out's initial slope EQUALS the cruise
+     speed, so the wind-down begins without a kick at the seam.
+
+     Only shapes whose silhouette repeats quickly can land in reasonable time —
+     the cookie repeats every 40 degrees and always lands inside ~2.5s; pill and
+     gem repeat every 90/180 and would take up to 5-10s, so they breathe
+     instead (_spins gates on the period). */
+  get _shapeStyle() {
+    return SHAPE_STYLES[this.config.shape_style] ?? SHAPE_STYLES.cookie9;
+  }
+
+  get _spins() {
+    const st = this._shapeStyle;
+    return st.vector && st.rot * 2 <= 45
+      && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  get _inFlight() {
+    const s = this._transitioning;
+    return s === "locking" || s === "unlocking";
+  }
+
+  _syncSpin() {
+    if (this._inFlight && this._spins) this._spinUp();
+    else this._spinDown();
+  }
+
+  _spinUp() {
+    if (this._spinMode === "ramp" || this._spinMode === "cruise") return;
+    this._spinMode = "ramp";
+    this._spinDeg = this._spinDeg ?? 0;
+    this._spinVel = this._spinVel ?? 0;
+    if (this._spinRaf) return; // a wind-down is mid-frame; the loop redirects
+    const CRUISE = 40;
+    let last = performance.now();
+    const tick = (now) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      if (this._spinMode === "ramp") {
+        this._spinVel = Math.min(CRUISE, this._spinVel + (CRUISE / 0.5) * dt);
+        if (this._spinVel >= CRUISE) this._spinMode = "cruise";
+        this._spinDeg += this._spinVel * dt;
+      } else if (this._spinMode === "cruise") {
+        this._spinDeg += CRUISE * dt;
+      } else if (this._spinMode === "stop") {
+        const t = Math.min(1, (now - this._stopT0) / this._stopDur);
+        const k = 1 - (1 - t) * (1 - t); // quadratic ease-out
+        this._spinDeg = this._stopFrom + (this._stopTo - this._stopFrom) * k;
+        if (t >= 1) {
+          this._spinDeg = this._stopTo % 360; // symmetric pose; bounded growth
+          this._applySpin();
+          this._spinMode = null;
+          this._spinVel = 0;
+          this._spinRaf = null;
+          return;
+        }
+      } else {
+        this._spinRaf = null;
+        return;
+      }
+      this._applySpin();
+      this._spinRaf = requestAnimationFrame(tick);
+    };
+    this._spinRaf = requestAnimationFrame(tick);
+  }
+
+  _spinDown() {
+    if (this._spinMode !== "ramp" && this._spinMode !== "cruise") return;
+    const period = this._shapeStyle.rot * 2;
+    const from = this._spinDeg ?? 0;
+    // The next symmetric pose at least 10 degrees on, so there is always room
+    // to decelerate rather than a sub-frame stop.
+    const to = Math.ceil((from + 10) / period) * period;
+    const vel = Math.max(this._spinVel ?? 40, 8);
+    this._stopFrom = from;
+    this._stopTo = to;
+    // Quadratic-out's initial slope is 2*delta/D; solving D for slope == the
+    // current speed is what removes the kick at the seam.
+    this._stopDur = Math.min(2600, ((2 * (to - from)) / vel) * 1000);
+    this._stopT0 = performance.now();
+    this._spinMode = "stop";
+  }
+
+  _applySpin() {
+    const el = this.shadowRoot?.querySelector(".shape");
+    el?.style.setProperty("--ml-spin", (this._spinDeg % 360).toFixed(2) + "deg");
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     clearTimeout(this._pendingTimer);
+    if (this._spinRaf) cancelAnimationFrame(this._spinRaf);
+    this._spinRaf = null;
+    this._spinMode = null;
   }
 
   _confirm() {
@@ -237,7 +336,7 @@ class MateriaLock extends ActionMixin(LitElement) {
       ? (this.config.locked_icon ?? "m3o:lock")
       : (this.config.unlocked_icon ?? "m3o:lock-open-right");
 
-    const style = SHAPE_STYLES[this.config.shape_style] ?? SHAPE_STYLES.cookie9;
+    const style = this._shapeStyle;
 
     // Locking is a backward motion and unlocking a forward one, so the gesture
     // mirrors rather than always sweeping the same way — the handle ends each
@@ -269,7 +368,7 @@ class MateriaLock extends ActionMixin(LitElement) {
                   )}
               >
                 <div
-                  class="shape ${locked ? "" : "unlocked"} ${style.vector ? "vector" : ""}"
+                  class="shape ${locked ? "" : "unlocked"} ${style.vector ? "vector" : ""} ${inFlight && !this._spins ? "working" : ""}"
                   style="--ml-rot:${style.rot}deg"
                 >
                   ${style.vector

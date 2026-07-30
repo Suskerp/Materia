@@ -114,10 +114,52 @@ class MateriaDragConfirm extends LitElement {
         pointer-events: none;
       }
 
-      /* Busy is NOT disabled: full opacity, because the control is doing exactly
-         what was asked — it just is not ready for another instruction yet. */
+      /* BUSY, per the spec's vocabulary. M3's interaction states define no
+         "busy": a control that cannot accept input takes the DISABLED treatment
+         — content at the 38% disabled-content opacity — so the track and its
+         status line dim to exactly that, and the cursor stops advertising a
+         grab. What disabled alone would get wrong is that the machine IS
+         working, and the progress-indicator guidance says an indeterminate wait
+         shows live activity — so the HANDLE is exempt from the dim and breathes
+         at full strength. Disabled surface + live handle reads as intended:
+         you cannot act, because it is acting. */
       :host([pending]) .track {
         cursor: default;
+      }
+
+      :host([pending]) .label {
+        opacity: 0.38;
+      }
+
+      :host([pending]) .handle {
+        animation: mdc-breathe 2s ease-in-out infinite alternate;
+      }
+
+      /* Hold mode has no handle, so the in-flight label carries the pulse. */
+      :host([pending][gesture="hold"]) .label {
+        animation: mdc-label-breathe 2s ease-in-out infinite alternate;
+      }
+
+      @keyframes mdc-breathe {
+        to {
+          scale: 1.05;
+        }
+      }
+
+      @keyframes mdc-label-breathe {
+        from {
+          opacity: 0.6;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        :host([pending]) .handle,
+        :host([pending][gesture="hold"]) .label {
+          animation: none;
+        }
       }
 
       .track {

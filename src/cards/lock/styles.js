@@ -102,6 +102,12 @@ export const styles = [
       fill: var(--ml-shape-bg);
       transition: fill var(--md-sys-motion-default-effects);
       pointer-events: none;
+      /* In-flight spin, driven per-frame from index.js. The standalone rotate
+         property, so it composes with the path's own state rotation without
+         touching it — and the GLYPH never spins, because only the silhouette
+         carries this. Deliberately no transition here: the JS owns every frame,
+         including the graceful stop. */
+      rotate: var(--ml-spin, 0deg);
     }
 
     /* The glyph sits above the silhouette and, unlike the CSS box, does NOT
@@ -149,6 +155,30 @@ export const styles = [
       .shape ha-icon {
         transition: background-color var(--md-sys-motion-default-effects),
           color var(--md-sys-motion-default-effects);
+      }
+    }
+
+    /* THE MACHINE IS WORKING. vacuum-hero's rule — motion means the machine is
+       doing something — applies here too: a frozen card during a 3-second bolt
+       drive reads as hung. Shapes with a SHORT symmetry period (the cookie, 40
+       degrees) SPIN while in flight — see the spinner in index.js, which also
+       owns the graceful stop. Shapes that repeat only every 90 or 180 degrees
+       cannot land from a slow spin in reasonable time, so they breathe instead:
+       this class is only applied to them. The standalone scale property, NOT
+       transform: the squircle carries its state rotation in transform. */
+    .shape.working {
+      animation: ml-breathe 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes ml-breathe {
+      to {
+        scale: 1.035;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .shape.working {
+        animation: none;
       }
     }
 
