@@ -37,6 +37,15 @@ export const styles = [
       cursor: grabbing;
     }
 
+    /* wrap: the same tiles as full rows — no rail, no bleed, no grab. */
+    :host([wrap]) .rail {
+      flex-wrap: wrap;
+      overflow: visible;
+      padding: 5px 0;
+      margin-right: 0;
+      cursor: default;
+    }
+
     .rail::-webkit-scrollbar {
       width: 0;
       height: 0;

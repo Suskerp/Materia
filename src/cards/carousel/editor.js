@@ -14,6 +14,7 @@ class MateriaCarouselEditor extends SmartEditorBase {
           { name: "entity", label: "Entity holding the selection", selector: { entity: {} } },
           { name: "attribute", label: "Attribute (instead of the state)", selector: { text: {} } },
           { name: "multi_select", label: "Multi-select (state is a comma-separated list)", selector: { boolean: {} } },
+          { name: "wrap", label: "Wrap into full rows (tablet) instead of scrolling", selector: { boolean: {} } },
         ],
       },
       {

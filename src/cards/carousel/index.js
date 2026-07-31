@@ -36,6 +36,9 @@ class MateriaCarousel extends DisabledMixin(ActionMixin(LitElement)) {
   setConfig(config) {
     if (!config.items?.length) throw new Error("Materia Carousel: at least one item is required");
     this.config = { ...config };
+    // wrap: full rows instead of a scroll rail — the tablet form of the same
+    // list (design 12a). Reflected so CSS owns the difference.
+    this.toggleAttribute("wrap", !!config.wrap);
   }
 
   updated(changedProps) {
