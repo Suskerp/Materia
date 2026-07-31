@@ -116,7 +116,13 @@ export const styles = [
       border-radius: 26px;
       white-space: nowrap;
       -webkit-tap-highlight-color: transparent;
+      /* CONNECTED-GROUP physics: selection is not just a recolour — the chosen
+         segment EARNS WIDTH and its neighbours yield, animated on the same
+         expressive spatial beat as the radius morph. This is M3E's connected
+         button group interaction, and it is what makes the row read as one
+         object reacting rather than four buttons taking turns. */
       transition: border-radius var(--md-sys-motion-expressive-fast-spatial),
+        flex-grow var(--md-sys-motion-expressive-default-spatial),
         background-color var(--md-sys-motion-fast-effects),
         color var(--md-sys-motion-fast-effects);
     }
@@ -131,6 +137,7 @@ export const styles = [
       background: var(--mh-fg);
       color: var(--mh-bg);
       border-radius: 14px;
+      flex-grow: 1.6;
     }
 
     /* On the SIDEKICK's neutral surface an ink-inverse fill would be a content

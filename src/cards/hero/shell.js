@@ -129,13 +129,11 @@ export const heroShellStyles = [
       margin-top: 4px;
     }
 
-    /* The decoration steps back too — at hero size on a short card it would
-       be most of the surface. */
+    /* NO decoration on the sidekick. The burst is the hero's statement mark,
+       and a sidekick's entire job is to not make statements — shrunk versions
+       still read as a second flourish on a page that already has one. */
     :host([variant="sidekick"]) .burst {
-      width: 28cqi;
-      height: 28cqi;
-      right: -6cqi;
-      top: -6cqi;
+      display: none;
     }
 
     .alert {
