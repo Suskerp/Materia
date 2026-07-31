@@ -1,7 +1,6 @@
-import { LitElement, html, svg, nothing } from "lit";
+import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { boomPath, softBurstPath } from "../../utils/shapes.js";
-import { styles } from "./styles.js";
+import { HeroShellMixin, heroShellStyles } from "./shell.js";
 import "./editor.js";
 
 /** Default "active" state per domain — the state that flips the hero to its
@@ -41,7 +40,7 @@ const DOMAIN_ACTIVE = {
  * with no entity — when its `text` template renders non-empty, which lets one
  * template both decide and describe the condition.
  */
-class MateriaHero extends ActionMixin(LitElement) {
+class MateriaHero extends HeroShellMixin(ActionMixin(LitElement)) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -55,7 +54,7 @@ class MateriaHero extends ActionMixin(LitElement) {
     _resolvedActiveColorOn: { state: true },
   };
 
-  static styles = styles;
+  static styles = heroShellStyles;
 
   static getConfigElement() {
     return document.createElement("materia-hero-editor");
@@ -81,54 +80,8 @@ class MateriaHero extends ActionMixin(LitElement) {
       this._resolveField("color_on", "_resolvedColorOn");
       this._resolveField("active_color", "_resolvedActiveColor");
       this._resolveField("active_color_on", "_resolvedActiveColorOn");
-      this._alertList().forEach((a, i) => {
-        if (a.text != null) this._resolveTemplateValue(`alertText${i}`, a.text);
-      });
+      this._resolveAlertTemplates();
     }
-  }
-
-  /** Normalised alert list; `alert:` (singular) is accepted as one entry. */
-  _alertList() {
-    if (Array.isArray(this.config.alerts)) return this.config.alerts;
-    return this.config.alert ? [this.config.alert] : [];
-  }
-
-  /** States that mean "nothing to report". */
-  _idle(state) {
-    return ["off", "idle", "unknown", "unavailable", "false", "0", "none", "", "ok", "docked"]
-      .includes(String(state ?? "").toLowerCase());
-  }
-
-  _alertText(i, a) {
-    if (a.text == null) return "";
-    const v = this._isTemplate(a.text) ? this._tplResults?.[`alertText${i}`] : a.text;
-    return v == null ? "" : String(v).trim();
-  }
-
-  /** First active alert wins — the list's order is the declared precedence. */
-  get _activeAlert() {
-    const list = this._alertList();
-    for (let i = 0; i < list.length; i++) {
-      const a = list[i];
-      const text = this._alertText(i, a);
-      if (a.entity) {
-        const st = this.hass?.states[a.entity];
-        if (!st) continue;
-        const cur = String(st.state);
-        if (a.state != null) {
-          const want = Array.isArray(a.state) ? a.state.map(String) : [String(a.state)];
-          if (!want.includes(cur)) continue;
-        } else if (this._idle(cur)) {
-          continue;
-        }
-        // No text configured: fall back to the entity's own localized state.
-        return { ...a, text: text || (this.hass.formatEntityState?.(st) ?? cur) };
-      }
-      // Template-only: an empty render means the condition isn't met.
-      if (!text) continue;
-      return { ...a, text };
-    }
-    return null;
   }
 
   /** Literal config value or its resolved template. */
@@ -196,24 +149,17 @@ class MateriaHero extends ActionMixin(LitElement) {
     // when they share a tone. Opt out with alert_tints_hero: false.
     const tinted = alert && this.config.alert_tints_hero !== false;
 
-    const bg = tinted
-      ? alertBg
-      : active
-      ? (this._field("active_color", "_resolvedActiveColor") ?? "var(--md-sys-cust-color-device, var(--md-sys-color-primary-container))")
-      : (this._field("color", "_resolvedColor") ?? "var(--md-sys-color-secondary-container)");
-    const fg = tinted
-      ? alertFg
-      : active
-      ? (this._field("active_color_on", "_resolvedActiveColorOn") ?? "var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container))")
-      : (this._field("color_on", "_resolvedColorOn") ?? "var(--md-sys-color-on-secondary-container)");
-
-    // Decoration, both canonical MaterialShapes and deliberately a pair:
-    // SoftBurst at rest (ten round lobes) becoming BOOM while an alert is live
-    // (fifteen near-sharp spikes), so the silhouette itself carries the fault
-    // rather than only the colour. Previously the calm shape was two rounded
-    // squares copied from the concept art — not a spec shape at all.
-    const calm = softBurstPath(90, 90, 86);
-    const boom = boomPath(90, 90, 88);
+    // The tier decides the family (see SHELL_PAIR in shell.js); config may
+    // override either channel, per state, with a template.
+    const pair = this._shellPair(active);
+    const bgOverride = active
+      ? this._field("active_color", "_resolvedActiveColor")
+      : this._field("color", "_resolvedColor");
+    const fgOverride = active
+      ? this._field("active_color_on", "_resolvedActiveColorOn")
+      : this._field("color_on", "_resolvedColorOn");
+    const bg = tinted ? alertBg : (bgOverride ?? pair.bg);
+    const fg = tinted ? alertFg : (fgOverride ?? pair.fg);
 
     return html`
       <ha-card style="--mh-bg:${bg};--mh-fg:${fg};--mh-alert-bg:${alertBg};--mh-alert-fg:${alertFg};">
@@ -222,13 +168,7 @@ class MateriaHero extends ActionMixin(LitElement) {
           class="hero ${unavailable ? "unavailable" : ""} ${alert ? "attached" : ""}"
           @click=${() => this._handleAction(this.config.tap_action || { action: "more-info", entity: this.config.entity })}
         >
-          ${this.config.burst === false
-            ? nothing
-            : html`<svg class="burst ${alert ? "alarm" : active ? "working" : ""}" viewBox="0 0 180 180" aria-hidden="true">
-                ${alert
-                  ? svg`<g class="loom"><path d=${boom} /></g>`
-                  : svg`<g class="drift"><path d=${calm} /></g>`}
-              </svg>`}
+          ${this._renderBurst({ alarm: !!alert, working: active })}
           <div class="content">
             <div class="eyebrow">
               ${icon ? html`<ha-icon .icon=${icon}></ha-icon>` : nothing}
@@ -245,16 +185,7 @@ class MateriaHero extends ActionMixin(LitElement) {
             ${secondary ? html`<div class="secondary">${secondary}</div>` : nothing}
           </div>
         </div>
-        ${alert
-          ? html`<div
-              class="alert"
-              role="status"
-              @click=${() => this._handleAction(alert.tap_action || { action: "more-info", entity: alert.entity || this.config.entity })}
-            >
-              <ha-icon .icon=${alert.icon ?? "mdi:alert-circle-outline"}></ha-icon>
-              <span>${alert.text}</span>
-            </div>`
-          : nothing}
+        ${this._renderAlertStrip(alert, this.config.entity)}
         </div>
       </ha-card>
     `;

@@ -7,7 +7,7 @@ class MateriaVacuumHeroEditor extends SmartEditorBase {
      is actually on, and merely opening the editor and saving would turn it off
      for real. Config still wins, so an explicit false is preserved. */
   _formData() {
-    return { brand: "roborock", burst: true, alert_tints_hero: true, ...this._config };
+    return { brand: "roborock", burst: true, alert_tints_hero: true, variant: "hero", ...this._config };
   }
 
   _sectionsSignature() {
@@ -63,6 +63,15 @@ class MateriaVacuumHeroEditor extends SmartEditorBase {
         title: "Appearance",
         icon: "mdi:palette-outline",
         fields: [
+          {
+            name: "variant",
+            label: "Emphasis",
+            helper: "Hero owns the panel; sidekick is its quiet companion — same anatomy one rung down, and it keeps the resting surface even while the robot runs.",
+            selector: { select: { mode: "dropdown", options: [
+              { value: "hero", label: "Hero — filled, owns the panel" },
+              { value: "sidekick", label: "Sidekick — quiet peer of the rows" },
+            ] } },
+          },
           { name: "working_color", label: "Background while working", color: true, selector: { text: {} } },
           { name: "working_color_on", label: "Text while working", color: true, selector: { text: {} } },
           { name: "color", label: "Background at rest", color: true, selector: { text: {} } },

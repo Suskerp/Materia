@@ -1,7 +1,7 @@
-import { LitElement, html, svg, nothing, css } from "lit";
+import { LitElement, html, nothing, css } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { boomPath, softBurstPath, liveBurstPath } from "../../utils/shapes.js";
-import { styles } from "../hero/styles.js";
+import { softBurstPath, liveBurstPath } from "../../utils/shapes.js";
+import { HeroShellMixin, heroShellStyles as styles } from "../hero/shell.js";
 import { CAPABILITY_KEYS, CONSUMABLE_KEYS, profileFor } from "./profiles.js";
 import { explainConsumable, explainError } from "./explanations.js";
 import "./editor.js";
@@ -26,7 +26,7 @@ import "./editor.js";
  * (`_work_mode`, `_lifespan`, and `_batterij` on a Dutch install) alike. Every
  * capability can be pinned explicitly when discovery guesses wrong.
  */
-class MateriaVacuumHero extends ActionMixin(LitElement) {
+class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -426,12 +426,11 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
     // vacuum in `cleaning`. Resting uses a neutral surface tone. Borrowing
     // water-eco or climate-cool here was the mistake: domain tokens lent to an
     // unrelated domain, which misleads anyone reading the config later.
-    let bg = this.config.color ?? "var(--md-sys-color-secondary-container)";
-    let fg = this.config.color_on ?? "var(--md-sys-color-on-secondary-container)";
-    if (working) {
-      bg = this.config.working_color ?? "var(--md-sys-cust-color-device, var(--md-sys-color-primary-container))";
-      fg = this.config.working_color_on ?? "var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container))";
-    }
+    // The tier's own pair (shell.js SHELL_PAIR) — so a sidekick vacuum hero
+    // stays a quiet peer even while the robot is running.
+    const pair = this._shellPair(working);
+    let bg = (working ? this.config.working_color : this.config.color) ?? pair.bg;
+    let fg = (working ? this.config.working_color_on : this.config.color_on) ?? pair.fg;
     // A warning stays in its strip: it does NOT repaint the hero and does not
     // swap the decoration for the spiked Boom. Ignoring a warning is fine, so
     // it must not look like the machine is broken. Only an error escalates.
@@ -456,7 +455,6 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
 
     const calm = softBurstPath(90, 90, 86);
     const live = liveBurstPath(90, 90, 86);
-    const boom = boomPath(90, 90, 88);
     const name = this.config.name ?? st.attributes?.friendly_name ?? this.config.entity;
     const icon = this.config.icon ?? "mdi:robot-vacuum";
 
@@ -471,13 +469,7 @@ class MateriaVacuumHero extends ActionMixin(LitElement) {
             class="hero ${unavailable ? "unavailable" : ""} ${alert ? "attached" : ""}"
             @click=${() => this._handleAction(this.config.tap_action || { action: "more-info", entity: this.config.entity })}
           >
-            ${this.config.burst === false
-              ? nothing
-              : html`<svg class="burst ${isError ? "alarm" : working ? "working" : ""}" viewBox="0 0 180 180" aria-hidden="true">
-                  ${isError
-                    ? svg`<g class="loom"><path d=${boom} /></g>`
-                    : svg`<g class="drift"><path d=${calm} /></g>`}
-                </svg>`}
+            ${this._renderBurst({ alarm: isError, working })}
             <div class="content">
               <div class="eyebrow">
                 <ha-icon .icon=${icon}></ha-icon><span>${name}</span>

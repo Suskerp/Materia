@@ -7,7 +7,7 @@ class MateriaHeroEditor extends SmartEditorBase {
      is actually on, and merely opening the editor and saving would turn it off
      for real. Config still wins, so an explicit false is preserved. */
   _formData() {
-    return { burst: true, ...this._config };
+    return { burst: true, variant: "hero", alert_tints_hero: true, ...this._config };
   }
 
   get _sections() {
@@ -30,6 +30,15 @@ class MateriaHeroEditor extends SmartEditorBase {
         title: "Appearance",
         icon: "mdi:palette-outline",
         fields: [
+          {
+            name: "variant",
+            label: "Emphasis",
+            helper: "Hero owns the panel; sidekick is its quiet companion — same anatomy one rung down, for pages that already have a hero.",
+            selector: { select: { mode: "dropdown", options: [
+              { value: "hero", label: "Hero — filled, owns the panel" },
+              { value: "sidekick", label: "Sidekick — quiet peer of the rows" },
+            ] } },
+          },
           { name: "active_state", label: "State(s) that count as active", selector: { text: {} } },
           { name: "burst", label: "Show the turning burst", selector: { boolean: {} } },
           { name: "active_color", label: "Background while active", color: true, template: true, selector: { text: {} } },

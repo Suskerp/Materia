@@ -1,87 +1,15 @@
 import { css } from "lit";
-import { hostStyles, haCardReset, unavailableStyles } from "../../styles/card-styles.js";
-import { motionTokens } from "../../utils/motion.js";
+import { heroShellStyles } from "../hero/shell.js";
 
+/* Only what a SELECT hero adds to the shared hero anatomy (shell.js): the
+ * route glyph, the consequence line, and the option pills. Container, tiers,
+ * eyebrow, title, burst and alert strip all come from the shell — which is
+ * why this card gains the family's fixes for free instead of drifting from
+ * them, as its own copy of the shell used to. */
 export const styles = [
-  hostStyles,
-  haCardReset,
-  unavailableStyles,
-  motionTokens,
+  heroShellStyles,
   css`
-    ha-card {
-      background: transparent;
-      box-shadow: none;
-      border: none;
-      container-type: inline-size;
-    }
-
-    /* One filled tonal block — the loudest thing on its panel, because the
-       option it presents is the DECISION and everything under it is
-       consequence. Same asymmetric silhouette as the rest of the family. */
-    .block {
-      border-radius: 34px 34px 14px 34px;
-      padding: clamp(16px, 4.8cqi, 22px);
-      background: var(--msh-bg);
-      color: var(--msh-fg);
-      display: flex;
-      flex-direction: column;
-      gap: clamp(12px, 3.6cqi, 16px);
-      transition: background-color var(--md-sys-motion-default-effects),
-        color var(--md-sys-motion-default-effects);
-    }
-
-    /* The sidekick tier: a peer of the level bars, not a second statement. The
-       asymmetric corner is the hero family's mark, so the sidekick takes the
-       bars' uniform radius, and every size steps down one rung. */
-    .block.sidekick {
-      border-radius: 26px;
-      padding: clamp(14px, 4cqi, 18px);
-      gap: clamp(10px, 3cqi, 14px);
-    }
-
-    .block.sidekick .title {
-      font-size: clamp(18px, 5.5cqi, 22px);
-    }
-
-    .block.sidekick .route {
-      width: clamp(38px, 11cqi, 46px);
-      height: clamp(26px, 8cqi, 32px);
-    }
-
-    .block.sidekick .gicon {
-      --mdc-icon-size: clamp(26px, 8cqi, 32px);
-    }
-
-    .block.sidekick .pills {
-      height: 44px;
-    }
-
-    /* These pills ARE a single-select toggle set, so TonalButtonTokens'
-       toggle pair applies: selected = SOLID secondary, unselected =
-       secondary-container — the same family button-group encodes. The previous
-       fix stopped at secondary-container for SELECTED, which on this light
-       surface has LESS contrast than the neutral resting pills: the chosen
-       option read as the faded one. Selection must be the emphatic step of the
-       family, not the quiet one. (The hero variant keeps its ink-inverse pills
-       because its block is a coloured container, not a neutral surface.) */
-    .block.sidekick .pill {
-      background: var(--md-sys-color-secondary-container);
-      color: var(--md-sys-color-on-secondary-container);
-    }
-
-    .block.sidekick .pill.on {
-      background: var(--md-sys-color-secondary);
-      color: var(--md-sys-color-on-secondary);
-    }
-
-    .eyebrow {
-      font-size: clamp(11px, 3.2cqi, 13px);
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      opacity: 0.62;
-    }
-
+    /* The head row: the glyph and the decision, side by side. */
     .head {
       display: flex;
       align-items: flex-start;
@@ -89,10 +17,13 @@ export const styles = [
     }
 
     /* The route glyph: a per-option stroke path on the design's 48x34 grid,
-       drawn in currentColor so it always sits on the block legibly. */
+       drawn in currentColor so it always sits on the block legibly.
+       pathLength normalises EVERY route to 100 user units, which is what lets
+       one draw-on duration read the same whether the glyph is a single line
+       (Fast) or eight crossing strokes (Ultra) — see _drawRoute in index.js. */
     .route {
-      width: clamp(46px, 14cqi, 56px);
-      height: clamp(32px, 10cqi, 40px);
+      width: clamp(52px, 16cqi, 68px);
+      height: clamp(36px, 11cqi, 48px);
       flex: none;
       fill: none;
       stroke: currentColor;
@@ -101,9 +32,22 @@ export const styles = [
       stroke-linejoin: round;
     }
 
+    .route path {
+      stroke-dasharray: 100;
+    }
+
     .gicon {
-      --mdc-icon-size: clamp(32px, 10cqi, 40px);
+      --mdc-icon-size: clamp(32px, 10cqi, 44px);
       flex: none;
+    }
+
+    :host([variant="sidekick"]) .route {
+      width: clamp(38px, 11cqi, 46px);
+      height: clamp(26px, 8cqi, 32px);
+    }
+
+    :host([variant="sidekick"]) .gicon {
+      --mdc-icon-size: clamp(26px, 8cqi, 32px);
     }
 
     .text {
@@ -114,33 +58,52 @@ export const styles = [
       gap: 2px;
     }
 
-    .title {
-      font-family: var(--materia-font-display, inherit);
+    /* The shell's .title carries a top margin for the eyebrow above it; here
+       the eyebrow sits in the head row, so the title starts flush. */
+    .head .title {
+      margin-top: 0;
       font-size: clamp(22px, 6.8cqi, 28px);
-      font-weight: 700;
       letter-spacing: -0.02em;
       line-height: 1.1;
     }
 
+    :host([variant="sidekick"]) .head .title {
+      font-size: clamp(18px, 5.5cqi, 22px);
+    }
+
+    /* One line of consequence — what picking this option actually does.
+       Two lines are RESERVED even when the text needs one: options have
+       different sentence lengths, and without the reservation every tap
+       resized the card and shoved the rest of the page up or down. */
     .blurb {
       font-size: clamp(12px, 3.6cqi, 13px);
       line-height: 1.45;
       opacity: 0.72;
       text-wrap: pretty;
+      min-height: 2.9em;
     }
 
     /* The option pills live INSIDE the block: choosing is part of the same
-       object as the explanation. Selected inverts — ink-filled with the block's
-       own surface as text — so the pair can never disagree with the theme. */
+       object as the explanation. */
     .pills {
       display: flex;
       gap: 3px;
-      height: 52px;
+      /* Never squeezed below their own labels: a select with six or seven
+         options scrolls rather than shrinking to unreadable slivers. */
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .pills::-webkit-scrollbar {
+      display: none;
     }
 
     .pill {
-      flex: 1;
-      min-width: 0;
+      flex: 1 1 auto;
+      min-width: max-content;
+      height: 52px;
+      padding: 0 14px;
       display: grid;
       place-items: center;
       font: inherit;
@@ -151,19 +114,44 @@ export const styles = [
       color: inherit;
       background: color-mix(in srgb, currentColor 14%, transparent);
       border-radius: 26px;
-      overflow: hidden;
       white-space: nowrap;
-      text-overflow: ellipsis;
       -webkit-tap-highlight-color: transparent;
       transition: border-radius var(--md-sys-motion-expressive-fast-spatial),
         background-color var(--md-sys-motion-fast-effects),
         color var(--md-sys-motion-fast-effects);
     }
 
+    :host([variant="sidekick"]) .pill {
+      height: 44px;
+    }
+
+    /* Selected inverts against the hero's coloured container — the pair can
+       never disagree with the theme, because both come from the block. */
     .pill.on {
-      background: var(--msh-fg);
-      color: var(--msh-bg);
+      background: var(--mh-fg);
+      color: var(--mh-bg);
       border-radius: 14px;
+    }
+
+    /* On the SIDEKICK's neutral surface an ink-inverse fill would be a content
+       role used as a container (a black blob in light mode). These pills are a
+       single-select toggle set, so TonalButtonTokens' toggle pair applies:
+       selected = SOLID secondary, unselected = secondary-container. Selection
+       must be the emphatic step of the family — stopping at the container tone
+       for both made the chosen option read as the faded one. */
+    :host([variant="sidekick"]) .pill {
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+
+    :host([variant="sidekick"]) .pill.on {
+      background: var(--md-sys-color-secondary);
+      color: var(--md-sys-color-on-secondary);
+    }
+
+    .pill:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
     }
   `,
 ];
