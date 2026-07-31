@@ -83,4 +83,10 @@ export const styles = css`
     opacity: 0.5;
     pointer-events: none;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wave {
+      animation: none;
+    }
+  }
 `;

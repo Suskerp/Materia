@@ -128,7 +128,8 @@ export const styles = [
     }
 
     :host([variant="sidekick"]) .pill {
-      height: 44px;
+      /* The 40px small-button rung — 44 was on no scale (see chips). */
+      height: 40px;
     }
 
     /* Selected inverts against the hero's coloured container — the pair can
@@ -136,7 +137,8 @@ export const styles = [
     .pill.on {
       background: var(--mh-fg);
       color: var(--mh-bg);
-      border-radius: 14px;
+      /* CornerMedium (12dp), the small rung's square shape. */
+      border-radius: 12px;
       flex-grow: 1.6;
     }
 

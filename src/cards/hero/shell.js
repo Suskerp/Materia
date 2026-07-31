@@ -3,6 +3,12 @@ import { hostStyles, haCardReset, unavailableStyles } from "../../styles/card-st
 import { motionTokens } from "../../utils/motion.js";
 import { boomPath, softBurstPath } from "../../utils/shapes.js";
 
+/* Burst geometry is CONSTANT — the fillet solver costs real time (~25-45us a
+ * call) and used to run twice per hero per render, every hass tick. Once, at
+ * module load, forever. */
+const BURST_CALM = softBurstPath(90, 90, 86);
+const BURST_BOOM = boomPath(90, 90, 88);
+
 /**
  * THE HERO SHELL — one anatomy, three cards.
  *
@@ -429,8 +435,6 @@ export const HeroShellMixin = (Base) =>
      *  itself carries the fault rather than only the colour. */
     _renderBurst({ alarm = false, working = false } = {}) {
       if (this.config.burst === false) return nothing;
-      const calm = softBurstPath(90, 90, 86);
-      const boom = boomPath(90, 90, 88);
       return html`
         <svg
           class="burst ${alarm ? "alarm" : working ? "working" : ""}"
@@ -438,8 +442,8 @@ export const HeroShellMixin = (Base) =>
           aria-hidden="true"
         >
           ${alarm
-            ? svg`<g class="loom"><path d=${boom} /></g>`
-            : svg`<g class="drift"><path d=${calm} /></g>`}
+            ? svg`<g class="loom"><path d=${BURST_BOOM} /></g>`
+            : svg`<g class="drift"><path d=${BURST_CALM} /></g>`}
         </svg>
       `;
     }

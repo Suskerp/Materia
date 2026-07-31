@@ -6,6 +6,10 @@ import { CAPABILITY_KEYS, CONSUMABLE_KEYS, profileFor } from "./profiles.js";
 import { explainConsumable, explainError } from "./explanations.js";
 import "./editor.js";
 
+/* Constant geometry, once at module load — see the same note in hero/shell.js. */
+const BURST_CALM = softBurstPath(90, 90, 86);
+const BURST_LIVE = liveBurstPath(90, 90, 86);
+
 /**
  * Robot-vacuum hero (materia-vacuum-hero) — the vacuum-aware counterpart to
  * materia-hero, which had to be driven by a wall of Jinja in the dashboard.
@@ -108,6 +112,11 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
   get _caps() {
     if (this._discovered) return this._discovered;
     const sibs = this._siblings();
+    // Never CACHE an empty discovery: if this runs before hass.entities has
+    // the vacuum's device, an all-null capability set would stick until the
+    // next config edit — no battery, no progress, no alerts. Recompute until
+    // the registry answers. (Explicit config still resolves below.)
+    const cacheable = sibs.length > 0;
     const pick = (keys, domains) => {
       for (const key of keys) {
         const hit = sibs.find((id) => {
@@ -126,7 +135,7 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
     }
     caps.consumables = this.config.consumable_entities
       ?? sibs.filter((id) => id.startsWith("sensor.") && CONSUMABLE_KEYS.some((k) => id.includes(k)));
-    this._discovered = caps;
+    if (cacheable) this._discovered = caps;
     return caps;
   }
 
@@ -453,8 +462,6 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
       }
     }
 
-    const calm = softBurstPath(90, 90, 86);
-    const live = liveBurstPath(90, 90, 86);
     const name = this.config.name ?? st.attributes?.friendly_name ?? this.config.entity;
     const icon = this.config.icon ?? "mdi:robot-vacuum";
 
@@ -463,7 +470,7 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
     this._lastGood = { title, value, caption, secondary, name, icon, bg, fg };
 
     return html`
-      <ha-card style="--mh-bg:${bg};--mh-fg:${fg};--mh-alert-bg:${alertBg ?? bg};--mh-alert-fg:${alertFg ?? fg};--mh-calm-d:path('${calm}');--mh-live-d:path('${live}');">
+      <ha-card style="--mh-bg:${bg};--mh-fg:${fg};--mh-alert-bg:${alertBg ?? bg};--mh-alert-fg:${alertFg ?? fg};--mh-calm-d:path('${BURST_CALM}');--mh-live-d:path('${BURST_LIVE}');">
         <div class="stack">
           <div
             class="hero ${unavailable ? "unavailable" : ""} ${alert ? "attached" : ""}"

@@ -63,7 +63,12 @@ class MateriaDoorbellEditor extends SmartEditorBase {
             selector: { entity: { domain: "lock" } },
           },
           { name: "open_title", label: "Panel title (default: Open the front door)", selector: { text: {} } },
-          { name: "open_sub", label: "Panel sub-line", selector: { text: {} } },
+          {
+            name: "open_sub",
+            label: "Panel sub-line",
+            helper: 'Default: "Unlocks the front door for your visitor.", translated with the dashboard.',
+            selector: { text: {} },
+          },
         ],
       },
       {

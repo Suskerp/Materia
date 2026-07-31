@@ -95,9 +95,12 @@ export const styles = [
       opacity: 0.12;
     }
 
+    /* Unselected toggle pair per FilledButtonTokens: SurfaceContainer /
+       OnSurfaceVariant. This half of the pair had drifted to HA theme vars
+       while the selected half was already correct. */
     button.inactive.filled {
-      background: var(--ha-card-background, var(--card-background-color));
-      color: var(--primary-text-color);
+      background: var(--md-sys-color-surface-container, var(--ha-card-background, var(--card-background-color)));
+      color: var(--md-sys-color-on-surface-variant, var(--primary-text-color));
     }
 
     button.inactive.tonal {

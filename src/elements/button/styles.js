@@ -36,8 +36,10 @@ export const styles = [
       position: relative;
       overflow: hidden;
       -webkit-tap-highlight-color: transparent;
-      transition: border-radius 0.25s ease, background-color 0.25s ease,
-        color 0.25s ease, box-shadow 0.25s ease;
+      transition: border-radius var(--md-sys-motion-expressive-fast-spatial),
+        background-color var(--md-sys-motion-fast-effects),
+        color var(--md-sys-motion-fast-effects),
+        box-shadow var(--md-sys-motion-fast-effects);
     }
 
     /* icon-only → square footprint (width tracks height) */
@@ -86,7 +88,7 @@ export const styles = [
     }
 
     /* ---- sizes (M3 expressive) ---- */
-    .size-xs { --mb-h: 32px;  --mb-icon: 20px; --mb-font: 14px; --mb-px: 12px; --mb-rsq: 12px; --mb-gap: 6px; }
+    .size-xs { --mb-h: 32px;  --mb-icon: 20px; --mb-font: 14px; --mb-px: 16px; --mb-rsq: 12px; --mb-gap: 8px; }
     .size-s  { --mb-h: 40px;  --mb-icon: 20px; --mb-font: 14px; --mb-px: 16px; --mb-rsq: 12px; --mb-gap: 8px; }
     .size-m  { --mb-h: 56px;  --mb-icon: 24px; --mb-font: 16px; --mb-px: 24px; --mb-rsq: 16px; --mb-gap: 8px; }
     .size-l  { --mb-h: 96px;  --mb-icon: 32px; --mb-font: 24px; --mb-px: 48px; --mb-rsq: 28px; --mb-gap: 12px; }
@@ -174,7 +176,7 @@ export const styles = [
       background: var(--md-sys-color-surface-container-low, var(--ha-card-background, var(--card-background-color)));
       /* ElevatedButtonTokens.LabelTextColor = Primary — the accent channel. */
       color: var(--mb-accent);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.15);
     }
 
     /* ---- state layer ---- */
@@ -186,10 +188,10 @@ export const styles = [
       background: currentColor;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.2s ease;
+      transition: opacity var(--md-sys-motion-fast-effects);
     }
     .btn:hover::before { opacity: 0.08; }
-    .btn:active::before { opacity: 0.12; }
+    .btn:active::before { opacity: 0.1; }
 
     .btn.disabled,
     .btn.unavailable {

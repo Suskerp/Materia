@@ -41,13 +41,6 @@ class MateriaCarousel extends DisabledMixin(ActionMixin(LitElement)) {
     this.toggleAttribute("wrap", !!config.wrap);
   }
 
-  updated(changedProps) {
-    if (changedProps.has("hass") && this.hass) {
-      this._resolveField("color", "_resolvedColor");
-      this._resolveField("color_on", "_resolvedColorOn");
-    }
-  }
-
   get _stateObj() {
     return this.config.entity ? this.hass?.states[this.config.entity] : null;
   }
@@ -78,6 +71,13 @@ class MateriaCarousel extends DisabledMixin(ActionMixin(LitElement)) {
 
   updated(changedProps) {
     super.updated?.(changedProps);
+    // This class briefly had TWO updated() definitions; the second silently
+    // replaced the first, so these template resolutions never ran and
+    // templated color/color_on were dead. One updated() per class, ever.
+    if (changedProps.has("hass") && this.hass) {
+      this._resolveField("color", "_resolvedColor");
+      this._resolveField("color_on", "_resolvedColorOn");
+    }
     const sel = new Set(this._selected.map(String));
     if (this._prevSel) {
       // Only the tiles whose membership actually flipped are origins.

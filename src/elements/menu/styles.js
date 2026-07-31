@@ -267,4 +267,11 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     background: var(--md-sys-color-outline-variant, var(--divider-color, rgba(0, 0, 0, 0.08)));
     margin: 8px 16px;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .portal-panel,
+    .portal-panel.closing {
+      animation: none;
+    }
+  }
 `];

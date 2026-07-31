@@ -14,7 +14,10 @@ export const unavailableStyles = css`
   ha-card.unavailable,
   .title-row.unavailable,
   .group.unavailable {
-    opacity: 0.4;
+    /* 0.38 is the M3 disabled-content opacity the rest of the library uses;
+       the grayscale is a DELIBERATE extra beyond M3 so unavailability never
+       reads as just a dimmer state of the same colour. */
+    opacity: 0.38;
     pointer-events: none;
     filter: grayscale(80%);
   }
@@ -41,7 +44,7 @@ export const rowCardStyles = css`
     display: flex;
     align-items: center;
     box-sizing: border-box;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color var(--md-sys-motion-default-effects), color var(--md-sys-motion-default-effects);
     cursor: pointer;
   }
 
@@ -117,7 +120,7 @@ export const fillBarStyles = css`
     top: 0;
     bottom: 0;
     left: 0;
-    transition: width 0.3s ease;
+    transition: width var(--md-sys-motion-default-effects);
     z-index: 0;
     border-radius: 28px 0 0 28px;
   }
