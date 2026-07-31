@@ -109,6 +109,13 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
 
     const sections = [setup];
 
+    sections.push({
+      title: "Disabled",
+      icon: "mdi:cancel",
+      expanded: false,
+      fields: [DISABLED_FIELD],
+    });
+
     if (this._config?.preset === "custom") {
       sections.push({
         title: "Appearance",

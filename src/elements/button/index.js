@@ -1,5 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { conditionsMet } from "../../utils/conditions.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -54,6 +55,8 @@ class MateriaButton extends ActionMixin(LitElement) {
     const val = this.config?.disabled;
     if (val === undefined || val === null) return false;
     if (typeof val === "boolean") return val;
+    // HA condition list — the same schema as card visibility, evaluated live.
+    if (Array.isArray(val)) return conditionsMet(val, this.hass);
     if (this._isTemplate(val)) {
       const r = this._resolvedDisabled;
       return r === "True" || r === "true" || r === "1";

@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import { unavailableStyles } from "../../styles/card-styles.js";
 import { styles, PRESETS, SIZES } from "./styles.js";
 import "../button/index.js";
@@ -26,7 +27,7 @@ const SPLIT_TYPES = new Set(["split", "split-button", "materia-split-button"]);
  * Note `variant` is the SURFACE style (filled/tonal) — it predates this merge,
  * which is why the configuration axis is `group` and not `variant`.
  */
-export class MateriaButtonGroup extends ActionMixin(LitElement) {
+export class MateriaButtonGroup extends DisabledMixin(ActionMixin(LitElement)) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -60,7 +61,7 @@ export class MateriaButtonGroup extends ActionMixin(LitElement) {
     };
   }
 
-  static styles = [unavailableStyles, styles];
+  static styles = [unavailableStyles, styles, disabledConditionStyles];
 
   setConfig(config) {
     this.config = {

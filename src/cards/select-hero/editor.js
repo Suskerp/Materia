@@ -1,4 +1,4 @@
-import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
 
 class MateriaSelectHeroEditor extends SmartEditorBase {
   get _sections() {
@@ -33,6 +33,12 @@ class MateriaSelectHeroEditor extends SmartEditorBase {
           { name: "color", label: "Block background", color: true, selector: { text: {} } },
           { name: "color_on", label: "Block text", color: true, selector: { text: {} } },
         ],
+      },
+      {
+        title: "Disabled",
+        icon: "mdi:cancel",
+        expanded: false,
+        fields: [DISABLED_FIELD],
       },
     ];
   }

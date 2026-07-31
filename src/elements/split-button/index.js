@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import "../button/index.js";
 import { styles } from "./styles.js";
 import "./editor.js";
@@ -9,14 +10,14 @@ const HEIGHTS = { xs: 32, s: 40, m: 56, l: 96, xl: 136, default: 48, large: 56 }
 const INNER = { xs: 12, s: 12, m: 16, l: 28, xl: 28, default: 14, large: 16 };
 const TICON = { xs: 20, s: 20, m: 24, l: 32, xl: 40, default: 24, large: 24 };
 
-class MateriaSplitButton extends ActionMixin(LitElement) {
+class MateriaSplitButton extends DisabledMixin(ActionMixin(LitElement)) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
     _open: { state: true },
   };
 
-  static styles = styles;
+  static styles = [styles, disabledConditionStyles];
 
   static getConfigElement() {
     return document.createElement("materia-split-button-editor");

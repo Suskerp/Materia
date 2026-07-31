@@ -1,4 +1,4 @@
-import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
 
 class MateriaBarSelectEditor extends SmartEditorBase {
   _formData() {
@@ -33,6 +33,12 @@ class MateriaBarSelectEditor extends SmartEditorBase {
           { name: "service", label: "Override service (domain.service)", selector: { text: {} } },
           { name: "service_key", label: "Override service data key", selector: { text: {} } },
         ],
+      },
+      {
+        title: "Disabled",
+        icon: "mdi:cancel",
+        expanded: false,
+        fields: [DISABLED_FIELD],
       },
     ];
   }

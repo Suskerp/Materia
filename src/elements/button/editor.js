@@ -1,6 +1,6 @@
 import { html, css } from "lit";
 import { computeLabel } from "../../utils/editor-helpers.js";
-import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
 
 class MateriaButtonEditor extends SmartEditorBase {
   static properties = {
@@ -111,7 +111,7 @@ class MateriaButtonEditor extends SmartEditorBase {
           },
           { name: "wide", selector: { boolean: {} } },
           { name: "entity", selector: { entity: {} } },
-          { name: "disabled", helper: "Template returning true / false", selector: { template: {} } },
+          DISABLED_FIELD,
         ],
       },
       {

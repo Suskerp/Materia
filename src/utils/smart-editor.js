@@ -254,6 +254,114 @@ export class MateriaColorPicker extends LitElement {
 customElements.define("materia-color-picker", MateriaColorPicker);
 
 /* ------------------------------------------------------------------ */
+/*  Conditions field — HA's own condition-builder UI                   */
+/*                                                                     */
+/*  Renders ha-card-conditions-editor (the exact panel the visibility  */
+/*  tab and the conditional card use), so "Disabled when" edits like   */
+/*  every other condition in HA. The element ships in a lazy frontend  */
+/*  chunk, so it is summoned the way custom cards summon HA editors:   */
+/*  instantiate a conditional card and ask for its config element,     */
+/*  which imports the chunk that defines the editor. Until that        */
+/*  resolves (or if it ever stops working after an HA upgrade) the     */
+/*  field falls back to a raw object selector — degraded, never dead.  */
+/* ------------------------------------------------------------------ */
+class MateriaConditionsField extends LitElement {
+  static properties = {
+    hass: { attribute: false },
+    value: { attribute: false },
+    label: {},
+    helper: {},
+    _ready: { state: true },
+  };
+
+  static styles = css`
+    :host { display: block; }
+    .label {
+      font-size: 12px;
+      color: var(--secondary-text-color);
+      padding: 0 0 4px 4px;
+    }
+    .helper {
+      font-size: 12px;
+      color: var(--secondary-text-color);
+      padding: 4px 4px 0;
+    }
+  `;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._summon();
+  }
+
+  async _summon() {
+    if (customElements.get("ha-card-conditions-editor")) {
+      this._ready = true;
+      return;
+    }
+    try {
+      const helpers = await window.loadCardHelpers?.();
+      helpers?.createCardElement?.({
+        type: "conditional",
+        conditions: [],
+        card: { type: "markdown", content: "x" },
+      });
+      await customElements.whenDefined("hui-conditional-card");
+      await customElements.get("hui-conditional-card")?.getConfigElement?.();
+    } catch (e) {
+      // fall through to the object-selector fallback
+    }
+    this._ready = !!customElements.get("ha-card-conditions-editor");
+  }
+
+  render() {
+    const conditions = Array.isArray(this.value) ? this.value : [];
+    if (!this._ready) {
+      return html`
+        <ha-selector
+          .hass=${this.hass}
+          .selector=${{ object: {} }}
+          .value=${this.value}
+          .label=${this.label}
+          .helper=${this.helper}
+        ></ha-selector>
+      `;
+    }
+    return html`
+      ${this.label ? html`<div class="label">${this.label}</div>` : ""}
+      <ha-card-conditions-editor
+        .hass=${this.hass}
+        .conditions=${conditions}
+        @value-changed=${this._changed}
+      ></ha-card-conditions-editor>
+      ${this.helper ? html`<div class="helper">${this.helper}</div>` : ""}
+    `;
+  }
+
+  _changed(ev) {
+    ev.stopPropagation();
+    const v = ev.detail?.value;
+    this.dispatchEvent(
+      new CustomEvent("value-changed", {
+        // An empty list means "never disabled" — drop the key entirely.
+        detail: { value: Array.isArray(v) && v.length ? v : undefined },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+}
+customElements.define("materia-conditions-field", MateriaConditionsField);
+
+/** The standard "Disabled when" field — spread into any editor's section. */
+export const DISABLED_FIELD = {
+  name: "disabled",
+  label: "Disabled when",
+  helper: "Card stays visible but inert (38%) while ALL conditions match.",
+  conditions: true,
+  template: true,
+};
+
+/* ------------------------------------------------------------------ */
 /*  SmartEditorBase                                                    */
 /*                                                                     */
 /*  Subclasses provide `get _sections()` returning:                    */
@@ -438,6 +546,16 @@ export class SmartEditorBase extends LitElement {
           .label=${label}
           .required=${!!field.required}
         ></ha-selector>
+      `;
+    } else if (field.conditions) {
+      control = html`
+        <materia-conditions-field
+          class="field-control"
+          .hass=${this.hass}
+          .value=${value}
+          .label=${label}
+          .helper=${field.helper}
+        ></materia-conditions-field>
       `;
     } else if (field.color) {
       control = html`

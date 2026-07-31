@@ -1,6 +1,6 @@
 import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
-import { SmartEditorBase, isTemplate } from "../../utils/smart-editor.js";
+import { SmartEditorBase, isTemplate, DISABLED_FIELD } from "../../utils/smart-editor.js";
 
 class MateriaSplitButtonEditor extends SmartEditorBase {
   static properties = {
@@ -108,6 +108,12 @@ class MateriaSplitButtonEditor extends SmartEditorBase {
           { name: "color", label: "Background", color: true, template: true, selector: { text: {} } },
           { name: "color_on", label: "Text / icon", color: true, template: true, selector: { text: {} } },
         ],
+      },
+      {
+        title: "Disabled",
+        icon: "mdi:cancel",
+        expanded: false,
+        fields: [DISABLED_FIELD],
       },
     ];
   }

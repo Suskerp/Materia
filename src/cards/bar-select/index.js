@@ -1,5 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -18,7 +19,7 @@ import "./editor.js";
  * `off_option` lifts one choice (a mop's "off") out of the bars into its own
  * round button, since "off" isn't a rung on the ladder.
  */
-class MateriaBarSelect extends ActionMixin(LitElement) {
+class MateriaBarSelect extends DisabledMixin(ActionMixin(LitElement)) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -26,7 +27,7 @@ class MateriaBarSelect extends ActionMixin(LitElement) {
     _resolvedAccentOn: { state: true },
   };
 
-  static styles = styles;
+  static styles = [styles, disabledConditionStyles];
 
   static getConfigElement() {
     return document.createElement("materia-bar-select-editor");

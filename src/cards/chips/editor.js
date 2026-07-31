@@ -1,4 +1,4 @@
-import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
 
 class MateriaChipsEditor extends SmartEditorBase {
   /* Switches must be seeded with the card's own defaults. An option that
@@ -29,6 +29,12 @@ class MateriaChipsEditor extends SmartEditorBase {
           { name: "color", label: "Selected chip color", color: true, template: true, selector: { text: {} } },
           { name: "color_on", label: "Selected chip text", color: true, template: true, selector: { text: {} } },
         ],
+      },
+      {
+        title: "Disabled",
+        icon: "mdi:cancel",
+        expanded: false,
+        fields: [DISABLED_FIELD],
       },
     ];
   }

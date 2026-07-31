@@ -159,5 +159,20 @@ export const styles = [
         transition: none;
       }
     }
+
+    /* disabled: conditions — DELIBERATELY not the shared host treatment.
+       Killing pointer events on the host would kill scrolling too, and the
+       standing decision is that a running vacuum dims the rooms but the list
+       still scrolls. Tiles alone go inert; touches over an inert tile fall
+       through to the rail, which is exactly what makes the scroll survive. */
+    :host([card-disabled]) .tile {
+      opacity: 0.38;
+      pointer-events: none;
+    }
+
+    :host([card-disabled]) .tile,
+    :host([card-disabled]) .check {
+      transition: opacity 0.2s ease;
+    }
   `,
 ];

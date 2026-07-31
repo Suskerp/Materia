@@ -1,5 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -19,7 +20,7 @@ import "./editor.js";
  * Each chip carries its own `tap_action`; without one, a select-like entity is
  * driven with select_option so the common case needs no wiring.
  */
-class MateriaChips extends ActionMixin(LitElement) {
+class MateriaChips extends DisabledMixin(ActionMixin(LitElement)) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -27,7 +28,7 @@ class MateriaChips extends ActionMixin(LitElement) {
     _resolvedColorOn: { state: true },
   };
 
-  static styles = styles;
+  static styles = [styles, disabledConditionStyles];
 
   static getConfigElement() {
     return document.createElement("materia-chips-editor");

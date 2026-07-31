@@ -1,4 +1,4 @@
-import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
 
 class MateriaSwitchEditor extends SmartEditorBase {
   _formData() {
@@ -31,6 +31,12 @@ class MateriaSwitchEditor extends SmartEditorBase {
         title: "Actions",
         icon: "mdi:gesture-tap",
         fields: [{ name: "tap_action", selector: { ui_action: { default_action: "toggle" } } }],
+      },
+      {
+        title: "Disabled",
+        icon: "mdi:cancel",
+        expanded: false,
+        fields: [DISABLED_FIELD],
       },
     ];
   }

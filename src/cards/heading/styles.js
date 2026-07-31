@@ -36,11 +36,14 @@ export const styles = [
       opacity: 0.9;
     }
 
-    /* The display voice, at the scale the mocks draw section titles: 24-26px,
-       bold, tight tracking. */
+    /* The display voice, bold with tight tracking — at a FIXED size. This
+       used to scale with the card's container width (cqi), which made the
+       same "Rooms" heading render smaller in a narrow column than a wide one.
+       A section title is a landmark: it must hold rank everywhere on the
+       page, so it holds one size — M3's title-large, 22px. */
     .title {
       font-family: var(--materia-font-display, inherit);
-      font-size: clamp(20px, 6cqi, 26px);
+      font-size: 22px;
       font-weight: 700;
       letter-spacing: -0.02em;
       line-height: 1.15;
@@ -51,7 +54,7 @@ export const styles = [
     }
 
     .row.subtitle .title {
-      font-size: clamp(14px, 4.2cqi, 16px);
+      font-size: 16px;
       font-weight: 600;
       letter-spacing: -0.01em;
       opacity: 0.85;
@@ -66,7 +69,7 @@ export const styles = [
     }
 
     .secondary {
-      font-size: clamp(12px, 3.6cqi, 14px);
+      font-size: 14px;
       font-weight: 500;
       opacity: 0.62;
       white-space: nowrap;

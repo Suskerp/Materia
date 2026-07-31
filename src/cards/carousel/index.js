@@ -1,5 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { DisabledMixin } from "../../utils/conditions.js";
 import { MOTION } from "../../utils/motion.js";
 import { styles } from "./styles.js";
 import "./editor.js";
@@ -14,7 +15,7 @@ import "./editor.js";
  * swaps for one another: read from a tracked entity's state, or from a
  * comma-separated list when `multi_select` is on.
  */
-class MateriaCarousel extends ActionMixin(LitElement) {
+class MateriaCarousel extends DisabledMixin(ActionMixin(LitElement)) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },

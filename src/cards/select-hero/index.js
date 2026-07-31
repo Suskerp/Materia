@@ -1,5 +1,6 @@
 import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
 import "./editor.js";
@@ -29,13 +30,13 @@ import "./editor.js";
  * `glyph` is an SVG path on the design's 48x34 grid — the route the robot
  * actually drives — stroked in currentColor.
  */
-class MateriaSelectHero extends ActionMixin(LitElement) {
+class MateriaSelectHero extends DisabledMixin(ActionMixin(LitElement)) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
   };
 
-  static styles = styles;
+  static styles = [styles, disabledConditionStyles];
 
   static getConfigElement() {
     return document.createElement("materia-select-hero-editor");

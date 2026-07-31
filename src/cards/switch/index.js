@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -14,7 +15,7 @@ import "./editor.js";
  * tap_action overrides.
  * flat: true drops the card chrome for nesting inside other cards.
  */
-class MateriaSwitch extends ActionMixin(LitElement) {
+class MateriaSwitch extends DisabledMixin(ActionMixin(LitElement)) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -25,7 +26,7 @@ class MateriaSwitch extends ActionMixin(LitElement) {
     _resolvedSwitchColorOn: { state: true },
   };
 
-  static styles = styles;
+  static styles = [styles, disabledConditionStyles];
 
   static getConfigElement() {
     return document.createElement("materia-switch-editor");
