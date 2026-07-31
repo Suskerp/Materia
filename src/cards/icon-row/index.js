@@ -1,4 +1,5 @@
 import { MateriaButtonGroup } from "../../elements/button-group/index.js";
+import "./editor.js";
 
 /**
  * DEPRECATED — `materia-icon-row` is now the `standard` configuration of
@@ -17,6 +18,15 @@ import { MateriaButtonGroup } from "../../elements/button-group/index.js";
  * canonical name.
  */
 class MateriaIconRow extends MateriaButtonGroup {
+  /* Without this override the alias inherits materia-button-group's editor,
+     whose Options list-manager writes `options:` — a key the standard group
+     never reads (it reads `buttons:`). The tailored editor below was sitting
+     in this directory unimported, so users got the wrong form and the right
+     one was dead code. */
+  static getConfigElement() {
+    return document.createElement("materia-icon-row-editor");
+  }
+
   setConfig(config) {
     super.setConfig({ ...config, group: "standard" });
   }

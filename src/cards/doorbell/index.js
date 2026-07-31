@@ -139,11 +139,17 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     if (this.config.buzz_action) this._handleAction(this.config.buzz_action);
   }
 
-  /** Slide is a TOGGLE, like materia-lock: unlocked slides back to lock. */
+  /** Slide is a TOGGLE, like materia-lock: unlocked slides back to lock.
+   *  Decided from the RAW lock state, not _opened — _opened includes
+   *  "unlocking" (the panel should flood the moment the bolt starts moving),
+   *  so keying the service off it meant a slide DURING the unlock transition
+   *  sent lock.lock and re-locked the door the user had just opened.
+   *  _callService, not hass.callService: a refused unlock must surface the
+   *  toast and failure haptic, not vanish as an unhandled rejection. */
   _slide() {
     if (!this.config.lock) return;
-    const service = this._opened ? "lock" : "unlock";
-    this.hass.callService("lock", service, { entity_id: this.config.lock });
+    const service = this._lockState === "unlocked" ? "lock" : "unlock";
+    this._callService("lock", service, { entity_id: this.config.lock });
   }
 
   _ignore() {
@@ -156,7 +162,7 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
 
   _toggleMute() {
     if (!this.config.mute_entity) return;
-    this.hass.callService("homeassistant", "toggle", { entity_id: this.config.mute_entity });
+    this._callService("homeassistant", "toggle", { entity_id: this.config.mute_entity });
   }
 
   /* ---- copy per phase ---- */
@@ -235,7 +241,7 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     const busy = phase === "buzzing";
     const opened = phase === "opened";
     const pct = phase === "ringing"
-      ? Math.round((this._left / this.config.timeout) * 100)
+      ? (this.config.timeout > 0 ? Math.round((this._left / this.config.timeout) * 100) : 0)
       : phase === "lapsed" ? 0 : 100;
 
     const cookieWord = busy

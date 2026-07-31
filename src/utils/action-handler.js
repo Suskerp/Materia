@@ -6,6 +6,7 @@
  *   import { ActionMixin } from "../utils/action-handler.js";
  *   class MyCard extends ActionMixin(LitElement) { ... }
  */
+import { t } from "./i18n.js";
 
 /** Timestamp of the last haptic fired anywhere in the library.
  *
@@ -49,11 +50,30 @@ export const ActionMixin = (superClass) =>
 
     /**
      * Dispatch an action based on a tap_action / hold_action config object.
-     * Supports: toggle, call-service/perform-action, navigate, more-info,
-     * fire-dom-event, none.
+     * Supports: toggle, call-service/perform-action, navigate, url,
+     * more-info, fire-dom-event, none — plus `confirmation:`.
+     *
+     * CONFIRMATION IS HONOURED FIRST. The editors offer HA's full ui_action
+     * selector, so a lock action can carry confirmation: {...} — and this
+     * used to be read by nobody: the guard the user configured did not
+     * exist, and the door unlocked on first tap. window.confirm is plainer
+     * than HA's dialog, but a custom card cannot summon HA's internal
+     * showConfirmationDialog, and a plain guard that exists beats a pretty
+     * one that doesn't.
      */
     _handleAction(actionConfig) {
       if (!actionConfig || actionConfig.action === "none") return;
+      const conf = actionConfig.confirmation;
+      if (conf) {
+        const c = conf === true ? {} : conf;
+        const exempt = Array.isArray(c.exemptions)
+          && c.exemptions.some((e) => e.user === this.hass?.user?.id);
+        if (!exempt) {
+          const text = c.text || t("confirm_action", this.hass);
+          // eslint-disable-next-line no-alert
+          if (!window.confirm(text)) return;
+        }
+      }
       if (STATE_CHANGING_ACTIONS.has(actionConfig.action)) this._fireHaptic("light");
 
       switch (actionConfig.action) {
@@ -108,6 +128,21 @@ export const ActionMixin = (superClass) =>
           break;
         }
 
+        case "url": {
+          // Offered by every ui_action selector in the editors and previously
+          // unimplemented — the tap silently did nothing. Scheme-gated: only
+          // web URLs and in-app relative paths; anything else (javascript:,
+          // data:) is refused.
+          const url = String(actionConfig.url_path ?? "");
+          if (/^https?:\/\//.test(url)) window.open(url, "_blank", "noopener");
+          else if (url.startsWith("/")) window.open(url, "_blank", "noopener");
+          break;
+        }
+        case "assist":
+          // Not implementable from a custom card without HA internals; warn
+          // so a configured-but-dead action is at least diagnosable.
+          console.warn("materia: the 'assist' action is not supported by Materia cards");
+          break;
         case "navigate": {
           if (!actionConfig.navigation_path) break; // would push literal "undefined"
           const replace = !!actionConfig.navigation_replace;

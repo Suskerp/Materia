@@ -426,6 +426,7 @@ export const HeroShellMixin = (Base) =>
 
     /** Resolve every alert entry's text template — call from updated(). */
     _resolveAlertTemplates() {
+      if (!this.config) return;
       this._alertList().forEach((a, i) => {
         if (a.text != null) this._resolveTemplateValue(`alertText${i}`, a.text);
       });

@@ -103,6 +103,9 @@ const STRINGS = {
   sched_skip: { en: "Skip", nl: "Overslaan" },
   sched_add: { en: "Add a schedule", nl: "Een planning toevoegen" },
 
+  /* ---- actions ------------------------------------------------------ */
+  confirm_action: { en: "Are you sure?", nl: "Ben je zeker?" },
+
   /* ---- materia-doorbell ------------------------------------------- */
   db_eyebrow: { en: "Doorbell", nl: "Deurbel" },
   db_eyebrow_street: { en: "Street door", nl: "Benedendeur" },
