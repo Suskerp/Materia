@@ -12,9 +12,28 @@ const METRICS = [
   { value: "pressure", label: "Pressure" },
 ];
 
+/** The title each metric falls back to, and the defaults of its own fields.
+ *  Units are absent on purpose — they follow the source entity's unit
+ *  attribute, so the field labels carry that instead of a fixed value. */
+const METRIC_DEFAULTS = {
+  wind: { name: "Wind", from_label: "From" },
+  uv: { name: "UV index" },
+  aqi: { name: "Air quality" },
+  pollen: { name: "Pollen", variant: "gauges", max_shown: 4, max: 4 },
+  precipitation: {
+    name: "Precipitation",
+    total_label: "Total rain for the day",
+    none_label: "No precipitation expected",
+  },
+  sun: { name: "Sunrise & sunset", sun_entity: "sun.sun" },
+  visibility: { name: "Visibility" },
+  humidity: { name: "Humidity", dew_label: "Dew point" },
+  pressure: { name: "Pressure" },
+};
+
 class MateriaWeatherMetricEditor extends SmartEditorBase {
   _formData() {
-    return { metric: "wind", ...this._config };
+    return { metric: "wind", ...METRIC_DEFAULTS[this._config?.metric], ...this._config };
   }
 
   _sectionsSignature() {

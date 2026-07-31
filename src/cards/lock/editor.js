@@ -40,17 +40,11 @@ class MateriaLockEditor extends SmartEditorBase {
             ] } },
           },
           { name: "shape", label: "Show the morphing lock shape", selector: { boolean: {} } },
-          {
-            name: "shape_style",
-            label: "Silhouette",
-            helper: "Squircle morphs its outline continuously; the MaterialShapes silhouettes change state by turning instead, since CSS cannot interpolate an SVG path.",
-            selector: { select: { mode: "dropdown", options: [
-              { value: "cookie9", label: "Cookie, 9-sided (default)" },
-              { value: "squircle", label: "Squircle — the only one that morphs its outline" },
-              { value: "pill", label: "Pill (square-aspect, not a capsule)" },
-              { value: "gem", label: "Gem" },
-            ] } },
-          },
+          /* No silhouette picker for now: the cookie is the ONE shape whose
+             symmetry period lets the in-flight spin land gracefully, so it is
+             the shape the card ships with. shape_style stays supported in YAML
+             (squircle/pill/gem still render) — the choice is just no longer
+             advertised until another silhouette earns its place. */
         ],
       },
       {

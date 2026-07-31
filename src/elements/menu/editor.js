@@ -57,6 +57,10 @@ class MateriaMenuEditor extends SmartEditorBase {
     this._expanded ??= null;
   }
 
+  _formData() {
+    return { position: "auto", menu_variant: "surface", substate_separator: "•", ...this._config };
+  }
+
   get _sections() {
     return [
       {

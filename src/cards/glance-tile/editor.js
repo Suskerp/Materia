@@ -12,8 +12,28 @@ const VARIANTS = [
 ];
 
 class MateriaGlanceTileEditor extends SmartEditorBase {
+  /* The threshold/label defaults belong to the soil-moisture scale the percent
+     tile draws, and the full-load watts to the power tile — both scoped to the
+     variant, exactly like the fields they sit next to. The temperature scale is
+     deliberately absent: its default depends on the entity's unit (10–30 °C,
+     50–86 °F), so the field labels state it instead. */
   _formData() {
-    return { variant: "percent", ...this._config };
+    const v = this._config?.variant;
+    const perVariant =
+      v === "percent"
+        ? {
+            critical_dry: 10,
+            dry_below: 20,
+            soggy_above: 60,
+            dry_label: "Needs water now",
+            soon_label: "Water soon",
+            optimal_label: "Optimal",
+            wet_label: "Overwatered",
+          }
+        : v === "power"
+          ? { max: 3000 }
+          : {};
+    return { variant: "percent", ...perVariant, ...this._config };
   }
 
   _sectionsSignature() {

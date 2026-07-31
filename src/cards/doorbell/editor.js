@@ -44,7 +44,12 @@ class MateriaDoorbellEditor extends SmartEditorBase {
             selector: { entity: {} },
           },
           { name: "buzz_title", label: "Panel title (default: Buzz in)", selector: { text: {} } },
-          { name: "buzz_sub", label: "Panel sub-line", selector: { text: {} } },
+          {
+            name: "buzz_sub",
+            label: "Panel sub-line",
+            helper: 'Default: "Street door only", translated with the dashboard.',
+            selector: { text: {} },
+          },
         ],
       },
       {

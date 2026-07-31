@@ -44,7 +44,7 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
   }
 
   _formData() {
-    return { ...this._config };
+    return { steppers: "side", wave: "auto", ...this._config };
   }
 
   /* ---- sections plumbing --------------------------------------------------- */
@@ -313,7 +313,7 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
         icon: "mdi:thermostat",
         fields: [
           { name: "temperature_entity", label: "Current-temp sensor (marker on the dial)", selector: { entity: { domain: "sensor", device_class: "temperature" } } },
-          { name: "step", label: "Step", selector: { number: { min: 0.1, max: 2, step: 0.1, mode: "box" } } },
+          { name: "step", label: "Step", helper: "Default: the entity's target_temp_step, else 0.5.", selector: { number: { min: 0.1, max: 2, step: 0.1, mode: "box" } } },
           { name: "min_temp", label: "Dial min (default: entity)", selector: { number: { min: -30, max: 40, step: 0.5, mode: "box" } } },
           { name: "max_temp", label: "Dial max (default: entity)", selector: { number: { min: 0, max: 60, step: 0.5, mode: "box" } } },
           { name: "steppers", label: "Stepper placement", selector: { select: { mode: "dropdown", options: [

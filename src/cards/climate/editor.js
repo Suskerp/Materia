@@ -1,6 +1,10 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaClimateEditor extends SmartEditorBase {
+  _formData() {
+    return { step: 0.5, ...this._config };
+  }
+
   get _sections() {
     return [
       {

@@ -1,6 +1,6 @@
 import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
-import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
 import { PRESETS } from "./styles.js";
 
 class MateriaButtonGroupEditor extends SmartEditorBase {
@@ -56,6 +56,14 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
   setConfig(config) {
     super.setConfig(config);
     this._expanded ??= null;
+  }
+
+  /* gap and padding only reach the DOM in the standard group, which is also the
+     only group that shows those fields — so seeding them unconditionally is
+     safe. Max columns stays out: the card reads a missing value as 0 ("as many
+     as fit"), which the 1–8 selector cannot represent. */
+  _formData() {
+    return { group: "connected", size: "m", variant: "tonal", gap: 8, padding: 4, ...this._config };
   }
 
   _sectionsSignature() {

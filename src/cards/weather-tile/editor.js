@@ -2,7 +2,9 @@ import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaWeatherTileEditor extends SmartEditorBase {
   _formData() {
-    return { show_minmax: true, mirror: false, size: 10, ...this._config };
+    // show_minmax is a plain truthy check in the card, so a card without the
+    // key hides the range — even though getStubConfig hands new cards `true`.
+    return { show_minmax: false, mirror: false, size: 10, ...this._config };
   }
 
   get _sections() {

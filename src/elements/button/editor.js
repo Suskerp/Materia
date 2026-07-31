@@ -63,6 +63,10 @@ class MateriaButtonEditor extends SmartEditorBase {
     );
   }
 
+  _formData() {
+    return { variant: "filled", size: "m", shape: "round", ...this._config };
+  }
+
   get _sections() {
     return [
       {

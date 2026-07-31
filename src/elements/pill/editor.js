@@ -4,7 +4,7 @@ class MateriaPillEditor extends SmartEditorBase {
   // The card shows the background unless explicitly disabled, so reflect that
   // default in the toggle (otherwise an unset value reads as "off").
   _formData() {
-    return { background: true, ...this._config };
+    return { background: true, icon: "mdi:information-outline", ...this._config };
   }
 
   get _sections() {
