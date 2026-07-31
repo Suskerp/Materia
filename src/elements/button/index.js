@@ -52,7 +52,10 @@ class MateriaButton extends ActionMixin(LitElement) {
   }
 
   get _disabled() {
-    const val = this.config?.disabled;
+    // disabled_when is the canonical key — hui-card hides any card whose
+    // config carries a truthy `disabled`, so that name is HA's, not ours.
+    // The old key is still read: booleans/templates predate the collision.
+    const val = this.config?.disabled_when ?? this.config?.disabled;
     if (val === undefined || val === null) return false;
     if (typeof val === "boolean") return val;
     // HA condition list — the same schema as card visibility, evaluated live.
@@ -78,7 +81,7 @@ class MateriaButton extends ActionMixin(LitElement) {
       this._resolveField("icon", "_resolvedIcon");
       this._resolveField("label", "_resolvedLabel");
       this._resolveField("subtitle", "_resolvedSubtitle");
-      this._resolveField("disabled", "_resolvedDisabled");
+      this._resolveField(this.config?.disabled_when != null ? "disabled_when" : "disabled", "_resolvedDisabled");
     }
   }
 

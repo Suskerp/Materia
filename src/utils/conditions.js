@@ -63,7 +63,14 @@ function met(c, hass) {
 }
 
 /**
- * Mixin: `disabled:` as a CONDITION LIST on any card.
+ * Mixin: disabled_when — a CONDITION LIST on any card.
+ *
+ * The key is disabled_when and NOT disabled, and that is load-bearing:
+ * hui-card treats a truthy `disabled` in ANY card's config as "hide this
+ * card" (editor previews skip the check), so a condition array under that
+ * name made the card vanish in view mode while looking fine in the editor.
+ * That was the unexplained v0.19.0 carousel bug, twice. `disabled` is
+ * HA's key; it is still read for back-compat but must never be written.
  *
  * Reflects the verdict onto a host attribute so the treatment is pure CSS.
  * Cards with structural needs (the carousel must keep scrolling) skip the
@@ -73,7 +80,7 @@ function met(c, hass) {
 export const DisabledMixin = (Base) =>
   class extends Base {
     get _disabledByCondition() {
-      const d = this.config?.disabled;
+      const d = this.config?.disabled_when ?? this.config?.disabled;
       return Array.isArray(d) && conditionsMet(d, this.hass);
     }
 

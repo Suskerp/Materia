@@ -352,9 +352,11 @@ class MateriaConditionsField extends LitElement {
 }
 customElements.define("materia-conditions-field", MateriaConditionsField);
 
-/** The standard "Disabled when" field — spread into any editor's section. */
+/** The standard "Disabled when" field — spread into any editor's section.
+ *  NB: the key is disabled_when — `disabled` belongs to hui-card, which
+ *  hides any card carrying it truthy (see utils/conditions.js). */
 export const DISABLED_FIELD = {
-  name: "disabled",
+  name: "disabled_when",
   label: "Disabled when",
   helper: "Card stays visible but inert (38%) while ALL conditions match.",
   conditions: true,
