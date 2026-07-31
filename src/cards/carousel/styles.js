@@ -20,10 +20,12 @@ export const styles = [
       /* No scroll-snap: proximity snapping caught fast flicks and settled them
          on the nearest tile, which killed the native fling. A room rail is a
          free scroll, not a pager. */
-      /* Bleed to the card edge so tiles scroll out under the padding rather
-         than stopping short of it. */
-      padding: 5px 14px 5px 0;
-      margin-right: -14px;
+      /* NO bleed. The old negative-margin overhang (tiles scrolling out under
+         the page padding) widened the rail beyond its grid cell, and in a
+         multi-column sections view that meant painting over the neighbouring
+         section. The rail is its own scroll container, so kept to its box it
+         clips its content for free. */
+      padding: 5px 0;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
       /* Drag affordance for pointer users; without user-select the drag would

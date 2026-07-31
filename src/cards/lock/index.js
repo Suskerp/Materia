@@ -158,7 +158,43 @@ class MateriaLock extends ActionMixin(LitElement) {
         clearTimeout(this._pendingTimer);
       }
     }
+    // Order matters: fold a pose flip into the spin BEFORE _syncSpin reads
+    // _spinDeg as the wind-down's starting point.
+    this._compensatePoseTurn();
     this._syncSpin();
+  }
+
+  /** THE SEAM THAT USED TO JUMP. Pose (the state turn, ±rot on the path) and
+   *  spin (the in-flight rotation on the silhouette) are rotations of the SAME
+   *  shape, so they compose additively — which means a pose change need not be
+   *  visible at all while the spin runs. When the destination state lands, the
+   *  path's turn snaps (transition:none under .spinning) — a jump of half the
+   *  silhouette's symmetry period, the LARGEST displacement the eye can see,
+   *  and at 40 deg/s it was very visible, "imperceptible on a spinning shape"
+   *  was simply wrong. So the snap is cancelled in the same frame: the spin
+   *  variable absorbs exactly -delta, total rotation stays continuous, and the
+   *  wind-down carries the shape through the state change as one unbroken
+   *  deceleration. The pose still ends up correct; the spin residual is just
+   *  offset by a symmetry-equivalent amount, which on these shapes is free. */
+  _compensatePoseTurn() {
+    const unlocked = !this._locked;
+    const prev = this._lastPose;
+    this._lastPose = unlocked;
+    if (prev === undefined || prev === unlocked) return;
+    if (!this._spinning || !this._spins) return;
+    const rot = this._shapeStyle.rot;
+    this._spinDeg = (this._spinDeg ?? 0) + (unlocked ? -rot : rot);
+    // Same frame as the class flip, so both land in one style recalc.
+    this._applySpin();
+    // A wind-down in progress is now half a period off its aligned target
+    // (the pose turn is rot, alignment is 2*rot), and its endpoints predate
+    // the compensation — re-plan from here at the brake's instantaneous
+    // speed instead of patching the stale interpolation.
+    if (this._spinMode === "stop") {
+      const t = Math.min(1, (performance.now() - this._stopT0) / this._stopDur);
+      const vel = (2 * (this._stopTo - this._stopFrom) * (1 - t)) / (this._stopDur / 1000);
+      this._planStop(this._spinDeg, Math.max(vel, 8));
+    }
   }
 
   /* ---- the in-flight spin -------------------------------------------------
@@ -220,7 +256,7 @@ class MateriaLock extends ActionMixin(LitElement) {
         const k = 1 - (1 - t) * (1 - t); // quadratic ease-out
         this._spinDeg = this._stopFrom + (this._stopTo - this._stopFrom) * k;
         if (t >= 1) {
-          this._spinDeg = this._stopTo % 360; // bounded growth; pose is free
+          this._spinDeg = this._stopTo % 360; // bounded growth; alignment survives — the period divides 360
           this._applySpin();
           this._spinMode = null;
           this._spinVel = 0;
@@ -240,19 +276,30 @@ class MateriaLock extends ActionMixin(LitElement) {
 
   _spinDown() {
     if (this._spinMode !== "ramp" && this._spinMode !== "cruise") return;
-    const from = this._spinDeg ?? 0;
-    const vel = Math.max(this._spinVel ?? 40, 8);
-    // NATURAL stop, no target pose. A 9-fold star reads identically at any
-    // resting angle — its tips have no absolute reference — so the earlier
-    // land-on-a-symmetric-pose rule bought nothing and cost a tail of up to
-    // 2.5s that kept turning long after the lock had landed. Fixed 550ms, the
-    // expressive-default morph's own beat, travelling only what momentum
-    // carries: to = from + vel*D/2 makes the quadratic-out's initial slope
-    // EXACTLY the cruise speed. Braking only; it can never speed up.
-    const D = 0.55;
+    this._planStop(this._spinDeg ?? 0, Math.max(this._spinVel ?? 40, 8));
+  }
+
+  /** ROLL OUT TO ALIGNMENT. The brake is never harder than the 550ms natural
+   *  stop (initial slope of the quadratic-out EQUALS the entry speed, so the
+   *  seam has no kick), but the travel extends to the next angle where the
+   *  spin residual is a whole number of symmetry periods — so the shape always
+   *  comes to rest on its exact canonical pose, just via a slightly longer,
+   *  fully continuous roll. That extra beat is sanctioned: a settle that
+   *  visibly finds its pose reads as the mechanism seating, not as lag. If
+   *  momentum is too low to reach the next aligned angle in reasonable time
+   *  (an interrupted ramp), alignment is skipped rather than crawled to —
+   *  at those speeds the pose is unreadable anyway. Braking only, never a
+   *  speed-up. */
+  _planStop(from, vel) {
+    const D_MIN = 0.55; // the natural-stop beat: minimum roll the momentum carries
+    const D_MAX = 2.6; // longest acceptable settle
+    const period = this._shapeStyle.rot * 2;
+    const minTravel = (vel * D_MIN) / 2;
+    let to = Math.ceil((from + minTravel) / period) * period;
+    if ((2 * (to - from)) / vel > D_MAX) to = from + minTravel;
     this._stopFrom = from;
-    this._stopTo = from + (vel * D) / 2;
-    this._stopDur = D * 1000;
+    this._stopTo = to;
+    this._stopDur = (2 * (to - from) / vel) * 1000;
     this._stopT0 = performance.now();
     this._spinMode = "stop";
   }

@@ -126,10 +126,15 @@ export const styles = [
 
     /* While the spin owns the rotation, the path's own state turn stands down:
        two rotation systems landing in the same moment read as a sudden
-       speed-up right as the bolt lands. The pose snaps instead — on a spinning
-       9-lobe star an instant 20-degree change is imperceptible, because the
-       pose carries no absolute reference. The transition comes back the moment
-       the wind-down ends, so ordinary instant toggles keep their turn. */
+       speed-up right as the bolt lands. The pose change is applied INSTANTLY
+       here and simultaneously cancelled out of the spin variable by
+       _compensatePoseTurn() in index.js — rotations of the same shape compose
+       additively, so the total stays continuous and the state lands inside one
+       unbroken deceleration. (The earlier claim that a bare 20-degree snap is
+       imperceptible on a spinning shape was wrong: 20 degrees is HALF the
+       cookie's symmetry period, the most visible jump it can make.) The
+       transition comes back when the wind-down ends, so ordinary instant
+       toggles keep their turn. */
     .shape.spinning .silhouette path {
       transition: none;
     }
