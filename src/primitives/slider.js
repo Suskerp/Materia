@@ -168,6 +168,13 @@ class MateriaSlider extends LitElement {
     }, 100);
   }
 
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    // A pending debounce firing on a detached slider would emit value-changed
+    // into nothing — or worse, onto a card that already re-rendered elsewhere.
+    clearTimeout(this._debounceTimer);
+  }
+
   _onChange(e) {
     clearTimeout(this._debounceTimer);
     const val = parseFloat(e.target.value);
