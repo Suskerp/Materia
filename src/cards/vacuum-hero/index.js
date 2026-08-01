@@ -4,6 +4,7 @@ import { softBurstPath, liveBurstPath } from "../../utils/shapes.js";
 import { HeroShellMixin, heroShellStyles as styles } from "../hero/shell.js";
 import { CAPABILITY_KEYS, CONSUMABLE_KEYS, profileFor } from "./profiles.js";
 import { explainConsumable, explainError } from "./explanations.js";
+import { t } from "../../utils/i18n.js";
 import "./editor.js";
 
 /* Constant geometry, once at module load — see the same note in hero/shell.js. */
@@ -401,9 +402,9 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
     const raw = String(rawStatus ?? "").toLowerCase();
     const chargingIsh = raw.includes("charg") || raw.includes("dock");
     if (!working && chargingIsh && batt != null && batt >= 100) {
-      title = this.config.docked_label ?? "Docked";
+      title = this.config.docked_label ?? t("vh_docked", this.hass);
     }
-    if (unavailable) title = "Unavailable";
+    if (unavailable) title = t("unavailable", this.hass);
 
     // Progress while working, battery otherwise.
     const showProgress = working && progress != null && this._hasProgress;
@@ -419,10 +420,10 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
       const mins = this._minutesLeft;
       const bits = [];
       if (room && !["unknown", "unavailable"].includes(room)) bits.push(this._pretty(room));
-      if (mins != null) bits.push(`about ${mins} min left`);
+      if (mins != null) bits.push(t("vh_min_left", this.hass, { mins }));
       secondary = bits.join(" - ") || null;
     } else if (this._drying) {
-      secondary = this.config.drying_label ?? "Drying the mop";
+      secondary = this.config.drying_label ?? t("vh_drying", this.hass);
     } else {
       const last = this._stateOf(c.last_clean);
       if (last) {
@@ -430,11 +431,11 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
         if (!Number.isNaN(d.getTime())) {
           const mins = Math.round((Date.now() - d.getTime()) / 60000);
           const rel = mins < 60
-            ? `${Math.max(1, mins)} min`
+            ? t("unit_min", this.hass, { n: Math.max(1, mins) })
             : mins < 1440
-            ? `${Math.round(mins / 60)} h`
-            : `${Math.round(mins / 1440)} d`;
-          secondary = `Last cleaned ${rel} ago`;
+            ? t("unit_hours", this.hass, { n: Math.round(mins / 60) })
+            : t("unit_days", this.hass, { n: Math.round(mins / 1440) });
+          secondary = t("vh_last_cleaned", this.hass, { rel });
         }
       }
     }

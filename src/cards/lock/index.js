@@ -2,6 +2,7 @@ import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { materialCookiePath, pillPath, gemPath } from "../../utils/shapes.js";
 import { t } from "../../utils/i18n.js";
+import { OptimismBus } from "../../utils/optimism-bus.js";
 import { styles } from "./styles.js";
 import "../../primitives/drag-confirm.js";
 import "./editor.js";
@@ -336,6 +337,9 @@ class MateriaLock extends ActionMixin(LitElement) {
     const eid = this.config.entity;
     const domain = eid.split(".")[0];
     if (domain === "lock") {
+      // Tell sibling cards on this entity what is happening BEFORE the
+      // round-trip — the hero above must say "Unlocking" when our track does.
+      OptimismBus.publish(eid, next ? "locking" : "unlocking", this._stateObj?.state);
       this._callService("lock", next ? "lock" : "unlock", { entity_id: eid });
     } else {
       // Which switch position is "locked" is configurable, so derive the

@@ -221,7 +221,7 @@ class MateriaBadge extends ActionMixin(LitElement) {
 
     let stateDisplay = "";
     if (showState && unavailable) {
-      stateDisplay = "Unavailable";
+      stateDisplay = t("unavailable", this.hass);
     } else if (showState && stateObj) {
       const hasTpl = this.config.state_display && (this.config.state_display.includes("{{") || this.config.state_display.includes("{%"));
       if (this._resolvedStateDisplay && hasTpl) {
@@ -238,7 +238,8 @@ class MateriaBadge extends ActionMixin(LitElement) {
           const rounded = Math.round(num * 100) / 100;
           stateDisplay = unit ? (unit === "%" ? `${rounded}%` : `${rounded} ${unit}`) : `${rounded}`;
         } else {
-          stateDisplay = raw;
+          // Words go through HA's own localization ("Locked" -> "Op slot").
+          stateDisplay = this.hass.formatEntityState?.(stateObj) ?? raw;
         }
       }
       stateDisplay = this._capitalize(stateDisplay);

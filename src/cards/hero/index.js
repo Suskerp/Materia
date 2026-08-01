@@ -1,6 +1,8 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { HeroShellMixin, heroShellStyles } from "./shell.js";
+import { OptimismBus } from "../../utils/optimism-bus.js";
+import { t } from "../../utils/i18n.js";
 import "./editor.js";
 
 /** Default "active" state per domain — the state that flips the hero to its
@@ -110,18 +112,50 @@ class MateriaHero extends HeroShellMixin(ActionMixin(LitElement)) {
     return Number.isFinite(n) ? n : null;
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    // Sibling cards (a lock below this hero) publish what they just told the
+    // entity to do — reflect it instantly instead of waiting out the ack.
+    this._busUnsub = OptimismBus.subscribe((entity) => {
+      if (entity === this.config?.entity) this.requestUpdate();
+    });
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._busUnsub?.();
+    this._busUnsub = null;
+  }
+
+  /** Localized word for a predicted (not yet reported) state. */
+  _predictedLabel(state) {
+    const key = { locking: "state_locking", unlocking: "state_unlocking" }[state];
+    if (key) return t(key, this.hass);
+    return state.charAt(0).toUpperCase() + state.slice(1);
+  }
+
   render() {
     if (!this.hass || !this.config) return html``;
     const st = this._stateObj;
     const unavailable = this._isUnavailable(st);
-    const active = !unavailable && this._isActive(st);
+    // A live prediction outranks the (stale) reported state — for the title
+    // AND the active surface, so this card and the one that fired the
+    // command move together. peek() dies as soon as reality moves.
+    const predicted = st && this.config.entity
+      ? OptimismBus.peek(this.config.entity, st.state)
+      : null;
+    const active = !unavailable && (predicted
+      ? this._isActive({ ...st, state: predicted })
+      : this._isActive(st));
 
     const name = this.config.name ?? st?.attributes?.friendly_name ?? this.config.entity;
     const icon = this.config.icon ?? st?.attributes?.icon;
 
     // Title defaults to the localized state ("Cleaning", "Charging").
-    const title = this._field("title", "_resolvedTitle")
-      ?? (st ? (this.hass.formatEntityState?.(st) ?? st.state) : "—");
+    const title = predicted
+      ? this._predictedLabel(predicted)
+      : this._field("title", "_resolvedTitle")
+        ?? (st ? (this.hass.formatEntityState?.(st) ?? st.state) : "—");
 
     // Value defaults to the entity's own numeric state; a non-numeric state
     // simply leaves the big numeral out rather than printing a word at 108px.
@@ -174,7 +208,7 @@ class MateriaHero extends HeroShellMixin(ActionMixin(LitElement)) {
               ${icon ? html`<ha-icon .icon=${icon}></ha-icon>` : nothing}
               <span>${name}</span>
             </div>
-            <div class="title">${unavailable ? "Unavailable" : title}</div>
+            <div class="title">${unavailable ? t("unavailable", this.hass) : title}</div>
             ${value != null
               ? html`<div class="figure">
                   <span class="value">${value}</span>

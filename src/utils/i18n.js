@@ -49,6 +49,15 @@ const STRINGS = {
   /* ---- materia-badge ------------------------------------------------- */
   badge_hold_hint: { en: "hold, don't tap", nl: "even vasthouden" },
 
+  /* ---- materia-vacuum-hero ------------------------------------------- */
+  vh_min_left: { en: "about {mins} min left", nl: "nog zo'n {mins} min" },
+  vh_drying: { en: "Drying the mop", nl: "De mop droogt" },
+  vh_last_cleaned: { en: "Last cleaned {rel} ago", nl: "Laatst gepoetst {rel} geleden" },
+  vh_docked: { en: "Docked", nl: "In het dokstation" },
+  unit_min: { en: "{n} min", nl: "{n} min" },
+  unit_hours: { en: "{n} h", nl: "{n} u" },
+  unit_days: { en: "{n} d", nl: "{n} d" },
+
   /* ---- materia-lock -------------------------------------------------- */
   lock_slide_to_unlock: { en: "Slide to unlock", nl: "Schuif om te openen" },
   lock_slide_to_lock: { en: "Slide to lock", nl: "Schuif om op slot te doen" },
