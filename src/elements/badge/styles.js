@@ -198,6 +198,63 @@ export const styles = [
       bottom: 20px;
     }
 
+    /* ---- action layout: the button badge (design 19 / 20a) ------------
+       Actions are pills, badges are squircles — same 100px floor, but the
+       action reads horizontally: icon | name + sub | value. The value is
+       the live consequence (a ticking countdown, "Open"), so it fades with
+       the open state exactly like the navigate badge's payload. */
+    .badge.action {
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 14px;
+      min-width: 132px;
+      max-width: none;
+      padding: 0 26px 0 22px;
+      border-radius: 50px;
+    }
+
+    .badge.action.open {
+      max-width: none;
+    }
+
+    /* 20a: the asymmetric shape-morph corners M3 uses on active tiles.
+       leaf rises to the right, leaf-flip mirrors it — a facing pair. */
+    .badge.action.leaf {
+      border-radius: 50px 18px 50px 18px;
+    }
+
+    .badge.action.leaf-flip {
+      border-radius: 18px 50px 18px 50px;
+    }
+
+    .badge.action .icon-cell ha-icon {
+      --mdc-icon-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+
+    .badge.action .name {
+      font-size: 16px;
+    }
+
+    .badge.action .text {
+      line-height: 1.2;
+    }
+
+    /* Rising fill while a timer runs — the badge IS the countdown. The 1s
+       linear transition matches the tick, so the climb reads continuous. */
+    .run-fill {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: currentColor;
+      opacity: 0.12;
+      pointer-events: none;
+      transition: height 1s linear;
+    }
+
     /* ---- tile layout: the badge grown into a section card ------------- */
     .badge.tile {
       width: 100%;

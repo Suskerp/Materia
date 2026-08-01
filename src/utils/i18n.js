@@ -49,6 +49,7 @@ const STRINGS = {
   /* ---- materia-badge ------------------------------------------------- */
   badge_tag_tap: { en: "tap", nl: "tik" },
   badge_tag_hold: { en: "hold", nl: "houd vast" },
+  badge_hold_hint: { en: "hold, don't tap", nl: "even vasthouden" },
 
   /* ---- materia-lock -------------------------------------------------- */
   lock_slide_to_unlock: { en: "Slide to unlock", nl: "Schuif om te openen" },

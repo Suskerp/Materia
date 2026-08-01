@@ -75,7 +75,7 @@ class MateriaBadge extends ActionMixin(LitElement) {
    *  active (and shown), tick once a second; remaining time is derived from
    *  the timer's own finishes_at, so every device shows the same number. */
   _syncTimerTick() {
-    const active = this.config.show_state
+    const active = (this.config.show_state || this.config.layout === "action")
       && this.config.entity?.startsWith("timer.")
       && this.hass.states[this.config.entity]?.state === "active";
     if (active && !this._timerTick) {
@@ -92,6 +92,18 @@ class MateriaBadge extends ActionMixin(LitElement) {
     if (Number.isNaN(ends)) return null;
     const s = Math.max(0, Math.ceil((ends - Date.now()) / 1000));
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  }
+
+  /** 0..1 elapsed fraction of a running timer — drives the action layout's
+   *  rising progress fill ("the pill becomes the countdown"). */
+  _timerProgress(stateObj) {
+    const ends = Date.parse(stateObj?.attributes?.finishes_at);
+    const dur = String(stateObj?.attributes?.duration || "")
+      .split(":")
+      .reduce((acc, p) => acc * 60 + Number(p), 0);
+    if (Number.isNaN(ends) || !dur) return null;
+    const remaining = Math.max(0, (ends - Date.now()) / 1000);
+    return Math.min(1, Math.max(0, 1 - remaining / dur));
   }
 
   _isActive(stateObj) {
@@ -260,13 +272,23 @@ class MateriaBadge extends ActionMixin(LitElement) {
       : this.config.secondary;
 
     const tile = this.config.layout === "tile";
+    const action = this.config.layout === "action";
+    const shape = action ? this.config.shape || "pill" : "";
     const hasStages = Array.isArray(this.config.stages) && this.config.stages.length > 0;
     const icon = html`<ha-icon .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon} style="color: ${textColor};"></ha-icon>`;
     const name = this._isTemplate(this.config.name) ? this._resolvedName : this.config.name;
     // The sub line: configured secondary wins; a quiet badge falls back to
     // its state word ("Off", "Locked") — when open, the value says it bigger.
-    const sub = secondary || (!open && showState ? stateDisplay : "");
-    const rootClass = `badge ${tile ? "tile" : ""} ${activeClass} ${open ? "open" : ""} ${alarm ? "alarm" : ""} ${hasStages ? "has-stages" : ""} ${unavailable ? "unavailable" : ""}`;
+    // A hold-only badge that was tapped flashes the hint here instead.
+    const sub = this._holdHint
+      ? t("badge_hold_hint", this.hass)
+      : secondary || (!open && showState ? stateDisplay : "");
+    // Rising fill while a timer runs — the action badge IS the countdown.
+    const timerProgress =
+      action && entity?.startsWith("timer.") && stateObj?.state === "active"
+        ? this._timerProgress(stateObj)
+        : null;
+    const rootClass = `badge ${tile ? "tile" : ""} ${action ? `action ${shape}` : ""} ${activeClass} ${open ? "open" : ""} ${alarm ? "alarm" : ""} ${hasStages ? "has-stages" : ""} ${unavailable ? "unavailable" : ""}`;
 
     return html`
       <div
@@ -300,6 +322,18 @@ class MateriaBadge extends ActionMixin(LitElement) {
               </div>
               ${this._renderStages()}
             `
+          : action
+          ? html`
+              ${timerProgress != null
+                ? html`<div class="run-fill" style="height: ${Math.round(timerProgress * 100)}%;"></div>`
+                : ""}
+              <div class="icon-cell">${icon}</div>
+              <div class="text">
+                <div class="name">${name}</div>
+                ${sub ? html`<div class="sub">${sub}</div>` : ""}
+              </div>
+              ${showState ? html`<span class="value">${stateDisplay}</span>` : ""}
+            `
           : html`
               <div class="row-top">
                 <div class="icon-cell">${icon}</div>
@@ -320,6 +354,20 @@ class MateriaBadge extends ActionMixin(LitElement) {
     // The click the browser delivers after a hold released is the SAME
     // gesture, not a tap.
     if (this._consumeHold()) return;
+    // Hold-only control: a stray tap must not fire anything, but silence
+    // reads as broken — flash the sub line with "hold, don't tap" instead.
+    const tapA = this.config.tap_action;
+    const holdA = this.config.hold_action;
+    if ((!tapA?.action || tapA.action === "none") && holdA?.action && holdA.action !== "none") {
+      this._holdHint = true;
+      this.requestUpdate();
+      clearTimeout(this._hintTimer);
+      this._hintTimer = setTimeout(() => {
+        this._holdHint = false;
+        this.requestUpdate();
+      }, 1400);
+      return;
+    }
     if (this.config.double_tap_action?.action && this.config.double_tap_action.action !== "none") {
       if (this._dblClickTimer) return;
       this._dblClickTimer = setTimeout(() => {
@@ -342,6 +390,8 @@ class MateriaBadge extends ActionMixin(LitElement) {
     super.disconnectedCallback();
     clearTimeout(this._dblClickTimer);
     this._dblClickTimer = null;
+    clearTimeout(this._hintTimer);
+    this._holdHint = false;
     clearInterval(this._timerTick);
     this._timerTick = null;
   }

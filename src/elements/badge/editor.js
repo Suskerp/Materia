@@ -20,7 +20,13 @@ const VARIANT_OPTIONS = [
 
 class MateriaBadgeEditor extends SmartEditorBase {
   _formData() {
-    return { show_state: false, variant: "secondary", layout: "badge", ...this._config };
+    return {
+      show_state: false,
+      variant: "secondary",
+      layout: "badge",
+      ...(this._config?.layout === "action" ? { shape: "pill" } : {}),
+      ...this._config,
+    };
   }
 
   _sectionsSignature() {
@@ -46,12 +52,24 @@ class MateriaBadgeEditor extends SmartEditorBase {
           },
           {
             name: "layout",
-            helper: "Badge is the small header pill; tile is the same badge grown into a section card.",
+            helper: "Badge is the navigate squircle; action is the button badge (does something); tile is the badge grown into a section card.",
             selector: { select: { mode: "dropdown", options: [
-              { value: "badge", label: "Badge — header row" },
+              { value: "badge", label: "Badge — navigate squircle" },
+              { value: "action", label: "Action — button badge" },
               { value: "tile", label: "Tile — section card" },
             ] } },
           },
+          ...(this._config?.layout === "action"
+            ? [{
+                name: "shape",
+                helper: "Pill is the stock action shape; the asymmetric corners are M3's shape-morph corners — use the mirrored one to make a facing pair.",
+                selector: { select: { mode: "dropdown", options: [
+                  { value: "pill", label: "Pill" },
+                  { value: "leaf", label: "Asymmetric corners" },
+                  { value: "leaf-flip", label: "Asymmetric corners — mirrored" },
+                ] } },
+              }]
+            : []),
           { name: "variant", selector: { select: { mode: "dropdown", options: VARIANT_OPTIONS } } },
           {
             name: "tag",
