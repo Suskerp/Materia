@@ -61,9 +61,11 @@ export const styles = [
       user-select: none;
       transition:
         max-width var(--md-sys-motion-expressive-default-spatial),
-        border-radius var(--md-sys-motion-expressive-fast-spatial),
+        border-radius var(--md-sys-motion-expressive-slow-spatial),
         background-color var(--md-sys-motion-default-effects),
         color var(--md-sys-motion-default-effects);
+      /* The slow expressive spring makes the corner morph a MIGRATION —
+         the radii travel, overshoot, and settle back, rather than swap. */
     }
 
     .badge.open {
@@ -151,52 +153,6 @@ export const styles = [
     @keyframes hold-fill {
       from { width: 0; }
       to { width: 100%; }
-    }
-
-    /* Gesture tag — a quiet eyebrow in the bottom-right corner, clear of the
-       value (top-right) and the name/sub column (bottom-left). */
-    .tag {
-      position: absolute;
-      right: 14px;
-      bottom: 10px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      opacity: 0.62;
-      pointer-events: none;
-    }
-
-    /* Stage track — one equal bar per stage, lit while its condition holds. */
-    .stages {
-      position: absolute;
-      left: 16px;
-      right: 16px;
-      bottom: 7px;
-      display: flex;
-      gap: 3px;
-      height: 4px;
-    }
-
-    .stage {
-      flex: 1;
-      border-radius: 4px;
-      background: currentColor;
-      opacity: 0.22;
-      transition: opacity var(--md-sys-motion-default-effects);
-    }
-
-    .stage.lit {
-      opacity: 0.6;
-    }
-
-    /* Lift the text and the tag off the track when one is shown. */
-    .badge.has-stages {
-      padding-bottom: 17px;
-    }
-
-    .badge.has-stages .tag {
-      bottom: 17px;
     }
 
     /* ---- action layout: the button badge (design 20a) -----------------

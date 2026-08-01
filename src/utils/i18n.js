@@ -47,8 +47,6 @@ const STRINGS = {
   state_jammed: { en: "Jammed", nl: "Vastgelopen" },
 
   /* ---- materia-badge ------------------------------------------------- */
-  badge_tag_tap: { en: "tap", nl: "tik" },
-  badge_tag_hold: { en: "hold", nl: "houd vast" },
   badge_hold_hint: { en: "hold, don't tap", nl: "even vasthouden" },
 
   /* ---- materia-lock -------------------------------------------------- */

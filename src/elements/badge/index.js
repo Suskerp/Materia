@@ -28,7 +28,6 @@ class MateriaBadge extends ActionMixin(LitElement) {
     _resolvedColorOn: { state: true },
     _resolvedIcon: { state: true },
     _resolvedName: { state: true },
-    _resolvedTag: { state: true },
     _resolvedSecondary: { state: true },
   };
 
@@ -66,7 +65,6 @@ class MateriaBadge extends ActionMixin(LitElement) {
     this._resolveField("color_on", "_resolvedColorOn");
     this._resolveField("icon", "_resolvedIcon");
     this._resolveField("name", "_resolvedName");
-    this._resolveField("tag", "_resolvedTag");
     this._resolveField("secondary", "_resolvedSecondary");
     this._syncTimerTick();
   }
@@ -134,39 +132,6 @@ class MateriaBadge extends ActionMixin(LitElement) {
     return hold && hold !== "none" ? VERB_ACTIONS.has(hold) : false;
   }
 
-  /** A stage bar is lit while its entity matches. `state` may be a string or
-   *  a list; omitted, the entity domain's default active state applies — the
-   *  same rule the badge itself uses. */
-  _stageActive(stage) {
-    const stateObj = stage?.entity ? this.hass.states[stage.entity] : undefined;
-    if (!stateObj) return false;
-    if (stage.state != null) {
-      if (Array.isArray(stage.state)) return stage.state.map(String).includes(stateObj.state);
-      return stateObj.state === String(stage.state);
-    }
-    const def = DOMAIN_ACTIVE_STATE[stateObj.entity_id.split(".")[0]] || "on";
-    return Array.isArray(def) ? def.includes(stateObj.state) : stateObj.state === def;
-  }
-
-  _renderStages() {
-    const stages = this.config.stages;
-    if (!Array.isArray(stages) || !stages.length) return "";
-    return html`
-      <div class="stages">
-        ${stages.map((s) => html`<div class="stage ${this._stageActive(s) ? "lit" : ""}"></div>`)}
-      </div>
-    `;
-  }
-
-  /** Auto gesture tag: the hold is the deliberate act, so when one is
-   *  configured it is the gesture worth advertising; otherwise the tap. */
-  _autoTag() {
-    const has = (a) => a?.action && a.action !== "none";
-    if (has(this.config.hold_action)) return t("badge_tag_hold", this.hass);
-    if (has(this.config.tap_action)) return t("badge_tag_tap", this.hass);
-    return "";
-  }
-
   _getBatteryColors(stateObj) {
     const pct = parseFloat(stateObj?.state);
     if (Number.isNaN(pct)) {
@@ -193,7 +158,6 @@ class MateriaBadge extends ActionMixin(LitElement) {
     if (this._isTemplate(c.state_display) && this._resolvedStateDisplay === undefined) return false;
     if (this._isTemplate(c.icon) && this._resolvedIcon === undefined) return false;
     if (this._isTemplate(c.name) && this._resolvedName === undefined) return false;
-    if (this._isTemplate(c.tag) && this._resolvedTag === undefined) return false;
     if (this._isTemplate(c.secondary) && this._resolvedSecondary === undefined) return false;
     return true;
   }
@@ -280,23 +244,11 @@ class MateriaBadge extends ActionMixin(LitElement) {
       stateDisplay = this._capitalize(stateDisplay);
     }
 
-    // Gesture tag (top-right eyebrow). Absent = none; the word "auto" derives
-    // it from the configured actions; anything else (templates included) is
-    // shown as written.
-    let tag = "";
-    if (this.config.tag) {
-      tag = this._isTemplate(this.config.tag)
-        ? this._resolvedTag || ""
-        : this.config.tag === "auto"
-          ? this._autoTag()
-          : this.config.tag;
-    }
     const secondary = this._isTemplate(this.config.secondary)
       ? this._resolvedSecondary || ""
       : this.config.secondary;
 
     const shape = action ? (this.config.shape === "leaf-flip" ? "leaf-flip" : "leaf") : "";
-    const hasStages = Array.isArray(this.config.stages) && this.config.stages.length > 0;
     const icon = html`<ha-icon .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon} style="color: ${textColor};"></ha-icon>`;
     const name = this._isTemplate(this.config.name) ? this._resolvedName : this.config.name;
     // The sub line: configured secondary wins; a quiet badge falls back to
@@ -310,7 +262,7 @@ class MateriaBadge extends ActionMixin(LitElement) {
       action && entity?.startsWith("timer.") && stateObj?.state === "active"
         ? this._timerProgress(stateObj)
         : null;
-    const rootClass = `badge ${action ? `action ${shape}` : ""} ${activeClass} ${this._firedFlash ? "fired" : ""} ${open ? "open" : ""} ${alarm ? "alarm" : ""} ${hasStages ? "has-stages" : ""} ${unavailable ? "unavailable" : ""}`;
+    const rootClass = `badge ${action ? `action ${shape}` : ""} ${activeClass} ${this._firedFlash ? "fired" : ""} ${open ? "open" : ""} ${alarm ? "alarm" : ""} ${unavailable ? "unavailable" : ""}`;
 
     return html`
       <div
@@ -354,8 +306,6 @@ class MateriaBadge extends ActionMixin(LitElement) {
                 <div class="name">${name}</div>
                 ${sub ? html`<div class="sub">${sub}</div>` : ""}
               </div>
-              ${tag ? html`<div class="tag">${tag}</div>` : ""}
-              ${this._renderStages()}
             `}
       </div>
     `;

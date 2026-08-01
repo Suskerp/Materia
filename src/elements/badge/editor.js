@@ -72,13 +72,6 @@ class MateriaBadgeEditor extends SmartEditorBase {
             : []),
           { name: "variant", selector: { select: { mode: "dropdown", options: VARIANT_OPTIONS } } },
           {
-            name: "tag",
-            label: "Gesture tag",
-            template: true,
-            helper: 'Leave empty for none. The word "auto" shows the configured gesture — hold when one is set, tap otherwise.',
-            selector: { text: {} },
-          },
-          {
             name: "secondary",
             label: "Secondary line",
             template: true,
@@ -102,19 +95,6 @@ class MateriaBadgeEditor extends SmartEditorBase {
     }
 
     sections.push(
-      {
-        title: "Stages",
-        icon: "mdi:chart-timeline",
-        expanded: false,
-        fields: [
-          {
-            name: "stages",
-            label: "Stage track",
-            helper: "List of { entity, state? } — one bar along the bottom per stage, lit while the entity matches. state may be a single value or a list; omitted, the domain's active state applies (a timer lights while running).",
-            selector: { object: {} },
-          },
-        ],
-      },
       {
         title: "Appearance",
         icon: "mdi:palette-outline",
