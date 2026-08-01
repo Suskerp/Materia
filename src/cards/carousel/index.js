@@ -248,10 +248,13 @@ class MateriaCarousel extends DisabledMixin(ActionMixin(LitElement)) {
   render() {
     if (!this.hass || !this.config) return html``;
     const selected = this._selected;
+    // Selected tiles wear the SELECTION tint, not the device pair — a picked
+    // room is a choice, not a device doing something. (M3: secondary
+    // container marks selected containers.)
     const bg = (this._isTemplate(this.config.color) ? this._resolvedColor : this.config.color)
-      || "var(--md-sys-cust-color-device, var(--md-sys-color-secondary-container))";
+      || "var(--md-sys-color-secondary-container)";
     const fg = (this._isTemplate(this.config.color_on) ? this._resolvedColorOn : this.config.color_on)
-      || "var(--md-sys-cust-color-on-device, var(--md-sys-color-on-secondary-container))";
+      || "var(--md-sys-color-on-secondary-container)";
 
     return html`
       <ha-card style="--mcar-bg:${bg};--mcar-fg:${fg};">
