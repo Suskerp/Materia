@@ -56,9 +56,6 @@ class MateriaBadge extends ActionMixin(LitElement) {
       variant: "secondary",
       ...config,
     };
-    // The tile layout must fill its section cell, where the header badge is a
-    // fixed-size inline block — the host itself has to change display mode.
-    this.toggleAttribute("tile", this.config.layout === "tile");
   }
 
   updated(changedProps) {
@@ -126,12 +123,11 @@ class MateriaBadge extends ActionMixin(LitElement) {
   }
 
   /** The silhouette follows the job, not a config choice: a badge whose
-   *  primary gesture CHANGES something renders as the action pill (where the
-   *  asymmetric shapes live); one that navigates stays the squircle. The tap
+   *  primary gesture CHANGES something renders as the action shape (the
+   *  asymmetric corners); one that navigates stays the squircle. The tap
    *  decides; a hold-only badge (tap: none) is judged by its hold. An
    *  implicit default tap doesn't count — only what was configured. */
   get _isActionRole() {
-    if (this.config.layout === "tile") return false;
     const tap = this.config.tap_action?.action;
     if (tap && tap !== "none") return VERB_ACTIONS.has(tap);
     const hold = this.config.hold_action?.action;
@@ -211,7 +207,6 @@ class MateriaBadge extends ActionMixin(LitElement) {
     const active = !unavailable && this._isActive(stateObj);
     const variant = this.config.variant || "secondary";
     const showState = this.config.show_state;
-    const tile = this.config.layout === "tile";
     const action = this._isActionRole;
 
     // Template colors: use ONLY the resolved value — an empty result means
@@ -237,12 +232,10 @@ class MateriaBadge extends ActionMixin(LitElement) {
         open = bg !== "var(--ha-card-background)";
       } else if (alwaysColoredVariants.includes(variant) || (active && entity)) {
         // The design's grammar: news wears the CONTAINER tone; only an alarm
-        // is filled. Header badges (navigate + action) soften their variant
-        // to its container pair so an open badge sits in the page instead of
-        // on it. The tile is the statement piece — it keeps the configured
-        // tier as written, like the hero cards do.
+        // is filled. A badge softens its variant to the container pair so an
+        // open badge sits in the page instead of on it.
         const isError = variant === "error" || variant === "error-state";
-        const key = tile || isError
+        const key = isError
           ? variant
           : variant.endsWith("-container")
             ? variant
@@ -317,7 +310,7 @@ class MateriaBadge extends ActionMixin(LitElement) {
       action && entity?.startsWith("timer.") && stateObj?.state === "active"
         ? this._timerProgress(stateObj)
         : null;
-    const rootClass = `badge ${tile ? "tile" : ""} ${action ? `action ${shape}` : ""} ${activeClass} ${open ? "open" : ""} ${alarm ? "alarm" : ""} ${hasStages ? "has-stages" : ""} ${unavailable ? "unavailable" : ""}`;
+    const rootClass = `badge ${action ? `action ${shape}` : ""} ${activeClass} ${this._firedFlash ? "fired" : ""} ${open ? "open" : ""} ${alarm ? "alarm" : ""} ${hasStages ? "has-stages" : ""} ${unavailable ? "unavailable" : ""}`;
 
     return html`
       <div
@@ -338,20 +331,7 @@ class MateriaBadge extends ActionMixin(LitElement) {
         ${this._haArming
           ? html`<div class="hold-fill" style="animation-duration: ${HOLD_MS}ms;"></div>`
           : ""}
-        ${tile
-          ? html`
-              <div class="tile-top">
-                <div class="icon-cell">${icon}</div>
-                ${tag ? html`<div class="tag">${tag}</div>` : ""}
-              </div>
-              <div class="tile-text">
-                <div class="name">${name}</div>
-                ${secondary ? html`<div class="secondary">${secondary}</div>` : ""}
-                ${showState && stateDisplay ? html`<div class="state">${stateDisplay}</div>` : ""}
-              </div>
-              ${this._renderStages()}
-            `
-          : action
+        ${action
           ? html`
               ${timerProgress != null
                 ? html`<div class="run-fill" style="height: ${Math.round(timerProgress * 100)}%;"></div>`
@@ -361,7 +341,9 @@ class MateriaBadge extends ActionMixin(LitElement) {
                 <div class="name">${name}</div>
                 ${sub ? html`<div class="sub">${sub}</div>` : ""}
               </div>
-              ${showState ? html`<span class="value">${stateDisplay}</span>` : ""}
+              ${showState
+                ? html`<div class="value-wrap"><span class="value">${stateDisplay}</span></div>`
+                : ""}
             `
           : html`
               <div class="row-top">
@@ -421,35 +403,40 @@ class MateriaBadge extends ActionMixin(LitElement) {
     this._dblClickTimer = null;
     clearTimeout(this._hintTimer);
     this._holdHint = false;
+    clearTimeout(this._firedTimer);
+    this._firedFlash = false;
     clearInterval(this._timerTick);
     this._timerTick = null;
   }
 
-  getGridOptions() {
-    if (this.config?.layout === "tile") {
-      return { columns: 6, rows: "auto", min_columns: 3 };
-    }
-    return {};
+  getCardSize() {
+    return 2;
   }
 
-  getCardSize() {
-    return this.config?.layout === "tile" ? 4 : 2;
+  /** Fired receipt: entity-less verbs (a scene) have no active state to
+   *  morph on, so the act of firing flashes the mirrored corners itself. */
+  _flashFired() {
+    this._firedFlash = true;
+    this.requestUpdate();
+    clearTimeout(this._firedTimer);
+    this._firedTimer = setTimeout(() => {
+      this._firedFlash = false;
+      this.requestUpdate();
+    }, 1600);
+  }
+
+  _handleAction(actionConfig) {
+    if (this._isActionRole && actionConfig?.action && VERB_ACTIONS.has(actionConfig.action)) {
+      this._flashFired();
+    }
+    super._handleAction(actionConfig);
   }
 }
 
 customElements.define("materia-badge", MateriaBadge);
 
-// The card registry covers the section picker (tile layout); the BADGE
-// picker reads its own registry — without this entry the badge dialog
-// only offers Entity/Shortcut and other communities' badges.
-window.customCards = window.customCards || [];
-window.customCards.push({
-  type: "materia-badge",
-  name: "Materia Badge",
-  description: "Value-typed header badge — navigate squircle, action corners, or a section tile.",
-  preview: true,
-});
-
+// Badge-picker registry ONLY — a materia-badge is a header thing; keeping it
+// out of window.customCards keeps the section card picker honest.
 window.customBadges = window.customBadges || [];
 window.customBadges.push({
   type: "materia-badge",

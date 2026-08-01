@@ -37,13 +37,6 @@ export const styles = [
       display: inline-block;
     }
 
-    /* The tile layout is a section card, not a header pill — it must take
-       the cell the section grid gives it. */
-    :host([tile]) {
-      display: block;
-      width: 100%;
-    }
-
     .badge {
       box-sizing: border-box;
       position: relative;
@@ -229,8 +222,11 @@ export const styles = [
     }
 
     /* Going active mirrors the asymmetry — the corner morph IS the state
-       change, riding the same expressive spring as the rest of the shape. */
-    .badge.action.active {
+       change, riding the same expressive spring as the rest of the shape.
+       .fired is the same morph as a receipt: entity-less verbs (scenes)
+       have no lasting state, so firing flashes the flip for a moment. */
+    .badge.action.active,
+    .badge.action.fired {
       border-radius: 16px 42px 16px 42px;
     }
 
@@ -238,8 +234,26 @@ export const styles = [
       border-radius: 16px 42px 16px 42px;
     }
 
-    .badge.action.leaf-flip.active {
+    .badge.action.leaf-flip.active,
+    .badge.action.leaf-flip.fired {
       border-radius: 42px 16px 42px 16px;
+    }
+
+    /* The value's column animates 0fr -> 1fr, so the badge visibly GROWS to
+       admit the state info — real animated width, whatever the text length. */
+    .badge.action .value-wrap {
+      display: grid;
+      grid-template-columns: 0fr;
+      transition: grid-template-columns var(--md-sys-motion-expressive-default-spatial);
+    }
+
+    .badge.action.open .value-wrap {
+      grid-template-columns: 1fr;
+    }
+
+    .badge.action .value-wrap .value {
+      overflow: hidden;
+      min-width: 0;
     }
 
     .badge.action .icon-cell ha-icon {
@@ -263,72 +277,6 @@ export const styles = [
       opacity: 0.12;
       pointer-events: none;
       transition: height 1s linear;
-    }
-
-    /* ---- tile layout: the badge grown into a section card ------------- */
-    .badge.tile {
-      width: 100%;
-      height: auto;
-      min-width: 0;
-      max-width: none;
-      aspect-ratio: 1;
-      border-radius: 34px;
-      padding: 20px;
-    }
-
-    .tile-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-    }
-
-    .badge.tile .icon-cell ha-icon {
-      --mdc-icon-size: 34px;
-      width: 34px;
-      height: 34px;
-    }
-
-    .badge.tile .tag {
-      position: static;
-      font-size: 12px;
-    }
-
-    .tile-text {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .badge.tile .name {
-      margin: 0;
-      padding: 0;
-      font-size: 32px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      line-height: 1.05;
-      white-space: normal;
-    }
-
-    .secondary {
-      font-size: 14px;
-      line-height: 1.35;
-      opacity: 0.72;
-      text-wrap: pretty;
-    }
-
-    .badge.tile .state {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 600;
-      opacity: 0.85;
-    }
-
-    .badge.tile .stages {
-      position: static;
-      flex: none;
-      gap: 4px;
-      height: 8px;
-      margin-top: 12px;
     }
 
     .badge.inactive {

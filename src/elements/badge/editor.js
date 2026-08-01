@@ -23,7 +23,6 @@ class MateriaBadgeEditor extends SmartEditorBase {
   /* Mirrors the card's role rule: the tap decides; a hold-only badge is
      judged by its hold. Only explicitly configured actions count. */
   get _actionRole() {
-    if (this._config?.layout === "tile") return false;
     const verbs = ["toggle", "perform-action", "call-service"];
     const tap = this._config?.tap_action?.action;
     if (tap && tap !== "none") return verbs.includes(tap);
@@ -37,12 +36,11 @@ class MateriaBadgeEditor extends SmartEditorBase {
       variant: "secondary",
       ...(this._actionRole ? { shape: "leaf" } : {}),
       ...this._config,
-      layout: this._config?.layout === "tile" ? "tile" : "auto",
     };
   }
 
   _sectionsSignature() {
-    return `${this._config?.entity ? "entity" : "none"}|${this._config?.layout || "auto"}|${this._actionRole ? "verb" : "nav"}`;
+    return `${this._config?.entity ? "entity" : "none"}|${this._actionRole ? "verb" : "nav"}`;
   }
 
   get _sections() {
@@ -61,14 +59,6 @@ class MateriaBadgeEditor extends SmartEditorBase {
             template: true,
             selector: { icon: {} },
             context: { icon_entity: "entity" },
-          },
-          {
-            name: "layout",
-            helper: "Automatic: the shape follows the job — a badge whose gesture changes something wears the asymmetric action corners; one that navigates stays the squircle. Tile is the section-card presentation.",
-            selector: { select: { mode: "dropdown", options: [
-              { value: "auto", label: "Automatic — shape follows the job" },
-              { value: "tile", label: "Tile — section card" },
-            ] } },
           },
           ...(this._actionRole
             ? [{
