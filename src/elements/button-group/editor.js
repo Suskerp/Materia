@@ -32,6 +32,11 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
         padding: 4px 4px 4px 12px;
         background: var(--secondary-background-color, rgba(0, 0, 0, 0.04));
       }
+      .option-header .glyph-note {
+        flex: none;
+        font-size: 11px;
+        opacity: 0.6;
+      }
       .option-header span {
         flex: 1;
         font-size: 13px;
@@ -147,10 +152,40 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
     ];
   }
 
+  /* A standard group's buttons are full materia-buttons, so the form edits
+     the button contract, not the option contract. Split buttons keep their
+     menu/`tap_action_map` keys via the spread; the header marks them. */
+  get _buttonSchema() {
+    return [
+      { name: "label", template: true, selector: { text: {} } },
+      { name: "icon", template: true, selector: { icon: {} } },
+      { name: "entity", label: "Entity (optional — drives active state)", selector: { entity: {} } },
+      {
+        name: "variant",
+        selector: { select: { mode: "dropdown", options: [
+          { value: "filled", label: "Filled" },
+          { value: "tonal", label: "Tonal" },
+        ] } },
+      },
+      { name: "wide", label: "Wide (stretch to share the row)", selector: { boolean: {} } },
+      { name: "tap_action", label: "Action", selector: { ui_action: { default_action: "call-service" } } },
+    ];
+  }
+
+  /** Which list this group actually reads: standard renders `buttons`,
+   *  connected renders `options`. Editing the other one edits dead config. */
+  get _listKey() {
+    return this._config?.group === "standard" ? "buttons" : "options";
+  }
+
   _renderExtra() {
+    const key = this._listKey;
+    const standard = key === "buttons";
+    const items = this._config[key] || [];
+    const schema = standard ? this._buttonSchema : this._optionSchema;
     return html`
       <div class="options-header">
-        <span>Options</span>
+        <span>${standard ? "Buttons" : "Options"}</span>
         <ha-icon-button @click=${this._addOption}>
           <ha-icon icon="mdi:plus"></ha-icon>
         </ha-icon-button>
@@ -158,12 +193,18 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
 
       ${sortableList(
         (from, to) => this._moveOption(from, to),
-        (this._config.options || []).map(
+        items.map(
           (opt, i) => html`
             <div class="option-card">
               <div class="option-header">
                 <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
-                <span>${opt.label || opt.value || `Option ${i + 1}`}</span>
+                <span>${opt.label || opt.value || `${standard ? "Button" : "Option"} ${i + 1}`}</span>
+                ${opt.type === "split" || opt.options
+                  ? html`<span class="glyph-note">split · menu in YAML</span>`
+                  : ""}
+                ${opt.tap_action_map
+                  ? html`<span class="glyph-note">state-mapped action (YAML)</span>`
+                  : ""}
                 <ha-icon-button @click=${() => this._toggleExpand(i)}>
                   <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
                 </ha-icon-button>
@@ -177,7 +218,7 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
                       <ha-form
                         .hass=${this.hass}
                         .data=${opt}
-                        .schema=${this._optionSchema}
+                        .schema=${schema}
                         .computeLabel=${computeLabel}
                         @value-changed=${(e) => this._updateOptionForm(i, e.detail.value)}
                       ></ha-form>
@@ -192,30 +233,38 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
   }
 
   _addOption() {
-    const options = [...(this._config.options || []), { label: "", value: "", icon: "" }];
-    this._expanded = options.length - 1;
-    this._commit({ ...this._config, options });
+    const key = this._listKey;
+    const items = [
+      ...(this._config[key] || []),
+      key === "buttons" ? { icon: "", variant: "tonal" } : { label: "", value: "", icon: "" },
+    ];
+    this._expanded = items.length - 1;
+    this._commit({ ...this._config, [key]: items });
   }
 
   _removeOption(index) {
-    const options = [...(this._config.options || [])];
-    options.splice(index, 1);
+    const key = this._listKey;
+    const items = [...(this._config[key] || [])];
+    items.splice(index, 1);
     if (this._expanded === index) this._expanded = null;
-    this._commit({ ...this._config, options });
+    this._commit({ ...this._config, [key]: items });
   }
 
   _moveOption(from, to) {
-    const options = [...(this._config.options || [])];
-    const [m] = options.splice(from, 1);
-    options.splice(to, 0, m);
+    const key = this._listKey;
+    const items = [...(this._config[key] || [])];
+    const [m] = items.splice(from, 1);
+    items.splice(to, 0, m);
     if (this._expanded === from) this._expanded = to;
-    this._commit({ ...this._config, options });
+    this._commit({ ...this._config, [key]: items });
   }
 
   _updateOptionForm(index, value) {
-    const options = [...(this._config.options || [])];
-    options[index] = { ...options[index], ...value };
-    this._commit({ ...this._config, options });
+    const key = this._listKey;
+    const items = [...(this._config[key] || [])];
+    // Spread preserves YAML-only keys (split menus, tap_action_map, flex…).
+    items[index] = { ...items[index], ...value };
+    this._commit({ ...this._config, [key]: items });
   }
 
   _toggleExpand(i) {
