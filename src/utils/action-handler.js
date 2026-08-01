@@ -326,6 +326,56 @@ export const ActionMixin = (superClass) =>
     disconnectedCallback() {
       super.disconnectedCallback?.();
       this._unsubscribeTemplates();
+      clearTimeout(this._haTimer);
+    }
+
+    /* ---- generic hold_action ------------------------------------------
+       Native HA cards have hold_action; Materia didn't. These three
+       handlers give it to any card that binds them on its root:
+
+         pointerdown -> _holdDown, pointermove -> _holdMove,
+         pointerup / pointercancel -> _holdUp
+
+       500ms — the platform long-press timeout, so it agrees with what
+       fingers already expect. Pointer travel over 12px hands the gesture
+       back to the dashboard as a scroll. After a hold fires, the click
+       that the browser still delivers on release must be swallowed:
+       tap handlers call _consumeHold() first. A hold is deliberate BY
+       CONSTRUCTION, which is what makes it a fit for guard duty on
+       actions a stray tap must never fire (the drag-confirm rule). */
+
+    _holdDown(ev) {
+      const a = this.config?.hold_action;
+      if (!a?.action || a.action === "none") return;
+      this._haX = ev.clientX;
+      this._haY = ev.clientY;
+      clearTimeout(this._haTimer);
+      this._haTimer = setTimeout(() => {
+        this._haFired = true;
+        this._fireHaptic("medium");
+        this._handleAction(a);
+      }, 500);
+    }
+
+    _holdMove(ev) {
+      if (!this._haTimer) return;
+      if (Math.hypot(ev.clientX - this._haX, ev.clientY - this._haY) > 12) {
+        clearTimeout(this._haTimer);
+        this._haTimer = null;
+      }
+    }
+
+    _holdUp() {
+      clearTimeout(this._haTimer);
+      this._haTimer = null;
+    }
+
+    /** True exactly once after a hold fired — the following click is the
+     *  same gesture, not a tap. */
+    _consumeHold() {
+      const fired = !!this._haFired;
+      this._haFired = false;
+      return fired;
     }
 
     /** Check if tap_action is navigate (for chevron rendering). */

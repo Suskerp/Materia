@@ -75,6 +75,11 @@ class MateriaBadgeEditor extends SmartEditorBase {
         icon: "mdi:gesture-tap",
         fields: [
           { name: "tap_action", selector: { ui_action: { default_action: "toggle" } } },
+          {
+            name: "hold_action",
+            helper: "A hold is deliberate by construction — the right slot for actions a stray tap must never fire.",
+            selector: { ui_action: { default_action: "none" } },
+          },
           { name: "double_tap_action", selector: { ui_action: { default_action: "none" } } },
         ],
       }

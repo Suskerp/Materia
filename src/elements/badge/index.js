@@ -57,6 +57,32 @@ class MateriaBadge extends ActionMixin(LitElement) {
     this._resolveField("color_on", "_resolvedColorOn");
     this._resolveField("icon", "_resolvedIcon");
     this._resolveField("name", "_resolvedName");
+    this._syncTimerTick();
+  }
+
+  /** Live countdown for timer entities. HA only pushes a state change when a
+   *  timer starts or finishes, so between those the badge would sit frozen on
+   *  "Active" — the one thing a countdown must not do. While a timer is
+   *  active (and shown), tick once a second; remaining time is derived from
+   *  the timer's own finishes_at, so every device shows the same number. */
+  _syncTimerTick() {
+    const active = this.config.show_state
+      && this.config.entity?.startsWith("timer.")
+      && this.hass.states[this.config.entity]?.state === "active";
+    if (active && !this._timerTick) {
+      this._timerTick = setInterval(() => this.requestUpdate(), 1000);
+    } else if (!active && this._timerTick) {
+      clearInterval(this._timerTick);
+      this._timerTick = null;
+    }
+  }
+
+  /** "M:SS" until a timer fires, from finishes_at. */
+  _timerRemaining(stateObj) {
+    const ends = Date.parse(stateObj.attributes?.finishes_at);
+    if (Number.isNaN(ends)) return null;
+    const s = Math.max(0, Math.ceil((ends - Date.now()) / 1000));
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   }
 
   _isActive(stateObj) {
@@ -153,6 +179,8 @@ class MateriaBadge extends ActionMixin(LitElement) {
         stateDisplay = this._resolvedStateDisplay;
       } else if (this.config.state_display && !hasTpl) {
         stateDisplay = this.config.state_display;
+      } else if (entity?.startsWith("timer.") && stateObj.state === "active" && this._timerRemaining(stateObj)) {
+        stateDisplay = this._timerRemaining(stateObj);
       } else {
         const raw = stateObj.state;
         const num = Number(raw);
@@ -173,6 +201,15 @@ class MateriaBadge extends ActionMixin(LitElement) {
         style="background-color: ${bgColor}; color: ${textColor};"
         @click=${this._handleTap}
         @dblclick=${this._handleDoubleTap}
+        @pointerdown=${this._holdDown}
+        @pointermove=${this._holdMove}
+        @pointerup=${this._holdUp}
+        @pointercancel=${this._holdUp}
+        @contextmenu=${(e) => {
+          // A touch long-press raises the context menu right through the
+          // hold — only when a hold is actually configured do we claim it.
+          if (this.config.hold_action?.action && this.config.hold_action.action !== "none") e.preventDefault();
+        }}
       >
         <div class="icon-cell">
           <ha-icon .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon} style="color: ${textColor};"></ha-icon>
@@ -184,6 +221,9 @@ class MateriaBadge extends ActionMixin(LitElement) {
   }
 
   _handleTap() {
+    // The click the browser delivers after a hold released is the SAME
+    // gesture, not a tap.
+    if (this._consumeHold()) return;
     if (this.config.double_tap_action?.action && this.config.double_tap_action.action !== "none") {
       if (this._dblClickTimer) return;
       this._dblClickTimer = setTimeout(() => {
@@ -206,6 +246,8 @@ class MateriaBadge extends ActionMixin(LitElement) {
     super.disconnectedCallback();
     clearTimeout(this._dblClickTimer);
     this._dblClickTimer = null;
+    clearInterval(this._timerTick);
+    this._timerTick = null;
   }
 
   getCardSize() {
