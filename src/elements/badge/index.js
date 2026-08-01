@@ -182,11 +182,11 @@ class MateriaBadge extends ActionMixin(LitElement) {
     const alwaysColoredVariants = ["primary", "tertiary", "error", "primary-container", "secondary-container", "error-container", "device-container"];
 
     // 18c state grammar: a badge is quiet, open (has news) or alarming.
-    // Open = the badge earned its colour: an explicit colour, an
-    // always-coloured variant, an active entity, or a battery in trouble.
-    // Open swells the tile and reveals the typed value; quiet keeps the
-    // full-size target with a muted ink. Alarm (the error family, live)
-    // goes squarer and widest — shape says danger before colour does.
+    // COLOUR and NEWS are separate: an always-coloured variant keeps its
+    // container tint around the clock, but open — the width swell and the
+    // typed value — is earned only by actual news: an active entity, a
+    // template colour that fired, or a battery in trouble. A lock that is
+    // simply "Locked" stays a floor-size chip, coloured or not.
     let open = !!bgColor;
     if (!bgColor) {
       if (variant === "battery") {
@@ -207,7 +207,7 @@ class MateriaBadge extends ActionMixin(LitElement) {
         const colors = VARIANT_COLORS[key] || VARIANT_COLORS[variant] || VARIANT_COLORS.secondary;
         bgColor = colors[0];
         textColor = textColor || colors[1];
-        open = true;
+        open = !!(active && entity);
       } else {
         bgColor = "var(--ha-card-background)";
         textColor = textColor || "var(--secondary-text-color)";
