@@ -47,6 +47,9 @@ export const styles = [
       grid-template-columns: 1fr;
       font-family: inherit;
       -webkit-tap-highlight-color: transparent;
+      /* A hold must not start a text selection on desktop. */
+      -webkit-user-select: none;
+      user-select: none;
     }
 
     .badge.no-state {
@@ -101,6 +104,28 @@ export const styles = [
       font-weight: normal;
       opacity: 0.7;
       line-height: 18px;
+    }
+
+    /* Hold progress — a fill sweeps across the badge over the arm window so
+       the gesture visibly charges. Rendered only while arming; mounting the
+       element starts the animation, unmounting resets it. Duration comes
+       inline from HOLD_MS so the sweep completes exactly when the hold
+       fires. currentColor at low alpha = the design's ink-tint fill. */
+    .hold-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0;
+      background: currentColor;
+      opacity: 0.14;
+      pointer-events: none;
+      animation: hold-fill linear forwards;
+    }
+
+    @keyframes hold-fill {
+      from { width: 0; }
+      to { width: 100%; }
     }
 
     /* Gesture tag — the top-right eyebrow. On the header pill it overlays the

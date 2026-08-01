@@ -28,6 +28,10 @@ const HAPTIC_DEDUPE_MS = 120;
  *  buzzing on every touch. */
 const STATE_CHANGING_ACTIONS = new Set(["toggle", "perform-action", "call-service"]);
 
+/** Long-press arm time. Exported so hold-progress visuals animate over the
+ *  exact same window the timer fires on — two numbers here WILL drift. */
+export const HOLD_MS = 500;
+
 export const ActionMixin = (superClass) =>
   class extends superClass {
     /**
@@ -327,6 +331,8 @@ export const ActionMixin = (superClass) =>
       super.disconnectedCallback?.();
       this._unsubscribeTemplates();
       clearTimeout(this._haTimer);
+      this._haTimer = null;
+      this._haArming = false;
     }
 
     /* ---- generic hold_action ------------------------------------------
@@ -336,13 +342,18 @@ export const ActionMixin = (superClass) =>
          pointerdown -> _holdDown, pointermove -> _holdMove,
          pointerup / pointercancel -> _holdUp
 
-       500ms — the platform long-press timeout, so it agrees with what
+       HOLD_MS — the platform long-press timeout, so it agrees with what
        fingers already expect. Pointer travel over 12px hands the gesture
        back to the dashboard as a scroll. After a hold fires, the click
        that the browser still delivers on release must be swallowed:
        tap handlers call _consumeHold() first. A hold is deliberate BY
        CONSTRUCTION, which is what makes it a fit for guard duty on
-       actions a stray tap must never fire (the drag-confirm rule). */
+       actions a stray tap must never fire (the drag-confirm rule).
+
+       While the hold arms, _haArming is true so the component can show
+       progress (the badge sweeps a fill across itself over HOLD_MS) —
+       the gesture must LOOK like it is charging, or a short hold reads
+       as an unresponsive tap. */
 
     _holdDown(ev) {
       const a = this.config?.hold_action;
@@ -350,24 +361,35 @@ export const ActionMixin = (superClass) =>
       this._haX = ev.clientX;
       this._haY = ev.clientY;
       clearTimeout(this._haTimer);
+      this._haArming = true;
+      this.requestUpdate();
       this._haTimer = setTimeout(() => {
         this._haFired = true;
+        this._haArming = false;
+        this.requestUpdate();
         this._fireHaptic("medium");
         this._handleAction(a);
-      }, 500);
+      }, HOLD_MS);
     }
 
     _holdMove(ev) {
       if (!this._haTimer) return;
       if (Math.hypot(ev.clientX - this._haX, ev.clientY - this._haY) > 12) {
-        clearTimeout(this._haTimer);
-        this._haTimer = null;
+        this._holdCancel();
       }
     }
 
     _holdUp() {
+      this._holdCancel();
+    }
+
+    _holdCancel() {
       clearTimeout(this._haTimer);
       this._haTimer = null;
+      if (this._haArming) {
+        this._haArming = false;
+        this.requestUpdate();
+      }
     }
 
     /** True exactly once after a hold fired — the following click is the

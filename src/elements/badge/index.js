@@ -1,5 +1,5 @@
 import { LitElement, html } from "lit";
-import { ActionMixin } from "../../utils/action-handler.js";
+import { ActionMixin, HOLD_MS } from "../../utils/action-handler.js";
 import { unavailableStyles } from "../../styles/card-styles.js";
 import { t } from "../../utils/i18n.js";
 import { styles, VARIANT_COLORS } from "./styles.js";
@@ -276,6 +276,9 @@ class MateriaBadge extends ActionMixin(LitElement) {
           if (this.config.hold_action?.action && this.config.hold_action.action !== "none") e.preventDefault();
         }}
       >
+        ${this._haArming
+          ? html`<div class="hold-fill" style="animation-duration: ${HOLD_MS}ms;"></div>`
+          : ""}
         ${tile
           ? html`
               <div class="tile-top">
