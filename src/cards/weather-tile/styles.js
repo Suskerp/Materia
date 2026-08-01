@@ -28,8 +28,9 @@ export const styles = [hostStyles, haCardReset, css`
        ellipse. The large radius clamps to half the shorter (height) side. */
     border-radius: 9999px;
     /* Tilt the whole pill diagonally (Pixel-widget style). --wt-tilt is set
-       per-config; scale keeps the rotated stadium inside its cell. */
-    transform: rotate(var(--wt-tilt, -26deg)) scale(0.8);
+       per-config; scale keeps the rotated stadium inside its cell — 0.86
+       instead of 0.8 so the temperature and icon get breathing room. */
+    transform: rotate(var(--wt-tilt, -26deg)) scale(0.86);
   }
 
   /* Content counter-rotates so the temperature / icon stay upright. */
