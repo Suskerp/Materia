@@ -439,10 +439,21 @@ class MateriaBadge extends ActionMixin(LitElement) {
 
 customElements.define("materia-badge", MateriaBadge);
 
+// The card registry covers the section picker (tile layout); the BADGE
+// picker reads its own registry — without this entry the badge dialog
+// only offers Entity/Shortcut and other communities' badges.
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-badge",
   name: "Materia Badge",
-  description: "Square badge for dashboard headers.",
+  description: "Value-typed header badge — navigate squircle, action corners, or a section tile.",
+  preview: true,
+});
+
+window.customBadges = window.customBadges || [];
+window.customBadges.push({
+  type: "materia-badge",
+  name: "Materia Badge",
+  description: "Value-typed header badge — navigate squircle or action corners.",
   preview: true,
 });
