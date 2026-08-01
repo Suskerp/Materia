@@ -16,6 +16,9 @@ const DOMAIN_ACTIVE_STATE = {
   timer: "active",
 };
 
+/** Actions that change the world — the ones that make a badge a VERB. */
+const VERB_ACTIONS = new Set(["toggle", "perform-action", "call-service"]);
+
 class MateriaBadge extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
@@ -44,11 +47,13 @@ class MateriaBadge extends ActionMixin(LitElement) {
   setConfig(config) {
     if (!config.icon) throw new Error("icon is required");
     if (!config.name) throw new Error("name is required");
+    // No tap_action default here: the role rule ("shape follows the job")
+    // must see only what the user actually configured. _handleTap still
+    // falls back to toggle for badges that never set one.
     this.config = {
       show_state: false,
       active_state: "on",
       variant: "secondary",
-      tap_action: { action: "toggle" },
       ...config,
     };
     // The tile layout must fill its section cell, where the header badge is a
@@ -75,7 +80,7 @@ class MateriaBadge extends ActionMixin(LitElement) {
    *  active (and shown), tick once a second; remaining time is derived from
    *  the timer's own finishes_at, so every device shows the same number. */
   _syncTimerTick() {
-    const active = (this.config.show_state || this.config.layout === "action")
+    const active = (this.config.show_state || this._isActionRole)
       && this.config.entity?.startsWith("timer.")
       && this.hass.states[this.config.entity]?.state === "active";
     if (active && !this._timerTick) {
@@ -118,6 +123,19 @@ class MateriaBadge extends ActionMixin(LitElement) {
     const defaultActive = DOMAIN_ACTIVE_STATE[domain] || "on";
     if (Array.isArray(defaultActive)) return defaultActive.includes(s);
     return s === defaultActive;
+  }
+
+  /** The silhouette follows the job, not a config choice: a badge whose
+   *  primary gesture CHANGES something renders as the action pill (where the
+   *  asymmetric shapes live); one that navigates stays the squircle. The tap
+   *  decides; a hold-only badge (tap: none) is judged by its hold. An
+   *  implicit default tap doesn't count — only what was configured. */
+  get _isActionRole() {
+    if (this.config.layout === "tile") return false;
+    const tap = this.config.tap_action?.action;
+    if (tap && tap !== "none") return VERB_ACTIONS.has(tap);
+    const hold = this.config.hold_action?.action;
+    return hold && hold !== "none" ? VERB_ACTIONS.has(hold) : false;
   }
 
   /** A stage bar is lit while its entity matches. `state` may be a string or
@@ -194,7 +212,7 @@ class MateriaBadge extends ActionMixin(LitElement) {
     const variant = this.config.variant || "secondary";
     const showState = this.config.show_state;
     const tile = this.config.layout === "tile";
-    const action = this.config.layout === "action";
+    const action = this._isActionRole;
 
     // Template colors: use ONLY the resolved value — an empty result means
     // "no override, use the variant color". Falling back to the raw template
@@ -284,7 +302,7 @@ class MateriaBadge extends ActionMixin(LitElement) {
       ? this._resolvedSecondary || ""
       : this.config.secondary;
 
-    const shape = action ? this.config.shape || "pill" : "";
+    const shape = action ? (this.config.shape === "leaf-flip" ? "leaf-flip" : "leaf") : "";
     const hasStages = Array.isArray(this.config.stages) && this.config.stages.length > 0;
     const icon = html`<ha-icon .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon} style="color: ${textColor};"></ha-icon>`;
     const name = this._isTemplate(this.config.name) ? this._resolvedName : this.config.name;

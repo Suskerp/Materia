@@ -206,11 +206,13 @@ export const styles = [
       bottom: 17px;
     }
 
-    /* ---- action layout: the button badge (design 19 / 20a) ------------
-       Actions are pills, badges are squircles — same 100px floor, but the
-       action reads horizontally: icon | name + sub | value. The value is
-       the live consequence (a ticking countdown, "Open"), so it fades with
-       the open state exactly like the navigate badge's payload. */
+    /* ---- action layout: the button badge (design 20a) -----------------
+       The silhouette is the role: navigation is a squircle, a verb wears
+       M3's asymmetric shape-morph corners — nothing else may. Reads
+       horizontally: icon | name + sub | value; the value is the live
+       consequence (a ticking countdown, "Open") and fades with the open
+       state exactly like the navigate badge's payload. leaf rises to the
+       right, leaf-flip mirrors it — a facing pair. */
     .badge.action {
       flex-direction: row;
       align-items: center;
@@ -219,17 +221,11 @@ export const styles = [
       min-width: 116px;
       max-width: none;
       padding: 0 22px 0 18px;
-      border-radius: 42px;
+      border-radius: 42px 16px 42px 16px;
     }
 
     .badge.action.open {
       max-width: none;
-    }
-
-    /* 20a: the asymmetric shape-morph corners M3 uses on active tiles.
-       leaf rises to the right, leaf-flip mirrors it — a facing pair. */
-    .badge.action.leaf {
-      border-radius: 42px 16px 42px 16px;
     }
 
     .badge.action.leaf-flip {
