@@ -228,8 +228,18 @@ export const styles = [
       max-width: none;
     }
 
+    /* Going active mirrors the asymmetry — the corner morph IS the state
+       change, riding the same expressive spring as the rest of the shape. */
+    .badge.action.active {
+      border-radius: 16px 42px 16px 42px;
+    }
+
     .badge.action.leaf-flip {
       border-radius: 16px 42px 16px 42px;
+    }
+
+    .badge.action.leaf-flip.active {
+      border-radius: 42px 16px 42px 16px;
     }
 
     .badge.action .icon-cell ha-icon {
