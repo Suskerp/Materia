@@ -98,11 +98,14 @@ export const styles = [
     }
 
     /* The typed value — "3 on", "21°", a ticking 0:14. Always in the DOM so
-       it can fade; the quiet tile is simply too narrow to show it. */
+       it can fade; the quiet tile is simply too narrow to show it.
+       The design doc's 20px/700 is Outfit, which carries bold lightly —
+       Figtree at that spec shouts, so the whole badge row runs a notch
+       softer (600 weights, smaller value) at the same hierarchy. */
     .value {
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
       white-space: nowrap;
       opacity: 0;
       transition: opacity var(--md-sys-motion-default-effects) 100ms;
@@ -119,8 +122,8 @@ export const styles = [
     }
 
     .name {
-      font-size: 15px;
-      font-weight: 700;
+      font-size: 14px;
+      font-weight: 600;
       white-space: nowrap;
     }
 
@@ -235,7 +238,7 @@ export const styles = [
     }
 
     .badge.action .name {
-      font-size: 16px;
+      font-size: 15px;
     }
 
     .badge.action .text {
@@ -292,9 +295,9 @@ export const styles = [
     .badge.tile .name {
       margin: 0;
       padding: 0;
-      font-size: 34px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
       line-height: 1.05;
       white-space: normal;
     }
