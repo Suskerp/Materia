@@ -11,7 +11,7 @@ class MateriaVacuumHeroEditor extends SmartEditorBase {
   }
 
   _sectionsSignature() {
-    return this._config?.brand || "";
+    return `${this._config?.brand || ""}|${this._config?.variant || ""}`;
   }
 
   get _sections() {
@@ -56,7 +56,12 @@ class MateriaVacuumHeroEditor extends SmartEditorBase {
           { name: "docked_label", label: 'Label at a full battery (default "Docked")', selector: { text: {} } },
           { name: "drying_label", label: 'Drying sub-line (default "Drying the mop")', selector: { text: {} } },
           { name: "alert_tints_hero", label: "An ERROR colours the whole hero (warnings never do)", selector: { boolean: {} } },
-          { name: "burst", label: "Show the decorative shape", selector: { boolean: {} } },
+          // The shell hides the burst on sidekicks unconditionally — the
+          // decoration is the hero's statement mark — so on a sidekick this
+          // toggle is a no-op and offering it just breaks trust in the form.
+          ...(this._config?.variant === "sidekick"
+            ? []
+            : [{ name: "burst", label: "Show the decorative shape", selector: { boolean: {} } }]),
         ],
       },
       {

@@ -136,7 +136,19 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
   /* ---- actions ---- */
 
   _buzz() {
-    if (this.config.buzz_action) this._handleAction(this.config.buzz_action);
+    if (!this.config.buzz_action) return;
+    this._handleAction(this.config.buzz_action);
+    // Without a buzz_entity there is no on->off transition to start the
+    // "Buzzed" linger, so tapping Buzz gave NO feedback at all — the card sat
+    // on the ringing face as if nothing happened (a momentary street-door
+    // relay often has no lasting state to expose). Optimistic confirmation,
+    // same contract as bar-select/select-hero: when the entity exists,
+    // reality drives the linger and this branch never runs.
+    if (!this.config.buzz_entity) {
+      this._buzzedUntil = Date.now() + BUZZED_LINGER_MS;
+      clearTimeout(this._lingerTimer);
+      this._lingerTimer = setTimeout(() => this.requestUpdate(), BUZZED_LINGER_MS + 50);
+    }
   }
 
   /** Slide is a TOGGLE, like materia-lock: unlocked slides back to lock.

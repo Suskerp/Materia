@@ -72,6 +72,11 @@ class MateriaSelectHeroEditor extends SmartEditorBase {
     return { variant: "hero", burst: true, alert_tints_hero: true, ...this._config };
   }
 
+  _sectionsSignature() {
+    // The burst toggle exists only on the hero tier — rebuild when it flips.
+    return this._config?.variant || "";
+  }
+
   get _sections() {
     return [
       {
@@ -95,7 +100,12 @@ class MateriaSelectHeroEditor extends SmartEditorBase {
               { value: "sidekick", label: "Sidekick — quiet peer of the bars" },
             ] } },
           },
-          { name: "burst", label: "Show the decorative shape", selector: { boolean: {} } },
+          // The shell hides the burst on sidekicks unconditionally — the
+          // decoration is the hero's statement mark — so on a sidekick this
+          // toggle is a no-op and offering it just breaks trust in the form.
+          ...(this._config?.variant === "sidekick"
+            ? []
+            : [{ name: "burst", label: "Show the decorative shape", selector: { boolean: {} } }]),
           { name: "color", label: "Block background", color: true, selector: { text: {} } },
           { name: "color_on", label: "Block text", color: true, selector: { text: {} } },
         ],

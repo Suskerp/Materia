@@ -98,13 +98,27 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
     return this.hass?.states[this.config.entity];
   }
 
-  /** Entity ids on the same DEVICE as the vacuum. */
+  /** Entity ids belonging to the same MACHINE as the vacuum.
+   *
+   *  Device scoping alone is not enough: the Qrevo Pro registers its dock as
+   *  a SECOND device with via_device unset, so everything on it — dock error,
+   *  mop drying, both water boxes, two consumables and their reset buttons —
+   *  was invisible to discovery. The frontend's slim entity registry doesn't
+   *  reliably expose config_entry_id to group by, so the dock is picked up by
+   *  the vacuum's own object-id prefix (sensor.roborock_qrevo_pro_dock_* for
+   *  vacuum.roborock_qrevo_pro), which holds across brands and both installs.
+   *  Known edge: a fleet whose ids prefix each other (a "qrevo" AND a
+   *  "qrevo_pro") would cross-match; explicit *_entity config remains the
+   *  escape hatch, as ever. */
   _siblings() {
     const reg = this.hass?.entities?.[this.config.entity];
-    const devId = reg?.device_id;
-    if (!devId) return [];
+    if (!reg) return [];
+    const devId = reg.device_id;
+    const root = this.config.entity.split(".")[1] + "_";
     return Object.values(this.hass.entities)
-      .filter((e) => e.device_id === devId && !e.disabled_by && !e.hidden_by)
+      .filter((e) =>
+        !e.disabled_by && !e.hidden_by &&
+        ((devId && e.device_id === devId) || e.entity_id.split(".")[1].startsWith(root)))
       .map((e) => e.entity_id);
   }
 
