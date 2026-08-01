@@ -1,6 +1,68 @@
+import { html, css } from "lit";
+import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
 
 class MateriaSelectHeroEditor extends SmartEditorBase {
+  static properties = {
+    _expanded: { state: true },
+  };
+
+  /* Same option-card chrome as the button-group editor — one editing idiom
+     for "a list of options" everywhere, instead of a raw YAML blob that
+     greeted users with SVG path strings. */
+  static styles = [
+    SmartEditorBase.styles,
+    css`
+      .options-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 16px;
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .option-card {
+        border: 1px solid var(--divider-color, rgba(0, 0, 0, 0.12));
+        border-radius: 12px;
+        margin-top: 8px;
+        overflow: hidden;
+      }
+      .option-header {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 4px 4px 12px;
+        background: var(--secondary-background-color, rgba(0, 0, 0, 0.04));
+      }
+      .option-header span {
+        flex: 1;
+        font-size: 13px;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .option-header .glyph-note {
+        flex: none;
+        font-size: 11px;
+        opacity: 0.6;
+      }
+      .option-body {
+        padding: 12px;
+      }
+      .drag-handle {
+        cursor: grab;
+        --mdc-icon-size: 18px;
+        opacity: 0.5;
+      }
+    `,
+  ];
+
+  setConfig(config) {
+    super.setConfig(config);
+    this._expanded ??= null;
+  }
+
   /* Mirror the card's own defaults so the form shows what it is ACTUALLY
      doing. Absent-means-true options are the dangerous ones: ha-form draws
      `undefined` as OFF, so the toggle would claim a live feature is disabled
@@ -18,12 +80,6 @@ class MateriaSelectHeroEditor extends SmartEditorBase {
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: ["select", "input_select"] } } },
           { name: "name", label: "Eyebrow above the option name", selector: { text: {} } },
-          {
-            name: "options",
-            label: "Options",
-            helper: "List of { value, label, short?, secondary?, glyph? (SVG path, 48x34 grid), icon?, tap_action? }. Empty uses the select's own options, plainly.",
-            selector: { object: {} },
-          },
         ],
       },
       {
@@ -67,6 +123,99 @@ class MateriaSelectHeroEditor extends SmartEditorBase {
         fields: [DISABLED_FIELD],
       },
     ];
+  }
+
+  /* Icons in the form, on purpose. The design's route `glyph` (an SVG path on
+     a 48x34 grid) stays a YAML-only power feature: a path string in a form
+     field is authoring, not configuring. An option that has one keeps it —
+     the form leaves unknown keys alone and the header shows a small note so
+     nobody wonders where the drawing comes from. */
+  get _optionSchema() {
+    return [
+      { name: "label", label: "Name (the big title when chosen)", selector: { text: {} } },
+      { name: "short", label: "Pill label (defaults to the name)", selector: { text: {} } },
+      { name: "value", label: "Select option value", selector: { text: {} } },
+      { name: "secondary", label: "One line of consequence", selector: { text: {} } },
+      { name: "icon", label: "Icon (shown when there is no route glyph)", selector: { icon: {} } },
+      { name: "tap_action", label: "Action (overrides selecting the option)", selector: { ui_action: {} } },
+    ];
+  }
+
+  _renderExtra() {
+    return html`
+      <div class="options-header">
+        <span>Options</span>
+        <ha-icon-button @click=${this._addOption}>
+          <ha-icon icon="mdi:plus"></ha-icon>
+        </ha-icon-button>
+      </div>
+
+      ${sortableList(
+        (from, to) => this._moveOption(from, to),
+        (this._config.options || []).map(
+          (opt, i) => html`
+            <div class="option-card">
+              <div class="option-header">
+                <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
+                <span>${opt.label || opt.value || `Option ${i + 1}`}</span>
+                ${opt.glyph ? html`<span class="glyph-note">route glyph (YAML)</span>` : ""}
+                <ha-icon-button @click=${() => this._toggleExpand(i)}>
+                  <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
+                </ha-icon-button>
+                <ha-icon-button @click=${() => this._removeOption(i)}>
+                  <ha-icon icon="mdi:delete"></ha-icon>
+                </ha-icon-button>
+              </div>
+              ${this._expanded === i
+                ? html`
+                    <div class="option-body">
+                      <ha-form
+                        .hass=${this.hass}
+                        .data=${opt}
+                        .schema=${this._optionSchema}
+                        .computeLabel=${computeLabel}
+                        @value-changed=${(e) => this._updateOptionForm(i, e.detail.value)}
+                      ></ha-form>
+                    </div>
+                  `
+                : ""}
+            </div>
+          `
+        )
+      )}
+    `;
+  }
+
+  _toggleExpand(index) {
+    this._expanded = this._expanded === index ? null : index;
+  }
+
+  _addOption() {
+    const options = [...(this._config.options || []), { label: "", value: "" }];
+    this._expanded = options.length - 1;
+    this._commit({ ...this._config, options });
+  }
+
+  _removeOption(index) {
+    const options = [...(this._config.options || [])];
+    options.splice(index, 1);
+    if (this._expanded === index) this._expanded = null;
+    this._commit({ ...this._config, options });
+  }
+
+  _moveOption(from, to) {
+    const options = [...(this._config.options || [])];
+    const [m] = options.splice(from, 1);
+    options.splice(to, 0, m);
+    if (this._expanded === from) this._expanded = to;
+    this._commit({ ...this._config, options });
+  }
+
+  _updateOptionForm(index, value) {
+    const options = [...(this._config.options || [])];
+    // Spread over the existing option so YAML-only keys (glyph) survive edits.
+    options[index] = { ...options[index], ...value };
+    this._commit({ ...this._config, options });
   }
 }
 
