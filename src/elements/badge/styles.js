@@ -54,7 +54,10 @@ export const styles = [
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      font-family: inherit;
+      /* Declared HERE, not inherited: the badge lives in HA's header (not
+         inside a Materia card), where outer rules can override :host — the
+         one place the library's voice could silently fall back to Roboto. */
+      font-family: "Figtree", var(--ha-font-family, "Roboto"), sans-serif;
       -webkit-tap-highlight-color: transparent;
       /* A hold must not start a text selection on desktop. */
       -webkit-user-select: none;
@@ -99,13 +102,11 @@ export const styles = [
 
     /* The typed value — "3 on", "21°", a ticking 0:14. Always in the DOM so
        it can fade; the quiet tile is simply too narrow to show it.
-       The design doc's 20px/700 is Outfit, which carries bold lightly —
-       Figtree at that spec shouts, so the whole badge row runs a notch
-       softer (600 weights, smaller value) at the same hierarchy. */
+       Type metrics come from the LIBRARY's row scale (rowCardStyles), not
+       the design doc — one voice across the whole dashboard. */
     .value {
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 600;
-      letter-spacing: -0.01em;
       white-space: nowrap;
       opacity: 0;
       transition: opacity var(--md-sys-motion-default-effects) 100ms;
@@ -115,21 +116,24 @@ export const styles = [
       opacity: 1;
     }
 
+    /* Same metrics as rowCardStyles' name/subtitle — the badge row must
+       read in the exact voice of the rows below it. */
     .text {
       display: flex;
       flex-direction: column;
-      line-height: 1.15;
+      line-height: 18px;
     }
 
     .name {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       white-space: nowrap;
     }
 
     .sub {
       font-size: 12px;
-      opacity: 0.68;
+      font-weight: normal;
+      opacity: 0.7;
       white-space: nowrap;
     }
 
