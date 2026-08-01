@@ -8,6 +8,7 @@ const VARIANT_OPTIONS = [
   { value: "device", label: "Device" },
   { value: "primary-container", label: "Primary Container" },
   { value: "secondary-container", label: "Secondary Container" },
+  { value: "tertiary-container", label: "Tertiary Container" },
   { value: "error-container", label: "Error Container" },
   { value: "device-container", label: "Device Container" },
   { value: "primary-state", label: "Primary State" },

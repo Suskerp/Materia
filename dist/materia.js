@@ -8296,7 +8296,7 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
               `:W}
         </div>
       </ha-card>
-    `}getCardSize(){return 5}}customElements.define("materia-doorbell",Xs),window.customCards=window.customCards||[],window.customCards.push({type:"materia-doorbell",name:"Materia Doorbell",description:"Doorbell alert — countdown ring, tap-to-buzz, slide-to-unlock. Built for a browser_mod popup.",preview:!0});const Ys={primary:["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],secondary:["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],tertiary:["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],error:["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],device:["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-container":["var(--md-sys-color-primary-container)","var(--md-sys-color-on-primary-container)"],"secondary-container":["var(--md-sys-color-secondary-container)","var(--md-sys-color-on-secondary-container)"],"error-container":["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"],"device-container":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-state":["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],"secondary-state":["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],"tertiary-state":["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],"error-state":["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],"device-state":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"]},Ks=[Ee,ge,n`
+    `}getCardSize(){return 5}}customElements.define("materia-doorbell",Xs),window.customCards=window.customCards||[],window.customCards.push({type:"materia-doorbell",name:"Materia Doorbell",description:"Doorbell alert — countdown ring, tap-to-buzz, slide-to-unlock. Built for a browser_mod popup.",preview:!0});const Ys={primary:["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],secondary:["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],tertiary:["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],error:["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],device:["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-container":["var(--md-sys-color-primary-container)","var(--md-sys-color-on-primary-container)"],"secondary-container":["var(--md-sys-color-secondary-container)","var(--md-sys-color-on-secondary-container)"],"tertiary-container":["var(--md-sys-color-tertiary-container)","var(--md-sys-color-on-tertiary-container)"],"error-container":["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"],"device-container":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-state":["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],"secondary-state":["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],"tertiary-state":["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],"error-state":["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],"device-state":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"]},Ks=[Ee,ge,n`
     :host {
       display: inline-block;
     }
@@ -8311,11 +8311,15 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
     .badge {
       box-sizing: border-box;
       position: relative;
-      height: 100px;
-      min-width: 132px;
-      max-width: 132px;
-      padding: 12px 18px;
-      border-radius: 28px;
+      /* The doc's 100x132 floor, scaled to sit WITH the page's rows rather
+         than over them — still a generous touch target, never a dot. */
+      height: 84px;
+      min-width: 116px;
+      max-width: 116px;
+      padding: 10px 16px;
+      /* Blend with the page: the corner comes from the theme, like every
+         other Materia surface. 28px is the 18c fallback. */
+      border-radius: var(--ha-card-border-radius, 28px);
       overflow: hidden;
       cursor: pointer;
       display: flex;
@@ -8334,14 +8338,14 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
     }
 
     .badge.open {
-      max-width: 190px;
+      max-width: 172px;
     }
 
     /* Alarm outgrows everything and squares off — the shape says danger
        before the colour does. */
     .badge.alarm {
-      max-width: 220px;
-      border-radius: 20px;
+      max-width: 196px;
+      border-radius: 18px;
     }
 
     .row-top {
@@ -8357,9 +8361,9 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
     }
 
     .icon-cell ha-icon {
-      --mdc-icon-size: 24px;
-      width: 24px;
-      height: 24px;
+      --mdc-icon-size: 22px;
+      width: 22px;
+      height: 22px;
     }
 
     /* The typed value — "3 on", "21°", a ticking 0:14. Always in the DOM so
@@ -8368,7 +8372,7 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
        Figtree at that spec shouts, so the whole badge row runs a notch
        softer (600 weights, smaller value) at the same hierarchy. */
     .value {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 600;
       letter-spacing: -0.01em;
       white-space: nowrap;
@@ -8424,8 +8428,8 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
        value (top-right) and the name/sub column (bottom-left). */
     .tag {
       position: absolute;
-      right: 16px;
-      bottom: 12px;
+      right: 14px;
+      bottom: 10px;
       font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.1em;
@@ -8437,9 +8441,9 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
     /* Stage track — one equal bar per stage, lit while its condition holds. */
     .stages {
       position: absolute;
-      left: 18px;
-      right: 18px;
-      bottom: 8px;
+      left: 16px;
+      right: 16px;
+      bottom: 7px;
       display: flex;
       gap: 3px;
       height: 4px;
@@ -8459,11 +8463,11 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
 
     /* Lift the text and the tag off the track when one is shown. */
     .badge.has-stages {
-      padding-bottom: 20px;
+      padding-bottom: 17px;
     }
 
     .badge.has-stages .tag {
-      bottom: 20px;
+      bottom: 17px;
     }
 
     /* ---- action layout: the button badge (design 19 / 20a) ------------
@@ -8475,11 +8479,11 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
       flex-direction: row;
       align-items: center;
       justify-content: flex-start;
-      gap: 14px;
-      min-width: 132px;
+      gap: 12px;
+      min-width: 116px;
       max-width: none;
-      padding: 0 26px 0 22px;
-      border-radius: 50px;
+      padding: 0 22px 0 18px;
+      border-radius: 42px;
     }
 
     .badge.action.open {
@@ -8489,21 +8493,17 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
     /* 20a: the asymmetric shape-morph corners M3 uses on active tiles.
        leaf rises to the right, leaf-flip mirrors it — a facing pair. */
     .badge.action.leaf {
-      border-radius: 50px 18px 50px 18px;
+      border-radius: 42px 16px 42px 16px;
     }
 
     .badge.action.leaf-flip {
-      border-radius: 18px 50px 18px 50px;
+      border-radius: 16px 42px 16px 42px;
     }
 
     .badge.action .icon-cell ha-icon {
-      --mdc-icon-size: 28px;
-      width: 28px;
-      height: 28px;
-    }
-
-    .badge.action .name {
-      font-size: 15px;
+      --mdc-icon-size: 24px;
+      width: 24px;
+      height: 24px;
     }
 
     .badge.action .text {
@@ -8599,14 +8599,14 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
       pointer-events: none;
       filter: grayscale(80%);
     }
-  `],Zs=[{value:"primary",label:"Primary"},{value:"secondary",label:"Secondary"},{value:"tertiary",label:"Tertiary"},{value:"error",label:"Error"},{value:"device",label:"Device"},{value:"primary-container",label:"Primary Container"},{value:"secondary-container",label:"Secondary Container"},{value:"error-container",label:"Error Container"},{value:"device-container",label:"Device Container"},{value:"primary-state",label:"Primary State"},{value:"secondary-state",label:"Secondary State"},{value:"tertiary-state",label:"Tertiary State"},{value:"error-state",label:"Error State"},{value:"device-state",label:"Device State"},{value:"battery",label:"Battery"}];customElements.define("materia-badge-editor",class extends Ie{_formData(){return{show_state:!1,variant:"secondary",layout:"badge",..."action"===this._config?.layout?{shape:"pill"}:{},...this._config}}_sectionsSignature(){return`${this._config?.entity?"entity":"none"}|${this._config?.layout||"badge"}`}get _sections(){const e=!!this._config?.entity,t=[{title:"Content",icon:"mdi:card-text-outline",fields:[{name:"entity",selector:{entity:{}}},{name:"name",required:!0,template:!0,selector:{text:{}}},{name:"icon",required:!0,template:!0,selector:{icon:{}},context:{icon_entity:"entity"}},{name:"layout",helper:"Badge is the navigate squircle; action is the button badge (does something); tile is the badge grown into a section card.",selector:{select:{mode:"dropdown",options:[{value:"badge",label:"Badge — navigate squircle"},{value:"action",label:"Action — button badge"},{value:"tile",label:"Tile — section card"}]}}},..."action"===this._config?.layout?[{name:"shape",helper:"Pill is the stock action shape; the asymmetric corners are M3's shape-morph corners — use the mirrored one to make a facing pair.",selector:{select:{mode:"dropdown",options:[{value:"pill",label:"Pill"},{value:"leaf",label:"Asymmetric corners"},{value:"leaf-flip",label:"Asymmetric corners — mirrored"}]}}}]:[],{name:"variant",selector:{select:{mode:"dropdown",options:Zs}}},{name:"tag",label:"Gesture tag",template:!0,helper:'Leave empty for none. The word "auto" shows the configured gesture — hold when one is set, tap otherwise.',selector:{text:{}}},{name:"secondary",label:"Secondary line",template:!0,helper:"One quiet line under the name. Left empty, a quiet badge shows its state word here instead.",selector:{text:{}}}]}];return e&&t.push({title:"State",icon:"mdi:state-machine",fields:[{name:"show_state",selector:{boolean:{}}},{name:"active_state",selector:{text:{}}},{name:"state_display",template:!0,selector:{text:{}}}]}),t.push({title:"Stages",icon:"mdi:chart-timeline",expanded:!1,fields:[{name:"stages",label:"Stage track",helper:"List of { entity, state? } — one bar along the bottom per stage, lit while the entity matches. state may be a single value or a list; omitted, the domain's active state applies (a timer lights while running).",selector:{object:{}}}]},{title:"Appearance",icon:"mdi:palette-outline",fields:[{name:"color",label:"Background",color:!0,template:!0,selector:{text:{}}},{name:"color_on",label:"Text / icon",color:!0,template:!0,selector:{text:{}}}]},{title:"Actions",icon:"mdi:gesture-tap",fields:[{name:"tap_action",selector:{ui_action:{default_action:"toggle"}}},{name:"hold_action",helper:"A hold is deliberate by construction — the right slot for actions a stray tap must never fire.",selector:{ui_action:{default_action:"none"}}},{name:"double_tap_action",selector:{ui_action:{default_action:"none"}}}]}),t}});const Qs={cover:"open",lock:["locked","locking"],vacuum:"cleaning",media_player:"playing",climate:"heat",alarm_control_panel:"armed_away",timer:"active"};class Js extends(Ce(ce)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedStateDisplay:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0},_resolvedTag:{state:!0},_resolvedSecondary:{state:!0}};static getConfigElement(){return document.createElement("materia-badge-editor")}static getStubConfig(e){const t=(e?Object.keys(e.states):[]).find(e=>e.startsWith("light.")||e.startsWith("switch."))||"";return{name:"Badge",icon:"mdi:power-plug",variant:"primary",show_state:!1,active_state:"on",entity:t}}static styles=[Ae,Ks];setConfig(e){if(!e.icon)throw new Error("icon is required");if(!e.name)throw new Error("name is required");this.config={show_state:!1,active_state:"on",variant:"secondary",tap_action:{action:"toggle"},...e},this.toggleAttribute("tile","tile"===this.config.layout)}updated(e){super.updated?.(e),e.has("hass")&&this.hass&&(this._resolveField("state_display","_resolvedStateDisplay"),this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"),this._resolveField("tag","_resolvedTag"),this._resolveField("secondary","_resolvedSecondary"),this._syncTimerTick())}_syncTimerTick(){const e=(this.config.show_state||"action"===this.config.layout)&&this.config.entity?.startsWith("timer.")&&"active"===this.hass.states[this.config.entity]?.state;e&&!this._timerTick?this._timerTick=setInterval(()=>this.requestUpdate(),1e3):!e&&this._timerTick&&(clearInterval(this._timerTick),this._timerTick=null)}_timerRemaining(e){const t=Date.parse(e.attributes?.finishes_at);if(Number.isNaN(t))return null;const i=Math.max(0,Math.ceil((t-Date.now())/1e3));return`${Math.floor(i/60)}:${String(i%60).padStart(2,"0")}`}_timerProgress(e){const t=Date.parse(e?.attributes?.finishes_at),i=String(e?.attributes?.duration||"").split(":").reduce((e,t)=>60*e+Number(t),0);if(Number.isNaN(t)||!i)return null;const s=Math.max(0,(t-Date.now())/1e3);return Math.min(1,Math.max(0,1-s/i))}_isActive(e){if(!e)return!1;const t=e.state,i=this.config.active_state;if(null!=i)return Array.isArray(i)?i.includes(t):t===String(i);const s=e.entity_id.split(".")[0],o=Qs[s]||"on";return Array.isArray(o)?o.includes(t):t===o}_stageActive(e){const t=e?.entity?this.hass.states[e.entity]:void 0;if(!t)return!1;if(null!=e.state)return Array.isArray(e.state)?e.state.map(String).includes(t.state):t.state===String(e.state);const i=Qs[t.entity_id.split(".")[0]]||"on";return Array.isArray(i)?i.includes(t.state):t.state===i}_renderStages(){const e=this.config.stages;return Array.isArray(e)&&e.length?I`
+  `],Zs=[{value:"primary",label:"Primary"},{value:"secondary",label:"Secondary"},{value:"tertiary",label:"Tertiary"},{value:"error",label:"Error"},{value:"device",label:"Device"},{value:"primary-container",label:"Primary Container"},{value:"secondary-container",label:"Secondary Container"},{value:"tertiary-container",label:"Tertiary Container"},{value:"error-container",label:"Error Container"},{value:"device-container",label:"Device Container"},{value:"primary-state",label:"Primary State"},{value:"secondary-state",label:"Secondary State"},{value:"tertiary-state",label:"Tertiary State"},{value:"error-state",label:"Error State"},{value:"device-state",label:"Device State"},{value:"battery",label:"Battery"}];customElements.define("materia-badge-editor",class extends Ie{_formData(){return{show_state:!1,variant:"secondary",layout:"badge",..."action"===this._config?.layout?{shape:"pill"}:{},...this._config}}_sectionsSignature(){return`${this._config?.entity?"entity":"none"}|${this._config?.layout||"badge"}`}get _sections(){const e=!!this._config?.entity,t=[{title:"Content",icon:"mdi:card-text-outline",fields:[{name:"entity",selector:{entity:{}}},{name:"name",required:!0,template:!0,selector:{text:{}}},{name:"icon",required:!0,template:!0,selector:{icon:{}},context:{icon_entity:"entity"}},{name:"layout",helper:"Badge is the navigate squircle; action is the button badge (does something); tile is the badge grown into a section card.",selector:{select:{mode:"dropdown",options:[{value:"badge",label:"Badge — navigate squircle"},{value:"action",label:"Action — button badge"},{value:"tile",label:"Tile — section card"}]}}},..."action"===this._config?.layout?[{name:"shape",helper:"Pill is the stock action shape; the asymmetric corners are M3's shape-morph corners — use the mirrored one to make a facing pair.",selector:{select:{mode:"dropdown",options:[{value:"pill",label:"Pill"},{value:"leaf",label:"Asymmetric corners"},{value:"leaf-flip",label:"Asymmetric corners — mirrored"}]}}}]:[],{name:"variant",selector:{select:{mode:"dropdown",options:Zs}}},{name:"tag",label:"Gesture tag",template:!0,helper:'Leave empty for none. The word "auto" shows the configured gesture — hold when one is set, tap otherwise.',selector:{text:{}}},{name:"secondary",label:"Secondary line",template:!0,helper:"One quiet line under the name. Left empty, a quiet badge shows its state word here instead.",selector:{text:{}}}]}];return e&&t.push({title:"State",icon:"mdi:state-machine",fields:[{name:"show_state",selector:{boolean:{}}},{name:"active_state",selector:{text:{}}},{name:"state_display",template:!0,selector:{text:{}}}]}),t.push({title:"Stages",icon:"mdi:chart-timeline",expanded:!1,fields:[{name:"stages",label:"Stage track",helper:"List of { entity, state? } — one bar along the bottom per stage, lit while the entity matches. state may be a single value or a list; omitted, the domain's active state applies (a timer lights while running).",selector:{object:{}}}]},{title:"Appearance",icon:"mdi:palette-outline",fields:[{name:"color",label:"Background",color:!0,template:!0,selector:{text:{}}},{name:"color_on",label:"Text / icon",color:!0,template:!0,selector:{text:{}}}]},{title:"Actions",icon:"mdi:gesture-tap",fields:[{name:"tap_action",selector:{ui_action:{default_action:"toggle"}}},{name:"hold_action",helper:"A hold is deliberate by construction — the right slot for actions a stray tap must never fire.",selector:{ui_action:{default_action:"none"}}},{name:"double_tap_action",selector:{ui_action:{default_action:"none"}}}]}),t}});const Qs={cover:"open",lock:["locked","locking"],vacuum:"cleaning",media_player:"playing",climate:"heat",alarm_control_panel:"armed_away",timer:"active"};class Js extends(Ce(ce)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedStateDisplay:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0},_resolvedTag:{state:!0},_resolvedSecondary:{state:!0}};static getConfigElement(){return document.createElement("materia-badge-editor")}static getStubConfig(e){const t=(e?Object.keys(e.states):[]).find(e=>e.startsWith("light.")||e.startsWith("switch."))||"";return{name:"Badge",icon:"mdi:power-plug",variant:"primary",show_state:!1,active_state:"on",entity:t}}static styles=[Ae,Ks];setConfig(e){if(!e.icon)throw new Error("icon is required");if(!e.name)throw new Error("name is required");this.config={show_state:!1,active_state:"on",variant:"secondary",tap_action:{action:"toggle"},...e},this.toggleAttribute("tile","tile"===this.config.layout)}updated(e){super.updated?.(e),e.has("hass")&&this.hass&&(this._resolveField("state_display","_resolvedStateDisplay"),this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"),this._resolveField("tag","_resolvedTag"),this._resolveField("secondary","_resolvedSecondary"),this._syncTimerTick())}_syncTimerTick(){const e=(this.config.show_state||"action"===this.config.layout)&&this.config.entity?.startsWith("timer.")&&"active"===this.hass.states[this.config.entity]?.state;e&&!this._timerTick?this._timerTick=setInterval(()=>this.requestUpdate(),1e3):!e&&this._timerTick&&(clearInterval(this._timerTick),this._timerTick=null)}_timerRemaining(e){const t=Date.parse(e.attributes?.finishes_at);if(Number.isNaN(t))return null;const i=Math.max(0,Math.ceil((t-Date.now())/1e3));return`${Math.floor(i/60)}:${String(i%60).padStart(2,"0")}`}_timerProgress(e){const t=Date.parse(e?.attributes?.finishes_at),i=String(e?.attributes?.duration||"").split(":").reduce((e,t)=>60*e+Number(t),0);if(Number.isNaN(t)||!i)return null;const s=Math.max(0,(t-Date.now())/1e3);return Math.min(1,Math.max(0,1-s/i))}_isActive(e){if(!e)return!1;const t=e.state,i=this.config.active_state;if(null!=i)return Array.isArray(i)?i.includes(t):t===String(i);const s=e.entity_id.split(".")[0],o=Qs[s]||"on";return Array.isArray(o)?o.includes(t):t===o}_stageActive(e){const t=e?.entity?this.hass.states[e.entity]:void 0;if(!t)return!1;if(null!=e.state)return Array.isArray(e.state)?e.state.map(String).includes(t.state):t.state===String(e.state);const i=Qs[t.entity_id.split(".")[0]]||"on";return Array.isArray(i)?i.includes(t.state):t.state===i}_renderStages(){const e=this.config.stages;return Array.isArray(e)&&e.length?I`
       <div class="stages">
         ${e.map(e=>I`<div class="stage ${this._stageActive(e)?"lit":""}"></div>`)}
       </div>
-    `:""}_autoTag(){const e=e=>e?.action&&"none"!==e.action;return e(this.config.hold_action)?we("badge_tag_hold",this.hass):e(this.config.tap_action)?we("badge_tag_tap",this.hass):""}_getBatteryColors(e){const t=parseFloat(e?.state);return Number.isNaN(t)?["var(--ha-card-background)","var(--primary-text-color)"]:t<10?["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"]:t<20?["var(--md-sys-cust-color-warning-container, #ffecb3)","var(--md-sys-cust-color-on-warning-container, #6d4c00)"]:["var(--ha-card-background)","var(--primary-text-color)"]}get _templatesReady(){const e=this.config;return(!this._isTemplate(e.color)||void 0!==this._resolvedColor)&&((!this._isTemplate(e.color_on)||void 0!==this._resolvedColorOn)&&((!this._isTemplate(e.state_display)||void 0!==this._resolvedStateDisplay)&&((!this._isTemplate(e.icon)||void 0!==this._resolvedIcon)&&((!this._isTemplate(e.name)||void 0!==this._resolvedName)&&((!this._isTemplate(e.tag)||void 0!==this._resolvedTag)&&(!this._isTemplate(e.secondary)||void 0!==this._resolvedSecondary))))))}render(){if(!this.hass||!this.config)return I``;const e=this.config.entity,t=e?this.hass.states[e]:void 0,i=!!e&&this._isUnavailable(t),s=!i&&this._isActive(t),o=this.config.variant||"secondary",n=this.config.show_state;let a=this._isTemplate(this.config.color)?(this._resolvedColor||"").trim():this.config.color,r=this._isTemplate(this.config.color_on)?(this._resolvedColorOn||"").trim():this.config.color_on;const l=["primary","tertiary","error","primary-container","secondary-container","error-container","device-container"];let c=!!a;if(!a)if("battery"===o){const[e,i]=this._getBatteryColors(t);a=e,r=i,c="var(--ha-card-background)"!==e}else if(l.includes(o)||s&&e){const e=Ys[o]||Ys.secondary;a=e[0],r=r||e[1],c=!0}else a="var(--ha-card-background)",r=r||"var(--secondary-text-color)";r=r||"var(--primary-text-color)";const d=c&&("error"===o||"error-state"===o)&&(!e||s),h=s?"active":"inactive";let p="";if(n&&i)p="Unavailable";else if(n&&t){const i=this.config.state_display&&(this.config.state_display.includes("{{")||this.config.state_display.includes("{%"));if(this._resolvedStateDisplay&&i)p=this._resolvedStateDisplay;else if(this.config.state_display&&!i)p=this.config.state_display;else if(e?.startsWith("timer.")&&"active"===t.state&&this._timerRemaining(t))p=this._timerRemaining(t);else{const e=t.state,i=Number(e);if(""===e||null==e||Number.isNaN(i))p=e;else{const e=t.attributes?.unit_of_measurement,s=Math.round(100*i)/100;p=e?"%"===e?`${s}%`:`${s} ${e}`:`${s}`}}p=this._capitalize(p)}let u="";this.config.tag&&(u=this._isTemplate(this.config.tag)?this._resolvedTag||"":"auto"===this.config.tag?this._autoTag():this.config.tag);const m=this._isTemplate(this.config.secondary)?this._resolvedSecondary||"":this.config.secondary,g="tile"===this.config.layout,f="action"===this.config.layout,_=f?this.config.shape||"pill":"",b=Array.isArray(this.config.stages)&&this.config.stages.length>0,v=I`<ha-icon .icon=${this._isTemplate(this.config.icon)?this._resolvedIcon:this.config.icon} style="color: ${r};"></ha-icon>`,y=this._isTemplate(this.config.name)?this._resolvedName:this.config.name,x=this._holdHint?we("badge_hold_hint",this.hass):m||(!c&&n?p:""),w=f&&e?.startsWith("timer.")&&"active"===t?.state?this._timerProgress(t):null;return I`
+    `:""}_autoTag(){const e=e=>e?.action&&"none"!==e.action;return e(this.config.hold_action)?we("badge_tag_hold",this.hass):e(this.config.tap_action)?we("badge_tag_tap",this.hass):""}_getBatteryColors(e){const t=parseFloat(e?.state);return Number.isNaN(t)?["var(--ha-card-background)","var(--primary-text-color)"]:t<10?["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"]:t<20?["var(--md-sys-cust-color-warning-container, #ffecb3)","var(--md-sys-cust-color-on-warning-container, #6d4c00)"]:["var(--ha-card-background)","var(--primary-text-color)"]}get _templatesReady(){const e=this.config;return(!this._isTemplate(e.color)||void 0!==this._resolvedColor)&&((!this._isTemplate(e.color_on)||void 0!==this._resolvedColorOn)&&((!this._isTemplate(e.state_display)||void 0!==this._resolvedStateDisplay)&&((!this._isTemplate(e.icon)||void 0!==this._resolvedIcon)&&((!this._isTemplate(e.name)||void 0!==this._resolvedName)&&((!this._isTemplate(e.tag)||void 0!==this._resolvedTag)&&(!this._isTemplate(e.secondary)||void 0!==this._resolvedSecondary))))))}render(){if(!this.hass||!this.config)return I``;const e=this.config.entity,t=e?this.hass.states[e]:void 0,i=!!e&&this._isUnavailable(t),s=!i&&this._isActive(t),o=this.config.variant||"secondary",n=this.config.show_state,a="tile"===this.config.layout,r="action"===this.config.layout;let l=this._isTemplate(this.config.color)?(this._resolvedColor||"").trim():this.config.color,c=this._isTemplate(this.config.color_on)?(this._resolvedColorOn||"").trim():this.config.color_on;const d=["primary","tertiary","error","primary-container","secondary-container","error-container","device-container"];let h=!!l;if(!l)if("battery"===o){const[e,i]=this._getBatteryColors(t);l=e,c=i,h="var(--ha-card-background)"!==e}else if(d.includes(o)||s&&e){const e=a||("error"===o||"error-state"===o)||o.endsWith("-container")?o:`${o.replace(/-state$/,"")}-container`,t=Ys[e]||Ys[o]||Ys.secondary;l=t[0],c=c||t[1],h=!0}else l="var(--ha-card-background)",c=c||"var(--secondary-text-color)";c=c||"var(--primary-text-color)";const p=h&&("error"===o||"error-state"===o)&&(!e||s),u=s?"active":"inactive";let m="";if(n&&i)m="Unavailable";else if(n&&t){const i=this.config.state_display&&(this.config.state_display.includes("{{")||this.config.state_display.includes("{%"));if(this._resolvedStateDisplay&&i)m=this._resolvedStateDisplay;else if(this.config.state_display&&!i)m=this.config.state_display;else if(e?.startsWith("timer.")&&"active"===t.state&&this._timerRemaining(t))m=this._timerRemaining(t);else{const e=t.state,i=Number(e);if(""===e||null==e||Number.isNaN(i))m=e;else{const e=t.attributes?.unit_of_measurement,s=Math.round(100*i)/100;m=e?"%"===e?`${s}%`:`${s} ${e}`:`${s}`}}m=this._capitalize(m)}let g="";this.config.tag&&(g=this._isTemplate(this.config.tag)?this._resolvedTag||"":"auto"===this.config.tag?this._autoTag():this.config.tag);const f=this._isTemplate(this.config.secondary)?this._resolvedSecondary||"":this.config.secondary,_=r?this.config.shape||"pill":"",b=Array.isArray(this.config.stages)&&this.config.stages.length>0,v=I`<ha-icon .icon=${this._isTemplate(this.config.icon)?this._resolvedIcon:this.config.icon} style="color: ${c};"></ha-icon>`,y=this._isTemplate(this.config.name)?this._resolvedName:this.config.name,x=this._holdHint?we("badge_hold_hint",this.hass):f||(!h&&n?m:""),w=r&&e?.startsWith("timer.")&&"active"===t?.state?this._timerProgress(t):null;return I`
       <div
-        class=${`badge ${g?"tile":""} ${f?`action ${_}`:""} ${h} ${c?"open":""} ${d?"alarm":""} ${b?"has-stages":""} ${i?"unavailable":""}`}
-        style="background-color: ${a}; color: ${r};"
+        class=${`badge ${a?"tile":""} ${r?`action ${_}`:""} ${u} ${h?"open":""} ${p?"alarm":""} ${b?"has-stages":""} ${i?"unavailable":""}`}
+        style="background-color: ${l}; color: ${c};"
         @click=${this._handleTap}
         @dblclick=${this._handleDoubleTap}
         @pointerdown=${this._holdDown}
@@ -8616,35 +8616,35 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
         @contextmenu=${e=>{this.config.hold_action?.action&&"none"!==this.config.hold_action.action&&e.preventDefault()}}
       >
         ${this._haArming?I`<div class="hold-fill" style="animation-duration: ${500}ms;"></div>`:""}
-        ${g?I`
+        ${a?I`
               <div class="tile-top">
                 <div class="icon-cell">${v}</div>
-                ${u?I`<div class="tag">${u}</div>`:""}
+                ${g?I`<div class="tag">${g}</div>`:""}
               </div>
               <div class="tile-text">
                 <div class="name">${y}</div>
-                ${m?I`<div class="secondary">${m}</div>`:""}
-                ${n&&p?I`<div class="state">${p}</div>`:""}
+                ${f?I`<div class="secondary">${f}</div>`:""}
+                ${n&&m?I`<div class="state">${m}</div>`:""}
               </div>
               ${this._renderStages()}
-            `:f?I`
+            `:r?I`
               ${null!=w?I`<div class="run-fill" style="height: ${Math.round(100*w)}%;"></div>`:""}
               <div class="icon-cell">${v}</div>
               <div class="text">
                 <div class="name">${y}</div>
                 ${x?I`<div class="sub">${x}</div>`:""}
               </div>
-              ${n?I`<span class="value">${p}</span>`:""}
+              ${n?I`<span class="value">${m}</span>`:""}
             `:I`
               <div class="row-top">
                 <div class="icon-cell">${v}</div>
-                ${n?I`<span class="value">${p}</span>`:""}
+                ${n?I`<span class="value">${m}</span>`:""}
               </div>
               <div class="text">
                 <div class="name">${y}</div>
                 ${x?I`<div class="sub">${x}</div>`:""}
               </div>
-              ${u?I`<div class="tag">${u}</div>`:""}
+              ${g?I`<div class="tag">${g}</div>`:""}
               ${this._renderStages()}
             `}
       </div>
@@ -9710,4 +9710,4 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
           <circle class="pin" cx="50" cy="50" r="2.4"></circle>
         </svg>
       </ha-card>
-    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const e=document.createElement("style");e.id="materia-fonts",e.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Display voice: Outfit VARIABLE (true wght 100-900 axis) — hero\n       numerals & titles via --materia-font-display; the weight axis\n       interpolates smoothly, which flavor C's morphs animate. */\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJuktqUYLkn8BJ.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJtEtqUYLknw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Accent voice: Fraunces italic — ONE personality moment (clock date). */\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7frU9kMz3lR27gVA.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7RrU9kMz3lR24.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(e)}();console.info("%c MATERIA %c v0.36.1 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");
+    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const e=document.createElement("style");e.id="materia-fonts",e.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Display voice: Outfit VARIABLE (true wght 100-900 axis) — hero\n       numerals & titles via --materia-font-display; the weight axis\n       interpolates smoothly, which flavor C's morphs animate. */\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJuktqUYLkn8BJ.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJtEtqUYLknw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Accent voice: Fraunces italic — ONE personality moment (clock date). */\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7frU9kMz3lR27gVA.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7RrU9kMz3lR24.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(e)}();console.info("%c MATERIA %c v0.37.0 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");

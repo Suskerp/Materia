@@ -193,6 +193,8 @@ class MateriaBadge extends ActionMixin(LitElement) {
     const active = !unavailable && this._isActive(stateObj);
     const variant = this.config.variant || "secondary";
     const showState = this.config.show_state;
+    const tile = this.config.layout === "tile";
+    const action = this.config.layout === "action";
 
     // Template colors: use ONLY the resolved value — an empty result means
     // "no override, use the variant color". Falling back to the raw template
@@ -216,7 +218,18 @@ class MateriaBadge extends ActionMixin(LitElement) {
         textColor = fg;
         open = bg !== "var(--ha-card-background)";
       } else if (alwaysColoredVariants.includes(variant) || (active && entity)) {
-        const colors = VARIANT_COLORS[variant] || VARIANT_COLORS.secondary;
+        // The design's grammar: news wears the CONTAINER tone; only an alarm
+        // is filled. Header badges (navigate + action) soften their variant
+        // to its container pair so an open badge sits in the page instead of
+        // on it. The tile is the statement piece — it keeps the configured
+        // tier as written, like the hero cards do.
+        const isError = variant === "error" || variant === "error-state";
+        const key = tile || isError
+          ? variant
+          : variant.endsWith("-container")
+            ? variant
+            : `${variant.replace(/-state$/, "")}-container`;
+        const colors = VARIANT_COLORS[key] || VARIANT_COLORS[variant] || VARIANT_COLORS.secondary;
         bgColor = colors[0];
         textColor = textColor || colors[1];
         open = true;
@@ -271,8 +284,6 @@ class MateriaBadge extends ActionMixin(LitElement) {
       ? this._resolvedSecondary || ""
       : this.config.secondary;
 
-    const tile = this.config.layout === "tile";
-    const action = this.config.layout === "action";
     const shape = action ? this.config.shape || "pill" : "";
     const hasStages = Array.isArray(this.config.stages) && this.config.stages.length > 0;
     const icon = html`<ha-icon .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon} style="color: ${textColor};"></ha-icon>`;

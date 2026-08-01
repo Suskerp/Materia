@@ -10,6 +10,7 @@ export const VARIANT_COLORS = {
   device:                ["var(--md-sys-cust-color-device-container)",  "var(--md-sys-cust-color-on-device)"],
   "primary-container":   ["var(--md-sys-color-primary-container)",      "var(--md-sys-color-on-primary-container)"],
   "secondary-container": ["var(--md-sys-color-secondary-container)",    "var(--md-sys-color-on-secondary-container)"],
+  "tertiary-container":  ["var(--md-sys-color-tertiary-container)",     "var(--md-sys-color-on-tertiary-container)"],
   "error-container":     ["var(--md-sys-color-error-container)",        "var(--md-sys-color-on-error-container)"],
   "device-container":    ["var(--md-sys-cust-color-device-container)",  "var(--md-sys-cust-color-on-device)"],
   // State-driven: colored only when entity is active, default bg when inactive.
@@ -46,11 +47,15 @@ export const styles = [
     .badge {
       box-sizing: border-box;
       position: relative;
-      height: 100px;
-      min-width: 132px;
-      max-width: 132px;
-      padding: 12px 18px;
-      border-radius: 28px;
+      /* The doc's 100x132 floor, scaled to sit WITH the page's rows rather
+         than over them — still a generous touch target, never a dot. */
+      height: 84px;
+      min-width: 116px;
+      max-width: 116px;
+      padding: 10px 16px;
+      /* Blend with the page: the corner comes from the theme, like every
+         other Materia surface. 28px is the 18c fallback. */
+      border-radius: var(--ha-card-border-radius, 28px);
       overflow: hidden;
       cursor: pointer;
       display: flex;
@@ -69,14 +74,14 @@ export const styles = [
     }
 
     .badge.open {
-      max-width: 190px;
+      max-width: 172px;
     }
 
     /* Alarm outgrows everything and squares off — the shape says danger
        before the colour does. */
     .badge.alarm {
-      max-width: 220px;
-      border-radius: 20px;
+      max-width: 196px;
+      border-radius: 18px;
     }
 
     .row-top {
@@ -92,9 +97,9 @@ export const styles = [
     }
 
     .icon-cell ha-icon {
-      --mdc-icon-size: 24px;
-      width: 24px;
-      height: 24px;
+      --mdc-icon-size: 22px;
+      width: 22px;
+      height: 22px;
     }
 
     /* The typed value — "3 on", "21°", a ticking 0:14. Always in the DOM so
@@ -103,7 +108,7 @@ export const styles = [
        Figtree at that spec shouts, so the whole badge row runs a notch
        softer (600 weights, smaller value) at the same hierarchy. */
     .value {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 600;
       letter-spacing: -0.01em;
       white-space: nowrap;
@@ -159,8 +164,8 @@ export const styles = [
        value (top-right) and the name/sub column (bottom-left). */
     .tag {
       position: absolute;
-      right: 16px;
-      bottom: 12px;
+      right: 14px;
+      bottom: 10px;
       font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.1em;
@@ -172,9 +177,9 @@ export const styles = [
     /* Stage track — one equal bar per stage, lit while its condition holds. */
     .stages {
       position: absolute;
-      left: 18px;
-      right: 18px;
-      bottom: 8px;
+      left: 16px;
+      right: 16px;
+      bottom: 7px;
       display: flex;
       gap: 3px;
       height: 4px;
@@ -194,11 +199,11 @@ export const styles = [
 
     /* Lift the text and the tag off the track when one is shown. */
     .badge.has-stages {
-      padding-bottom: 20px;
+      padding-bottom: 17px;
     }
 
     .badge.has-stages .tag {
-      bottom: 20px;
+      bottom: 17px;
     }
 
     /* ---- action layout: the button badge (design 19 / 20a) ------------
@@ -210,11 +215,11 @@ export const styles = [
       flex-direction: row;
       align-items: center;
       justify-content: flex-start;
-      gap: 14px;
-      min-width: 132px;
+      gap: 12px;
+      min-width: 116px;
       max-width: none;
-      padding: 0 26px 0 22px;
-      border-radius: 50px;
+      padding: 0 22px 0 18px;
+      border-radius: 42px;
     }
 
     .badge.action.open {
@@ -224,21 +229,17 @@ export const styles = [
     /* 20a: the asymmetric shape-morph corners M3 uses on active tiles.
        leaf rises to the right, leaf-flip mirrors it — a facing pair. */
     .badge.action.leaf {
-      border-radius: 50px 18px 50px 18px;
+      border-radius: 42px 16px 42px 16px;
     }
 
     .badge.action.leaf-flip {
-      border-radius: 18px 50px 18px 50px;
+      border-radius: 16px 42px 16px 42px;
     }
 
     .badge.action .icon-cell ha-icon {
-      --mdc-icon-size: 28px;
-      width: 28px;
-      height: 28px;
-    }
-
-    .badge.action .name {
-      font-size: 15px;
+      --mdc-icon-size: 24px;
+      width: 24px;
+      height: 24px;
     }
 
     .badge.action .text {
