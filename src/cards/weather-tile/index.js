@@ -141,7 +141,10 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     const iconX = this.config.icon_x ?? 5;
     const iconY = this.config.icon_y ?? 10;
     const tempX = this.config.temp_x ?? 10;
-    const tempY = this.config.temp_y ?? 15;
+    // The min/max row stacks ABOVE the temperature, so with it shown the
+    // readout's top edge is the small hi/lo text hugging the pill's curve —
+    // give it more clearance than the big temp needs on its own.
+    const tempY = this.config.temp_y ?? (showMinmax ? 21 : 15);
     // Global size 1–10 caps the tile width (10 = fill the cell). Everything
     // else is in container-query units, so the whole tile scales with it.
     const sizes = ["120px", "150px", "185px", "225px", "270px", "320px", "380px", "460px", "560px", "none"];

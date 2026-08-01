@@ -1,6 +1,7 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { unavailableStyles } from "../../styles/card-styles.js";
+import { t } from "../../utils/i18n.js";
 import { styles, VARIANT_COLORS } from "./styles.js";
 import "./editor.js";
 
@@ -12,6 +13,7 @@ const DOMAIN_ACTIVE_STATE = {
   media_player: "playing",
   climate: "heat",
   alarm_control_panel: "armed_away",
+  timer: "active",
 };
 
 class MateriaBadge extends ActionMixin(LitElement) {
@@ -23,6 +25,8 @@ class MateriaBadge extends ActionMixin(LitElement) {
     _resolvedColorOn: { state: true },
     _resolvedIcon: { state: true },
     _resolvedName: { state: true },
+    _resolvedTag: { state: true },
+    _resolvedSecondary: { state: true },
   };
 
   static getConfigElement() {
@@ -47,6 +51,9 @@ class MateriaBadge extends ActionMixin(LitElement) {
       tap_action: { action: "toggle" },
       ...config,
     };
+    // The tile layout must fill its section cell, where the header badge is a
+    // fixed-size inline block — the host itself has to change display mode.
+    this.toggleAttribute("tile", this.config.layout === "tile");
   }
 
   updated(changedProps) {
@@ -57,6 +64,8 @@ class MateriaBadge extends ActionMixin(LitElement) {
     this._resolveField("color_on", "_resolvedColorOn");
     this._resolveField("icon", "_resolvedIcon");
     this._resolveField("name", "_resolvedName");
+    this._resolveField("tag", "_resolvedTag");
+    this._resolveField("secondary", "_resolvedSecondary");
     this._syncTimerTick();
   }
 
@@ -99,6 +108,39 @@ class MateriaBadge extends ActionMixin(LitElement) {
     return s === defaultActive;
   }
 
+  /** A stage bar is lit while its entity matches. `state` may be a string or
+   *  a list; omitted, the entity domain's default active state applies — the
+   *  same rule the badge itself uses. */
+  _stageActive(stage) {
+    const stateObj = stage?.entity ? this.hass.states[stage.entity] : undefined;
+    if (!stateObj) return false;
+    if (stage.state != null) {
+      if (Array.isArray(stage.state)) return stage.state.map(String).includes(stateObj.state);
+      return stateObj.state === String(stage.state);
+    }
+    const def = DOMAIN_ACTIVE_STATE[stateObj.entity_id.split(".")[0]] || "on";
+    return Array.isArray(def) ? def.includes(stateObj.state) : stateObj.state === def;
+  }
+
+  _renderStages() {
+    const stages = this.config.stages;
+    if (!Array.isArray(stages) || !stages.length) return "";
+    return html`
+      <div class="stages">
+        ${stages.map((s) => html`<div class="stage ${this._stageActive(s) ? "lit" : ""}"></div>`)}
+      </div>
+    `;
+  }
+
+  /** Auto gesture tag: the hold is the deliberate act, so when one is
+   *  configured it is the gesture worth advertising; otherwise the tap. */
+  _autoTag() {
+    const has = (a) => a?.action && a.action !== "none";
+    if (has(this.config.hold_action)) return t("badge_tag_hold", this.hass);
+    if (has(this.config.tap_action)) return t("badge_tag_tap", this.hass);
+    return "";
+  }
+
   _getBatteryColors(stateObj) {
     const pct = parseFloat(stateObj?.state);
     if (Number.isNaN(pct)) {
@@ -125,6 +167,8 @@ class MateriaBadge extends ActionMixin(LitElement) {
     if (this._isTemplate(c.state_display) && this._resolvedStateDisplay === undefined) return false;
     if (this._isTemplate(c.icon) && this._resolvedIcon === undefined) return false;
     if (this._isTemplate(c.name) && this._resolvedName === undefined) return false;
+    if (this._isTemplate(c.tag) && this._resolvedTag === undefined) return false;
+    if (this._isTemplate(c.secondary) && this._resolvedSecondary === undefined) return false;
     return true;
   }
 
@@ -195,9 +239,30 @@ class MateriaBadge extends ActionMixin(LitElement) {
       stateDisplay = this._capitalize(stateDisplay);
     }
 
+    // Gesture tag (top-right eyebrow). Absent = none; the word "auto" derives
+    // it from the configured actions; anything else (templates included) is
+    // shown as written.
+    let tag = "";
+    if (this.config.tag) {
+      tag = this._isTemplate(this.config.tag)
+        ? this._resolvedTag || ""
+        : this.config.tag === "auto"
+          ? this._autoTag()
+          : this.config.tag;
+    }
+    const secondary = this._isTemplate(this.config.secondary)
+      ? this._resolvedSecondary || ""
+      : this.config.secondary;
+
+    const tile = this.config.layout === "tile";
+    const hasStages = Array.isArray(this.config.stages) && this.config.stages.length > 0;
+    const icon = html`<ha-icon .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon} style="color: ${textColor};"></ha-icon>`;
+    const name = this._isTemplate(this.config.name) ? this._resolvedName : this.config.name;
+    const rootClass = `badge ${tile ? "tile" : ""} ${cardClass} ${activeClass} ${hasStages ? "has-stages" : ""} ${unavailable ? "unavailable" : ""}`;
+
     return html`
       <div
-        class="badge ${cardClass} ${activeClass} ${unavailable ? 'unavailable' : ''}"
+        class=${rootClass}
         style="background-color: ${bgColor}; color: ${textColor};"
         @click=${this._handleTap}
         @dblclick=${this._handleDoubleTap}
@@ -211,11 +276,26 @@ class MateriaBadge extends ActionMixin(LitElement) {
           if (this.config.hold_action?.action && this.config.hold_action.action !== "none") e.preventDefault();
         }}
       >
-        <div class="icon-cell">
-          <ha-icon .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon} style="color: ${textColor};"></ha-icon>
-        </div>
-        <div class="name">${this._isTemplate(this.config.name) ? this._resolvedName : this.config.name}</div>
-        ${showState ? html`<div class="state">${stateDisplay}</div>` : ""}
+        ${tile
+          ? html`
+              <div class="tile-top">
+                <div class="icon-cell">${icon}</div>
+                ${tag ? html`<div class="tag">${tag}</div>` : ""}
+              </div>
+              <div class="tile-text">
+                <div class="name">${name}</div>
+                ${secondary ? html`<div class="secondary">${secondary}</div>` : ""}
+                ${showState && stateDisplay ? html`<div class="state">${stateDisplay}</div>` : ""}
+              </div>
+              ${this._renderStages()}
+            `
+          : html`
+              <div class="icon-cell">${icon}</div>
+              ${tag ? html`<div class="tag">${tag}</div>` : ""}
+              <div class="name">${name}</div>
+              ${showState ? html`<div class="state">${stateDisplay}</div>` : ""}
+              ${this._renderStages()}
+            `}
       </div>
     `;
   }
@@ -250,8 +330,15 @@ class MateriaBadge extends ActionMixin(LitElement) {
     this._timerTick = null;
   }
 
+  getGridOptions() {
+    if (this.config?.layout === "tile") {
+      return { columns: 6, rows: "auto", min_columns: 3 };
+    }
+    return {};
+  }
+
   getCardSize() {
-    return 2;
+    return this.config?.layout === "tile" ? 4 : 2;
   }
 }
 

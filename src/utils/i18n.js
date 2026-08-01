@@ -46,6 +46,10 @@ const STRINGS = {
   state_unlocking: { en: "Unlocking", nl: "Gaat open" },
   state_jammed: { en: "Jammed", nl: "Vastgelopen" },
 
+  /* ---- materia-badge ------------------------------------------------- */
+  badge_tag_tap: { en: "tap", nl: "tik" },
+  badge_tag_hold: { en: "hold", nl: "houd vast" },
+
   /* ---- materia-lock -------------------------------------------------- */
   lock_slide_to_unlock: { en: "Slide to unlock", nl: "Schuif om te openen" },
   lock_slide_to_lock: { en: "Slide to lock", nl: "Schuif om op slot te doen" },

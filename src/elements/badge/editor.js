@@ -20,15 +20,16 @@ const VARIANT_OPTIONS = [
 
 class MateriaBadgeEditor extends SmartEditorBase {
   _formData() {
-    return { show_state: false, variant: "secondary", ...this._config };
+    return { show_state: false, variant: "secondary", layout: "badge", ...this._config };
   }
 
   _sectionsSignature() {
-    return this._config?.entity ? "entity" : "none";
+    return `${this._config?.entity ? "entity" : "none"}|${this._config?.layout || "badge"}`;
   }
 
   get _sections() {
     const hasEntity = !!this._config?.entity;
+    const isTile = this._config?.layout === "tile";
 
     const sections = [
       {
@@ -44,7 +45,31 @@ class MateriaBadgeEditor extends SmartEditorBase {
             selector: { icon: {} },
             context: { icon_entity: "entity" },
           },
+          {
+            name: "layout",
+            helper: "Badge is the small header pill; tile is the same badge grown into a section card.",
+            selector: { select: { mode: "dropdown", options: [
+              { value: "badge", label: "Badge — header row" },
+              { value: "tile", label: "Tile — section card" },
+            ] } },
+          },
           { name: "variant", selector: { select: { mode: "dropdown", options: VARIANT_OPTIONS } } },
+          {
+            name: "tag",
+            label: "Gesture tag (top right)",
+            template: true,
+            helper: 'Leave empty for none. The word "auto" shows the configured gesture — hold when one is set, tap otherwise.',
+            selector: { text: {} },
+          },
+          ...(isTile
+            ? [{
+                name: "secondary",
+                label: "Secondary line",
+                template: true,
+                helper: "One quiet line under the name — say what the gestures do.",
+                selector: { text: {} },
+              }]
+            : []),
         ],
       },
     ];
@@ -62,6 +87,19 @@ class MateriaBadgeEditor extends SmartEditorBase {
     }
 
     sections.push(
+      {
+        title: "Stages",
+        icon: "mdi:chart-timeline",
+        expanded: false,
+        fields: [
+          {
+            name: "stages",
+            label: "Stage track",
+            helper: "List of { entity, state? } — one bar along the bottom per stage, lit while the entity matches. state may be a single value or a list; omitted, the domain's active state applies (a timer lights while running).",
+            selector: { object: {} },
+          },
+        ],
+      },
       {
         title: "Appearance",
         icon: "mdi:palette-outline",
