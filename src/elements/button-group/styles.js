@@ -35,8 +35,10 @@ export const styles = [
       display: flex;
       gap: 2px;
       width: 100%;
-      border-radius: 999px;
-      overflow: hidden;
+      /* NO container radius/clip: every button computes its own corners
+         (outer stadium ends, inner seams, and the M3E active-square morph).
+         A 999px clip here silently erased the morph on outer corners — a
+         single-option group could never show it at all. */
       background: transparent;
       box-sizing: border-box;
     }
