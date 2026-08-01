@@ -29,7 +29,6 @@ class MateriaBadgeEditor extends SmartEditorBase {
 
   get _sections() {
     const hasEntity = !!this._config?.entity;
-    const isTile = this._config?.layout === "tile";
 
     const sections = [
       {
@@ -56,20 +55,18 @@ class MateriaBadgeEditor extends SmartEditorBase {
           { name: "variant", selector: { select: { mode: "dropdown", options: VARIANT_OPTIONS } } },
           {
             name: "tag",
-            label: "Gesture tag (top right)",
+            label: "Gesture tag",
             template: true,
             helper: 'Leave empty for none. The word "auto" shows the configured gesture — hold when one is set, tap otherwise.',
             selector: { text: {} },
           },
-          ...(isTile
-            ? [{
-                name: "secondary",
-                label: "Secondary line",
-                template: true,
-                helper: "One quiet line under the name — say what the gestures do.",
-                selector: { text: {} },
-              }]
-            : []),
+          {
+            name: "secondary",
+            label: "Secondary line",
+            template: true,
+            helper: "One quiet line under the name. Left empty, a quiet badge shows its state word here instead.",
+            selector: { text: {} },
+          },
         ],
       },
     ];

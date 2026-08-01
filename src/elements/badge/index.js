@@ -190,28 +190,33 @@ class MateriaBadge extends ActionMixin(LitElement) {
 
     const alwaysColoredVariants = ["primary", "tertiary", "error", "primary-container", "secondary-container", "error-container", "device-container"];
 
+    // 18c state grammar: a badge is quiet, open (has news) or alarming.
+    // Open = the badge earned its colour: an explicit colour, an
+    // always-coloured variant, an active entity, or a battery in trouble.
+    // Open swells the tile and reveals the typed value; quiet keeps the
+    // full-size target with a muted ink. Alarm (the error family, live)
+    // goes squarer and widest — shape says danger before colour does.
+    let open = !!bgColor;
     if (!bgColor) {
       if (variant === "battery") {
         const [bg, fg] = this._getBatteryColors(stateObj);
         bgColor = bg;
         textColor = fg;
-      } else if (alwaysColoredVariants.includes(variant)) {
+        open = bg !== "var(--ha-card-background)";
+      } else if (alwaysColoredVariants.includes(variant) || (active && entity)) {
         const colors = VARIANT_COLORS[variant] || VARIANT_COLORS.secondary;
         bgColor = colors[0];
         textColor = textColor || colors[1];
-      } else if (active && entity) {
-        const colors = VARIANT_COLORS[variant] || VARIANT_COLORS.secondary;
-        bgColor = colors[0];
-        textColor = textColor || colors[1];
+        open = true;
       } else {
         bgColor = "var(--ha-card-background)";
-        textColor = textColor || "var(--primary-text-color)";
+        textColor = textColor || "var(--secondary-text-color)";
       }
     }
 
     textColor = textColor || "var(--primary-text-color)";
+    const alarm = open && (variant === "error" || variant === "error-state") && (!entity || active);
 
-    const cardClass = showState ? "with-state" : "no-state";
     const activeClass = active ? "active" : "inactive";
 
     let stateDisplay = "";
@@ -258,7 +263,10 @@ class MateriaBadge extends ActionMixin(LitElement) {
     const hasStages = Array.isArray(this.config.stages) && this.config.stages.length > 0;
     const icon = html`<ha-icon .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon} style="color: ${textColor};"></ha-icon>`;
     const name = this._isTemplate(this.config.name) ? this._resolvedName : this.config.name;
-    const rootClass = `badge ${tile ? "tile" : ""} ${cardClass} ${activeClass} ${hasStages ? "has-stages" : ""} ${unavailable ? "unavailable" : ""}`;
+    // The sub line: configured secondary wins; a quiet badge falls back to
+    // its state word ("Off", "Locked") — when open, the value says it bigger.
+    const sub = secondary || (!open && showState ? stateDisplay : "");
+    const rootClass = `badge ${tile ? "tile" : ""} ${activeClass} ${open ? "open" : ""} ${alarm ? "alarm" : ""} ${hasStages ? "has-stages" : ""} ${unavailable ? "unavailable" : ""}`;
 
     return html`
       <div
@@ -293,10 +301,15 @@ class MateriaBadge extends ActionMixin(LitElement) {
               ${this._renderStages()}
             `
           : html`
-              <div class="icon-cell">${icon}</div>
+              <div class="row-top">
+                <div class="icon-cell">${icon}</div>
+                ${showState ? html`<span class="value">${stateDisplay}</span>` : ""}
+              </div>
+              <div class="text">
+                <div class="name">${name}</div>
+                ${sub ? html`<div class="sub">${sub}</div>` : ""}
+              </div>
               ${tag ? html`<div class="tag">${tag}</div>` : ""}
-              <div class="name">${name}</div>
-              ${showState ? html`<div class="state">${stateDisplay}</div>` : ""}
               ${this._renderStages()}
             `}
       </div>

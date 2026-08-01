@@ -8311,38 +8311,49 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
     .badge {
       box-sizing: border-box;
       position: relative;
-      height: 107px;
-      width: 110px;
-      border-radius: var(--ha-card-border-radius, 18px);
+      height: 100px;
+      min-width: 132px;
+      max-width: 132px;
+      padding: 12px 18px;
+      border-radius: 28px;
       overflow: hidden;
       cursor: pointer;
-      display: grid;
-      grid-template-columns: 1fr;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
       font-family: inherit;
       -webkit-tap-highlight-color: transparent;
       /* A hold must not start a text selection on desktop. */
       -webkit-user-select: none;
       user-select: none;
+      transition:
+        max-width var(--md-sys-motion-expressive-default-spatial),
+        border-radius var(--md-sys-motion-expressive-fast-spatial),
+        background-color var(--md-sys-motion-default-effects),
+        color var(--md-sys-motion-default-effects);
     }
 
-    .badge.no-state {
-      grid-template-areas: "i" "n";
-      grid-template-rows: 1fr min-content;
+    .badge.open {
+      max-width: 190px;
     }
 
-    .badge.with-state {
-      grid-template-areas: "i" "n" "s";
-      grid-template-rows: 1fr min-content min-content;
+    /* Alarm outgrows everything and squares off — the shape says danger
+       before the colour does. */
+    .badge.alarm {
+      max-width: 220px;
+      border-radius: 20px;
+    }
+
+    .row-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     .icon-cell {
-      grid-area: i;
-      align-self: start;
       display: flex;
-      justify-content: start;
-      align-items: start;
-      height: 24px;
-      padding: 14px 0 0 16px;
+      flex: none;
     }
 
     .icon-cell ha-icon {
@@ -8351,32 +8362,37 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
       height: 24px;
     }
 
+    /* The typed value — "3 on", "21°", a ticking 0:14. Always in the DOM so
+       it can fade; the quiet tile is simply too narrow to show it. */
+    .value {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity var(--md-sys-motion-default-effects) 100ms;
+    }
+
+    .badge.open .value {
+      opacity: 1;
+    }
+
+    .text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.15;
+    }
+
     .name {
-      grid-area: n;
-      justify-self: start;
-      padding-left: 10px;
-      font-weight: 600;
-      font-size: 13px;
-      line-height: 18px;
+      font-size: 15px;
+      font-weight: 700;
+      white-space: nowrap;
     }
 
-    .badge.no-state .name {
-      margin: 0px 10px 30px 6px;
-      align-self: end;
-    }
-
-    .badge.with-state .name {
-      margin: 10px 10px 0 6px;
-    }
-
-    .state {
-      grid-area: s;
-      justify-self: start;
-      margin: 0 0 10px 16px;
+    .sub {
       font-size: 12px;
-      font-weight: normal;
-      opacity: 0.7;
-      line-height: 18px;
+      opacity: 0.68;
+      white-space: nowrap;
     }
 
     /* Hold progress — a fill sweeps across the badge over the arm window so
@@ -8401,12 +8417,12 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
       to { width: 100%; }
     }
 
-    /* Gesture tag — the top-right eyebrow. On the header pill it overlays the
-       icon row (absolute keeps it out of the grid's auto-placement). */
+    /* Gesture tag — a quiet eyebrow in the bottom-right corner, clear of the
+       value (top-right) and the name/sub column (bottom-left). */
     .tag {
       position: absolute;
-      top: 14px;
-      right: 12px;
+      right: 16px;
+      bottom: 12px;
       font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.1em;
@@ -8418,8 +8434,8 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
     /* Stage track — one equal bar per stage, lit while its condition holds. */
     .stages {
       position: absolute;
-      left: 14px;
-      right: 14px;
+      left: 18px;
+      right: 18px;
       bottom: 8px;
       display: flex;
       gap: 3px;
@@ -8438,20 +8454,23 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
       opacity: 0.6;
     }
 
-    /* Lift the bottom text off the track when one is shown. */
-    .badge.has-stages.with-state .state {
-      margin-bottom: 18px;
+    /* Lift the text and the tag off the track when one is shown. */
+    .badge.has-stages {
+      padding-bottom: 20px;
+    }
+
+    .badge.has-stages .tag {
+      bottom: 20px;
     }
 
     /* ---- tile layout: the badge grown into a section card ------------- */
     .badge.tile {
       width: 100%;
       height: auto;
+      min-width: 0;
+      max-width: none;
       aspect-ratio: 1;
       border-radius: 34px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
       padding: 20px;
     }
 
@@ -8459,11 +8478,6 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-    }
-
-    .badge.tile .icon-cell {
-      padding: 0;
-      height: auto;
     }
 
     .badge.tile .icon-cell ha-icon {
@@ -8490,6 +8504,7 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
       font-weight: 700;
       letter-spacing: -0.02em;
       line-height: 1.05;
+      white-space: normal;
     }
 
     .secondary {
@@ -8524,13 +8539,13 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
       pointer-events: none;
       filter: grayscale(80%);
     }
-  `],Zs=[{value:"primary",label:"Primary"},{value:"secondary",label:"Secondary"},{value:"tertiary",label:"Tertiary"},{value:"error",label:"Error"},{value:"device",label:"Device"},{value:"primary-container",label:"Primary Container"},{value:"secondary-container",label:"Secondary Container"},{value:"error-container",label:"Error Container"},{value:"device-container",label:"Device Container"},{value:"primary-state",label:"Primary State"},{value:"secondary-state",label:"Secondary State"},{value:"tertiary-state",label:"Tertiary State"},{value:"error-state",label:"Error State"},{value:"device-state",label:"Device State"},{value:"battery",label:"Battery"}];customElements.define("materia-badge-editor",class extends Ie{_formData(){return{show_state:!1,variant:"secondary",layout:"badge",...this._config}}_sectionsSignature(){return`${this._config?.entity?"entity":"none"}|${this._config?.layout||"badge"}`}get _sections(){const e=!!this._config?.entity,t="tile"===this._config?.layout,i=[{title:"Content",icon:"mdi:card-text-outline",fields:[{name:"entity",selector:{entity:{}}},{name:"name",required:!0,template:!0,selector:{text:{}}},{name:"icon",required:!0,template:!0,selector:{icon:{}},context:{icon_entity:"entity"}},{name:"layout",helper:"Badge is the small header pill; tile is the same badge grown into a section card.",selector:{select:{mode:"dropdown",options:[{value:"badge",label:"Badge — header row"},{value:"tile",label:"Tile — section card"}]}}},{name:"variant",selector:{select:{mode:"dropdown",options:Zs}}},{name:"tag",label:"Gesture tag (top right)",template:!0,helper:'Leave empty for none. The word "auto" shows the configured gesture — hold when one is set, tap otherwise.',selector:{text:{}}},...t?[{name:"secondary",label:"Secondary line",template:!0,helper:"One quiet line under the name — say what the gestures do.",selector:{text:{}}}]:[]]}];return e&&i.push({title:"State",icon:"mdi:state-machine",fields:[{name:"show_state",selector:{boolean:{}}},{name:"active_state",selector:{text:{}}},{name:"state_display",template:!0,selector:{text:{}}}]}),i.push({title:"Stages",icon:"mdi:chart-timeline",expanded:!1,fields:[{name:"stages",label:"Stage track",helper:"List of { entity, state? } — one bar along the bottom per stage, lit while the entity matches. state may be a single value or a list; omitted, the domain's active state applies (a timer lights while running).",selector:{object:{}}}]},{title:"Appearance",icon:"mdi:palette-outline",fields:[{name:"color",label:"Background",color:!0,template:!0,selector:{text:{}}},{name:"color_on",label:"Text / icon",color:!0,template:!0,selector:{text:{}}}]},{title:"Actions",icon:"mdi:gesture-tap",fields:[{name:"tap_action",selector:{ui_action:{default_action:"toggle"}}},{name:"hold_action",helper:"A hold is deliberate by construction — the right slot for actions a stray tap must never fire.",selector:{ui_action:{default_action:"none"}}},{name:"double_tap_action",selector:{ui_action:{default_action:"none"}}}]}),i}});const Qs={cover:"open",lock:["locked","locking"],vacuum:"cleaning",media_player:"playing",climate:"heat",alarm_control_panel:"armed_away",timer:"active"};class Js extends(Ce(ce)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedStateDisplay:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0},_resolvedTag:{state:!0},_resolvedSecondary:{state:!0}};static getConfigElement(){return document.createElement("materia-badge-editor")}static getStubConfig(e){const t=(e?Object.keys(e.states):[]).find(e=>e.startsWith("light.")||e.startsWith("switch."))||"";return{name:"Badge",icon:"mdi:power-plug",variant:"primary",show_state:!1,active_state:"on",entity:t}}static styles=[Ae,Ks];setConfig(e){if(!e.icon)throw new Error("icon is required");if(!e.name)throw new Error("name is required");this.config={show_state:!1,active_state:"on",variant:"secondary",tap_action:{action:"toggle"},...e},this.toggleAttribute("tile","tile"===this.config.layout)}updated(e){super.updated?.(e),e.has("hass")&&this.hass&&(this._resolveField("state_display","_resolvedStateDisplay"),this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"),this._resolveField("tag","_resolvedTag"),this._resolveField("secondary","_resolvedSecondary"),this._syncTimerTick())}_syncTimerTick(){const e=this.config.show_state&&this.config.entity?.startsWith("timer.")&&"active"===this.hass.states[this.config.entity]?.state;e&&!this._timerTick?this._timerTick=setInterval(()=>this.requestUpdate(),1e3):!e&&this._timerTick&&(clearInterval(this._timerTick),this._timerTick=null)}_timerRemaining(e){const t=Date.parse(e.attributes?.finishes_at);if(Number.isNaN(t))return null;const i=Math.max(0,Math.ceil((t-Date.now())/1e3));return`${Math.floor(i/60)}:${String(i%60).padStart(2,"0")}`}_isActive(e){if(!e)return!1;const t=e.state,i=this.config.active_state;if(null!=i)return Array.isArray(i)?i.includes(t):t===String(i);const s=e.entity_id.split(".")[0],o=Qs[s]||"on";return Array.isArray(o)?o.includes(t):t===o}_stageActive(e){const t=e?.entity?this.hass.states[e.entity]:void 0;if(!t)return!1;if(null!=e.state)return Array.isArray(e.state)?e.state.map(String).includes(t.state):t.state===String(e.state);const i=Qs[t.entity_id.split(".")[0]]||"on";return Array.isArray(i)?i.includes(t.state):t.state===i}_renderStages(){const e=this.config.stages;return Array.isArray(e)&&e.length?I`
+  `],Zs=[{value:"primary",label:"Primary"},{value:"secondary",label:"Secondary"},{value:"tertiary",label:"Tertiary"},{value:"error",label:"Error"},{value:"device",label:"Device"},{value:"primary-container",label:"Primary Container"},{value:"secondary-container",label:"Secondary Container"},{value:"error-container",label:"Error Container"},{value:"device-container",label:"Device Container"},{value:"primary-state",label:"Primary State"},{value:"secondary-state",label:"Secondary State"},{value:"tertiary-state",label:"Tertiary State"},{value:"error-state",label:"Error State"},{value:"device-state",label:"Device State"},{value:"battery",label:"Battery"}];customElements.define("materia-badge-editor",class extends Ie{_formData(){return{show_state:!1,variant:"secondary",layout:"badge",...this._config}}_sectionsSignature(){return`${this._config?.entity?"entity":"none"}|${this._config?.layout||"badge"}`}get _sections(){const e=!!this._config?.entity,t=[{title:"Content",icon:"mdi:card-text-outline",fields:[{name:"entity",selector:{entity:{}}},{name:"name",required:!0,template:!0,selector:{text:{}}},{name:"icon",required:!0,template:!0,selector:{icon:{}},context:{icon_entity:"entity"}},{name:"layout",helper:"Badge is the small header pill; tile is the same badge grown into a section card.",selector:{select:{mode:"dropdown",options:[{value:"badge",label:"Badge — header row"},{value:"tile",label:"Tile — section card"}]}}},{name:"variant",selector:{select:{mode:"dropdown",options:Zs}}},{name:"tag",label:"Gesture tag",template:!0,helper:'Leave empty for none. The word "auto" shows the configured gesture — hold when one is set, tap otherwise.',selector:{text:{}}},{name:"secondary",label:"Secondary line",template:!0,helper:"One quiet line under the name. Left empty, a quiet badge shows its state word here instead.",selector:{text:{}}}]}];return e&&t.push({title:"State",icon:"mdi:state-machine",fields:[{name:"show_state",selector:{boolean:{}}},{name:"active_state",selector:{text:{}}},{name:"state_display",template:!0,selector:{text:{}}}]}),t.push({title:"Stages",icon:"mdi:chart-timeline",expanded:!1,fields:[{name:"stages",label:"Stage track",helper:"List of { entity, state? } — one bar along the bottom per stage, lit while the entity matches. state may be a single value or a list; omitted, the domain's active state applies (a timer lights while running).",selector:{object:{}}}]},{title:"Appearance",icon:"mdi:palette-outline",fields:[{name:"color",label:"Background",color:!0,template:!0,selector:{text:{}}},{name:"color_on",label:"Text / icon",color:!0,template:!0,selector:{text:{}}}]},{title:"Actions",icon:"mdi:gesture-tap",fields:[{name:"tap_action",selector:{ui_action:{default_action:"toggle"}}},{name:"hold_action",helper:"A hold is deliberate by construction — the right slot for actions a stray tap must never fire.",selector:{ui_action:{default_action:"none"}}},{name:"double_tap_action",selector:{ui_action:{default_action:"none"}}}]}),t}});const Qs={cover:"open",lock:["locked","locking"],vacuum:"cleaning",media_player:"playing",climate:"heat",alarm_control_panel:"armed_away",timer:"active"};class Js extends(Ce(ce)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedStateDisplay:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedIcon:{state:!0},_resolvedName:{state:!0},_resolvedTag:{state:!0},_resolvedSecondary:{state:!0}};static getConfigElement(){return document.createElement("materia-badge-editor")}static getStubConfig(e){const t=(e?Object.keys(e.states):[]).find(e=>e.startsWith("light.")||e.startsWith("switch."))||"";return{name:"Badge",icon:"mdi:power-plug",variant:"primary",show_state:!1,active_state:"on",entity:t}}static styles=[Ae,Ks];setConfig(e){if(!e.icon)throw new Error("icon is required");if(!e.name)throw new Error("name is required");this.config={show_state:!1,active_state:"on",variant:"secondary",tap_action:{action:"toggle"},...e},this.toggleAttribute("tile","tile"===this.config.layout)}updated(e){super.updated?.(e),e.has("hass")&&this.hass&&(this._resolveField("state_display","_resolvedStateDisplay"),this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("icon","_resolvedIcon"),this._resolveField("name","_resolvedName"),this._resolveField("tag","_resolvedTag"),this._resolveField("secondary","_resolvedSecondary"),this._syncTimerTick())}_syncTimerTick(){const e=this.config.show_state&&this.config.entity?.startsWith("timer.")&&"active"===this.hass.states[this.config.entity]?.state;e&&!this._timerTick?this._timerTick=setInterval(()=>this.requestUpdate(),1e3):!e&&this._timerTick&&(clearInterval(this._timerTick),this._timerTick=null)}_timerRemaining(e){const t=Date.parse(e.attributes?.finishes_at);if(Number.isNaN(t))return null;const i=Math.max(0,Math.ceil((t-Date.now())/1e3));return`${Math.floor(i/60)}:${String(i%60).padStart(2,"0")}`}_isActive(e){if(!e)return!1;const t=e.state,i=this.config.active_state;if(null!=i)return Array.isArray(i)?i.includes(t):t===String(i);const s=e.entity_id.split(".")[0],o=Qs[s]||"on";return Array.isArray(o)?o.includes(t):t===o}_stageActive(e){const t=e?.entity?this.hass.states[e.entity]:void 0;if(!t)return!1;if(null!=e.state)return Array.isArray(e.state)?e.state.map(String).includes(t.state):t.state===String(e.state);const i=Qs[t.entity_id.split(".")[0]]||"on";return Array.isArray(i)?i.includes(t.state):t.state===i}_renderStages(){const e=this.config.stages;return Array.isArray(e)&&e.length?I`
       <div class="stages">
         ${e.map(e=>I`<div class="stage ${this._stageActive(e)?"lit":""}"></div>`)}
       </div>
-    `:""}_autoTag(){const e=e=>e?.action&&"none"!==e.action;return e(this.config.hold_action)?we("badge_tag_hold",this.hass):e(this.config.tap_action)?we("badge_tag_tap",this.hass):""}_getBatteryColors(e){const t=parseFloat(e?.state);return Number.isNaN(t)?["var(--ha-card-background)","var(--primary-text-color)"]:t<10?["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"]:t<20?["var(--md-sys-cust-color-warning-container, #ffecb3)","var(--md-sys-cust-color-on-warning-container, #6d4c00)"]:["var(--ha-card-background)","var(--primary-text-color)"]}get _templatesReady(){const e=this.config;return(!this._isTemplate(e.color)||void 0!==this._resolvedColor)&&((!this._isTemplate(e.color_on)||void 0!==this._resolvedColorOn)&&((!this._isTemplate(e.state_display)||void 0!==this._resolvedStateDisplay)&&((!this._isTemplate(e.icon)||void 0!==this._resolvedIcon)&&((!this._isTemplate(e.name)||void 0!==this._resolvedName)&&((!this._isTemplate(e.tag)||void 0!==this._resolvedTag)&&(!this._isTemplate(e.secondary)||void 0!==this._resolvedSecondary))))))}render(){if(!this.hass||!this.config)return I``;const e=this.config.entity,t=e?this.hass.states[e]:void 0,i=!!e&&this._isUnavailable(t),s=!i&&this._isActive(t),o=this.config.variant||"secondary",n=this.config.show_state;let a=this._isTemplate(this.config.color)?(this._resolvedColor||"").trim():this.config.color,r=this._isTemplate(this.config.color_on)?(this._resolvedColorOn||"").trim():this.config.color_on;const l=["primary","tertiary","error","primary-container","secondary-container","error-container","device-container"];if(!a)if("battery"===o){const[e,i]=this._getBatteryColors(t);a=e,r=i}else if(l.includes(o)){const e=Ys[o]||Ys.secondary;a=e[0],r=r||e[1]}else if(s&&e){const e=Ys[o]||Ys.secondary;a=e[0],r=r||e[1]}else a="var(--ha-card-background)",r=r||"var(--primary-text-color)";r=r||"var(--primary-text-color)";const c=n?"with-state":"no-state",d=s?"active":"inactive";let h="";if(n&&i)h="Unavailable";else if(n&&t){const i=this.config.state_display&&(this.config.state_display.includes("{{")||this.config.state_display.includes("{%"));if(this._resolvedStateDisplay&&i)h=this._resolvedStateDisplay;else if(this.config.state_display&&!i)h=this.config.state_display;else if(e?.startsWith("timer.")&&"active"===t.state&&this._timerRemaining(t))h=this._timerRemaining(t);else{const e=t.state,i=Number(e);if(""===e||null==e||Number.isNaN(i))h=e;else{const e=t.attributes?.unit_of_measurement,s=Math.round(100*i)/100;h=e?"%"===e?`${s}%`:`${s} ${e}`:`${s}`}}h=this._capitalize(h)}let p="";this.config.tag&&(p=this._isTemplate(this.config.tag)?this._resolvedTag||"":"auto"===this.config.tag?this._autoTag():this.config.tag);const u=this._isTemplate(this.config.secondary)?this._resolvedSecondary||"":this.config.secondary,m="tile"===this.config.layout,g=Array.isArray(this.config.stages)&&this.config.stages.length>0,f=I`<ha-icon .icon=${this._isTemplate(this.config.icon)?this._resolvedIcon:this.config.icon} style="color: ${r};"></ha-icon>`,_=this._isTemplate(this.config.name)?this._resolvedName:this.config.name;return I`
+    `:""}_autoTag(){const e=e=>e?.action&&"none"!==e.action;return e(this.config.hold_action)?we("badge_tag_hold",this.hass):e(this.config.tap_action)?we("badge_tag_tap",this.hass):""}_getBatteryColors(e){const t=parseFloat(e?.state);return Number.isNaN(t)?["var(--ha-card-background)","var(--primary-text-color)"]:t<10?["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"]:t<20?["var(--md-sys-cust-color-warning-container, #ffecb3)","var(--md-sys-cust-color-on-warning-container, #6d4c00)"]:["var(--ha-card-background)","var(--primary-text-color)"]}get _templatesReady(){const e=this.config;return(!this._isTemplate(e.color)||void 0!==this._resolvedColor)&&((!this._isTemplate(e.color_on)||void 0!==this._resolvedColorOn)&&((!this._isTemplate(e.state_display)||void 0!==this._resolvedStateDisplay)&&((!this._isTemplate(e.icon)||void 0!==this._resolvedIcon)&&((!this._isTemplate(e.name)||void 0!==this._resolvedName)&&((!this._isTemplate(e.tag)||void 0!==this._resolvedTag)&&(!this._isTemplate(e.secondary)||void 0!==this._resolvedSecondary))))))}render(){if(!this.hass||!this.config)return I``;const e=this.config.entity,t=e?this.hass.states[e]:void 0,i=!!e&&this._isUnavailable(t),s=!i&&this._isActive(t),o=this.config.variant||"secondary",n=this.config.show_state;let a=this._isTemplate(this.config.color)?(this._resolvedColor||"").trim():this.config.color,r=this._isTemplate(this.config.color_on)?(this._resolvedColorOn||"").trim():this.config.color_on;const l=["primary","tertiary","error","primary-container","secondary-container","error-container","device-container"];let c=!!a;if(!a)if("battery"===o){const[e,i]=this._getBatteryColors(t);a=e,r=i,c="var(--ha-card-background)"!==e}else if(l.includes(o)||s&&e){const e=Ys[o]||Ys.secondary;a=e[0],r=r||e[1],c=!0}else a="var(--ha-card-background)",r=r||"var(--secondary-text-color)";r=r||"var(--primary-text-color)";const d=c&&("error"===o||"error-state"===o)&&(!e||s),h=s?"active":"inactive";let p="";if(n&&i)p="Unavailable";else if(n&&t){const i=this.config.state_display&&(this.config.state_display.includes("{{")||this.config.state_display.includes("{%"));if(this._resolvedStateDisplay&&i)p=this._resolvedStateDisplay;else if(this.config.state_display&&!i)p=this.config.state_display;else if(e?.startsWith("timer.")&&"active"===t.state&&this._timerRemaining(t))p=this._timerRemaining(t);else{const e=t.state,i=Number(e);if(""===e||null==e||Number.isNaN(i))p=e;else{const e=t.attributes?.unit_of_measurement,s=Math.round(100*i)/100;p=e?"%"===e?`${s}%`:`${s} ${e}`:`${s}`}}p=this._capitalize(p)}let u="";this.config.tag&&(u=this._isTemplate(this.config.tag)?this._resolvedTag||"":"auto"===this.config.tag?this._autoTag():this.config.tag);const m=this._isTemplate(this.config.secondary)?this._resolvedSecondary||"":this.config.secondary,g="tile"===this.config.layout,f=Array.isArray(this.config.stages)&&this.config.stages.length>0,_=I`<ha-icon .icon=${this._isTemplate(this.config.icon)?this._resolvedIcon:this.config.icon} style="color: ${r};"></ha-icon>`,b=this._isTemplate(this.config.name)?this._resolvedName:this.config.name,v=m||(!c&&n?p:"");return I`
       <div
-        class=${`badge ${m?"tile":""} ${c} ${d} ${g?"has-stages":""} ${i?"unavailable":""}`}
+        class=${`badge ${g?"tile":""} ${h} ${c?"open":""} ${d?"alarm":""} ${f?"has-stages":""} ${i?"unavailable":""}`}
         style="background-color: ${a}; color: ${r};"
         @click=${this._handleTap}
         @dblclick=${this._handleDoubleTap}
@@ -8541,22 +8556,27 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
         @contextmenu=${e=>{this.config.hold_action?.action&&"none"!==this.config.hold_action.action&&e.preventDefault()}}
       >
         ${this._haArming?I`<div class="hold-fill" style="animation-duration: ${500}ms;"></div>`:""}
-        ${m?I`
+        ${g?I`
               <div class="tile-top">
-                <div class="icon-cell">${f}</div>
-                ${p?I`<div class="tag">${p}</div>`:""}
+                <div class="icon-cell">${_}</div>
+                ${u?I`<div class="tag">${u}</div>`:""}
               </div>
               <div class="tile-text">
-                <div class="name">${_}</div>
-                ${u?I`<div class="secondary">${u}</div>`:""}
-                ${n&&h?I`<div class="state">${h}</div>`:""}
+                <div class="name">${b}</div>
+                ${m?I`<div class="secondary">${m}</div>`:""}
+                ${n&&p?I`<div class="state">${p}</div>`:""}
               </div>
               ${this._renderStages()}
             `:I`
-              <div class="icon-cell">${f}</div>
-              ${p?I`<div class="tag">${p}</div>`:""}
-              <div class="name">${_}</div>
-              ${n?I`<div class="state">${h}</div>`:""}
+              <div class="row-top">
+                <div class="icon-cell">${_}</div>
+                ${n?I`<span class="value">${p}</span>`:""}
+              </div>
+              <div class="text">
+                <div class="name">${b}</div>
+                ${v?I`<div class="sub">${v}</div>`:""}
+              </div>
+              ${u?I`<div class="tag">${u}</div>`:""}
               ${this._renderStages()}
             `}
       </div>
@@ -9622,4 +9642,4 @@ const Us=ws(class extends ks{constructor(){super(...arguments),this.key=W}render
           <circle class="pin" cx="50" cy="50" r="2.4"></circle>
         </svg>
       </ha-card>
-    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const e=document.createElement("style");e.id="materia-fonts",e.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Display voice: Outfit VARIABLE (true wght 100-900 axis) — hero\n       numerals & titles via --materia-font-display; the weight axis\n       interpolates smoothly, which flavor C's morphs animate. */\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJuktqUYLkn8BJ.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJtEtqUYLknw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Accent voice: Fraunces italic — ONE personality moment (clock date). */\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7frU9kMz3lR27gVA.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7RrU9kMz3lR24.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(e)}();console.info("%c MATERIA %c v0.34.0 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");
+    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const e=document.createElement("style");e.id="materia-fonts",e.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Display voice: Outfit VARIABLE (true wght 100-900 axis) — hero\n       numerals & titles via --materia-font-display; the weight axis\n       interpolates smoothly, which flavor C's morphs animate. */\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJuktqUYLkn8BJ.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJtEtqUYLknw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Accent voice: Fraunces italic — ONE personality moment (clock date). */\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7frU9kMz3lR27gVA.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7RrU9kMz3lR24.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(e)}();console.info("%c MATERIA %c v0.35.0 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");

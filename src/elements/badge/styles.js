@@ -20,6 +20,14 @@ export const VARIANT_COLORS = {
   "device-state":        ["var(--md-sys-cust-color-device-container)",  "var(--md-sys-cust-color-on-device)"],
 };
 
+/* Header badge anatomy per design 18c ("Same grammar, accessible floor"):
+   nothing ever drops below a full 100x132 tile, so every target stays a
+   generous size, lit or not. News changes COLOUR, PAYLOAD and WIDTH instead
+   of existence: quiet keeps icon + name + a muted state word; open (news)
+   reveals the big typed value top-right and swells to 190px; alarm goes
+   squarer and widest. Widths ride the expressive spatial spring; colour and
+   opacity ride the effects curve. The design doc's hex palette is
+   illustrative — colours here stay on the M3 variant tokens. */
 export const styles = [
   hostStyles,
   motionTokens,
@@ -38,38 +46,49 @@ export const styles = [
     .badge {
       box-sizing: border-box;
       position: relative;
-      height: 107px;
-      width: 110px;
-      border-radius: var(--ha-card-border-radius, 18px);
+      height: 100px;
+      min-width: 132px;
+      max-width: 132px;
+      padding: 12px 18px;
+      border-radius: 28px;
       overflow: hidden;
       cursor: pointer;
-      display: grid;
-      grid-template-columns: 1fr;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
       font-family: inherit;
       -webkit-tap-highlight-color: transparent;
       /* A hold must not start a text selection on desktop. */
       -webkit-user-select: none;
       user-select: none;
+      transition:
+        max-width var(--md-sys-motion-expressive-default-spatial),
+        border-radius var(--md-sys-motion-expressive-fast-spatial),
+        background-color var(--md-sys-motion-default-effects),
+        color var(--md-sys-motion-default-effects);
     }
 
-    .badge.no-state {
-      grid-template-areas: "i" "n";
-      grid-template-rows: 1fr min-content;
+    .badge.open {
+      max-width: 190px;
     }
 
-    .badge.with-state {
-      grid-template-areas: "i" "n" "s";
-      grid-template-rows: 1fr min-content min-content;
+    /* Alarm outgrows everything and squares off — the shape says danger
+       before the colour does. */
+    .badge.alarm {
+      max-width: 220px;
+      border-radius: 20px;
+    }
+
+    .row-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     .icon-cell {
-      grid-area: i;
-      align-self: start;
       display: flex;
-      justify-content: start;
-      align-items: start;
-      height: 24px;
-      padding: 14px 0 0 16px;
+      flex: none;
     }
 
     .icon-cell ha-icon {
@@ -78,32 +97,37 @@ export const styles = [
       height: 24px;
     }
 
+    /* The typed value — "3 on", "21°", a ticking 0:14. Always in the DOM so
+       it can fade; the quiet tile is simply too narrow to show it. */
+    .value {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity var(--md-sys-motion-default-effects) 100ms;
+    }
+
+    .badge.open .value {
+      opacity: 1;
+    }
+
+    .text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.15;
+    }
+
     .name {
-      grid-area: n;
-      justify-self: start;
-      padding-left: 10px;
-      font-weight: 600;
-      font-size: 13px;
-      line-height: 18px;
+      font-size: 15px;
+      font-weight: 700;
+      white-space: nowrap;
     }
 
-    .badge.no-state .name {
-      margin: 0px 10px 30px 6px;
-      align-self: end;
-    }
-
-    .badge.with-state .name {
-      margin: 10px 10px 0 6px;
-    }
-
-    .state {
-      grid-area: s;
-      justify-self: start;
-      margin: 0 0 10px 16px;
+    .sub {
       font-size: 12px;
-      font-weight: normal;
-      opacity: 0.7;
-      line-height: 18px;
+      opacity: 0.68;
+      white-space: nowrap;
     }
 
     /* Hold progress — a fill sweeps across the badge over the arm window so
@@ -128,12 +152,12 @@ export const styles = [
       to { width: 100%; }
     }
 
-    /* Gesture tag — the top-right eyebrow. On the header pill it overlays the
-       icon row (absolute keeps it out of the grid's auto-placement). */
+    /* Gesture tag — a quiet eyebrow in the bottom-right corner, clear of the
+       value (top-right) and the name/sub column (bottom-left). */
     .tag {
       position: absolute;
-      top: 14px;
-      right: 12px;
+      right: 16px;
+      bottom: 12px;
       font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.1em;
@@ -145,8 +169,8 @@ export const styles = [
     /* Stage track — one equal bar per stage, lit while its condition holds. */
     .stages {
       position: absolute;
-      left: 14px;
-      right: 14px;
+      left: 18px;
+      right: 18px;
       bottom: 8px;
       display: flex;
       gap: 3px;
@@ -165,20 +189,23 @@ export const styles = [
       opacity: 0.6;
     }
 
-    /* Lift the bottom text off the track when one is shown. */
-    .badge.has-stages.with-state .state {
-      margin-bottom: 18px;
+    /* Lift the text and the tag off the track when one is shown. */
+    .badge.has-stages {
+      padding-bottom: 20px;
+    }
+
+    .badge.has-stages .tag {
+      bottom: 20px;
     }
 
     /* ---- tile layout: the badge grown into a section card ------------- */
     .badge.tile {
       width: 100%;
       height: auto;
+      min-width: 0;
+      max-width: none;
       aspect-ratio: 1;
       border-radius: 34px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
       padding: 20px;
     }
 
@@ -186,11 +213,6 @@ export const styles = [
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-    }
-
-    .badge.tile .icon-cell {
-      padding: 0;
-      height: auto;
     }
 
     .badge.tile .icon-cell ha-icon {
@@ -217,6 +239,7 @@ export const styles = [
       font-weight: 700;
       letter-spacing: -0.02em;
       line-height: 1.05;
+      white-space: normal;
     }
 
     .secondary {
