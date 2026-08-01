@@ -63,7 +63,7 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
      safe. Max columns stays out: the card reads a missing value as 0 ("as many
      as fit"), which the 1–8 selector cannot represent. */
   _formData() {
-    return { group: "connected", size: "m", variant: "tonal", gap: 8, padding: 4, ...this._config };
+    return { group: "connected", size: "m", variant: "tonal", ...this._config };
   }
 
   _sectionsSignature() {
@@ -105,8 +105,6 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
           { value: "tonal", label: "Tonal" },
         ] } } },
         ...(standard ? [
-          { name: "gap", label: "Gap between buttons (px)", selector: { number: { min: 0, max: 32, mode: "box" } } },
-          { name: "padding", label: "Vertical padding (px)", selector: { number: { min: 0, max: 32, mode: "box" } } },
         ] : []),
         ...(standard ? [] : [{ name: "multi_select", label: "Multi-select", selector: { boolean: {} } }]),
         ...(!standard && this._config?.multi_select

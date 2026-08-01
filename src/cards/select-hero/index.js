@@ -2,6 +2,7 @@ import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import { HeroShellMixin } from "../hero/shell.js";
+import { OptimisticMixin } from "../../utils/optimistic.js";
 import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
 import "./editor.js";
@@ -36,7 +37,7 @@ import "./editor.js";
  * `glyph` is an SVG path on the design's 48x34 grid — the route the machine
  * actually drives — stroked in currentColor and drawn on when it changes.
  */
-class MateriaSelectHero extends DisabledMixin(HeroShellMixin(ActionMixin(LitElement))) {
+class MateriaSelectHero extends OptimisticMixin(DisabledMixin(HeroShellMixin(ActionMixin(LitElement)))) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -63,6 +64,19 @@ class MateriaSelectHero extends DisabledMixin(HeroShellMixin(ActionMixin(LitElem
     return this.hass?.states[this.config.entity];
   }
 
+  _optimisticActual() {
+    const st = this._stateObj;
+    return st ? String(st.state) : null;
+  }
+
+  /** The option the UI presents — the tapped one immediately. The whole panel
+   *  follows (title, blurb, glyph, pills), so picking a mode answers on the
+   *  tap frame; the route even starts drawing at once, because _drawnFor keys
+   *  off this same value. */
+  get _current() {
+    return String(this._optimistic ?? "");
+  }
+
   get _options() {
     if (this.config.options?.length) return this.config.options;
     const st = this._stateObj;
@@ -74,10 +88,13 @@ class MateriaSelectHero extends DisabledMixin(HeroShellMixin(ActionMixin(LitElem
 
   updated(changed) {
     super.updated?.(changed);
-    if (changed.has("hass") && this.hass) this._resolveAlertTemplates();
+    if (changed.has("hass") && this.hass) {
+      this._resolveAlertTemplates();
+      this._optimisticReconcile();
+    }
     // Draw the route whenever the chosen option actually changes — including
     // the first paint, which gives the card an entrance rather than a pop.
-    const cur = String(this._stateObj?.state ?? "");
+    const cur = this._current;
     if (cur !== this._drawnFor) {
       this._drawnFor = cur;
       this._drawRoute();
@@ -103,6 +120,7 @@ class MateriaSelectHero extends DisabledMixin(HeroShellMixin(ActionMixin(LitElem
 
   _select(opt) {
     this._fireHaptic("selection");
+    if (opt.value != null) this._optimisticSet(opt.value);
     if (opt.tap_action) {
       this._handleAction(opt.tap_action);
       return;
@@ -125,7 +143,7 @@ class MateriaSelectHero extends DisabledMixin(HeroShellMixin(ActionMixin(LitElem
     const options = this._options;
     if (!options.length) return;
     ev.preventDefault();
-    const cur = String(this._stateObj?.state ?? "");
+    const cur = this._current;
     const n = options.length;
     let i = options.findIndex((o) => String(o.value) === cur);
     if (i < 0) i = 0;
@@ -145,7 +163,7 @@ class MateriaSelectHero extends DisabledMixin(HeroShellMixin(ActionMixin(LitElem
     if (!this.hass || !this.config) return html``;
     const st = this._stateObj;
     const unavailable = this._isUnavailable(st);
-    const cur = String(st?.state ?? "");
+    const cur = this._current;
     const options = this._options;
     const active = options.find((o) => String(o.value) === cur) || null;
     const alert = this._activeAlert;

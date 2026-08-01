@@ -88,6 +88,11 @@ export const styles = [
     .pills {
       display: flex;
       gap: 3px;
+      /* Real separation from the text above. The blurb reserves two lines, and
+         on wide screens its unused second line LOOKED like a gap — on narrow
+         screens the sentence wraps into both lines and the text sat flush
+         against the pills. Spacing must not depend on leftover reservation. */
+      margin-top: clamp(10px, 3.2cqi, 14px);
       /* Never squeezed below their own labels: a select with six or seven
          options scrolls rather than shrinking to unreadable slivers. */
       overflow-x: auto;

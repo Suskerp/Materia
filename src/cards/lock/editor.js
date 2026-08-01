@@ -58,11 +58,7 @@ class MateriaLockEditor extends SmartEditorBase {
                 helper: "Keep this above 500ms — the platform long-press timeout — or an ordinary long-press commits by accident.",
                 selector: { number: { min: 300, max: 5000, step: 50, mode: "box" } },
               }]
-            : [{
-                name: "threshold",
-                label: "Commit past this fraction of the track (default 0.55)",
-                selector: { number: { min: 0.3, max: 1, step: 0.05, mode: "slider" } },
-              }]),
+            : []),
           ...(hasEntity
             ? [
                 {

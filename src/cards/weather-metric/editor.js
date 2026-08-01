@@ -15,23 +15,22 @@ const METRICS = [
 /** The title each metric falls back to, and the defaults of its own fields.
  *  Units are absent on purpose — they follow the source entity's unit
  *  attribute, so the field labels carry that instead of a fixed value. */
+/* Only what the form MISRENDERS without: pollen's variant select and its
+   max_shown slider. The name/label strings that used to live here are
+   runtime defaults (and i18n-translated) — seeding them made every field
+   look user-filled and, once saved, froze the English wording into config. */
 const METRIC_DEFAULTS = {
-  wind: { name: "Wind", from_label: "From" },
-  uv: { name: "UV index" },
-  aqi: { name: "Air quality" },
-  pollen: { name: "Pollen", variant: "gauges", max_shown: 4, max: 4 },
-  precipitation: {
-    name: "Precipitation",
-    total_label: "Total rain for the day",
-    none_label: "No precipitation expected",
-  },
-  sun: { name: "Sunrise & sunset", sun_entity: "sun.sun" },
-  visibility: { name: "Visibility" },
-  humidity: { name: "Humidity", dew_label: "Dew point" },
-  pressure: { name: "Pressure" },
+  pollen: { variant: "gauges", max_shown: 4 },
 };
 
 class MateriaWeatherMetricEditor extends SmartEditorBase {
+  /* Seed ONLY booleans, closed-set selects, and sliders — controls that
+     MISRENDER when the value is absent (an unseeded switch reads off, an
+     unseeded slider sits at its minimum). Free values — text, icons, numbers
+     in plain boxes — must NOT be seeded: the field looks user-filled, and
+     saving writes the default into config, permanently freezing it. For
+     labels that i18n translates at runtime, a seeded English default would
+     even override the user's language. */
   _formData() {
     return { metric: "wind", ...METRIC_DEFAULTS[this._config?.metric], ...this._config };
   }

@@ -2,7 +2,7 @@ import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
 
 class MateriaBarSelectEditor extends SmartEditorBase {
   _formData() {
-    return { off_icon: "mdi:water-off", ...this._config };
+    return { ...this._config };
   }
 
   get _sections() {

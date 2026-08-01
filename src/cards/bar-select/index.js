@@ -1,6 +1,7 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
+import { OptimisticMixin } from "../../utils/optimistic.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -19,7 +20,7 @@ import "./editor.js";
  * `off_option` lifts one choice (a mop's "off") out of the bars into its own
  * round button, since "off" isn't a rung on the ladder.
  */
-class MateriaBarSelect extends DisabledMixin(ActionMixin(LitElement)) {
+class MateriaBarSelect extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement))) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -47,6 +48,7 @@ class MateriaBarSelect extends DisabledMixin(ActionMixin(LitElement)) {
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("accent", "_resolvedAccent");
       this._resolveField("accent_on", "_resolvedAccentOn");
+      this._optimisticReconcile();
     }
     // Recorded AFTER paint so the next change can tell which direction it
     // travelled and stagger accordingly. Plain field, not reactive state —
@@ -72,12 +74,21 @@ class MateriaBarSelect extends DisabledMixin(ActionMixin(LitElement)) {
     return this._rungs.indexOf(String(this._current));
   }
 
-  /** Current value — an attribute when configured, else the state. */
-  get _current() {
+  /** The REAL value — an attribute when configured, else the state. */
+  _optimisticActual() {
     const st = this._stateObj;
     if (!st) return null;
     const v = this.config.attribute ? st.attributes?.[this.config.attribute] : st.state;
     return v == null ? null : String(v);
+  }
+
+  /** What the UI shows: the tapped value immediately, reality once it lands.
+   *  Everything downstream (_index, the lit bars, the choreography) reads
+   *  this, so a tap answers on THIS frame instead of a poll cycle later —
+   *  Roborock's round-trip could take seconds, during which the old bar
+   *  height claimed the tap hadn't happened. */
+  get _current() {
+    return this._optimistic;
   }
 
   /** Choices: explicit config, else the attribute's `_list`, else the
@@ -112,6 +123,9 @@ class MateriaBarSelect extends DisabledMixin(ActionMixin(LitElement)) {
     if (!st) return;
     const domain = st.entity_id.split(".")[0];
     this._fireHaptic?.("selection");
+    // Pin before the call: the bars move on the tap frame. Wrong predictions
+    // release themselves the moment the real state moves anywhere.
+    this._optimisticSet(option);
 
     // Explicit override wins.
     if (this.config.service) {

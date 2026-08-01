@@ -334,7 +334,10 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       return { head: `${this._pad(this._hour)}:${this._pad(this._minute)}`, sub: date };
     }
     const q = this._quick.find((x) => x.key === this._pickKey);
-    return q ? { head: q.name, sub: t("sched_starts_at", this.hass, { time: q.at }) } : { head: t("sched_when_question", this.hass), sub: t("sched_pick_moment", this.hass) };
+    // Time first, name second — the resolved moment is the answer, the
+    // shortcut is only how it was arrived at. The custom branch already led
+    // with the time; the class doc always claimed both did.
+    return q ? { head: q.at, sub: q.name } : { head: t("sched_when_question", this.hass), sub: t("sched_pick_moment", this.hass) };
   }
 
   get _dayNames() {
@@ -787,6 +790,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
   _renderClock() {
     return html`
+      <div class="chips-wrap ${this._customOpen ? "folded" : ""}" ?inert=${this._customOpen}>
       <div class="chips">
         ${this._quick.map(
           (q, i) => html`<button
@@ -800,6 +804,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
             <span class="n">${q.name}</span><span class="t">${q.at}</span>
           </button>`
         )}
+      </div>
       </div>
 
       <div class="custom ${this._customOpen ? "open" : ""}">

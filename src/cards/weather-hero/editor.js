@@ -2,13 +2,12 @@ import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaWeatherHeroEditor extends SmartEditorBase {
   _formData() {
+    // Booleans only — Night/Day are i18n'd runtime defaults.
     return {
       show_condition: true,
       show_icon: true,
       show_feels_like: true,
       show_minmax: true,
-      night_label: "Night",
-      day_label: "Day",
       ...this._config,
     };
   }

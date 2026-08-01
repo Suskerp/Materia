@@ -50,6 +50,12 @@ export const styles = [
       font-weight: 700;
       letter-spacing: -0.02em;
       line-height: 1.25;
+      /* The meta column is fixed-width; on small screens a long option name
+         ("Balanced") overflowed it into the off button. Ellipsis over
+         collision — the bars' own titles still carry the full names. */
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     /* The "off" choice — a round button, because off isn't a rung. */

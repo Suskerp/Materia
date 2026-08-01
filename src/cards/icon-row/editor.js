@@ -99,18 +99,10 @@ class MateriaIconRowEditor extends SmartEditorBase {
       {
         title: "Layout",
         icon: "mdi:tune",
-        fields: [
-          {
-            name: "gap",
-            label: "Gap between buttons",
-            selector: { number: { min: 0, max: 64, step: 4, unit_of_measurement: "px", mode: "slider" } },
-          },
-          {
-            name: "padding",
-            label: "Vertical padding",
-            selector: { number: { min: 0, max: 48, step: 4, unit_of_measurement: "px", mode: "slider" } },
-          },
-        ],
+        /* gap/padding stay honoured from YAML but are no longer offered:
+           nobody tunes row plumbing per-card, and every knob in the form is a
+           decision the editor asks the user to re-make. */
+        fields: [],
       },
     ];
   }

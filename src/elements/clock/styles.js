@@ -44,12 +44,12 @@ export const styles = css`
     transition: font-weight 1s linear;
   }
 
-  /* The ONE accent-face moment in the system (Fraunces italic). */
   .date {
     fill: var(--clock-number, color-mix(in srgb, var(--md-sys-color-primary, #888) 45%, transparent));
-    font-family: var(--materia-font-accent, var(--materia-font-display, inherit));
-    font-style: italic;
-    font-weight: 500;
+    /* Was the system's one Fraunces-italic accent moment; retired — it read
+       as a different product wedged into the clock face. */
+    font-family: var(--materia-font-display, inherit);
+    font-weight: 600;
   }
 
   .second-dot {

@@ -5,10 +5,9 @@ class MateriaScheduleEditor extends SmartEditorBase {
      defaults are still mirrored so the fields show what the card will actually
      render rather than sitting empty. */
   _formData() {
+    // presentation is a closed select; the three strings are runtime
+    // (i18n-translated) defaults that must not be frozen into config.
     return {
-      name: "Schedule",
-      empty_label: "Not scheduled",
-      empty_sub: "Tap to pick a time or a trigger",
       presentation: "inline",
       ...this._config,
     };

@@ -2,12 +2,11 @@ import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaForecastHourlyEditor extends SmartEditorBase {
   _formData() {
+    // Booleans + the hours slider only — see forecast-daily.
     return {
       hours: 24,
       show_header: true,
       show_precipitation: true,
-      min_precipitation: 10,
-      name: "Hourly forecast",
       ...this._config,
     };
   }

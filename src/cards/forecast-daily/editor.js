@@ -2,12 +2,12 @@ import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaForecastDailyEditor extends SmartEditorBase {
   _formData() {
+    // Booleans + the days slider only; today_label is i18n'd at runtime and
+    // min_precipitation is a plain box — seeding either writes it into config.
     return {
       days: 10,
       show_hourly: true,
       show_precipitation: true,
-      min_precipitation: 10,
-      today_label: "Today",
       ...this._config,
     };
   }

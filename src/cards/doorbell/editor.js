@@ -2,7 +2,7 @@ import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaDoorbellEditor extends SmartEditorBase {
   _formData() {
-    return { timeout: 30, ...this._config };
+    return { ...this._config };
   }
 
   get _sections() {
