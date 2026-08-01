@@ -209,6 +209,18 @@ class MateriaCarousel extends DisabledMixin(ActionMixin(LitElement)) {
     this._stopMomentum();
   }
 
+  /** Mirrors button-group's _entityOptionActive: with a value, the entity's
+   *  state must equal it; without one, any truthy-ish state counts. */
+  _itemEntityActive(item) {
+    const st = this.hass?.states[item.entity]?.state;
+    if (item.match != null && item.match !== "") {
+      return String(st ?? "").toLowerCase() === String(item.match).toLowerCase();
+    }
+    return ["on", "true", "home", "open", "active", "unlocked", "cleaning"].includes(
+      String(st ?? "").toLowerCase()
+    );
+  }
+
   _tap(item) {
     // A drag that happens to end on a tile must not toggle it.
     if (this._didDrag) {
@@ -218,6 +230,11 @@ class MateriaCarousel extends DisabledMixin(ActionMixin(LitElement)) {
     this._fireHaptic?.("selection");
     if (item.tap_action) {
       this._handleAction(item.tap_action);
+      return;
+    }
+    if (item.entity && !item.tap_action) {
+      // The natural default for an entity tile is its toggle.
+      this._callService("homeassistant", "toggle", { entity_id: item.entity });
       return;
     }
     const st = this._stateObj;
@@ -247,7 +264,12 @@ class MateriaCarousel extends DisabledMixin(ActionMixin(LitElement)) {
         >
           ${this._items().map((item) => {
             const value = item.value ?? item.label;
-            const on = selected.some((s) => s === String(value));
+            // Per-item entity wins over the tracked list — same contract as
+            // button-group options, so a row of independent toggles (one
+            // boolean per room) can be a carousel too.
+            const on = item.entity
+              ? this._itemEntityActive(item)
+              : selected.some((s) => s === String(value));
             return html`
               <button class="tile ${on ? "on" : ""}" @click=${() => this._tap(item)} aria-pressed=${on ? "true" : "false"}>
                 <div class="top">

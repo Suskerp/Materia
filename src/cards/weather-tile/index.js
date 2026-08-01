@@ -139,8 +139,11 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     const width = this.config.width ?? 115;
     const ratio = (this.config.height ?? 85) / 100;
     const iconX = this.config.icon_x ?? 5;
-    const iconY = this.config.icon_y ?? 10;
-    const tempX = this.config.temp_x ?? 10;
+    // With min/max shown the temperature sits lower — drop the icon toward
+    // the bottom by the same amount or the two crowd in the middle.
+    const iconY = this.config.icon_y ?? (showMinmax ? 5 : 10);
+    // 13, not 10: the big numeral was kissing the pill's curve on the right.
+    const tempX = this.config.temp_x ?? 13;
     // The min/max row stacks ABOVE the temperature, so with it shown the
     // readout's top edge is the small hi/lo text hugging the pill's curve —
     // give it more clearance than the big temp needs on its own.
