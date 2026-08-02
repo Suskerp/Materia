@@ -67,6 +67,9 @@ const STRINGS = {
   lock_locking: { en: "Locking…", nl: "Gaat op slot…" },
   lock_unlocking: { en: "Unlocking…", nl: "Gaat open…" },
   lock_demo_note: { en: "Demo · no entity", nl: "Demo · geen entiteit" },
+  lock_track_locked: { en: "Locked", nl: "Op slot" },
+  lock_track_unlocked: { en: "Unlocked", nl: "Ontgrendeld" },
+  lock_track_open: { en: "Open", nl: "Open de deur" },
 
   /* ---- materia-climate-panel ----------------------------------------- */
   cp_currently: { en: "Currently", nl: "Nu" },

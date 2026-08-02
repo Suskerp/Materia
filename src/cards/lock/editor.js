@@ -18,6 +18,7 @@ class MateriaLockEditor extends SmartEditorBase {
 
   get _sections() {
     const hold = this._config?.gesture === "hold";
+    const track = this._config?.gesture === "track";
     const hasEntity = !!this._config?.entity;
     const isLock = !!this._config?.entity?.startsWith("lock.");
 
@@ -32,7 +33,7 @@ class MateriaLockEditor extends SmartEditorBase {
             helper: "Leave empty to run self-contained — the card keeps its own state, with nothing to control.",
             selector: { entity: { domain: ["lock", "switch", "input_boolean"] } },
           },
-          ...(isLock
+          ...(isLock && !track
             ? [{
                 name: "unlock_service",
                 label: "Unlatch service",
@@ -46,9 +47,13 @@ class MateriaLockEditor extends SmartEditorBase {
           {
             name: "gesture",
             label: "Commit gesture",
+            helper: track
+              ? "One physical track, three stops: Locked, Unlocked (a real resting state), Open (a momentary unlatch you must drag past a detent to reach — always a drag, never a tap). The lock settling back to \"unlocked\" on its own re-centers the track with no gesture needed."
+              : undefined,
             selector: { select: { mode: "dropdown", options: [
               { value: "slide", label: "Slide the handle across" },
               { value: "hold", label: "Press and hold" },
+              { value: "track", label: "Drag across a 3-stop track (locked / unlocked / open)" },
             ] } },
           },
           { name: "shape", label: "Show the morphing lock shape", selector: { boolean: {} } },
@@ -96,7 +101,14 @@ class MateriaLockEditor extends SmartEditorBase {
         title: "Labels",
         icon: "mdi:text-short",
         fields: [
-          ...(hold
+          ...(track
+            ? [{
+                name: "track_labels",
+                label: "Show Locked / Unlocked / Open captions under the track",
+                helper: "Off by default — the track's icon and position already say what it's doing; captions are an extra, opt-in explanation.",
+                selector: { boolean: {} },
+              }]
+            : hold
             ? [
                 { name: "unlock_hold_hint", label: 'While locked (default "Hold to unlock")', selector: { text: {} } },
                 { name: "lock_hold_hint", label: 'While unlocked (default "Hold to lock")', selector: { text: {} } },
@@ -126,6 +138,9 @@ class MateriaLockEditor extends SmartEditorBase {
           { name: "accent_on", label: "Ink on the accent", color: true, selector: { text: {} } },
           { name: "locked_icon", label: "Icon while locked", selector: { icon: {} } },
           { name: "unlocked_icon", label: "Icon while unlocked", selector: { icon: {} } },
+          ...(track
+            ? [{ name: "open_icon", label: "Icon for the Open stop (default door-open)", selector: { icon: {} } }]
+            : []),
         ],
       },
       {

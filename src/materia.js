@@ -11,6 +11,7 @@ import { injectFonts } from "./styles/shared.js";
 // Primitives
 import "./primitives/slider.js";
 import "./primitives/drag-confirm.js";
+import "./primitives/track-confirm.js";
 import "./primitives/calendar.js";
 
 // Cards
@@ -57,7 +58,7 @@ import "./elements/clock/index.js";
 injectFonts();
 
 // Version info
-const VERSION = "0.46.2";
+const VERSION = "0.47.0";
 console.info(
   `%c MATERIA %c v${VERSION} `,
   "color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;",

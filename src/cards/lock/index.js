@@ -5,6 +5,7 @@ import { t } from "../../utils/i18n.js";
 import { OptimismBus } from "../../utils/optimism-bus.js";
 import { styles } from "./styles.js";
 import "../../primitives/drag-confirm.js";
+import "../../primitives/track-confirm.js";
 import "./editor.js";
 
 /** Silhouettes the shape can take, drawn in a 180x180 box.
@@ -140,6 +141,66 @@ class MateriaLock extends ActionMixin(LitElement) {
     if (String(this._stateObj?.state ?? "") === "unlocking") return true;
     const real = this._entityLocked;
     return real ?? (this._local ?? true);
+  }
+
+  /** Resting stop for the 3-position TRACK gesture: 0 locked, 1 unlocked (a
+   *  real rest — reachable on its own, and the base you drag PAST to reach
+   *  the third), 2 open (momentary; the entity springs back to "unlocked"
+   *  once the latch closes, which re-centers this on its own, no gesture
+   *  needed). In-flight states show the ORIGIN, same rule as `_locked`:
+   *  "unlocking" hasn't arrived yet, so the thumb stays at locked;
+   *  "locking" hasn't arrived yet, so it stays at unlocked. */
+  get _trackIndex() {
+    if (this._trackFlourish) return 2;
+    if (this._selfContained) return this._locked ? 0 : 1;
+    const s = String(this._stateObj?.state ?? "");
+    if (s === "open" || s === "opening") return 2;
+    if (s === "unlocking") return 0;
+    if (s === "locking") return 1;
+    return this._entityLocked ? 0 : 1;
+  }
+
+  /** The track has no `_confirm` toggle to drive it — every release names an
+   *  absolute stop, not a flip — so it gets its own commit path. Index 2
+   *  (open) is deliberately re-triggerable from rest: that is the entire
+   *  point of a detent you can drag past more than once. */
+  _onTrackSelect(ev) {
+    const idx = ev.detail.index;
+
+    if (this._selfContained) {
+      if (idx === 2) {
+        this._trackFlourish = true;
+        this.requestUpdate();
+        clearTimeout(this._trackFlourishTimer);
+        this._trackFlourishTimer = setTimeout(() => {
+          this._trackFlourish = false;
+          this._local = false; // springs back to "unlocked", per the design
+          this.requestUpdate();
+        }, 1200);
+        return;
+      }
+      this._local = idx === 0;
+      return;
+    }
+
+    const eid = this.config.entity;
+    const domain = eid.split(".")[0];
+    if (domain !== "lock") {
+      // No third stop off a lock domain — open collapses onto unlock.
+      const lockedIsOff = this._lockedState === "off";
+      const on = idx === 0 ? !lockedIsOff : lockedIsOff;
+      this._callService(domain, on ? "turn_on" : "turn_off", { entity_id: eid });
+      return;
+    }
+    if (idx === 0) {
+      OptimismBus.publish(eid, "locking", this._stateObj?.state);
+      this._callService("lock", "lock", { entity_id: eid });
+    } else if (idx === 1) {
+      OptimismBus.publish(eid, "unlocking", this._stateObj?.state);
+      this._callService("lock", "unlock", { entity_id: eid });
+    } else {
+      this._callService("lock", "open", { entity_id: eid });
+    }
   }
 
   /** In-flight states are worth showing: a lock that takes three seconds should
@@ -313,6 +374,7 @@ class MateriaLock extends ActionMixin(LitElement) {
   disconnectedCallback() {
     super.disconnectedCallback();
     clearTimeout(this._pendingTimer);
+    clearTimeout(this._trackFlourishTimer);
     if (this._spinRaf) cancelAnimationFrame(this._spinRaf);
     this._spinRaf = null;
     this._spinMode = null;
@@ -414,11 +476,30 @@ class MateriaLock extends ActionMixin(LitElement) {
       ? (this.config.unlock_hold_hint ?? t("lock_hold_to_unlock", this.hass))
       : (this.config.lock_hold_hint ?? t("lock_hold_to_lock", this.hass));
     const isHold = this.config.gesture === "hold";
+    const isTrack = this.config.gesture === "track";
+
+    const trackBusyLabel = inFlight
+      ? busy === "locking"
+        ? (this.config.locking_label ?? t("lock_locking", this.hass))
+        : (this.config.unlocking_label ?? t("lock_unlocking", this.hass))
+      : "";
+    const trackStops = [
+      { value: "locked", icon: this.config.locked_icon ?? "m3o:lock" },
+      { value: "unlocked", icon: this.config.unlocked_icon ?? "m3o:lock-open-right" },
+      { value: "open", icon: this.config.open_icon ?? "m3o:door-open" },
+    ];
+    const trackLabels = this.config.track_labels
+      ? [
+          t("lock_track_locked", this.hass),
+          t("lock_track_unlocked", this.hass),
+          t("lock_track_open", this.hass),
+        ]
+      : null;
 
     return html`
       <ha-card
         class=${unavailable ? "unavailable" : ""}
-        style="--ml-bg:${bg};--ml-fg:${fg};--ml-shape-bg:${shapeBg};--ml-shape-fg:${shapeFg};--ml-handle-bg:${handleBg};--ml-handle-fg:${handleFg};"
+        style="--ml-bg:${bg};--ml-fg:${fg};--ml-shape-bg:${shapeBg};--ml-shape-fg:${shapeFg};--ml-handle-bg:${handleBg};--ml-handle-fg:${handleFg};--ml-accent:${accent};"
       >
         <div class="body">
           ${this.config.shape === false
@@ -446,22 +527,37 @@ class MateriaLock extends ActionMixin(LitElement) {
                 </div>
               </div>`}
 
-          <materia-drag-confirm
-            .gesture=${isHold ? "hold" : "slide"}
-            .label=${inFlight
-              ? (busy === "locking"
-                  ? (this.config.locking_label ?? t("lock_locking", this.hass))
-                  : (this.config.unlocking_label ?? t("lock_unlocking", this.hass)))
-              : isHold
-              ? holdHint
-              : hint}
-            .pending=${inFlight}
-            .direction=${locked ? "forward" : "backward"}
-            .threshold=${this.config.threshold ?? 0.55}
-            .holdMs=${this.config.hold_ms ?? 800}
-            ?disabled=${unavailable}
-            @confirm=${this._confirm}
-          ></materia-drag-confirm>
+          ${isTrack
+            ? html`
+                <materia-track-confirm
+                  .stops=${trackStops}
+                  .boundaries=${[this.config.track_lock_boundary ?? 0.3, this.config.track_open_boundary ?? 0.82]}
+                  .pos=${this._trackIndex}
+                  .label=${trackBusyLabel}
+                  .stopLabels=${trackLabels}
+                  .pending=${inFlight}
+                  ?disabled=${unavailable}
+                  @select=${this._onTrackSelect}
+                ></materia-track-confirm>
+              `
+            : html`
+                <materia-drag-confirm
+                  .gesture=${isHold ? "hold" : "slide"}
+                  .label=${inFlight
+                    ? (busy === "locking"
+                        ? (this.config.locking_label ?? t("lock_locking", this.hass))
+                        : (this.config.unlocking_label ?? t("lock_unlocking", this.hass)))
+                    : isHold
+                    ? holdHint
+                    : hint}
+                  .pending=${inFlight}
+                  .direction=${locked ? "forward" : "backward"}
+                  .threshold=${this.config.threshold ?? 0.55}
+                  .holdMs=${this.config.hold_ms ?? 800}
+                  ?disabled=${unavailable}
+                  @confirm=${this._confirm}
+                ></materia-drag-confirm>
+              `}
 
           ${busy === "jammed"
             ? html`<div class="pending">

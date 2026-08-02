@@ -211,6 +211,18 @@ export const styles = [
       --mdc-handle-ink: var(--ml-handle-fg);
     }
 
+    /* The 3-stop track shares the drag-confirm's well and the handle's own
+       colour pair — the thumb IS the same handle, just with a third rest. */
+    materia-track-confirm {
+      width: 100%;
+      --mtc-track: color-mix(in srgb, var(--ml-fg) 14%, transparent);
+      --mtc-thumb: var(--ml-handle-bg);
+      --mtc-thumb-ink: var(--ml-handle-fg);
+      --mtc-callout-border: color-mix(in srgb, var(--ml-fg) 30%, transparent);
+      --mtc-callout-ink: var(--ml-fg);
+      --mtc-callout-active: var(--ml-accent);
+    }
+
     .pending {
       font-size: clamp(12px, 3.4cqi, 14px);
       font-weight: 600;
