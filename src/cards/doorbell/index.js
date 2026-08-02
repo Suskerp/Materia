@@ -120,10 +120,16 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
       // The ring WINDOW outlives the ring itself: the popup that opened on
       // the ring closes `timeout` seconds after it started, whatever was
       // buzzed or opened in between — the top bar drains on this clock.
-      if (this._ringing && !this._ringT0) {
+      // Armed from the doorbell's last state change, NOT only while `on`:
+      // the ring is a short pulse, and a popup that finishes rendering
+      // after the pulse ended must still show the window.
+      if (!this._ringT0) {
         const st = this.hass?.states[this.config.entity];
         const t0 = st ? Date.parse(st.last_changed) : NaN;
-        this._ringT0 = Number.isNaN(t0) ? Date.now() : t0;
+        if (!Number.isNaN(t0) && (Date.now() - t0) / 1000 <= (this.config.timeout || 0)) {
+          this._ringT0 = t0;
+          this.requestUpdate();
+        }
       }
       if (this._ringT0 && (Date.now() - this._ringT0) / 1000 > (this.config.timeout || 0)) {
         this._ringT0 = null;
