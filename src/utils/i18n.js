@@ -147,6 +147,7 @@ const STRINGS = {
   db_open_title: { en: "Open the front door", nl: "Doe de voordeur open" },
   db_open_sub: { en: "Unlocks the front door for your visitor.", nl: "Haalt de voordeur van het slot voor je bezoek." },
   db_slide_hint: { en: "Slide to open", nl: "Schuif om te openen" },
+  db_hold_hint: { en: "Hold to open", nl: "Houd ingedrukt om te openen" },
   db_slide_done: { en: "Door open", nl: "Deur open" },
   db_ignore: { en: "Ignore", nl: "Negeer" },
   db_replay: { en: "Replay ring", nl: "Bel opnieuw" },
