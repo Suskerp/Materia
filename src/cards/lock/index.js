@@ -5,7 +5,6 @@ import { t } from "../../utils/i18n.js";
 import { OptimismBus } from "../../utils/optimism-bus.js";
 import { styles } from "./styles.js";
 import "../../primitives/drag-confirm.js";
-import "../../primitives/track-confirm.js";
 import "./editor.js";
 
 /** Silhouettes the shape can take, drawn in a 180x180 box.
@@ -66,7 +65,21 @@ const SHAPE_STYLES = {
  * a Z-Wave lock takes to answer. `lock`, `switch` and `input_boolean` all work;
  * which state counts as locked is config, not a guess, because "on" means
  * unlocked on a relay strike and locked on plenty of other things.
- */
+ *
+ * OPEN/UNLATCH is a SEPARATE control (below the gesture), not a third
+ * position on it — a square outlined button, disabled while locked (opening
+ * only makes sense once already unlocked; the gesture itself still owns
+ * locked <-> unlocked). `unlock_service: open` covers hardware whose
+ * "unlock" IS the swing-open action; `open_action` covers the OTHER case,
+ * a distinct extra action available once unlocked (a relay pulse, a
+ * multi-step "let them in" sequence) that the gesture must never fire by
+ * itself.
+ *
+ * `state_remap` treats one reported raw state as another before ANYTHING
+ * else reads it (locked/unlocked, in-flight, jammed, colour, icon, spin) —
+ * for hardware that reports a real but misleading transition (a relatch
+ * settling reported as "unlocking" seconds after a door that was never
+ * locked). */
 class MateriaLock extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
@@ -110,6 +123,16 @@ class MateriaLock extends ActionMixin(LitElement) {
     return !this.config?.entity;
   }
 
+  /** The raw entity state, remapped through `state_remap` BEFORE anything
+   *  else reads it — the single point every other getter funnels through,
+   *  so a remap configured once applies to locked/unlocked, in-flight,
+   *  jammed, colour, icon and spin uniformly, not just one of them. */
+  get _rawState() {
+    const raw = String(this._stateObj?.state ?? "");
+    const remap = this.config?.state_remap || {};
+    return Object.prototype.hasOwnProperty.call(remap, raw) ? remap[raw] : raw;
+  }
+
   /** The state string that counts as locked, per domain. `switch` defaults to
    *  "off" because a relay strike is energised to RELEASE the door — a card
    *  reading "Locked" while the door stands open is the dangerous failure, so
@@ -125,7 +148,7 @@ class MateriaLock extends ActionMixin(LitElement) {
   get _entityLocked() {
     const st = this._stateObj;
     if (!st || this._isUnavailable(st)) return null;
-    return String(st.state) === this._lockedState;
+    return this._rawState === this._lockedState;
   }
 
   get _locked() {
@@ -138,100 +161,15 @@ class MateriaLock extends ActionMixin(LitElement) {
     // of acceptance. ("locking" reads as still-unlocked for the same reason,
     // which happens to be correct.) _pending no longer flips the display either;
     // it only marks the wait.
-    if (String(this._stateObj?.state ?? "") === "unlocking") return true;
+    if (this._rawState === "unlocking") return true;
     const real = this._entityLocked;
     return real ?? (this._local ?? true);
-  }
-
-  /** Resting stop + busy read for the 3-position TRACK gesture, together,
-   *  because on real hardware they're the SAME decision made twice: 0
-   *  locked, 1 unlocked (a real rest — reachable on its own, and the base
-   *  you drag PAST to reach the third), 2 open (momentary; the entity
-   *  springs back to "unlocked" once the latch closes, re-centering this
-   *  on its own, no gesture needed).
-   *
-   *  In-flight states show the ORIGIN, same rule as `_locked`: "unlocking"
-   *  hasn't arrived yet, so the thumb stays at locked; "locking" hasn't
-   *  arrived yet, so it stays at unlocked.
-   *
-   *  `track_skip_states` remaps a raw state to another BEFORE any of that —
-   *  some hardware reports states that are technically real but tell a lie
-   *  about what's happening: this Nuki jumps unlocked -> open directly (no
-   *  "opening" ever fires, so there's nothing to skip there — "open" IS the
-   *  first report), then on relatching reports a transient "unlocking" that
-   *  is not a lock-direction change at all, just the latch settling — so
-   *  the interesting remap is `{unlocking: unlocked}`, which erases the
-   *  false "heading toward locked" detour and the "Unlocking…" label that
-   *  made no sense seconds after a door that was never locked swung open. */
-  _trackState() {
-    if (this._trackFlourish) return { index: 2, busy: false, label: "" };
-    if (this._selfContained) return { index: this._locked ? 0 : 1, busy: false, label: "" };
-
-    const raw = String(this._stateObj?.state ?? "");
-    const remap = this.config.track_skip_states || {};
-    const s = Object.prototype.hasOwnProperty.call(remap, raw) ? remap[raw] : raw;
-
-    if (s === "open" || s === "opening") {
-      return { index: 2, busy: true, label: this.config.opening_label ?? t("lock_opening", this.hass) };
-    }
-    if (s === "unlocking") {
-      return { index: 0, busy: true, label: this.config.unlocking_label ?? t("lock_unlocking", this.hass) };
-    }
-    if (s === "locking") {
-      return { index: 1, busy: true, label: this.config.locking_label ?? t("lock_locking", this.hass) };
-    }
-    // Anything else (including a remapped "unlocked"/"locked") settles by
-    // the real lock state, not the possibly-remapped label.
-    return { index: this._entityLocked ? 0 : 1, busy: false, label: "" };
-  }
-
-  /** The track has no `_confirm` toggle to drive it — every release names an
-   *  absolute stop, not a flip — so it gets its own commit path. Index 2
-   *  (open) is deliberately re-triggerable from rest: that is the entire
-   *  point of a detent you can drag past more than once. */
-  _onTrackSelect(ev) {
-    const idx = ev.detail.index;
-
-    if (this._selfContained) {
-      if (idx === 2) {
-        this._trackFlourish = true;
-        this.requestUpdate();
-        clearTimeout(this._trackFlourishTimer);
-        this._trackFlourishTimer = setTimeout(() => {
-          this._trackFlourish = false;
-          this._local = false; // springs back to "unlocked", per the design
-          this.requestUpdate();
-        }, 1200);
-        return;
-      }
-      this._local = idx === 0;
-      return;
-    }
-
-    const eid = this.config.entity;
-    const domain = eid.split(".")[0];
-    if (domain !== "lock") {
-      // No third stop off a lock domain — open collapses onto unlock.
-      const lockedIsOff = this._lockedState === "off";
-      const on = idx === 0 ? !lockedIsOff : lockedIsOff;
-      this._callService(domain, on ? "turn_on" : "turn_off", { entity_id: eid });
-      return;
-    }
-    if (idx === 0) {
-      OptimismBus.publish(eid, "locking", this._stateObj?.state);
-      this._callService("lock", "lock", { entity_id: eid });
-    } else if (idx === 1) {
-      OptimismBus.publish(eid, "unlocking", this._stateObj?.state);
-      this._callService("lock", "unlock", { entity_id: eid });
-    } else {
-      this._callService("lock", "open", { entity_id: eid });
-    }
   }
 
   /** In-flight states are worth showing: a lock that takes three seconds should
    *  say so rather than look like nothing happened. */
   get _transitioning() {
-    const s = String(this._stateObj?.state ?? "");
+    const s = this._rawState;
     if (s === "locking" || s === "unlocking" || s === "jammed") return s;
     return this._pending != null ? (this._pending ? "locking" : "unlocking") : null;
   }
@@ -399,7 +337,6 @@ class MateriaLock extends ActionMixin(LitElement) {
   disconnectedCallback() {
     super.disconnectedCallback();
     clearTimeout(this._pendingTimer);
-    clearTimeout(this._trackFlourishTimer);
     if (this._spinRaf) cancelAnimationFrame(this._spinRaf);
     this._spinRaf = null;
     this._spinMode = null;
@@ -442,6 +379,14 @@ class MateriaLock extends ActionMixin(LitElement) {
     }
   }
 
+  /** The OPEN button: a separate, deliberate extra action reachable only
+   *  once already unlocked — never a substitute for the gesture, and never
+   *  usable to skip past "locked" in one step. */
+  _openTap() {
+    if (this._locked || !this.config.open_action) return;
+    this._handleAction(this.config.open_action);
+  }
+
   render() {
     if (!this.hass || !this.config) return html``;
 
@@ -456,15 +401,19 @@ class MateriaLock extends ActionMixin(LitElement) {
     const locked = this._locked;
     const busy = this._transitioning;
     const inFlight = busy === "locking" || busy === "unlocking";
+    const jammed = busy === "jammed";
 
-    // Colour: the flooded pair while unlocked, a quiet surface while locked.
-    // `device` is the palette's existing "this device is in its active state"
-    // token — the same one materia-hero and materia-card already use — so the
-    // two cards agree without a bespoke lock colour.
-    const bg = locked
+    // Colour: the flooded pair while unlocked, a quiet surface while locked —
+    // EXCEPT jammed, which overrides both with an error tint regardless of
+    // lock state, since a jam is a fault, not a resting position.
+    const bg = jammed
+      ? (this.config.jammed_color ?? "var(--md-sys-color-error-container)")
+      : locked
       ? (this.config.locked_color ?? "var(--md-sys-color-surface-container-low, var(--card-background-color))")
       : (this.config.unlocked_color ?? "var(--md-sys-cust-color-device, var(--md-sys-color-primary-container))");
-    const fg = locked
+    const fg = jammed
+      ? (this.config.jammed_color_on ?? "var(--md-sys-color-on-error-container)")
+      : locked
       ? (this.config.locked_color_on ?? "var(--md-sys-color-on-surface)")
       : (this.config.unlocked_color_on ?? "var(--md-sys-cust-color-on-device, var(--md-sys-color-on-primary-container))");
     const accent = this.config.accent ?? "var(--md-sys-color-primary)";
@@ -474,29 +423,21 @@ class MateriaLock extends ActionMixin(LitElement) {
     // more colour keys. While unlocked they INVERT it — the surface's ink
     // becomes their fill and the surface itself becomes their glyph — which is
     // legible in both themes for free, because the theme already guarantees
-    // those two contrast.
+    // those two contrast. Jammed skips the invert and just flattens to the
+    // same error pair as the card, since there is no "unlocked-style" pose to
+    // invert toward — the mechanism isn't in either resting state right now.
     //
     // These have to name `fg`/`bg` explicitly and NOT use currentColor: both
     // .shape and .handle set their own `color`, so a currentColor fill would
     // resolve against their own glyph colour and paint the glyph invisible
     // against an identically-coloured block.
-    const shapeBg = locked ? `color-mix(in srgb, ${fg} 12%, transparent)` : fg;
-    const shapeFg = locked ? accent : bg;
-    const handleBg = locked ? accent : fg;
-    const handleFg = locked ? accentOn : bg;
+    const shapeBg = jammed ? bg : locked ? `color-mix(in srgb, ${fg} 12%, transparent)` : fg;
+    const shapeFg = jammed ? fg : locked ? accent : bg;
+    const handleBg = jammed ? fg : locked ? accent : fg;
+    const handleFg = jammed ? bg : locked ? accentOn : bg;
 
-    const isHold = this.config.gesture === "hold";
-    const isTrack = this.config.gesture === "track";
-    // Index+busy+label together — see _trackState's own doc for why the
-    // track needs a richer read than the binary _locked/_transitioning.
-    const trackState = isTrack ? this._trackState() : null;
-
-    // The main shape gets its OWN third face for the track's open stop —
-    // otherwise a door standing open still wore the plain "unlocked"
-    // lock-open glyph, no different from a door that's simply unlocked and
-    // shut.
-    const icon = isTrack && trackState.index === 2
-      ? (this.config.open_icon ?? "m3o:door-open")
+    const icon = jammed
+      ? (this.config.jammed_icon ?? "m3o:warning")
       : locked
       ? (this.config.locked_icon ?? "m3o:lock")
       : (this.config.unlocked_icon ?? "m3o:lock-open-right");
@@ -512,24 +453,12 @@ class MateriaLock extends ActionMixin(LitElement) {
     const holdHint = locked
       ? (this.config.unlock_hold_hint ?? t("lock_hold_to_unlock", this.hass))
       : (this.config.lock_hold_hint ?? t("lock_hold_to_lock", this.hass));
-
-    const trackStops = [
-      { value: "locked", icon: this.config.locked_icon ?? "m3o:lock" },
-      { value: "unlocked", icon: this.config.unlocked_icon ?? "m3o:lock-open-right" },
-      { value: "open", icon: this.config.open_icon ?? "m3o:door-open" },
-    ];
-    const trackLabels = this.config.track_labels
-      ? [
-          t("lock_track_locked", this.hass),
-          t("lock_track_unlocked", this.hass),
-          t("lock_track_open", this.hass),
-        ]
-      : null;
+    const isHold = this.config.gesture === "hold";
 
     return html`
       <ha-card
         class=${unavailable ? "unavailable" : ""}
-        style="--ml-bg:${bg};--ml-fg:${fg};--ml-shape-bg:${shapeBg};--ml-shape-fg:${shapeFg};--ml-handle-bg:${handleBg};--ml-handle-fg:${handleFg};--ml-accent:${accent};"
+        style="--ml-bg:${bg};--ml-fg:${fg};--ml-shape-bg:${shapeBg};--ml-shape-fg:${shapeFg};--ml-handle-bg:${handleBg};--ml-handle-fg:${handleFg};"
       >
         <div class="body">
           ${this.config.shape === false
@@ -545,7 +474,7 @@ class MateriaLock extends ActionMixin(LitElement) {
                   )}
               >
                 <div
-                  class="shape ${locked ? "" : "unlocked"} ${style.vector ? "vector" : ""} ${inFlight && !this._spins ? "working" : ""} ${this._spinning ? "spinning" : ""}"
+                  class="shape ${locked ? "" : "unlocked"} ${jammed ? "jammed" : ""} ${style.vector ? "vector" : ""} ${inFlight && !this._spins ? "working" : ""} ${this._spinning ? "spinning" : ""}"
                   style="--ml-rot:${style.rot}deg"
                 >
                   ${style.vector
@@ -557,40 +486,37 @@ class MateriaLock extends ActionMixin(LitElement) {
                 </div>
               </div>`}
 
-          ${isTrack
-            ? html`
-                <materia-track-confirm
-                  .stops=${trackStops}
-                  .boundaries=${[this.config.track_lock_boundary ?? 0.3, this.config.track_open_boundary ?? 0.75]}
-                  .pos=${trackState.index}
-                  .label=${trackState.label}
-                  .stopLabels=${trackLabels}
-                  .pending=${trackState.busy}
-                  .thumbIcon=${false}
-                  ?disabled=${unavailable}
-                  @select=${this._onTrackSelect}
-                ></materia-track-confirm>
-              `
-            : html`
-                <materia-drag-confirm
-                  .gesture=${isHold ? "hold" : "slide"}
-                  .label=${inFlight
-                    ? (busy === "locking"
-                        ? (this.config.locking_label ?? t("lock_locking", this.hass))
-                        : (this.config.unlocking_label ?? t("lock_unlocking", this.hass)))
-                    : isHold
-                    ? holdHint
-                    : hint}
-                  .pending=${inFlight}
-                  .direction=${locked ? "forward" : "backward"}
-                  .threshold=${this.config.threshold ?? 0.55}
-                  .holdMs=${this.config.hold_ms ?? 800}
-                  ?disabled=${unavailable}
-                  @confirm=${this._confirm}
-                ></materia-drag-confirm>
-              `}
+          <materia-drag-confirm
+            .gesture=${isHold ? "hold" : "slide"}
+            .label=${inFlight
+              ? (busy === "locking"
+                  ? (this.config.locking_label ?? t("lock_locking", this.hass))
+                  : (this.config.unlocking_label ?? t("lock_unlocking", this.hass)))
+              : isHold
+              ? holdHint
+              : hint}
+            .pending=${inFlight}
+            .direction=${locked ? "forward" : "backward"}
+            .threshold=${this.config.threshold ?? 0.55}
+            .holdMs=${this.config.hold_ms ?? 800}
+            ?disabled=${unavailable}
+            @confirm=${this._confirm}
+          ></materia-drag-confirm>
 
-          ${busy === "jammed"
+          ${this.config.open_action
+            ? html`
+                <button
+                  class="open-btn"
+                  ?disabled=${locked || unavailable}
+                  @click=${this._openTap}
+                >
+                  <ha-icon .icon=${this.config.open_button_icon ?? "m3o:door-open"}></ha-icon>
+                  <span>${this.config.open_button_label ?? t("lock_open_button", this.hass)}</span>
+                </button>
+              `
+            : nothing}
+
+          ${jammed
             ? html`<div class="pending">
                 ${this.config.jammed_label ?? t("lock_jammed_hint", this.hass)}
               </div>`

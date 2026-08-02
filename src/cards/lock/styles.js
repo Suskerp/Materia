@@ -197,6 +197,28 @@ export const styles = [
       }
     }
 
+    /* JAMMED: a fault, not a resting position — a short shake reads as
+       "the mechanism tried and failed", distinct from working's steady
+       breathe. Runs once (not looping): a jam that lingers on screen for
+       minutes doesn't need to keep shaking at you. */
+    .shape.jammed {
+      animation: ml-jam-shake 0.5s ease-in-out 1;
+    }
+
+    @keyframes ml-jam-shake {
+      0%, 100% { transform: rotate(0deg) translateX(0); }
+      20% { transform: rotate(-4deg) translateX(-3px); }
+      40% { transform: rotate(3deg) translateX(3px); }
+      60% { transform: rotate(-2deg) translateX(-2px); }
+      80% { transform: rotate(1deg) translateX(1px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .shape.jammed {
+        animation: none;
+      }
+    }
+
     /* ---- the gesture ---- */
 
     materia-drag-confirm {
@@ -211,16 +233,52 @@ export const styles = [
       --mdc-handle-ink: var(--ml-handle-fg);
     }
 
-    /* The 3-stop track shares the drag-confirm's well and the handle's own
-       colour pair — the thumb IS the same handle, just with a third rest. */
-    materia-track-confirm {
+    /* ---- the open button ---- */
+
+    /* M3 Outlined Button, full width, square-ish shape (16px — noticeably
+       LESS round than the gesture's own stadium track above it, so the two
+       don't compete for the same "this is the primary control" reading).
+       Disabled per M3's flat 38%-opacity convention while locked — opening
+       only makes sense once the gesture has already unlocked the door. */
+    .open-btn {
       width: 100%;
-      --mtc-track: color-mix(in srgb, var(--ml-fg) 14%, transparent);
-      --mtc-thumb: var(--ml-handle-bg);
-      --mtc-thumb-ink: var(--ml-handle-fg);
-      --mtc-callout-border: color-mix(in srgb, var(--ml-fg) 30%, transparent);
-      --mtc-callout-ink: var(--ml-fg);
-      --mtc-callout-active: var(--ml-accent);
+      height: 56px;
+      border-radius: 16px;
+      border: 1px solid color-mix(in srgb, var(--ml-fg) 40%, transparent);
+      background: transparent;
+      color: var(--ml-fg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity var(--md-sys-motion-fast-effects),
+        background-color var(--md-sys-motion-fast-effects),
+        border-color var(--md-sys-motion-default-effects),
+        color var(--md-sys-motion-default-effects);
+    }
+
+    .open-btn:disabled {
+      opacity: 0.38;
+      pointer-events: none;
+      cursor: default;
+    }
+
+    .open-btn:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--ml-fg) 8%, transparent);
+    }
+
+    .open-btn:active:not(:disabled) {
+      background: color-mix(in srgb, var(--ml-fg) 12%, transparent);
+    }
+
+    .open-btn ha-icon {
+      --mdc-icon-size: 20px;
     }
 
     .pending {

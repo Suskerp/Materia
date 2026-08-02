@@ -1,6 +1,33 @@
+import { html, css } from "lit";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaLockEditor extends SmartEditorBase {
+  static styles = [
+    SmartEditorBase.styles,
+    css`
+      .remap-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .remap-row ha-textfield {
+        flex: 1;
+        min-width: 0;
+      }
+      .remap-arrow {
+        flex: none;
+        opacity: 0.5;
+        --mdc-icon-size: 18px;
+      }
+      .remap-note {
+        font-size: 12px;
+        opacity: 0.65;
+        padding: 0 4px 4px;
+      }
+    `,
+  ];
+
   /* Switches must be seeded with the card's own defaults. An option that
      defaults to TRUE but is absent from config arrives as `undefined`, which
      ha-form draws as OFF — so the toggle claims the feature is disabled when it
@@ -13,14 +40,14 @@ class MateriaLockEditor extends SmartEditorBase {
   /* Fields appear and disappear with the gesture and with whether an entity is
      set, so the memoized sections have to be invalidated on both. */
   _sectionsSignature() {
-    return `${this._config?.gesture || "slide"}|${this._config?.entity?.split(".")[0] || ""}`;
+    return `${this._config?.gesture || "slide"}|${this._config?.entity?.split(".")[0] || ""}|${this._config?.open_action ? "o" : ""}`;
   }
 
   get _sections() {
     const hold = this._config?.gesture === "hold";
-    const track = this._config?.gesture === "track";
     const hasEntity = !!this._config?.entity;
     const isLock = !!this._config?.entity?.startsWith("lock.");
+    const hasOpenButton = !!this._config?.open_action;
 
     return [
       {
@@ -33,7 +60,7 @@ class MateriaLockEditor extends SmartEditorBase {
             helper: "Leave empty to run self-contained — the card keeps its own state, with nothing to control.",
             selector: { entity: { domain: ["lock", "switch", "input_boolean"] } },
           },
-          ...(isLock && !track
+          ...(isLock
             ? [{
                 name: "unlock_service",
                 label: "Unlatch service",
@@ -47,13 +74,9 @@ class MateriaLockEditor extends SmartEditorBase {
           {
             name: "gesture",
             label: "Commit gesture",
-            helper: track
-              ? "One physical track, three stops: Locked, Unlocked (a real resting state), Open (a momentary unlatch you must drag past a detent to reach — always a drag, never a tap). The lock settling back to \"unlocked\" on its own re-centers the track with no gesture needed."
-              : undefined,
             selector: { select: { mode: "dropdown", options: [
               { value: "slide", label: "Slide the handle across" },
               { value: "hold", label: "Press and hold" },
-              { value: "track", label: "Drag across a 3-stop track (locked / unlocked / open)" },
             ] } },
           },
           { name: "shape", label: "Show the morphing lock shape", selector: { boolean: {} } },
@@ -62,6 +85,25 @@ class MateriaLockEditor extends SmartEditorBase {
              the shape the card ships with. shape_style stays supported in YAML
              (squircle/pill/gem still render) — the choice is just no longer
              advertised until another silhouette earns its place. */
+        ],
+      },
+      {
+        title: "Open button",
+        icon: "mdi:door-open",
+        expanded: hasOpenButton,
+        fields: [
+          {
+            name: "open_action",
+            label: "Open action",
+            helper: "A separate, extra action available ONLY once unlocked (a relay pulse, a multi-step let-them-in sequence) — never a substitute for the gesture above, and disabled entirely while locked. Leave empty to hide the button.",
+            selector: { ui_action: { default_action: "none" } },
+          },
+          ...(hasOpenButton
+            ? [
+                { name: "open_button_icon", label: 'Icon (default "door-open")', selector: { icon: {} } },
+                { name: "open_button_label", label: 'Label (default "Open")', selector: { text: {} } },
+              ]
+            : []),
         ],
       },
       {
@@ -101,14 +143,7 @@ class MateriaLockEditor extends SmartEditorBase {
         title: "Labels",
         icon: "mdi:text-short",
         fields: [
-          ...(track
-            ? [{
-                name: "track_labels",
-                label: "Show Locked / Unlocked / Open captions under the track",
-                helper: "Off by default — the track's icon and position already say what it's doing; captions are an extra, opt-in explanation.",
-                selector: { boolean: {} },
-              }]
-            : hold
+          ...(hold
             ? [
                 { name: "unlock_hold_hint", label: 'While locked (default "Hold to unlock")', selector: { text: {} } },
                 { name: "lock_hold_hint", label: 'While unlocked (default "Hold to lock")', selector: { text: {} } },
@@ -121,9 +156,6 @@ class MateriaLockEditor extends SmartEditorBase {
             ? [
                 { name: "locking_label", label: 'While locking (default "Locking…")', selector: { text: {} } },
                 { name: "unlocking_label", label: 'While unlocking (default "Unlocking…")', selector: { text: {} } },
-                ...(track
-                  ? [{ name: "opening_label", label: 'While opening (default "Opening…")', selector: { text: {} } }]
-                  : []),
                 { name: "jammed_label", label: 'When jammed (default "Jammed — check the door")', selector: { text: {} } },
               ]
             : [{ name: "demo_label", label: 'Self-contained note (default "Demo · no entity")', selector: { text: {} } }]),
@@ -141,8 +173,12 @@ class MateriaLockEditor extends SmartEditorBase {
           { name: "accent_on", label: "Ink on the accent", color: true, selector: { text: {} } },
           { name: "locked_icon", label: "Icon while locked", selector: { icon: {} } },
           { name: "unlocked_icon", label: "Icon while unlocked", selector: { icon: {} } },
-          ...(track
-            ? [{ name: "open_icon", label: "Icon for the Open stop (default door-open)", selector: { icon: {} } }]
+          ...(hasEntity
+            ? [
+                { name: "jammed_color", label: "Background while jammed (default error container)", color: true, selector: { text: {} } },
+                { name: "jammed_color_on", label: "Text while jammed", color: true, selector: { text: {} } },
+                { name: "jammed_icon", label: 'Icon while jammed (default "warning")', selector: { icon: {} } },
+              ]
             : []),
         ],
       },
@@ -154,6 +190,86 @@ class MateriaLockEditor extends SmartEditorBase {
         fields: [{ name: "tap_action", label: "Tapping the shape", selector: { ui_action: { default_action: "more-info" } } }],
       },
     ];
+  }
+
+  /** Only rendered when there's an entity — the list itself, in `_renderExtra`
+   *  below the standard sections, since a from->to map isn't a `selector`
+   *  the shared field renderer knows how to draw. */
+  get _showRemapList() {
+    return !!this._config?.entity;
+  }
+
+  _remapEntries() {
+    const map = this._config?.state_remap || {};
+    return Object.entries(map).map(([from, to]) => ({ from, to }));
+  }
+
+  _commitRemap(entries) {
+    const map = {};
+    for (const e of entries) if (e.from) map[e.from] = e.to ?? "";
+    this._commit({ ...this._config, state_remap: map });
+  }
+
+  _addRemap() {
+    this._commitRemap([...this._remapEntries(), { from: "", to: "" }]);
+  }
+
+  _removeRemap(i) {
+    const entries = [...this._remapEntries()];
+    entries.splice(i, 1);
+    this._commitRemap(entries);
+  }
+
+  _updateRemapFrom(i, value) {
+    const entries = [...this._remapEntries()];
+    entries[i] = { ...entries[i], from: value };
+    this._commitRemap(entries);
+  }
+
+  _updateRemapTo(i, value) {
+    const entries = [...this._remapEntries()];
+    entries[i] = { ...entries[i], to: value };
+    this._commitRemap(entries);
+  }
+
+  _renderExtra() {
+    if (!this._showRemapList) return "";
+    const entries = this._remapEntries();
+    return html`
+      <div class="options-header" style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;font-weight:600;font-size:14px;">
+        <span>State skips</span>
+        <ha-icon-button @click=${this._addRemap}>
+          <ha-icon icon="mdi:plus"></ha-icon>
+        </ha-icon-button>
+      </div>
+      <div class="remap-note">
+        Treat one reported entity state as another, before anything else
+        reads it — for hardware that reports a real but misleading
+        transition (e.g. a relatch settling reported as "unlocking" seconds
+        after a door that was never locked). Example: from "unlocking" to
+        "unlocked".
+      </div>
+      ${entries.map(
+        (e, i) => html`
+          <div class="remap-row">
+            <ha-textfield
+              label="From (raw state)"
+              .value=${e.from}
+              @change=${(ev) => this._updateRemapFrom(i, ev.target.value)}
+            ></ha-textfield>
+            <ha-icon class="remap-arrow" icon="mdi:arrow-right"></ha-icon>
+            <ha-textfield
+              label="To"
+              .value=${e.to}
+              @change=${(ev) => this._updateRemapTo(i, ev.target.value)}
+            ></ha-textfield>
+            <ha-icon-button @click=${() => this._removeRemap(i)}>
+              <ha-icon icon="mdi:delete"></ha-icon>
+            </ha-icon-button>
+          </div>
+        `
+      )}
+    `;
   }
 }
 
