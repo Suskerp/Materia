@@ -2,6 +2,7 @@ import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { HeroShellMixin, heroShellStyles } from "./shell.js";
 import { OptimismBus } from "../../utils/optimism-bus.js";
+import { settledLockState, isLockBusy } from "../../utils/lock-state.js";
 import { t } from "../../utils/i18n.js";
 import "./editor.js";
 
@@ -83,7 +84,32 @@ class MateriaHero extends HeroShellMixin(ActionMixin(LitElement)) {
       this._resolveField("active_color", "_resolvedActiveColor");
       this._resolveField("active_color_on", "_resolvedActiveColorOn");
       this._resolveAlertTemplates();
+      this._trackLockFamily();
     }
+  }
+
+  /** Lock-domain only: remembers the family ("locked" | "unlocked") the
+   *  entity last actually SETTLED into, so `_effectiveLockState` can tell a
+   *  genuine "unlocking" from hardware that reports one as a relatch
+   *  settling — see utils/lock-state.js. A lock card paired with this same
+   *  entity applies the identical logic, so the two never disagree about
+   *  what a given raw state means. */
+  _trackLockFamily() {
+    const st = this._stateObj;
+    if (!st || this.config.entity?.split(".")[0] !== "lock") return;
+    const lockedState = this.config.locked_state ?? "locked";
+    const eff = settledLockState(st.state, this._lastFamily, lockedState);
+    if (!isLockBusy(eff)) {
+      this._lastFamily = eff === lockedState ? "locked" : "unlocked";
+    }
+  }
+
+  /** The state string everything below should actually read: unchanged for
+   *  every domain but lock, where a bogus direction report gets swapped for
+   *  the settled state it actually means (see utils/lock-state.js). */
+  _effectiveLockState(st) {
+    if (!st || this.config.entity?.split(".")[0] !== "lock") return st?.state;
+    return settledLockState(st.state, this._lastFamily, this.config.locked_state ?? "locked");
   }
 
   /** Literal config value or its resolved template. */
@@ -144,9 +170,16 @@ class MateriaHero extends HeroShellMixin(ActionMixin(LitElement)) {
     const predicted = st && this.config.entity
       ? OptimismBus.peek(this.config.entity, st.state)
       : null;
+    // Lock-only: a bogus direction report (this Nuki's post-relatch
+    // "unlocking", seconds after the door was already open again) gets
+    // swapped for the state it actually settled into — see
+    // _trackLockFamily/utils/lock-state.js. Every other domain is
+    // untouched: effState === st.state.
+    const effState = this._effectiveLockState(st);
+    const effSt = st && effState !== st.state ? { ...st, state: effState } : st;
     const active = !unavailable && (predicted
-      ? this._isActive({ ...st, state: predicted })
-      : this._isActive(st));
+      ? this._isActive({ ...effSt, state: predicted })
+      : this._isActive(effSt));
 
     const name = this.config.name ?? st?.attributes?.friendly_name ?? this.config.entity;
     const icon = this.config.icon ?? st?.attributes?.icon;
@@ -155,7 +188,7 @@ class MateriaHero extends HeroShellMixin(ActionMixin(LitElement)) {
     const title = predicted
       ? this._predictedLabel(predicted)
       : this._field("title", "_resolvedTitle")
-        ?? (st ? (this.hass.formatEntityState?.(st) ?? st.state) : "—");
+        ?? (effSt ? (this.hass.formatEntityState?.(effSt) ?? effSt.state) : "—");
 
     // Value defaults to the entity's own numeric state; a non-numeric state
     // simply leaves the big numeral out rather than printing a word at 108px.

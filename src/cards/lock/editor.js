@@ -175,6 +175,12 @@ class MateriaLockEditor extends SmartEditorBase {
           { name: "unlocked_icon", label: "Icon while unlocked", selector: { icon: {} } },
           ...(hasEntity
             ? [
+                {
+                  name: "open_icon",
+                  label: 'Icon while literally open (default "door-open")',
+                  helper: "Rides on top of the unlocked colour, never its own — only the glyph changes.",
+                  selector: { icon: {} },
+                },
                 { name: "jammed_color", label: "Background while jammed (default error container)", color: true, selector: { text: {} } },
                 { name: "jammed_color_on", label: "Text while jammed", color: true, selector: { text: {} } },
                 { name: "jammed_icon", label: 'Icon while jammed (default "warning")', selector: { icon: {} } },

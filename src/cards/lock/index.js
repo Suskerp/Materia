@@ -3,6 +3,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { materialCookiePath, pillPath, gemPath } from "../../utils/shapes.js";
 import { t } from "../../utils/i18n.js";
 import { OptimismBus } from "../../utils/optimism-bus.js";
+import { settledLockState, isLockBusy } from "../../utils/lock-state.js";
 import { styles } from "./styles.js";
 import "../../primitives/drag-confirm.js";
 import "./editor.js";
@@ -124,13 +125,23 @@ class MateriaLock extends ActionMixin(LitElement) {
   }
 
   /** The raw entity state, remapped through `state_remap` BEFORE anything
-   *  else reads it — the single point every other getter funnels through,
-   *  so a remap configured once applies to locked/unlocked, in-flight,
-   *  jammed, colour, icon and spin uniformly, not just one of them. */
+   *  else reads it — a literal, context-free substitution for hardware that
+   *  reports some OTHER genuinely idiosyncratic string. It does NOT solve
+   *  the "unlocking" ambiguity below — that needs the previous state, not
+   *  just the current one, which is what `_effectiveState` is for. */
   get _rawState() {
     const raw = String(this._stateObj?.state ?? "");
     const remap = this.config?.state_remap || {};
     return Object.prototype.hasOwnProperty.call(remap, raw) ? remap[raw] : raw;
+  }
+
+  /** `_rawState`, disambiguated against `_lastFamily` — see
+   *  utils/lock-state.js for the full reasoning. This is the single point
+   *  every other getter funnels through, so the fix applies to
+   *  locked/unlocked, in-flight, jammed, colour, icon and spin uniformly,
+   *  not just one of them. */
+  get _effectiveState() {
+    return settledLockState(this._rawState, this._lastFamily, this._lockedState);
   }
 
   /** The state string that counts as locked, per domain. `switch` defaults to
@@ -148,39 +159,52 @@ class MateriaLock extends ActionMixin(LitElement) {
   get _entityLocked() {
     const st = this._stateObj;
     if (!st || this._isUnavailable(st)) return null;
-    return this._rawState === this._lockedState;
+    return this._effectiveState === this._lockedState;
   }
 
   get _locked() {
     if (this._selfContained) return this._local ?? (this.config.initial_locked !== false);
-    // IN-FLIGHT DISPLAYS THE ORIGIN. Some locks report locking/unlocking for the
-    // seconds the bolt is driving, and the destination has not happened yet —
-    // the surface floods when the machine ARRIVES, not when the command is
-    // accepted. "unlocking" needs saying explicitly: it fails the === locked
-    // test and would read as already-unlocked, flipping the card at the moment
-    // of acceptance. ("locking" reads as still-unlocked for the same reason,
-    // which happens to be correct.) _pending no longer flips the display either;
-    // it only marks the wait.
-    if (this._rawState === "unlocking") return true;
-    const real = this._entityLocked;
-    return real ?? (this._local ?? true);
+    const st = this._stateObj;
+    if (!st || this._isUnavailable(st)) return this._local ?? true;
+    // IN-FLIGHT DISPLAYS THE ORIGIN. A genuine "unlocking" (locked heading to
+    // unlocked) hasn't arrived yet, so the surface stays locked until the
+    // machine ARRIVES — `_effectiveState` has already dropped anything that
+    // ISN'T genuine (see settledLockState), so this check no longer needs to
+    // guess.
+    if (this._effectiveState === "unlocking") return true;
+    return this._effectiveState === this._lockedState;
   }
 
   /** In-flight states are worth showing: a lock that takes three seconds should
    *  say so rather than look like nothing happened. */
   get _transitioning() {
-    const s = this._rawState;
+    if (this._selfContained) return null;
+    const s = this._effectiveState;
     if (s === "locking" || s === "unlocking" || s === "jammed") return s;
     return this._pending != null ? (this._pending ? "locking" : "unlocking") : null;
   }
 
   updated(changed) {
-    if (changed.has("hass") && this._pending != null) {
-      // The entity has agreed with what we asked for — drop the optimistic state
-      // and let the real one drive again.
-      if (this._entityLocked === this._pending) {
-        this._pending = null;
-        clearTimeout(this._pendingTimer);
+    if (changed.has("hass")) {
+      if (this._pending != null) {
+        // The entity has agreed with what we asked for — drop the optimistic
+        // state and let the real one drive again.
+        if (this._entityLocked === this._pending) {
+          this._pending = null;
+          clearTimeout(this._pendingTimer);
+        }
+      }
+      // The family the entity last actually SETTLED into — everything
+      // `settledLockState` needs to tell a real "unlocking" from a bogus
+      // one apart. Only resting reads move it forward; a state this same
+      // getter just resolved (opening, jammed, a genuine locking/unlocking)
+      // never does, or the memory of "where we came from" would be
+      // overwritten by the very transition it exists to judge.
+      if (!this._selfContained) {
+        const eff = this._effectiveState;
+        if (!isLockBusy(eff)) {
+          this._lastFamily = eff === this._lockedState ? "locked" : "unlocked";
+        }
       }
     }
     // Order matters: fold a pose flip into the spin BEFORE _syncSpin reads
@@ -436,8 +460,17 @@ class MateriaLock extends ActionMixin(LitElement) {
     const handleBg = jammed ? fg : locked ? accent : fg;
     const handleFg = jammed ? bg : locked ? accentOn : bg;
 
+    // The open FACE rides on top of the unlocked family colour — never its
+    // own colour treatment (that would contradict "styling stays unlocked
+    // the whole time"), only its own glyph, and only while the entity is
+    // LITERALLY open/opening. The moment that stops being true (the bogus
+    // post-relatch "unlocking" among them) the icon reverts to the plain
+    // unlocked glyph, same as the colour already does.
+    const open = !this._selfContained && (this._effectiveState === "open" || this._effectiveState === "opening");
     const icon = jammed
       ? (this.config.jammed_icon ?? "m3o:warning")
+      : open
+      ? (this.config.open_icon ?? "m3o:door-open")
       : locked
       ? (this.config.locked_icon ?? "m3o:lock")
       : (this.config.unlocked_icon ?? "m3o:lock-open-right");
