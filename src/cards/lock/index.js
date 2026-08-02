@@ -98,6 +98,11 @@ class MateriaLock extends ActionMixin(LitElement) {
      *  tap receipt: it always completes one full turn and never touches
      *  the shape's actual pose. */
     _openSpin: { state: true },
+    /** Optimistic OPEN: set the instant the button is tapped, cleared once
+     *  the real entity actually reports open/opening (or a safety timeout)
+     *  — the same bridge-over-the-ack-gap `_pending` already is for the
+     *  gesture, so the open face doesn't wait out the round-trip either. */
+    _openPending: { state: true },
   };
 
   static styles = styles;
@@ -121,6 +126,7 @@ class MateriaLock extends ActionMixin(LitElement) {
     this._pending = null;
     this._local = null;
     this._openSpin = false;
+    this._openPending = false;
   }
 
   get _stateObj() {
@@ -211,6 +217,12 @@ class MateriaLock extends ActionMixin(LitElement) {
         const eff = this._effectiveState;
         if (!isLockBusy(eff)) {
           this._lastFamily = eff === this._lockedState ? "locked" : "unlocked";
+        }
+        // The entity has caught up with the open tap — drop the optimistic
+        // hold and let the real read take over.
+        if (this._openPending && (eff === "open" || eff === "opening")) {
+          this._openPending = false;
+          clearTimeout(this._openPendingTimer);
         }
       }
     }
@@ -369,6 +381,7 @@ class MateriaLock extends ActionMixin(LitElement) {
     super.disconnectedCallback();
     clearTimeout(this._pendingTimer);
     clearTimeout(this._openSpinTimer);
+    clearTimeout(this._openPendingTimer);
     if (this._spinRaf) cancelAnimationFrame(this._spinRaf);
     this._spinRaf = null;
     this._spinMode = null;
@@ -434,6 +447,20 @@ class MateriaLock extends ActionMixin(LitElement) {
   _openTap() {
     if (this._locked || !this.config.open_action) return;
     this._spinOpenShape();
+
+    if (!this._selfContained) {
+      this._openPending = true;
+      clearTimeout(this._openPendingTimer);
+      this._openPendingTimer = setTimeout(() => {
+        this._openPending = false;
+      }, this.config.pending_timeout_ms ?? 10000);
+      // Tell sibling cards on this entity (the hero above) what's about to
+      // happen BEFORE the round-trip, same bridge OptimismBus already
+      // gives the gesture — otherwise only THIS card's face was optimistic
+      // and the hero kept sitting on the stale state for the round-trip.
+      OptimismBus.publish(this.config.entity, "open", this._stateObj?.state);
+    }
+
     this._handleAction(this.config.open_action);
   }
 
@@ -492,7 +519,8 @@ class MateriaLock extends ActionMixin(LitElement) {
     // LITERALLY open/opening. The moment that stops being true (the bogus
     // post-relatch "unlocking" among them) the icon reverts to the plain
     // unlocked glyph, same as the colour already does.
-    const open = !this._selfContained && (this._effectiveState === "open" || this._effectiveState === "opening");
+    const open = !this._selfContained
+      && (this._openPending || this._effectiveState === "open" || this._effectiveState === "opening");
     const icon = jammed
       ? (this.config.jammed_icon ?? "m3o:warning")
       : open
@@ -523,7 +551,7 @@ class MateriaLock extends ActionMixin(LitElement) {
           ${this.config.shape === false
             ? nothing
             : html`<div
-                class="shape-wrap ${this._openSpin ? "spin-once" : ""}"
+                class="shape-wrap"
                 @click=${() =>
                   this._handleAction(
                     this.config.tap_action ||
@@ -533,7 +561,7 @@ class MateriaLock extends ActionMixin(LitElement) {
                   )}
               >
                 <div
-                  class="shape ${locked ? "" : "unlocked"} ${jammed ? "jammed" : ""} ${style.vector ? "vector" : ""} ${inFlight && !this._spins ? "working" : ""} ${this._spinning ? "spinning" : ""}"
+                  class="shape ${locked ? "" : "unlocked"} ${jammed ? "jammed" : ""} ${style.vector ? "vector" : ""} ${inFlight && !this._spins ? "working" : ""} ${this._spinning ? "spinning" : ""} ${this._openSpin ? "spin-once" : ""}"
                   style="--ml-rot:${style.rot}deg"
                 >
                   ${style.vector

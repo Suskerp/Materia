@@ -47,15 +47,30 @@ export const styles = [
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* The OPEN button's tap receipt — a quick single turn, independent of
-       the shape's own pose. Animates the standalone rotate property, not
-       transform, so it composes with whatever the shape underneath is
-       doing rather than fighting it — same technique the continuous
-       in-flight spin already uses on the silhouette. Always exactly one
-       turn: no easing toward an aligned stop, since nothing ongoing is
-       being tracked here. */
-    .shape-wrap.spin-once {
+    /* The OPEN button's tap receipt — a quick single turn of the SHAPE
+       only, never the glyph, exactly like the continuous in-flight spin
+       already never touches it. Animates the standalone rotate property,
+       not transform, so it composes with whatever the pose is doing
+       rather than fighting it. Always exactly one turn: no easing toward
+       an aligned stop, since nothing ongoing is being tracked here.
+
+       Vector shapes (cookie9, the default) already keep the icon as a
+       SIBLING of the silhouette, not a child of it — spinning only
+       .silhouette leaves the icon untouched for free, same guarantee the
+       continuous spin relies on. The CSS-box squircle has no separate
+       silhouette layer: the icon lives INSIDE the box that's turning, so
+       it needs an equal, opposite spin of its own to cancel the box's
+       rotation and stay upright. */
+    .shape.vector.spin-once .silhouette {
       animation: ml-open-spin 0.6s cubic-bezier(0.3, 0.1, 0.2, 1);
+    }
+
+    .shape:not(.vector).spin-once {
+      animation: ml-open-spin 0.6s cubic-bezier(0.3, 0.1, 0.2, 1);
+    }
+
+    .shape:not(.vector).spin-once ha-icon {
+      animation: ml-open-spin-counter 0.6s cubic-bezier(0.3, 0.1, 0.2, 1);
     }
 
     @keyframes ml-open-spin {
@@ -67,8 +82,19 @@ export const styles = [
       }
     }
 
+    @keyframes ml-open-spin-counter {
+      from {
+        rotate: 0deg;
+      }
+      to {
+        rotate: -360deg;
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
-      .shape-wrap.spin-once {
+      .shape.spin-once,
+      .shape.spin-once .silhouette,
+      .shape.spin-once ha-icon {
         animation: none;
       }
     }
