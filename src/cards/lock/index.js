@@ -92,6 +92,12 @@ class MateriaLock extends ActionMixin(LitElement) {
     /** True from spin-up until the wind-down completes — drives the class that
      *  stands the path's own state turn down while the spin owns rotation. */
     _spinning: { state: true },
+    /** One-shot flourish on the OPEN button — a quick single full turn,
+     *  distinct from the continuous in-flight spin above (which tracks a
+     *  real busy lock/unlock and eases to an aligned pose). This is just a
+     *  tap receipt: it always completes one full turn and never touches
+     *  the shape's actual pose. */
+    _openSpin: { state: true },
   };
 
   static styles = styles;
@@ -114,6 +120,7 @@ class MateriaLock extends ActionMixin(LitElement) {
     super();
     this._pending = null;
     this._local = null;
+    this._openSpin = false;
   }
 
   get _stateObj() {
@@ -361,9 +368,27 @@ class MateriaLock extends ActionMixin(LitElement) {
   disconnectedCallback() {
     super.disconnectedCallback();
     clearTimeout(this._pendingTimer);
+    clearTimeout(this._openSpinTimer);
     if (this._spinRaf) cancelAnimationFrame(this._spinRaf);
     this._spinRaf = null;
     this._spinMode = null;
+  }
+
+  /** A quick single turn as the OPEN button's tap receipt — always exactly
+   *  one full rotation, never eased into an aligned pose the way the
+   *  continuous in-flight spin is, because this isn't tracking anything
+   *  ongoing. Re-toggling the class within the same frame is a no-op in
+   *  the DOM, so a re-tap mid-spin drops the class for a frame first —
+   *  that's what lets it restart cleanly instead of being ignored. */
+  _spinOpenShape() {
+    clearTimeout(this._openSpinTimer);
+    this._openSpin = false;
+    requestAnimationFrame(() => {
+      this._openSpin = true;
+      this._openSpinTimer = setTimeout(() => {
+        this._openSpin = false;
+      }, 650);
+    });
   }
 
   _confirm() {
@@ -408,6 +433,7 @@ class MateriaLock extends ActionMixin(LitElement) {
    *  usable to skip past "locked" in one step. */
   _openTap() {
     if (this._locked || !this.config.open_action) return;
+    this._spinOpenShape();
     this._handleAction(this.config.open_action);
   }
 
@@ -497,7 +523,7 @@ class MateriaLock extends ActionMixin(LitElement) {
           ${this.config.shape === false
             ? nothing
             : html`<div
-                class="shape-wrap"
+                class="shape-wrap ${this._openSpin ? "spin-once" : ""}"
                 @click=${() =>
                   this._handleAction(
                     this.config.tap_action ||

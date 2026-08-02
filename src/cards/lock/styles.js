@@ -47,6 +47,32 @@ export const styles = [
       -webkit-tap-highlight-color: transparent;
     }
 
+    /* The OPEN button's tap receipt — a quick single turn, independent of
+       the shape's own pose. Animates the standalone rotate property, not
+       transform, so it composes with whatever the shape underneath is
+       doing rather than fighting it — same technique the continuous
+       in-flight spin already uses on the silhouette. Always exactly one
+       turn: no easing toward an aligned stop, since nothing ongoing is
+       being tracked here. */
+    .shape-wrap.spin-once {
+      animation: ml-open-spin 0.6s cubic-bezier(0.3, 0.1, 0.2, 1);
+    }
+
+    @keyframes ml-open-spin {
+      from {
+        rotate: 0deg;
+      }
+      to {
+        rotate: 360deg;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .shape-wrap.spin-once {
+        animation: none;
+      }
+    }
+
     /* 236px of a 412px frame in the design = 57cqi, clamped so it stays a
        recognisable shape in a narrow column and never dwarfs a wide one. */
     .shape {
