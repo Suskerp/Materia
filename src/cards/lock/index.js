@@ -478,10 +478,21 @@ class MateriaLock extends ActionMixin(LitElement) {
     const isHold = this.config.gesture === "hold";
     const isTrack = this.config.gesture === "track";
 
-    const trackBusyLabel = inFlight
-      ? busy === "locking"
-        ? (this.config.locking_label ?? t("lock_locking", this.hass))
-        : (this.config.unlocking_label ?? t("lock_unlocking", this.hass))
+    // The track's own busy read: `_transitioning` (which drives the shape
+    // hero) never learned "open"/"opening" — those aren't in-flight states
+    // for the binary lock, but they ARE for the third stop, and the drag
+    // that reaches it deserves the same "something is happening" feedback
+    // locking/unlocking already get, not silence for the one gesture that
+    // takes the longest to settle.
+    const trackRawState = String(this._stateObj?.state ?? "");
+    const trackBusy = trackRawState === "locking" || trackRawState === "unlocking"
+      || trackRawState === "open" || trackRawState === "opening";
+    const trackBusyLabel = trackRawState === "locking"
+      ? (this.config.locking_label ?? t("lock_locking", this.hass))
+      : trackRawState === "unlocking"
+      ? (this.config.unlocking_label ?? t("lock_unlocking", this.hass))
+      : trackRawState === "open" || trackRawState === "opening"
+      ? (this.config.opening_label ?? t("lock_opening", this.hass))
       : "";
     const trackStops = [
       { value: "locked", icon: this.config.locked_icon ?? "m3o:lock" },
@@ -531,11 +542,11 @@ class MateriaLock extends ActionMixin(LitElement) {
             ? html`
                 <materia-track-confirm
                   .stops=${trackStops}
-                  .boundaries=${[this.config.track_lock_boundary ?? 0.3, this.config.track_open_boundary ?? 0.82]}
+                  .boundaries=${[this.config.track_lock_boundary ?? 0.3, this.config.track_open_boundary ?? 0.75]}
                   .pos=${this._trackIndex}
                   .label=${trackBusyLabel}
                   .stopLabels=${trackLabels}
-                  .pending=${inFlight}
+                  .pending=${trackBusy}
                   ?disabled=${unavailable}
                   @select=${this._onTrackSelect}
                 ></materia-track-confirm>

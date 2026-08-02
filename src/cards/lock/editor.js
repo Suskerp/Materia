@@ -121,6 +121,9 @@ class MateriaLockEditor extends SmartEditorBase {
             ? [
                 { name: "locking_label", label: 'While locking (default "Locking…")', selector: { text: {} } },
                 { name: "unlocking_label", label: 'While unlocking (default "Unlocking…")', selector: { text: {} } },
+                ...(track
+                  ? [{ name: "opening_label", label: 'While opening (default "Opening…")', selector: { text: {} } }]
+                  : []),
                 { name: "jammed_label", label: 'When jammed (default "Jammed — check the door")', selector: { text: {} } },
               ]
             : [{ name: "demo_label", label: 'Self-contained note (default "Demo · no entity")', selector: { text: {} } }]),

@@ -5,18 +5,33 @@ import { loadCardHelpers } from "../../styles/shared.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
+/** M3 tab row height (48dp) and its stadium/seam radii — the SAME formula
+ *  materia-button-group's connected mode uses, ported rather than shared
+ *  because the two components render entirely different DOM. Kept as one
+ *  fixed size (no xs..xl ladder): a section-level view switcher doesn't
+ *  need the button scale. */
+const HEIGHT = 48;
+const OUTER_R = HEIGHT / 2;
+const INNER_R = 8;
+
 /**
- * Tab rail (materia-tabs): the M3 navigation-rail grammar as one
- * composable card, vertical (default) or horizontal (vertical: false).
- * The tabs switch a shared slot — pages EMBEDDED in the card (each item
- * holds its own `cards:` list, like a small vertical-stack per tab) or
- * external conditional cards (design 13a: "tabs, not a taller column").
+ * Tab rail (materia-tabs): a connected button group turned into a view
+ * switcher, vertical (default) or horizontal (vertical: false). The tabs
+ * switch a shared slot — pages EMBEDDED in the card (each item holds its
+ * own `cards:` list, like a small vertical-stack per tab) or external
+ * conditional cards (design 13a: "tabs, not a taller column").
  *
- * Spec anchors: the M3 Tabs component (secondary tabs with inline icon) —
- * 48dp rows, title-small labels, on-surface-variant inactive ink, primary
- * active ink, a 2dp primary indicator over a 1dp outline-variant divider
- * on the edge facing the content. The vertical rail is that same grammar
- * rotated; no per-tab containers, no growth.
+ * NOT the M3 Tabs component. Segmented buttons are deprecated in M3
+ * Expressive in favor of the connected button group (Google's own
+ * migration note), and Expressive never touched Tabs at all — new
+ * shape-morph treatment went to ButtonGroup/ToggleButton instead. Tabs are
+ * also the wrong SEMANTIC fit here: M3's hierarchy reserves tabs for
+ * top-level content groups (3+), while switching between two views of the
+ * same content (rooms vs. map) is exactly the section-level job a
+ * connected group is for. So this wears that grammar: joined tonal
+ * segments, the selected one growing and rounding to a full pill while its
+ * neighbor's facing corner stays the small seam radius — the corner math
+ * is button-group's own formula, not a lookalike.
  *
  * Selection state: CLIENT-SIDE by default — tabs are a viewing choice, so
  * each device keeps its own (the phone flipping to Map must not flip the
@@ -138,20 +153,43 @@ class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
     }
   }
 
+  /** Corner radius for one segment — button-group's own connected-group
+   *  formula: rail-end (outer) corners are always the full stadium cap;
+   *  seam (inner) corners are the small facing radius, EXCEPT on the
+   *  active segment, where they open to the same full radius so the whole
+   *  segment reads as a pill floating inside the rail's shared well. */
+  _segmentRadius(index, count, active, vertical) {
+    const ir = active ? OUTER_R : INNER_R;
+    if (count === 1) return `${OUTER_R}px`;
+    const first = index === 0;
+    const last = index === count - 1;
+    if (vertical) {
+      if (first) return `${OUTER_R}px ${OUTER_R}px ${ir}px ${ir}px`;
+      if (last) return `${ir}px ${ir}px ${OUTER_R}px ${OUTER_R}px`;
+      return `${ir}px`;
+    }
+    if (first) return `${OUTER_R}px ${ir}px ${ir}px ${OUTER_R}px`;
+    if (last) return `${ir}px ${OUTER_R}px ${OUTER_R}px ${ir}px`;
+    return `${ir}px`;
+  }
+
   render() {
     if (!this.hass || !this.config) return html``;
     const items = this._items();
     const current = this._current;
+    const vertical = this.config.vertical !== false;
     const rail = html`
-      <div class="rail" role="tablist" aria-orientation=${this.config.vertical === false ? "horizontal" : "vertical"}>
-        ${items.map((item) => {
+      <div class="rail" role="tablist" aria-orientation=${vertical ? "vertical" : "horizontal"} style="height:${vertical ? "auto" : `${HEIGHT}px`};">
+        ${items.map((item, i) => {
           const value = String(item.value ?? item.label);
           const on = current === value;
+          const radius = this._segmentRadius(i, items.length, on, vertical);
           return html`
             <button
               class="tab ${on ? "on" : ""}"
               role="tab"
               aria-selected=${on ? "true" : "false"}
+              style="border-radius:${radius};${vertical ? `min-height:${HEIGHT}px;` : `height:${HEIGHT}px;`}"
               @click=${() => this._tap(item)}
             >
               ${item.icon ? html`<ha-icon class="glyph" .icon=${item.icon}></ha-icon>` : nothing}

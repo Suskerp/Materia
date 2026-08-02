@@ -21,69 +21,62 @@ export const styles = [
       height: 100%;
     }
 
-    /* M3 Tabs (secondary style, inline icon + label): a quiet bar, not a
-       column of buttons. The container is transparent with a 1dp
-       outline-variant divider on the edge facing the content; the active
-       tab wears primary ink and a 2dp primary indicator on that edge.
-       Vertical is the same grammar rotated. */
+    /* Connected button group, not Tabs — see index.js for why. One joined
+       well; each segment computes its own corner radius in JS (button-
+       group's own formula), so there is no container clip or divider here
+       to fight it. */
     .rail {
       display: flex;
       flex-direction: column;
+      gap: 2px;
       height: 100%;
-      border-left: 1px solid var(--md-sys-color-outline-variant);
     }
 
     .tab {
       position: relative;
-      flex: none;
-      min-height: 48px;
+      flex: 1 0 auto;
       border: none;
-      padding: 0 16px;
+      padding: 8px 16px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
       cursor: pointer;
       font-family: inherit;
-      background: transparent;
-      color: var(--md-sys-color-on-surface-variant);
       -webkit-tap-highlight-color: transparent;
-      transition: color var(--md-sys-motion-fast-effects);
+      overflow: hidden;
+      /* Quiet filled well when unselected — the carousel-tile treatment,
+         so an unselected tab never reads as disabled. */
+      background: var(--md-sys-color-surface-container, color-mix(in srgb, var(--md-sys-color-on-surface, #1c1b1f) 5%, transparent));
+      color: var(--md-sys-color-on-surface-variant);
+      transition: border-radius var(--md-sys-motion-expressive-fast-spatial),
+        flex-grow var(--md-sys-motion-expressive-fast-spatial),
+        background-color var(--md-sys-motion-fast-effects),
+        color var(--md-sys-motion-fast-effects);
     }
 
+    /* The selected segment grows AND opens its seam corner to a full pill —
+       the shape+size morph button-group already established, not a new one. */
     .tab.on {
-      color: var(--md-sys-color-primary);
-    }
-
-    /* The indicator: 2dp primary, on the divider edge, growing in on the
-       spatial spring. */
-    .tab::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: var(--md-sys-color-primary);
-      transform: scaleY(0);
-      transform-origin: center;
-      transition: transform var(--md-sys-motion-expressive-default-spatial);
-    }
-
-    .tab.on::after {
-      transform: scaleY(1);
+      flex-grow: 1.4;
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
     }
 
     .glyph {
-      --mdc-icon-size: 24px;
+      --mdc-icon-size: 20px;
+      flex-shrink: 0;
     }
 
     .label {
-      /* title-small — the tabs spec's label style. */
       font-size: 14px;
       font-weight: 500;
+      line-height: 20px;
       letter-spacing: 0.01em;
-      line-height: 1.2;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     /* M3 state layer */
@@ -151,27 +144,10 @@ export const styles = [
     :host([horizontal]) .rail {
       flex-direction: row;
       height: auto;
-      border-left: none;
-      border-bottom: 1px solid var(--md-sys-color-outline-variant);
     }
 
     :host([horizontal]) .tab {
-      flex: 1 1 0;
       min-width: 0;
-    }
-
-    :host([horizontal]) .tab::after {
-      left: 0;
-      right: 0;
-      top: auto;
-      bottom: 0;
-      width: auto;
-      height: 2px;
-      transform: scaleX(0);
-    }
-
-    :host([horizontal]) .tab.on::after {
-      transform: scaleX(1);
     }
 
     /* Bar above, pages below — markup stays stage-then-rail. */
@@ -184,8 +160,7 @@ export const styles = [
 
     @media (prefers-reduced-motion: reduce) {
       .tab,
-      .tab::before,
-      .tab::after {
+      .tab::before {
         transition: none;
       }
     }

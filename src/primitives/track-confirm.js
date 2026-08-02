@@ -1,5 +1,20 @@
-import { LitElement, html, css, nothing } from "lit";
+import { LitElement, html, css, svg, nothing } from "lit";
 import { motionTokens } from "../utils/motion.js";
+
+/** Small directional chevron — the SAME affordance materia-drag-confirm's
+ *  handle carries, so the two read as one family of drag control. Shown to
+ *  either side of the thumb's icon, one per direction the current rest
+ *  position can still travel: hidden at whichever end has run out of
+ *  stops, so the arrows always describe the real range, not just decorate
+ *  the thumb. */
+const CHEVRON = svg`<path
+  d="M9 6l6 6-6 6"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2.4"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+/>`;
 
 /**
  * <materia-track-confirm> — materia-drag-confirm generalized from two
@@ -167,6 +182,30 @@ class MateriaTrackConfirm extends LitElement {
         --mdc-icon-size: var(--mtc-icon);
       }
 
+      .thumb .chevrons {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 4px;
+        pointer-events: none;
+      }
+
+      .thumb .chevron {
+        width: 18px;
+        height: 18px;
+        opacity: 0.55;
+      }
+
+      .thumb .chevron.left {
+        transform: scaleX(-1);
+      }
+
+      .thumb .chevron.hidden {
+        opacity: 0;
+      }
+
       .label {
         position: absolute;
         inset: 0;
@@ -226,11 +265,13 @@ class MateriaTrackConfirm extends LitElement {
     this._armed = false;
     this._settling = false;
     this._travel = 0;
+    this._optimistic = null;
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     this._cleanup();
+    clearTimeout(this._optimisticTimer);
   }
 
   willUpdate(changed) {
@@ -241,6 +282,17 @@ class MateriaTrackConfirm extends LitElement {
     const pendingChanged = changed.has("pending") && changed.get("pending") !== undefined;
     if ((posChanged || pendingChanged) && !this._armed) {
       this._settling = true;
+    }
+    // Reality caught up (the caller's `pos` moved at all) — drop the
+    // optimistic hold and let the real value drive again. Without this the
+    // release-to-open gesture flew back to the OLD resting stop the
+    // instant the pointer lifted (pos hadn't moved yet), then jumped back
+    // out once the entity finally reported the transition — a visible
+    // double-motion. Holding the resolved stop from the moment of release
+    // until pos next changes closes that gap.
+    if (posChanged && this._optimistic != null) {
+      this._optimistic = null;
+      clearTimeout(this._optimisticTimer);
     }
   }
 
@@ -391,6 +443,16 @@ class MateriaTrackConfirm extends LitElement {
     this._cleanup();
     if (index != null && this.stops[index]) {
       this._haptic("success");
+      // Hold the resolved stop optimistically — the caller's `pos` is
+      // driven by the real entity and hasn't moved yet. Cleared in
+      // willUpdate the moment `pos` next changes; the timeout is a safety
+      // net for an offline entity that never answers.
+      this._optimistic = index;
+      clearTimeout(this._optimisticTimer);
+      this._optimisticTimer = setTimeout(() => {
+        this._optimistic = null;
+        this.requestUpdate();
+      }, 4000);
       this.dispatchEvent(
         new CustomEvent("select", {
           detail: { index, value: this.stops[index].value },
@@ -437,6 +499,12 @@ class MateriaTrackConfirm extends LitElement {
   _commitDirect(index) {
     this._settling = true;
     this._haptic("success");
+    this._optimistic = index;
+    clearTimeout(this._optimisticTimer);
+    this._optimisticTimer = setTimeout(() => {
+      this._optimistic = null;
+      this.requestUpdate();
+    }, 4000);
     this.dispatchEvent(
       new CustomEvent("select", {
         detail: { index, value: this.stops[index].value },
@@ -464,12 +532,23 @@ class MateriaTrackConfirm extends LitElement {
   render() {
     const n = this.stops.length;
     if (!n) return html``;
-    const liveIndex = this._armed ? this._dragIndex : this.pos;
-    const frac = this._armed && this._liveFrac != null ? this._liveFrac : this._fracForIndex(this.pos);
+    // The rest position: the caller's `pos` UNLESS a gesture just resolved
+    // and reality hasn't reported back yet, in which case the optimistic
+    // stop wins so the thumb never snaps back to the old rest first.
+    const restIndex = this._optimistic != null ? this._optimistic : this.pos;
+    const liveIndex = this._armed ? this._dragIndex : restIndex;
+    const frac = this._armed && this._liveFrac != null ? this._liveFrac : this._fracForIndex(restIndex);
     const settle = this._settling && !this._armed ? "settling" : "";
     const lastIndex = n - 1;
     const calloutActive = this._armed && this._dragIndex === lastIndex;
-    const thumbStop = this.stops[liveIndex] ?? this.stops[this.pos];
+    const thumbStop = this.stops[liveIndex] ?? this.stops[restIndex];
+    const canLeft = restIndex > 0;
+    const canRight = restIndex < lastIndex;
+    // The callout SPANS the actual committable zone (from the last boundary
+    // to the track's end) rather than sitting as a small icon-sized box in
+    // the corner — a target you can only half-see is a target that feels
+    // too small, whatever its real hit area.
+    const calloutStart = this._boundaries[this._boundaries.length - 1] ?? 1;
 
     return html`
       <div class="wrap">
@@ -479,20 +558,24 @@ class MateriaTrackConfirm extends LitElement {
           tabindex=${this.disabled ? -1 : 0}
           aria-valuemin="0"
           aria-valuemax=${lastIndex}
-          aria-valuenow=${this.pos}
-          aria-valuetext=${this.stops[this.pos]?.value ?? ""}
+          aria-valuenow=${restIndex}
+          aria-valuetext=${this.stops[restIndex]?.value ?? ""}
           aria-disabled=${this.disabled ? "true" : "false"}
           style="--mtc-frac:${frac};"
           @pointerdown=${this._onPointerDown}
           @keydown=${this._onKeyDown}
         >
-          <div class="callout ${calloutActive ? "active" : ""}">
+          <div class="callout ${calloutActive ? "active" : ""}" style="left:${(calloutStart * 100).toFixed(1)}%;">
             ${this.stops[lastIndex]?.icon
               ? html`<ha-icon .icon=${this.stops[lastIndex].icon}></ha-icon>`
               : nothing}
           </div>
           ${this.label ? html`<div class="label"><span>${this.label}</span></div>` : nothing}
           <div class="thumb ${settle}">
+            <div class="chevrons">
+              <svg class="chevron left ${canLeft ? "" : "hidden"}" viewBox="0 0 24 24" aria-hidden="true">${CHEVRON}</svg>
+              <svg class="chevron right ${canRight ? "" : "hidden"}" viewBox="0 0 24 24" aria-hidden="true">${CHEVRON}</svg>
+            </div>
             ${thumbStop?.icon ? html`<ha-icon .icon=${thumbStop.icon}></ha-icon>` : nothing}
           </div>
         </div>
@@ -500,7 +583,7 @@ class MateriaTrackConfirm extends LitElement {
           ? html`
               <div class="labels">
                 ${this.stopLabels.map(
-                  (l, i) => html`<span class="${i === this.pos ? "on" : ""}">${l}</span>`
+                  (l, i) => html`<span class="${i === restIndex ? "on" : ""}">${l}</span>`
                 )}
               </div>
             `
