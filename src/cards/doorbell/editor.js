@@ -19,9 +19,15 @@ class MateriaDoorbellEditor extends SmartEditorBase {
           },
           {
             name: "timeout",
-            label: "Ring timeout (seconds)",
-            helper: "Match the popup timeout so the bar and the dialog agree.",
+            label: "Popup timeout (seconds)",
+            helper: "Match the popup timeout so the top bar and the dialog agree.",
             selector: { number: { min: 5, max: 300, mode: "box" } },
+          },
+          {
+            name: "ring_seconds",
+            label: "Ring length (seconds)",
+            helper: "How long the chime actually sounds — the ring lapses when it ends. Empty = same as the popup timeout.",
+            selector: { number: { min: 1, max: 300, mode: "box" } },
           },
           { name: "name", label: "Eyebrow while ringing (default: Doorbell)", selector: { text: {} } },
           { name: "place", label: "Where the ring is from (default: Front door)", selector: { text: {} } },

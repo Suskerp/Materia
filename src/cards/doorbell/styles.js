@@ -29,6 +29,14 @@ export const styles = [
       transition: width 1s linear, background-color var(--md-sys-motion-default-effects);
     }
 
+    /* The bar's colour settles with the phase — urgent while the ring is
+       live, container-soft once it's been answered, outline-quiet when it
+       lapsed. System tokens only; the design's palette is illustrative. */
+    .countbar.buzzed .fill,
+    .countbar.opened .fill {
+      background: var(--md-sys-color-primary-container);
+    }
+
     .countbar.lapsed .fill {
       background: var(--md-sys-color-outline-variant);
     }

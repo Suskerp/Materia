@@ -135,7 +135,7 @@ const STRINGS = {
   db_count_before_lapse: { en: "before it lapses", nl: "voor de bel verloopt" },
   db_count_buzzing: { en: "buzzing", nl: "aan het zoemen" },
   db_count_buzzed: { en: "street door released", nl: "benedendeur open" },
-  db_count_opened: { en: "front door unlocked", nl: "voordeur open" },
+  db_count_opened: { en: "come on in", nl: "kom maar binnen" },
   db_count_lapsed: { en: "missed ring", nl: "gemiste bel" },
   db_count_done: { en: "Done", nl: "Klaar" },
   db_count_open: { en: "Open", nl: "Open" },

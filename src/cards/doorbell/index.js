@@ -66,8 +66,18 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     return st ? st.state === "on" : false;
   }
 
+  /** How long a ring RINGS — the length of the chime sound, not the popup's
+   *  lifetime. The doorbell entity is often a 1–2s pulse, so "ringing" is
+   *  judged from the ring window, not the entity alone: the phase holds for
+   *  the whole chime and lapses when it ends, even while the popup (timeout)
+   *  lives on. Defaults to timeout so configs without it behave as before. */
+  get _ringSeconds() {
+    return this.config.ring_seconds ?? this.config.timeout;
+  }
+
   get _ringing() {
-    return this._on(this.config.entity);
+    if (this._on(this.config.entity)) return true;
+    return this._ringT0 != null && (Date.now() - this._ringT0) / 1000 < this._ringSeconds;
   }
 
   get _buzzing() {
@@ -87,14 +97,12 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     return ["unlocking", "locking"].includes(this._lockState);
   }
 
-  /** Seconds left on the ring, from the doorbell entity's own last_changed —
-   *  no client clock to drift, and a replay (turn it on again) resets it. */
+  /** Seconds left before the ring lapses — the chime's own clock, from the
+   *  ring window's start. No client clock to drift, and a replay (turn the
+   *  doorbell back on) re-arms the window and resets it. */
   get _left() {
-    if (!this._ringing) return 0;
-    const st = this.hass?.states[this.config.entity];
-    const t0 = st ? new Date(st.last_changed).getTime() : NaN;
-    if (Number.isNaN(t0)) return this.config.timeout;
-    return Math.max(0, Math.ceil(this.config.timeout - (Date.now() - t0) / 1000));
+    if (!this._ringT0) return this._ringing ? this._ringSeconds : 0;
+    return Math.max(0, Math.ceil(this._ringSeconds - (Date.now() - this._ringT0) / 1000));
   }
 
   get _phase() {
@@ -244,11 +252,12 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
         accent: false,
         title: t("db_title_buzzed", h),
         sub: t("db_sub_buzzed", h),
-        // Settled phases drop the count column — the headline already says
-        // it, and saying it twice reads as a rendering mistake.
-        num: null,
+        // Settled phases KEEP the count column (the design does), but its copy
+        // must never repeat the subtitle — the #172 "double info" bug was the
+        // cap echoing the sub word for word, not the column existing.
+        num: t("db_count_done", h),
         numAccent: false,
-        cap: null,
+        cap: t("db_count_buzzed", h),
         icon: "m3o:volume-up",
         chip: "soft",
       },
@@ -258,9 +267,9 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
         title: t("db_title_opened", h),
         titleAccent: true,
         sub: t("db_sub_opened", h),
-        num: null,
-        numAccent: false,
-        cap: null,
+        num: t("db_count_open", h),
+        numAccent: true,
+        cap: t("db_count_opened", h),
         icon: "m3o:lock-open-right",
         chip: "live",
       },
@@ -269,9 +278,9 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
         accent: false,
         title: t("db_title_lapsed", h),
         sub: t("db_sub_lapsed", h),
-        num: null,
+        num: "—",
         numAccent: false,
-        cap: null,
+        cap: t("db_count_lapsed", h),
         icon: "m3o:notifications-off",
         chip: "",
       },
@@ -307,7 +316,7 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
 
     return html`
       <ha-card>
-        <div class="countbar ${phase === "lapsed" ? "lapsed" : ""}">
+        <div class="countbar ${phase}">
           <div class="fill" style="width:${pct}%"></div>
         </div>
         <div class="body">
