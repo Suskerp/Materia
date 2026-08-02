@@ -47,10 +47,18 @@ export const styles = [
     .pane {
       grid-area: 1 / 1;
       min-width: 0;
+      /* Heavy panes (a live map) must not tax the rest of the page. */
+      contain: layout style;
     }
 
+    /* visibility alone is NOT enough: a child may set visibility:visible
+       under a hidden ancestor — the map card's zoom overlay does exactly
+       that and punched through the rooms grid. Opacity can't be overridden
+       from below. Both stay applied: visibility skips paint for honest
+       children, opacity guarantees the rest. */
     .pane:not(.on) {
       visibility: hidden;
+      opacity: 0;
       pointer-events: none;
     }
 
@@ -117,8 +125,10 @@ export const styles = [
       color: var(--md-sys-color-on-surface-variant, var(--primary-text-color));
       border-radius: 16px;
       /* The selected tab grows AND rounds in one gesture, both on the
-         expressive spatial spring; colours ride the flat effects curve. */
-      transition: flex-grow var(--md-sys-motion-expressive-slow-spatial),
+         expressive spatial spring; colours ride the flat effects curve.
+         Default-speed spring — the slow one read as lag next to a heavy
+         pane swap. */
+      transition: flex-grow var(--md-sys-motion-expressive-default-spatial),
         border-radius var(--md-sys-motion-expressive-default-spatial),
         background-color var(--md-sys-motion-fast-effects),
         color var(--md-sys-motion-fast-effects);
