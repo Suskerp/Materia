@@ -371,12 +371,11 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     // header. (Raw entity OR phase, so demo:buzzing still animates.)
     const busy = this._buzzing || phase === "buzzing";
     const opened = phase === "opened";
-    // What the open PANEL floods on: its own sequence having run, or the
-    // interior door being LIVE open — not the header's combined state, so a
-    // street-only buzz activates the header without flooding this panel.
-    const doorOpen = this.config.open_action
-      ? this._openedViaCard || this._unlockedNow
-      : this._unlockedNow;
+    // What the open PANEL floods on. With an open_action, ONLY its own
+    // sequence having run this visit — an interior lock that happens to sit
+    // unlocked pre-flooded the panel mid-ring before anyone buzzed. Without
+    // one the panel IS the lock control, so the live lock state rules.
+    const doorOpen = this.config.open_action ? this._openedViaCard : this._unlockedNow;
     // The bar is the popup-close indicator: it drains from the moment the
     // ring started, through buzzing and opening alike. With no window (the
     // card at rest) it sits FULL in the phase's quiet tone — the design's
