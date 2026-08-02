@@ -117,12 +117,29 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
         this._lingerTimer = setTimeout(() => this.requestUpdate(), BUZZED_LINGER_MS + 50);
       }
       this._wasBuzzing = buzzing;
+      // The ring WINDOW outlives the ring itself: the popup that opened on
+      // the ring closes `timeout` seconds after it started, whatever was
+      // buzzed or opened in between — the top bar drains on this clock.
+      if (this._ringing && !this._ringT0) {
+        const st = this.hass?.states[this.config.entity];
+        const t0 = st ? Date.parse(st.last_changed) : NaN;
+        this._ringT0 = Number.isNaN(t0) ? Date.now() : t0;
+      }
+      if (this._ringT0 && (Date.now() - this._ringT0) / 1000 > (this.config.timeout || 0)) {
+        this._ringT0 = null;
+      }
       this._syncTicker();
     }
   }
 
+  /** Seconds until the ring window — and the popup riding it — closes. */
+  get _windowLeft() {
+    if (!this._ringT0) return 0;
+    return Math.max(0, Math.ceil((this.config.timeout || 0) - (Date.now() - this._ringT0) / 1000));
+  }
+
   _syncTicker() {
-    const need = this._ringing;
+    const need = this._ringing || this._windowLeft > 0;
     if (need && !this._tick) {
       this._tick = setInterval(() => {
         this._now = Date.now();
@@ -221,9 +238,11 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
         accent: false,
         title: t("db_title_buzzed", h),
         sub: t("db_sub_buzzed", h),
-        num: t("db_count_done", h),
+        // Settled phases drop the count column — the headline already says
+        // it, and saying it twice reads as a rendering mistake.
+        num: null,
         numAccent: false,
-        cap: t("db_count_buzzed", h),
+        cap: null,
         icon: "m3o:volume-up",
         chip: "soft",
       },
@@ -233,9 +252,9 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
         title: t("db_title_opened", h),
         titleAccent: true,
         sub: t("db_sub_opened", h),
-        num: t("db_count_open", h),
-        numAccent: true,
-        cap: t("db_count_opened", h),
+        num: null,
+        numAccent: false,
+        cap: null,
         icon: "m3o:lock-open-right",
         chip: "live",
       },
@@ -244,9 +263,9 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
         accent: false,
         title: t("db_title_lapsed", h),
         sub: t("db_sub_lapsed", h),
-        num: "—",
+        num: null,
         numAccent: false,
-        cap: t("db_count_lapsed", h),
+        cap: null,
         icon: "m3o:notifications-off",
         chip: "",
       },
@@ -260,9 +279,12 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     const c = this._copy(phase);
     const busy = phase === "buzzing";
     const opened = phase === "opened";
-    const pct = phase === "ringing"
-      ? (this.config.timeout > 0 ? Math.round((this._left / this.config.timeout) * 100) : 0)
-      : phase === "lapsed" ? 0 : 100;
+    // The bar is the popup-close indicator: it drains from the moment the
+    // ring started, through buzzing and opening alike. No ring window (the
+    // card opened by hand) = no bar.
+    const pct = this.config.timeout > 0 && this._ringT0
+      ? Math.round((this._windowLeft / this.config.timeout) * 100)
+      : 0;
 
     const cookieWord = busy
       ? t("db_buzz_busy", this.hass)
@@ -290,10 +312,14 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
               <span class="title ${c.titleAccent ? "accent" : ""}">${c.title}</span>
               <span class="subtitle">${c.sub}</span>
             </div>
-            <div class="count">
-              <span class="num ${c.numAccent ? "accent" : ""}">${c.num}</span>
-              <span class="cap">${c.cap}</span>
-            </div>
+            ${c.num != null
+              ? html`
+                  <div class="count">
+                    <span class="num ${c.numAccent ? "accent" : ""}">${c.num}</span>
+                    <span class="cap">${c.cap}</span>
+                  </div>
+                `
+              : nothing}
           </div>
 
           <div class="panels">
