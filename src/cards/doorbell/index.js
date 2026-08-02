@@ -160,8 +160,19 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
    *  toast and failure haptic, not vanish as an unhandled rejection. */
   _slide() {
     if (!this.config.lock) return;
-    const service = this._lockState === "unlocked" ? "lock" : "unlock";
-    this._callService("lock", service, { entity_id: this.config.lock });
+    if (this._lockState === "unlocked") {
+      // Re-locking always drives the lock itself — a custom open sequence
+      // (buzz + delayed unlock) has no sensible reverse.
+      this._callService("lock", "lock", { entity_id: this.config.lock });
+      return;
+    }
+    // open_action replaces the plain unlock — the let-them-in sequence that
+    // clears BOTH doors, not just the one this card watches.
+    if (this.config.open_action) {
+      this._handleAction(this.config.open_action);
+      return;
+    }
+    this._callService("lock", "unlock", { entity_id: this.config.lock });
   }
 
   _ignore() {
@@ -322,14 +333,18 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
                     </div>
                     <div class="open-spacer"></div>
                     <materia-drag-confirm
-                      gesture="slide"
+                      gesture=${this.config.open_gesture === "hold" ? "hold" : "slide"}
                       .label=${this._lockState === "unlocking"
                         ? t("lock_unlocking", this.hass)
                         : this._lockState === "locking"
                         ? t("lock_locking", this.hass)
                         : opened
-                        ? t("lock_slide_to_lock", this.hass)
-                        : t("db_slide_hint", this.hass)}
+                        ? (this.config.open_gesture === "hold"
+                            ? t("lock_hold_to_lock", this.hass)
+                            : t("lock_slide_to_lock", this.hass))
+                        : (this.config.open_gesture === "hold"
+                            ? t("lock_hold_to_unlock", this.hass)
+                            : t("db_slide_hint", this.hass))}
                       .pending=${this._unlocking}
                       .direction=${opened ? "backward" : "forward"}
                       @confirm=${this._slide}

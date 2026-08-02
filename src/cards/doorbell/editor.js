@@ -59,8 +59,22 @@ class MateriaDoorbellEditor extends SmartEditorBase {
           {
             name: "lock",
             label: "Lock",
-            helper: "Slide-to-open unlocks this. Leave empty to hide the panel.",
+            helper: "The gesture unlocks this. Leave empty to hide the panel.",
             selector: { entity: { domain: "lock" } },
+          },
+          {
+            name: "open_gesture",
+            label: "Open gesture",
+            selector: { select: { mode: "dropdown", options: [
+              { value: "slide", label: "Slide" },
+              { value: "hold", label: "Hold" },
+            ] } },
+          },
+          {
+            name: "open_action",
+            label: "Open action (replaces the plain unlock)",
+            helper: "For a let-them-in sequence that clears more than this one lock. Re-locking always drives the lock itself.",
+            selector: { ui_action: { default_action: "none" } },
           },
           { name: "open_title", label: "Panel title (default: Open the front door)", selector: { text: {} } },
           {
