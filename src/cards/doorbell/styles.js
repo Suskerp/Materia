@@ -317,8 +317,10 @@ export const styles = [
       transform-origin: center;
     }
 
+    /* One lobe passes about every 1.1s — a slow churn, not a spinner. At 5s
+       per turn the 9-lobe silhouette read as frantic. */
     .busy .cookie path {
-      animation: mdb-spin 5s linear infinite;
+      animation: mdb-spin 10s linear infinite;
     }
 
     /* Press acknowledgement on the stage, not the cookie — the cookie's scale
