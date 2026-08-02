@@ -7,18 +7,19 @@ class MateriaLockEditor extends SmartEditorBase {
      is actually on, and merely opening the editor and saving would turn it off
      for real. Config still wins, so an explicit false survives. */
   _formData() {
-    return { gesture: "slide", shape: true, shape_style: "cookie9", initial_locked: true, ...this._config };
+    return { gesture: "slide", shape: true, shape_style: "cookie9", initial_locked: true, unlock_service: "unlock", ...this._config };
   }
 
   /* Fields appear and disappear with the gesture and with whether an entity is
      set, so the memoized sections have to be invalidated on both. */
   _sectionsSignature() {
-    return `${this._config?.gesture || "slide"}|${this._config?.entity ? "e" : ""}`;
+    return `${this._config?.gesture || "slide"}|${this._config?.entity?.split(".")[0] || ""}`;
   }
 
   get _sections() {
     const hold = this._config?.gesture === "hold";
     const hasEntity = !!this._config?.entity;
+    const isLock = !!this._config?.entity?.startsWith("lock.");
 
     return [
       {
@@ -31,6 +32,17 @@ class MateriaLockEditor extends SmartEditorBase {
             helper: "Leave empty to run self-contained — the card keeps its own state, with nothing to control.",
             selector: { entity: { domain: ["lock", "switch", "input_boolean"] } },
           },
+          ...(isLock
+            ? [{
+                name: "unlock_service",
+                label: "Unlatch service",
+                helper: "Open is for strikes/relays that don't stay meaningfully \"unlocked\" — the door swings rather than sitting unlatched (lock.open instead of lock.unlock). Locking always uses lock.lock.",
+                selector: { select: { mode: "dropdown", options: [
+                  { value: "unlock", label: "Unlock (lock.unlock)" },
+                  { value: "open", label: "Open (lock.open)" },
+                ] } },
+              }]
+            : []),
           {
             name: "gesture",
             label: "Commit gesture",

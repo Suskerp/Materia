@@ -90,6 +90,12 @@ class MateriaBadgeEditor extends SmartEditorBase {
           { name: "show_state", selector: { boolean: {} } },
           { name: "active_state", selector: { text: {} } },
           { name: "state_display", template: true, selector: { text: {} } },
+          {
+            name: "busy_entity",
+            label: "Also active while (optional)",
+            helper: "A script/automation/timer whose 'on' also counts as active — for when the badge's own entity only reflects part of a longer sequence (e.g. a relay that pulses inside a multi-step unlock script).",
+            selector: { entity: { domain: ["script", "automation", "timer", "input_boolean", "binary_sensor"] } },
+          },
         ],
       });
     }

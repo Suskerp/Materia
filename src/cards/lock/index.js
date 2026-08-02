@@ -340,7 +340,12 @@ class MateriaLock extends ActionMixin(LitElement) {
       // Tell sibling cards on this entity what is happening BEFORE the
       // round-trip — the hero above must say "Unlocking" when our track does.
       OptimismBus.publish(eid, next ? "locking" : "unlocking", this._stateObj?.state);
-      this._callService("lock", next ? "lock" : "unlock", { entity_id: eid });
+      // Some locks (electric strikes, videophone relays) don't have a
+      // meaningful "unlocked and staying that way" state — the door should
+      // swing on `lock.open` rather than sit unlatched. Locking is always
+      // `lock.lock`; only the unlatch service is configurable.
+      const unlockService = this.config.unlock_service === "open" ? "open" : "unlock";
+      this._callService("lock", next ? "lock" : unlockService, { entity_id: eid });
     } else {
       // Which switch position is "locked" is configurable, so derive the
       // service from that rather than assuming on/off means anything.

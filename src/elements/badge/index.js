@@ -120,6 +120,17 @@ class MateriaBadge extends ActionMixin(LitElement) {
     return s === defaultActive;
   }
 
+  /** Also-active while a SEPARATE entity is running — the badge's own
+   *  entity state may not span the full job (e.g. a lock that only sits
+   *  unlocked for the 3s a relay pulses, inside a 15s multi-step script).
+   *  Point this at that script/automation/timer so the badge stays lit for
+   *  the whole thing, not just whatever moment its own entity happens to
+   *  agree. */
+  get _isBusy() {
+    const id = this.config.busy_entity;
+    return id ? this.hass?.states[id]?.state === "on" : false;
+  }
+
   /** The silhouette follows the job, not a config choice: a badge whose
    *  primary gesture CHANGES something renders as the action shape (the
    *  asymmetric corners); one that navigates stays the squircle. The tap
@@ -168,7 +179,7 @@ class MateriaBadge extends ActionMixin(LitElement) {
     const entity = this.config.entity;
     const stateObj = entity ? this.hass.states[entity] : undefined;
     const unavailable = entity ? this._isUnavailable(stateObj) : false;
-    const active = !unavailable && this._isActive(stateObj);
+    const active = !unavailable && (this._isActive(stateObj) || this._isBusy);
     const variant = this.config.variant || "secondary";
     const showState = this.config.show_state;
     const action = this._isActionRole;

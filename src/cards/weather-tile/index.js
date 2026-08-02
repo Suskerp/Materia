@@ -134,14 +134,18 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     // Mirror flips the tilt to the opposite diagonal (e.g. -45 → +45) so the
     // mirrored content (temp left, icon right) still follows the pill's slope.
     if (this.config.mirror) tiltDeg = -tiltDeg;
-    const iconSize = this.config.icon_size ?? 53;
+    // The minmax row stacks ON TOP of the big temp, pushing the readout's
+    // block taller — an icon sized for the no-minmax case ran straight into
+    // it. Shrinking the icon a notch (not just repositioning it) is what
+    // actually buys clearance; iconY alone chased the overlap without
+    // fixing it (predicted and confirmed at the defaults, independent of
+    // any per-card override).
+    const iconSize = this.config.icon_size ?? (showMinmax ? 40 : 53);
     const textSize = this.config.text_size ?? 30;
     const width = this.config.width ?? 115;
     const ratio = (this.config.height ?? 85) / 100;
     const iconX = this.config.icon_x ?? 5;
-    // With min/max shown the temperature sits lower — drop the icon toward
-    // the bottom by the same amount or the two crowd in the middle.
-    const iconY = this.config.icon_y ?? (showMinmax ? 5 : 10);
+    const iconY = this.config.icon_y ?? (showMinmax ? 2 : 10);
     // 13, not 10: the big numeral was kissing the pill's curve on the right.
     const tempX = this.config.temp_x ?? 13;
     // The min/max row stacks ABOVE the temperature, so with it shown the
