@@ -456,30 +456,35 @@ export const styles = [
       min-height: 18px;
     }
 
-    /* Buzzed-in status — quiet answer to "did we let them in downstairs?".
-       Sits right above the gesture it informs. */
-    .open-status {
+    /* Global doors status — the header's right column outside the ringing
+       countdown: which doors are open / were opened for this visit. */
+    .doors {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      flex: none;
+    }
+
+    .door {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 12px;
       font-size: clamp(13px, 2.8cqi, 14px);
       font-weight: 600;
       color: var(--md-sys-color-on-surface-variant);
-      transition: color var(--md-sys-motion-default-effects);
+      opacity: 0.65;
+      transition: color var(--md-sys-motion-default-effects),
+        opacity var(--md-sys-motion-default-effects);
     }
 
-    .open-status ha-icon {
+    .door ha-icon {
       --mdc-icon-size: 18px;
     }
 
-    .open-status.yes {
+    .door.yes {
       color: var(--md-sys-color-primary);
-    }
-
-    .panel.open.done .open-status,
-    .panel.open.done .open-status.yes {
-      color: inherit;
+      opacity: 1;
     }
 
     materia-drag-confirm {

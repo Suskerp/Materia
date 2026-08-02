@@ -302,12 +302,16 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
         accent: true,
         title: t("db_title_buzzing", h),
         sub: t("db_sub_buzzing", h),
-        num: "···",
+        // Outside the ringing countdown the right column is the DOORS
+        // status (which doors are/were opened) — rendered from live state,
+        // not phase copy, so num/cap stay null past this point.
+        num: null,
         numAccent: false,
-        cap: t("db_count_buzzing", h),
-        // graphic-eq is not in the installed Material Symbols subset — blank
-        // glyphs, verified against the pack's file list. volume-up is.
-        icon: "m3o:volume-up",
+        cap: null,
+        // Buzzing is the street door's electric latch releasing — a DOOR
+        // event, not a sound, so no audio glyphs. door-open is in the pack
+        // (verified against beecho01/material-symbols' m3o file list).
+        icon: "m3o:door-open",
         chip: "live",
       },
       buzzed: {
@@ -318,10 +322,10 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
         // Settled phases KEEP the count column (the design does), but its copy
         // must never repeat the subtitle — the #172 "double info" bug was the
         // cap echoing the sub word for word, not the column existing.
-        num: t("db_count_done", h),
+        num: null,
         numAccent: false,
-        cap: t("db_count_buzzed", h),
-        icon: "m3o:volume-up",
+        cap: null,
+        icon: "m3o:door-open",
         chip: "soft",
       },
       opened: {
@@ -330,9 +334,9 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
         title: t("db_title_opened", h),
         titleAccent: true,
         sub: t("db_sub_opened", h),
-        num: t("db_count_open", h),
-        numAccent: true,
-        cap: t("db_count_opened", h),
+        num: null,
+        numAccent: false,
+        cap: null,
         icon: "m3o:lock-open-right",
         chip: "live",
       },
@@ -341,9 +345,9 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
         accent: false,
         title: t("db_title_lapsed", h),
         sub: t("db_sub_lapsed", h),
-        num: "—",
+        num: null,
         numAccent: false,
-        cap: t("db_count_lapsed", h),
+        cap: null,
         icon: "m3o:notifications-off",
         chip: "",
       },
@@ -378,11 +382,12 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
       : buzzed
       ? t("db_buzz_done", this.hass)
       : t("db_buzz_cta", this.hass);
+    // Electric-latch glyphs: bolt = zap the latch, door-open = it's released.
     const cookieIcon = busy
-      ? "m3o:volume-up"
+      ? "m3o:door-open"
       : buzzed
       ? "m3o:check-circle"
-      : "m3o:campaign";
+      : "m3o:bolt";
 
     const muted = this._on(this.config.mute_entity);
 
@@ -404,6 +409,27 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
                   <div class="count">
                     <span class="num ${c.numAccent ? "accent" : ""}">${c.num}</span>
                     <span class="cap">${c.cap}</span>
+                  </div>
+                `
+              : this.config.buzz_action || this.config.lock
+              ? html`
+                  <div class="doors">
+                    ${this.config.buzz_action
+                      ? html`
+                          <div class="door ${buzzed ? "yes" : ""}">
+                            <ha-icon .icon=${buzzed ? "m3o:check-circle" : "m3o:bolt"}></ha-icon>
+                            <span>${t("db_eyebrow_street", this.hass)}</span>
+                          </div>
+                        `
+                      : nothing}
+                    ${this.config.lock
+                      ? html`
+                          <div class="door ${this._unlockedNow ? "yes" : ""}">
+                            <ha-icon .icon=${this._unlockedNow ? "m3o:lock-open-right" : "m3o:door-front"}></ha-icon>
+                            <span>${t("db_eyebrow_front", this.hass)}</span>
+                          </div>
+                        `
+                      : nothing}
                   </div>
                 `
               : nothing}
@@ -442,14 +468,6 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
                       </div>
                     </div>
                     <div class="open-spacer"></div>
-                    ${this.config.buzz_action
-                      ? html`
-                          <div class="open-status ${buzzed ? "yes" : ""}">
-                            <ha-icon .icon=${buzzed ? "m3o:check-circle" : "m3o:campaign"}></ha-icon>
-                            <span>${buzzed ? t("db_status_buzzed", this.hass) : t("db_status_not_buzzed", this.hass)}</span>
-                          </div>
-                        `
-                      : nothing}
                     <materia-drag-confirm
                       gesture=${this.config.open_gesture === "hold" ? "hold" : "slide"}
                       .label=${this._lockState === "unlocking"
