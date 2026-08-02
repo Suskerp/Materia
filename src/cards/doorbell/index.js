@@ -118,17 +118,19 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     return ["unlocked", "unlocking"].includes(this._lockState);
   }
 
-  /** The HEADER's "opened" is an event, not a state: someone answered THIS
-   *  ring. With an open_action the ONLY thing that counts is the card's own
-   *  let-them-in having run — the interior lock being open doesn't mean the
-   *  visitor at the street door was buzzed in, so entity state can't stand
-   *  in for it. Without one, the lock is the whole story, but the unlock
-   *  still has to be recent (within the ring timeout): a door that has sat
-   *  unlocked for hours must not dress the card as an answered doorbell. */
+  /** Did THIS card's let-them-in sequence run recently? Feeds the open
+   *  panel's done face the instant the gesture confirms. */
+  get _openedViaCard() {
+    return this._openedVia != null && (Date.now() - this._openedVia) / 1000 <= (this.config.timeout || 0);
+  }
+
+  /** The HEADER's active "opened" face: the visit was ANSWERED — the street
+   *  door was buzzed within the window, or the front door was opened within
+   *  it. Both judged from entity last_changed, so every viewer agrees, and
+   *  both time-bounded: a door that has sat unlocked for hours must not
+   *  dress the card as an answered doorbell. */
   get _opened() {
-    if (this.config.open_action) {
-      return this._openedVia != null && (Date.now() - this._openedVia) / 1000 <= (this.config.timeout || 0);
-    }
+    if (this._buzzedRecently) return true;
     if (!this._unlockedNow) return false;
     const st = this.hass?.states[this.config.lock];
     const t0 = st ? Date.parse(st.last_changed) : NaN;
@@ -152,9 +154,12 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     // demo: force a face for design checks — the live phases only exist
     // during a real ring, which makes them impossible to evaluate at rest.
     if (this.config.demo) return this.config.demo;
+    // opened OUTRANKS buzzing: the let-them-in sequence includes a street
+    // buzz, and letting that buzz demote the face made the card flash
+    // opened -> buzzing -> buzzed -> opened while the door was opening.
+    if (this._opened) return "opened";
     if (this._buzzing) return "buzzing";
     if (this._buzzedUntil && Date.now() < this._buzzedUntil) return "buzzed";
-    if (this._opened) return "opened";
     if (this._ringing) return "ringing";
     return "lapsed";
   }
@@ -333,7 +338,9 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
         accent: false,
         title: t("db_title_opened", h),
         titleAccent: true,
-        sub: t("db_sub_opened", h),
+        // Combined state, truthful sub: buzzed-only visits say the front
+        // door is still locked; the doors column carries the split.
+        sub: this._unlockedNow ? t("db_sub_opened", h) : t("db_sub_buzzed", h),
         num: null,
         numAccent: false,
         cap: null,
@@ -359,12 +366,17 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     if (!this.config || !this.hass) return html``;
     const phase = this._phase;
     const c = this._copy(phase);
-    const busy = phase === "buzzing";
+    // The cookie mirrors the LATCH, not the phase — with opened outranking
+    // buzzing, the sequence's buzz still spins the cookie under an opened
+    // header. (Raw entity OR phase, so demo:buzzing still animates.)
+    const busy = this._buzzing || phase === "buzzing";
     const opened = phase === "opened";
-    // What the open PANEL floods on: its own action having run (open_action
-    // mode — an ambient interior unlock is NOT the visitor buzzed in), or
-    // the live lock state when the panel IS the lock control.
-    const doorOpen = this.config.open_action ? opened : this._unlockedNow;
+    // What the open PANEL floods on: its own sequence having run, or the
+    // interior door being LIVE open — not the header's combined state, so a
+    // street-only buzz activates the header without flooding this panel.
+    const doorOpen = this.config.open_action
+      ? this._openedViaCard || this._unlockedNow
+      : this._unlockedNow;
     // The bar is the popup-close indicator: it drains from the moment the
     // ring started, through buzzing and opening alike. With no window (the
     // card at rest) it sits FULL in the phase's quiet tone — the design's
@@ -474,7 +486,7 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
                         ? t("lock_unlocking", this.hass)
                         : this._lockState === "locking"
                         ? t("lock_locking", this.hass)
-                        : opened && !this.config.open_action
+                        : doorOpen && !this.config.open_action
                         ? (this.config.open_gesture === "hold"
                             ? t("lock_hold_to_lock", this.hass)
                             : t("lock_slide_to_lock", this.hass))
@@ -482,7 +494,7 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
                             ? t("db_hold_hint", this.hass)
                             : t("db_slide_hint", this.hass))}
                       .pending=${this._unlocking}
-                      .direction=${opened && !this.config.open_action ? "backward" : "forward"}
+                      .direction=${doorOpen && !this.config.open_action ? "backward" : "forward"}
                       @confirm=${this._slide}
                     ></materia-drag-confirm>
                   </div>
