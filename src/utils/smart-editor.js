@@ -419,6 +419,15 @@ export class SmartEditorBase extends LitElement {
       gap: 4px;
     }
 
+    /* HA's ui_action selector ignores the label property, so action fields
+       rendered nameless — this caption is ours, above the control. */
+    .field-caption {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--secondary-text-color);
+      margin-bottom: -8px;
+    }
+
     .field-control {
       flex: 1;
       min-width: 0;
@@ -583,6 +592,7 @@ export class SmartEditorBase extends LitElement {
     }
 
     return html`
+      ${field.selector?.ui_action ? html`<div class="field-caption">${label}</div>` : ""}
       <div class="field" @value-changed=${(e) => this._fieldChanged(field.name, e)}>
         ${control}
         ${templatable
