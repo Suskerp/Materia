@@ -8386,6 +8386,73 @@ const Bs=Cs(class extends Ss{constructor(){super(...arguments),this.key=W}render
       height: 100%;
     }
 
+    /* Embedded pages: content left, rail right, one seam. */
+    .wrap {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--mtabs-rail-width, 92px);
+      gap: 8px;
+      height: 100%;
+    }
+
+    /* Every pane occupies the SAME cell; hidden ones keep their box so the
+       stage holds the tallest pane's height — no reflow on switch, and
+       pane-internal state (a map's zoom) survives. */
+    .stage {
+      display: grid;
+      min-width: 0;
+    }
+
+    .pane {
+      grid-area: 1 / 1;
+      min-width: 0;
+    }
+
+    .pane:not(.on) {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    /* A pane is a small stack of its own cards. */
+    .pane {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pane-card > * {
+      display: block;
+    }
+
+    /* ---- horizontal bar (vertical: false) ---- */
+
+    :host([horizontal]) .rail {
+      flex-direction: row;
+      height: auto;
+    }
+
+    :host([horizontal]) .tab {
+      min-height: 64px;
+      flex-direction: row;
+      gap: 8px;
+      padding: 8px 14px;
+    }
+
+    :host([horizontal]) .tab:first-child {
+      border-radius: 28px 16px 16px 28px;
+    }
+
+    :host([horizontal]) .tab:last-child {
+      border-radius: 16px 28px 28px 16px;
+    }
+
+    /* Bar above, pages below — markup stays stage-then-rail. */
+    :host([horizontal]) .wrap {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 8px;
+      height: auto;
+    }
+
     .tab {
       flex: 1 1 0;
       /* Standalone (nothing to stretch against) the tabs still need a body. */
@@ -8494,6 +8561,11 @@ const Bs=Cs(class extends Ss{constructor(){super(...arguments),this.key=W}render
         padding: 4px 4px 4px 12px;
         background: var(--secondary-background-color, rgba(0, 0, 0, 0.04));
       }
+      .option-header .glyph-note {
+        flex: none;
+        font-size: 11px;
+        opacity: 0.6;
+      }
       .option-header span {
         flex: 1;
         font-size: 13px;
@@ -8509,7 +8581,7 @@ const Bs=Cs(class extends Ss{constructor(){super(...arguments),this.key=W}render
         display: block;
         width: 100%;
       }
-    `];setConfig(e){super.setConfig(e),this._expanded??=null}_formData(){return{...this._config}}get _sections(){return[{title:"Tabs",icon:"mdi:tab",fields:[{name:"entity",label:"Entity holding the selected tab",helper:"An input_select whose options are the tab values. Conditional cards on the same entity are the tab pages.",selector:{entity:{domain:["input_select","select","input_text"]}}},{name:"attribute",label:"Attribute (instead of the state)",selector:{text:{}}}]},{title:"Disabled",icon:"mdi:cancel",expanded:!1,fields:[Le]}]}get _itemSchema(){return[{name:"label",selector:{text:{}}},{name:"value",label:"Value (the entity state this tab means)",selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"tap_action",label:"Action (overrides writing the value)",selector:{ui_action:{default_action:"none"}}}]}_renderExtra(){const e=this._config.items||[];return I`
+    `];setConfig(e){super.setConfig(e),this._expanded??=null}_formData(){return{...this._config}}get _sections(){return[{title:"Tabs",icon:"mdi:tab",fields:[{name:"entity",label:"Entity holding the selected tab (optional)",helper:"Leave empty for per-device tabs (each screen keeps its own). Set an input_select only when the selection must be shared or drive conditional cards elsewhere.",selector:{entity:{domain:["input_select","select","input_text"]}}},{name:"attribute",label:"Attribute (instead of the state)",selector:{text:{}}},{name:"vertical",label:"Vertical rail (off = horizontal tab bar)",selector:{boolean:{}}}]},{title:"Disabled",icon:"mdi:cancel",expanded:!1,fields:[Le]}]}get _itemSchema(){return[{name:"label",selector:{text:{}}},{name:"value",label:"Value (the entity state this tab means)",selector:{text:{}}},{name:"icon",selector:{icon:{}}},{name:"tap_action",label:"Action (overrides writing the value)",selector:{ui_action:{default_action:"none"}}}]}_renderExtra(){const e=this._config.items||[];return I`
       <div class="options-header">
         <span>Tabs</span>
         <ha-icon-button @click=${this._addItem}>
@@ -8522,6 +8594,7 @@ const Bs=Cs(class extends Ss{constructor(){super(...arguments),this.key=W}render
               <div class="option-header">
                 <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
                 <span>${e.label||e.value||`Tab ${t+1}`}</span>
+                ${e.cards||e.card?I`<span class="glyph-note">${(e.cards||[e.card]).length} card(s) · YAML</span>`:""}
                 <ha-icon-button @click=${()=>this._toggleExpand(t)}>
                   <ha-icon icon=${this._expanded===t?"mdi:chevron-up":"mdi:chevron-down"}></ha-icon>
                 </ha-icon-button>
@@ -8542,23 +8615,32 @@ const Bs=Cs(class extends Ss{constructor(){super(...arguments),this.key=W}render
                   `:""}
             </div>
           `))}
-    `}_addItem(){const e=[...this._config.items||[],{label:"",value:"",icon:""}];this._expanded=e.length-1,this._commit({...this._config,items:e})}_removeItem(e){const t=[...this._config.items||[]];t.splice(e,1),this._expanded===e&&(this._expanded=null),this._commit({...this._config,items:t})}_moveItem(e,t){const i=[...this._config.items||[]],[s]=i.splice(e,1);i.splice(t,0,s),this._expanded===e&&(this._expanded=t),this._commit({...this._config,items:i})}_updateItem(e,t){const i=[...this._config.items||[]];i[e]={...i[e],...t},this._commit({...this._config,items:i})}_toggleExpand(e){this._expanded=this._expanded===e?null:e}}customElements.define("materia-tabs-editor",Js);class eo extends(li(Ce(ce))){static properties={hass:{attribute:!1},config:{state:!0}};static styles=Qs;static getConfigElement(){return document.createElement("materia-tabs-editor")}static getStubConfig(){return{entity:"",items:[{label:"Rooms",value:"rooms",icon:"m3o:grid-view"},{label:"Map",value:"map",icon:"m3o:map"}]}}setConfig(e){if(!e.items?.length)throw new Error("Materia Tabs: at least one item is required");if(!e.entity)throw new Error("Materia Tabs: entity is required (it holds the selected tab)");this.config={...e}}get _stateObj(){return this.hass?.states[this.config.entity]}get _current(){const e=this._stateObj;if(!e)return null;const t=this.config.attribute?e.attributes?.[this.config.attribute]:e.state;return null==t?null:String(t)}_items(){return(this.config.items||[]).map(e=>"string"==typeof e?{label:e,value:e}:e)}_tap(e){if(this._fireHaptic?.("selection"),e.tap_action)return void this._handleAction(e.tap_action);const t=this._stateObj,i=t?.entity_id?.split(".")[0],s=String(e.value??e.label);"select"===i||"input_select"===i?this._callService(i,"select_option",{entity_id:t.entity_id,option:s}):"input_text"===i&&this._callService(i,"set_value",{entity_id:t.entity_id,value:s})}render(){if(!this.hass||!this.config)return I``;const e=this._current;return I`
+    `}_addItem(){const e=[...this._config.items||[],{label:"",value:"",icon:""}];this._expanded=e.length-1,this._commit({...this._config,items:e})}_removeItem(e){const t=[...this._config.items||[]];t.splice(e,1),this._expanded===e&&(this._expanded=null),this._commit({...this._config,items:t})}_moveItem(e,t){const i=[...this._config.items||[]],[s]=i.splice(e,1);i.splice(t,0,s),this._expanded===e&&(this._expanded=t),this._commit({...this._config,items:i})}_updateItem(e,t){const i=[...this._config.items||[]];i[e]={...i[e],...t},this._commit({...this._config,items:i})}_toggleExpand(e){this._expanded=this._expanded===e?null:e}}customElements.define("materia-tabs-editor",Js);class eo extends(li(Ce(ce))){static properties={hass:{attribute:!1},config:{state:!0},_sel:{state:!0},_panes:{state:!0}};static styles=Qs;static getConfigElement(){return document.createElement("materia-tabs-editor")}static getStubConfig(){return{items:[{label:"Rooms",value:"rooms",icon:"m3o:grid-view"},{label:"Map",value:"map",icon:"m3o:map"}]}}setConfig(e){if(!e.items?.length)throw new Error("Materia Tabs: at least one item is required");this.config={...e},this.toggleAttribute("horizontal",!1===e.vertical),this._panes=null,this._buildPanes()}_items(){return(this.config.items||[]).map(e=>"string"==typeof e?{label:e,value:e}:e)}_paneConfigs(e){return Array.isArray(e.cards)&&e.cards.length?e.cards:e.card?[e.card]:null}async _buildPanes(){const e=this._items();if(!e.some(e=>this._paneConfigs(e)))return;const t=await pe();this._panes=await Promise.all(e.map(async e=>{const i=this._paneConfigs(e);return i?Promise.all(i.map(async e=>{const i=await t.createCardElement(e);return this.hass&&(i.hass=this.hass),i})):null}))}updated(e){if(super.updated?.(e),e.has("hass")&&this._panes)for(const e of this._panes)if(e)for(const t of e)t.hass=this.hass}get _stateObj(){return this.config.entity?this.hass?.states[this.config.entity]:null}get _current(){if(this.config.entity){const e=this._stateObj;if(!e)return null;const t=this.config.attribute?e.attributes?.[this.config.attribute]:e.state;return null==t?null:String(t)}const e=this._items()[0];return this._sel??String(e?.value??e?.label??"")}_tap(e){if(this._fireHaptic?.("selection"),e.tap_action)return void this._handleAction(e.tap_action);const t=String(e.value??e.label);if(!this.config.entity)return void(this._sel=t);const i=this._stateObj,s=i?.entity_id?.split(".")[0];"select"===s||"input_select"===s?this._callService(s,"select_option",{entity_id:i.entity_id,option:t}):"input_text"===s&&this._callService(s,"set_value",{entity_id:i.entity_id,value:t})}render(){if(!this.hass||!this.config)return I``;const e=this._items(),t=this._current,i=I`
+      <div class="rail" role="tablist" aria-orientation=${!1===this.config.vertical?"horizontal":"vertical"}>
+        ${e.map(e=>{const i=String(e.value??e.label),s=t===i;return I`
+            <button
+              class="tab ${s?"on":""}"
+              role="tab"
+              aria-selected=${s?"true":"false"}
+              @click=${()=>this._tap(e)}
+            >
+              ${e.icon?I`<ha-icon class="glyph" .icon=${e.icon}></ha-icon>`:W}
+              <span class="label">${e.label??i}</span>
+            </button>
+          `})}
+      </div>
+    `;return this._panes?I`
       <ha-card>
-        <div class="rail" role="tablist" aria-orientation="vertical">
-          ${this._items().map(t=>{const i=String(t.value??t.label),s=e===i;return I`
-              <button
-                class="tab ${s?"on":""}"
-                role="tab"
-                aria-selected=${s?"true":"false"}
-                @click=${()=>this._tap(t)}
-              >
-                ${t.icon?I`<ha-icon class="glyph" .icon=${t.icon}></ha-icon>`:W}
-                <span class="label">${t.label??i}</span>
-              </button>
-            `})}
+        <div class="wrap">
+          <div class="stage">
+            ${e.map((e,i)=>{const s=String(e.value??e.label);return this._panes[i]?I`<div class="pane ${t===s?"on":""}" role="tabpanel">
+                    ${this._panes[i].map(e=>I`<div class="pane-card">${e}</div>`)}
+                  </div>`:W})}
+          </div>
+          ${i}
         </div>
       </ha-card>
-    `}getGridOptions(){return{columns:2,rows:"auto"}}getCardSize(){return 3}}customElements.define("materia-tabs",eo),window.customCards=window.customCards||[],window.customCards.push({type:"materia-tabs",name:"Materia Tabs",description:"Vertical tab rail — the selected tab grows into the nav-rail indicator. Pair with conditional cards to switch one slot between views.",preview:!0});const to={primary:["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],secondary:["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],tertiary:["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],error:["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],device:["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-container":["var(--md-sys-color-primary-container)","var(--md-sys-color-on-primary-container)"],"secondary-container":["var(--md-sys-color-secondary-container)","var(--md-sys-color-on-secondary-container)"],"tertiary-container":["var(--md-sys-color-tertiary-container)","var(--md-sys-color-on-tertiary-container)"],"error-container":["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"],"device-container":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-state":["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],"secondary-state":["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],"tertiary-state":["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],"error-state":["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],"device-state":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"]},io=[Ae,ge,n`
+    `:I`<ha-card>${i}</ha-card>`}getGridOptions(){return this._panes?{columns:12,rows:"auto"}:{columns:2,rows:"auto"}}getCardSize(){return this._panes?6:3}}customElements.define("materia-tabs",eo),window.customCards=window.customCards||[],window.customCards.push({type:"materia-tabs",name:"Materia Tabs",description:"Vertical tab rail — the selected tab grows into the nav-rail indicator. Embed cards per tab, or pair with conditional cards.",preview:!0});const to={primary:["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],secondary:["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],tertiary:["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],error:["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],device:["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-container":["var(--md-sys-color-primary-container)","var(--md-sys-color-on-primary-container)"],"secondary-container":["var(--md-sys-color-secondary-container)","var(--md-sys-color-on-secondary-container)"],"tertiary-container":["var(--md-sys-color-tertiary-container)","var(--md-sys-color-on-tertiary-container)"],"error-container":["var(--md-sys-color-error-container)","var(--md-sys-color-on-error-container)"],"device-container":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"],"primary-state":["var(--md-sys-color-primary)","var(--md-sys-color-on-primary)"],"secondary-state":["var(--md-sys-color-secondary)","var(--md-sys-color-on-secondary)"],"tertiary-state":["var(--md-sys-color-tertiary)","var(--md-sys-color-on-tertiary)"],"error-state":["var(--md-sys-color-error)","var(--md-sys-color-on-error)"],"device-state":["var(--md-sys-cust-color-device-container)","var(--md-sys-cust-color-on-device)"]},io=[Ae,ge,n`
     :host {
       display: inline-block;
     }
@@ -9683,4 +9765,4 @@ const Bs=Cs(class extends Ss{constructor(){super(...arguments),this.key=W}render
           <circle class="pin" cx="50" cy="50" r="2.4"></circle>
         </svg>
       </ha-card>
-    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const e=document.createElement("style");e.id="materia-fonts",e.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Display voice: Outfit VARIABLE (true wght 100-900 axis) — hero\n       numerals & titles via --materia-font-display; the weight axis\n       interpolates smoothly, which flavor C's morphs animate. */\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJuktqUYLkn8BJ.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJtEtqUYLknw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Accent voice: Fraunces italic — ONE personality moment (clock date). */\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7frU9kMz3lR27gVA.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7RrU9kMz3lR24.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(e)}();console.info("%c MATERIA %c v0.44.5 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");
+    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const e=document.createElement("style");e.id="materia-fonts",e.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Display voice: Outfit VARIABLE (true wght 100-900 axis) — hero\n       numerals & titles via --materia-font-display; the weight axis\n       interpolates smoothly, which flavor C's morphs animate. */\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJuktqUYLkn8BJ.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJtEtqUYLknw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Accent voice: Fraunces italic — ONE personality moment (clock date). */\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7frU9kMz3lR27gVA.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7RrU9kMz3lR24.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(e)}();console.info("%c MATERIA %c v0.45.0 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");

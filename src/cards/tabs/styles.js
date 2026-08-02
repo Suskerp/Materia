@@ -28,6 +28,73 @@ export const styles = [
       height: 100%;
     }
 
+    /* Embedded pages: content left, rail right, one seam. */
+    .wrap {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--mtabs-rail-width, 92px);
+      gap: 8px;
+      height: 100%;
+    }
+
+    /* Every pane occupies the SAME cell; hidden ones keep their box so the
+       stage holds the tallest pane's height — no reflow on switch, and
+       pane-internal state (a map's zoom) survives. */
+    .stage {
+      display: grid;
+      min-width: 0;
+    }
+
+    .pane {
+      grid-area: 1 / 1;
+      min-width: 0;
+    }
+
+    .pane:not(.on) {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    /* A pane is a small stack of its own cards. */
+    .pane {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pane-card > * {
+      display: block;
+    }
+
+    /* ---- horizontal bar (vertical: false) ---- */
+
+    :host([horizontal]) .rail {
+      flex-direction: row;
+      height: auto;
+    }
+
+    :host([horizontal]) .tab {
+      min-height: 64px;
+      flex-direction: row;
+      gap: 8px;
+      padding: 8px 14px;
+    }
+
+    :host([horizontal]) .tab:first-child {
+      border-radius: 28px 16px 16px 28px;
+    }
+
+    :host([horizontal]) .tab:last-child {
+      border-radius: 16px 28px 28px 16px;
+    }
+
+    /* Bar above, pages below — markup stays stage-then-rail. */
+    :host([horizontal]) .wrap {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 8px;
+      height: auto;
+    }
+
     .tab {
       flex: 1 1 0;
       /* Standalone (nothing to stretch against) the tabs still need a body. */

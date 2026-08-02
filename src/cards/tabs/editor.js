@@ -31,6 +31,11 @@ class MateriaTabsEditor extends SmartEditorBase {
         padding: 4px 4px 4px 12px;
         background: var(--secondary-background-color, rgba(0, 0, 0, 0.04));
       }
+      .option-header .glyph-note {
+        flex: none;
+        font-size: 11px;
+        opacity: 0.6;
+      }
       .option-header span {
         flex: 1;
         font-size: 13px;
@@ -66,11 +71,12 @@ class MateriaTabsEditor extends SmartEditorBase {
         fields: [
           {
             name: "entity",
-            label: "Entity holding the selected tab",
-            helper: "An input_select whose options are the tab values. Conditional cards on the same entity are the tab pages.",
+            label: "Entity holding the selected tab (optional)",
+            helper: "Leave empty for per-device tabs (each screen keeps its own). Set an input_select only when the selection must be shared or drive conditional cards elsewhere.",
             selector: { entity: { domain: ["input_select", "select", "input_text"] } },
           },
           { name: "attribute", label: "Attribute (instead of the state)", selector: { text: {} } },
+          { name: "vertical", label: "Vertical rail (off = horizontal tab bar)", selector: { boolean: {} } },
         ],
       },
       {
@@ -109,6 +115,9 @@ class MateriaTabsEditor extends SmartEditorBase {
               <div class="option-header">
                 <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
                 <span>${item.label || item.value || `Tab ${i + 1}`}</span>
+                ${item.cards || item.card
+                  ? html`<span class="glyph-note">${(item.cards || [item.card]).length} card(s) · YAML</span>`
+                  : ""}
                 <ha-icon-button @click=${() => this._toggleExpand(i)}>
                   <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
                 </ha-icon-button>
