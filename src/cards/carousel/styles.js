@@ -39,13 +39,15 @@ export const styles = [
       cursor: grabbing;
     }
 
-    /* wrap: the same tiles as full rows — no rail, no bleed, no grab. */
+    /* wrap: the same tiles as full rows — no rail, no bleed, no grab.
+       Centred, so a short last row doesn't hang off the left edge. */
     :host([wrap]) .rail {
       flex-wrap: wrap;
       overflow: visible;
       padding: 5px 0;
       margin-right: 0;
       cursor: default;
+      justify-content: center;
     }
 
     .rail::-webkit-scrollbar {
@@ -143,6 +145,17 @@ export const styles = [
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    /* A tap leaves the button focused — the browser's blue ring is not our
+       affordance. Keyboard focus keeps a proper visible ring. */
+    .tile:focus {
+      outline: none;
+    }
+
+    .tile:focus-visible {
+      outline: 2px solid var(--md-sys-color-primary);
+      outline-offset: 2px;
     }
 
     /* M3 state layer */

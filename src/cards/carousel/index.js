@@ -6,16 +6,21 @@ import { styles } from "./styles.js";
 import "./editor.js";
 
 /**
- * Horizontal tile carousel (materia-carousel): a free-scrolling row of
- * selectable tiles — icon top-left, check top-right, name and a secondary line
- * at the bottom. The alternative to materia-chips when each option deserves
- * more than a label (a room's size, a scene's preview, a zone's status).
+ * Selectable tile cards (materia-cards): rows of tiles — icon top-left,
+ * check top-right, name and a secondary line at the bottom. The alternative
+ * to materia-chips when each option deserves more than a label (a room's
+ * size, a scene's preview, a zone's status). A wrapped, centred grid by
+ * default; `carousel: true` turns it into the free-scrolling rail.
  *
  * Shares materia-chips' selection contract exactly, so the two are drop-in
  * swaps for one another: read from a tracked entity's state, or from a
  * comma-separated list when `multi_select` is on.
+ *
+ * `materia-carousel` remains defined as a legacy alias whose DEFAULT is the
+ * scrolling rail (what it always was); existing dashboards keep rendering
+ * identically, `wrap: true` included.
  */
-class MateriaCarousel extends DisabledMixin(ActionMixin(LitElement)) {
+class MateriaCards extends DisabledMixin(ActionMixin(LitElement)) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -34,11 +39,19 @@ class MateriaCarousel extends DisabledMixin(ActionMixin(LitElement)) {
   }
 
   setConfig(config) {
-    if (!config.items?.length) throw new Error("Materia Carousel: at least one item is required");
+    if (!config.items?.length) throw new Error("Materia Cards: at least one item is required");
     this.config = { ...config };
-    // wrap: full rows instead of a scroll rail — the tablet form of the same
-    // list (design 12a). Reflected so CSS owns the difference.
-    this.toggleAttribute("wrap", !!config.wrap);
+    // Grid vs rail: `carousel` wins, then legacy `wrap` (inverted), then the
+    // tag's own default — materia-cards is a grid, the materia-carousel
+    // alias stays a rail so deployed configs don't change shape. Reflected
+    // as [wrap] so CSS owns the difference.
+    const scroll =
+      config.carousel != null
+        ? !!config.carousel
+        : config.wrap != null
+        ? !config.wrap
+        : this.localName === "materia-carousel";
+    this.toggleAttribute("wrap", !scroll);
   }
 
   get _stateObj() {
@@ -78,7 +91,17 @@ class MateriaCarousel extends DisabledMixin(ActionMixin(LitElement)) {
       this._resolveField("color", "_resolvedColor");
       this._resolveField("color_on", "_resolvedColorOn");
     }
-    const sel = new Set(this._selected.map(String));
+    // The active set covers BOTH selection mechanisms — tracked-entity value
+    // AND per-item entities. Watching only _selected meant per-item tiles
+    // (a room of input_booleans) never rippled: their flips were invisible.
+    const selected = this._selected;
+    const sel = new Set(
+      this._items()
+        .filter((it) =>
+          it.entity ? this._itemEntityActive(it) : selected.some((s) => s === String(it.value ?? it.label))
+        )
+        .map((it) => String(it.value ?? it.label))
+    );
     if (this._prevSel) {
       // Only the tiles whose membership actually flipped are origins.
       const flipped = [...new Set([...sel, ...this._prevSel])]
@@ -300,12 +323,20 @@ class MateriaCarousel extends DisabledMixin(ActionMixin(LitElement)) {
   }
 }
 
-customElements.define("materia-carousel", MateriaCarousel);
+customElements.define("materia-cards", MateriaCards);
+// Legacy alias — same class, rail-by-default (see setConfig).
+customElements.define("materia-carousel", class extends MateriaCards {});
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "materia-carousel",
-  name: "Materia Carousel",
-  description: "Scroll-snapping row of selectable tiles — the richer alternative to a chip row.",
+  type: "materia-cards",
+  name: "Materia Cards",
+  description: "Grid of selectable tile cards — the richer alternative to a chip row. carousel: true scrolls instead.",
   preview: true,
+});
+window.customCards.push({
+  type: "materia-carousel",
+  name: "Materia Carousel (deprecated — use Materia Cards)",
+  description: "Legacy alias of Materia Cards; defaults to the scrolling rail.",
+  preview: false,
 });
