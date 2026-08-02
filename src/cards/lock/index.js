@@ -143,21 +143,46 @@ class MateriaLock extends ActionMixin(LitElement) {
     return real ?? (this._local ?? true);
   }
 
-  /** Resting stop for the 3-position TRACK gesture: 0 locked, 1 unlocked (a
-   *  real rest — reachable on its own, and the base you drag PAST to reach
-   *  the third), 2 open (momentary; the entity springs back to "unlocked"
-   *  once the latch closes, which re-centers this on its own, no gesture
-   *  needed). In-flight states show the ORIGIN, same rule as `_locked`:
-   *  "unlocking" hasn't arrived yet, so the thumb stays at locked;
-   *  "locking" hasn't arrived yet, so it stays at unlocked. */
-  get _trackIndex() {
-    if (this._trackFlourish) return 2;
-    if (this._selfContained) return this._locked ? 0 : 1;
-    const s = String(this._stateObj?.state ?? "");
-    if (s === "open" || s === "opening") return 2;
-    if (s === "unlocking") return 0;
-    if (s === "locking") return 1;
-    return this._entityLocked ? 0 : 1;
+  /** Resting stop + busy read for the 3-position TRACK gesture, together,
+   *  because on real hardware they're the SAME decision made twice: 0
+   *  locked, 1 unlocked (a real rest — reachable on its own, and the base
+   *  you drag PAST to reach the third), 2 open (momentary; the entity
+   *  springs back to "unlocked" once the latch closes, re-centering this
+   *  on its own, no gesture needed).
+   *
+   *  In-flight states show the ORIGIN, same rule as `_locked`: "unlocking"
+   *  hasn't arrived yet, so the thumb stays at locked; "locking" hasn't
+   *  arrived yet, so it stays at unlocked.
+   *
+   *  `track_skip_states` remaps a raw state to another BEFORE any of that —
+   *  some hardware reports states that are technically real but tell a lie
+   *  about what's happening: this Nuki jumps unlocked -> open directly (no
+   *  "opening" ever fires, so there's nothing to skip there — "open" IS the
+   *  first report), then on relatching reports a transient "unlocking" that
+   *  is not a lock-direction change at all, just the latch settling — so
+   *  the interesting remap is `{unlocking: unlocked}`, which erases the
+   *  false "heading toward locked" detour and the "Unlocking…" label that
+   *  made no sense seconds after a door that was never locked swung open. */
+  _trackState() {
+    if (this._trackFlourish) return { index: 2, busy: false, label: "" };
+    if (this._selfContained) return { index: this._locked ? 0 : 1, busy: false, label: "" };
+
+    const raw = String(this._stateObj?.state ?? "");
+    const remap = this.config.track_skip_states || {};
+    const s = Object.prototype.hasOwnProperty.call(remap, raw) ? remap[raw] : raw;
+
+    if (s === "open" || s === "opening") {
+      return { index: 2, busy: true, label: this.config.opening_label ?? t("lock_opening", this.hass) };
+    }
+    if (s === "unlocking") {
+      return { index: 0, busy: true, label: this.config.unlocking_label ?? t("lock_unlocking", this.hass) };
+    }
+    if (s === "locking") {
+      return { index: 1, busy: true, label: this.config.locking_label ?? t("lock_locking", this.hass) };
+    }
+    // Anything else (including a remapped "unlocked"/"locked") settles by
+    // the real lock state, not the possibly-remapped label.
+    return { index: this._entityLocked ? 0 : 1, busy: false, label: "" };
   }
 
   /** The track has no `_confirm` toggle to drive it — every release names an
@@ -460,7 +485,19 @@ class MateriaLock extends ActionMixin(LitElement) {
     const handleBg = locked ? accent : fg;
     const handleFg = locked ? accentOn : bg;
 
-    const icon = locked
+    const isHold = this.config.gesture === "hold";
+    const isTrack = this.config.gesture === "track";
+    // Index+busy+label together — see _trackState's own doc for why the
+    // track needs a richer read than the binary _locked/_transitioning.
+    const trackState = isTrack ? this._trackState() : null;
+
+    // The main shape gets its OWN third face for the track's open stop —
+    // otherwise a door standing open still wore the plain "unlocked"
+    // lock-open glyph, no different from a door that's simply unlocked and
+    // shut.
+    const icon = isTrack && trackState.index === 2
+      ? (this.config.open_icon ?? "m3o:door-open")
+      : locked
       ? (this.config.locked_icon ?? "m3o:lock")
       : (this.config.unlocked_icon ?? "m3o:lock-open-right");
 
@@ -475,25 +512,7 @@ class MateriaLock extends ActionMixin(LitElement) {
     const holdHint = locked
       ? (this.config.unlock_hold_hint ?? t("lock_hold_to_unlock", this.hass))
       : (this.config.lock_hold_hint ?? t("lock_hold_to_lock", this.hass));
-    const isHold = this.config.gesture === "hold";
-    const isTrack = this.config.gesture === "track";
 
-    // The track's own busy read: `_transitioning` (which drives the shape
-    // hero) never learned "open"/"opening" — those aren't in-flight states
-    // for the binary lock, but they ARE for the third stop, and the drag
-    // that reaches it deserves the same "something is happening" feedback
-    // locking/unlocking already get, not silence for the one gesture that
-    // takes the longest to settle.
-    const trackRawState = String(this._stateObj?.state ?? "");
-    const trackBusy = trackRawState === "locking" || trackRawState === "unlocking"
-      || trackRawState === "open" || trackRawState === "opening";
-    const trackBusyLabel = trackRawState === "locking"
-      ? (this.config.locking_label ?? t("lock_locking", this.hass))
-      : trackRawState === "unlocking"
-      ? (this.config.unlocking_label ?? t("lock_unlocking", this.hass))
-      : trackRawState === "open" || trackRawState === "opening"
-      ? (this.config.opening_label ?? t("lock_opening", this.hass))
-      : "";
     const trackStops = [
       { value: "locked", icon: this.config.locked_icon ?? "m3o:lock" },
       { value: "unlocked", icon: this.config.unlocked_icon ?? "m3o:lock-open-right" },
@@ -543,10 +562,11 @@ class MateriaLock extends ActionMixin(LitElement) {
                 <materia-track-confirm
                   .stops=${trackStops}
                   .boundaries=${[this.config.track_lock_boundary ?? 0.3, this.config.track_open_boundary ?? 0.75]}
-                  .pos=${this._trackIndex}
-                  .label=${trackBusyLabel}
+                  .pos=${trackState.index}
+                  .label=${trackState.label}
                   .stopLabels=${trackLabels}
-                  .pending=${trackBusy}
+                  .pending=${trackState.busy}
+                  .thumbIcon=${false}
                   ?disabled=${unavailable}
                   @select=${this._onTrackSelect}
                 ></materia-track-confirm>

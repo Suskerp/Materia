@@ -60,6 +60,11 @@ class MateriaTrackConfirm extends LitElement {
     stopLabels: { type: Array },
     /** Busy: thumb holds at `pos` and breathes; no drag accepted. */
     pending: { type: Boolean, reflect: true },
+    /** Show the current stop's icon inside the thumb, alongside the
+     *  direction chevrons. Default on; turn off when a caller already
+     *  depicts the stop elsewhere (materia-lock's own shape hero) — the
+     *  same glyph twice a few pixels apart just repeats itself. */
+    thumbIcon: { type: Boolean },
     disabled: { type: Boolean, reflect: true },
     _dragIndex: { state: true },
     _armed: { state: true },
@@ -260,6 +265,7 @@ class MateriaTrackConfirm extends LitElement {
     this.label = "";
     this.stopLabels = null;
     this.pending = false;
+    this.thumbIcon = true;
     this.disabled = false;
     this._dragIndex = null;
     this._armed = false;
@@ -576,7 +582,7 @@ class MateriaTrackConfirm extends LitElement {
               <svg class="chevron left ${canLeft ? "" : "hidden"}" viewBox="0 0 24 24" aria-hidden="true">${CHEVRON}</svg>
               <svg class="chevron right ${canRight ? "" : "hidden"}" viewBox="0 0 24 24" aria-hidden="true">${CHEVRON}</svg>
             </div>
-            ${thumbStop?.icon ? html`<ha-icon .icon=${thumbStop.icon}></ha-icon>` : nothing}
+            ${this.thumbIcon && thumbStop?.icon ? html`<ha-icon .icon=${thumbStop.icon}></ha-icon>` : nothing}
           </div>
         </div>
         ${this.stopLabels?.length
