@@ -75,8 +75,10 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     return this.config.ring_seconds ?? this.config.timeout;
   }
 
+  /** Ringing is the ring WINDOW, not the entity: some doorbells pulse for a
+   *  second, others hold `on` until answered — the chime clock treats both
+   *  the same. A 29s-long `on` still lapses when the chime ends. */
   get _ringing() {
-    if (this._on(this.config.entity)) return true;
     return this._ringT0 != null && (Date.now() - this._ringT0) / 1000 < this._ringSeconds;
   }
 
@@ -101,11 +103,15 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
    *  ring window's start. No client clock to drift, and a replay (turn the
    *  doorbell back on) re-arms the window and resets it. */
   get _left() {
-    if (!this._ringT0) return this._ringing ? this._ringSeconds : 0;
+    if (this.config.demo === "ringing") return this._ringSeconds;
+    if (!this._ringT0) return 0;
     return Math.max(0, Math.ceil(this._ringSeconds - (Date.now() - this._ringT0) / 1000));
   }
 
   get _phase() {
+    // demo: force a face for design checks — the live phases only exist
+    // during a real ring, which makes them impossible to evaluate at rest.
+    if (this.config.demo) return this.config.demo;
     if (this._buzzing) return "buzzing";
     if (this._buzzedUntil && Date.now() < this._buzzedUntil) return "buzzed";
     if (this._opened) return "opened";
@@ -114,6 +120,28 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
   }
 
   /* ---- clockwork ---- */
+
+  /* The ring WINDOW outlives the ring itself: the popup that opened on the
+     ring closes `timeout` seconds after it started, whatever was buzzed or
+     opened in between — the top bar drains on this clock. Armed from the
+     doorbell's last state change, NOT only while `on`: a pulse doorbell is
+     off again before the popup finishes rendering. Armed in willUpdate so
+     the FIRST render already knows the window — arming in updated() flashed
+     one lapsed frame before the ringing face. */
+  willUpdate(changed) {
+    if (changed.has("hass") || changed.has("config")) {
+      if (!this._ringT0) {
+        const st = this.hass?.states[this.config?.entity];
+        const t0 = st ? Date.parse(st.last_changed) : NaN;
+        if (!Number.isNaN(t0) && (Date.now() - t0) / 1000 <= (this.config.timeout || 0)) {
+          this._ringT0 = t0;
+        }
+      }
+      if (this._ringT0 && (Date.now() - this._ringT0) / 1000 > (this.config.timeout || 0)) {
+        this._ringT0 = null;
+      }
+    }
+  }
 
   updated(changed) {
     if (changed.has("hass")) {
@@ -125,23 +153,6 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
         this._lingerTimer = setTimeout(() => this.requestUpdate(), BUZZED_LINGER_MS + 50);
       }
       this._wasBuzzing = buzzing;
-      // The ring WINDOW outlives the ring itself: the popup that opened on
-      // the ring closes `timeout` seconds after it started, whatever was
-      // buzzed or opened in between — the top bar drains on this clock.
-      // Armed from the doorbell's last state change, NOT only while `on`:
-      // the ring is a short pulse, and a popup that finishes rendering
-      // after the pulse ended must still show the window.
-      if (!this._ringT0) {
-        const st = this.hass?.states[this.config.entity];
-        const t0 = st ? Date.parse(st.last_changed) : NaN;
-        if (!Number.isNaN(t0) && (Date.now() - t0) / 1000 <= (this.config.timeout || 0)) {
-          this._ringT0 = t0;
-          this.requestUpdate();
-        }
-      }
-      if (this._ringT0 && (Date.now() - this._ringT0) / 1000 > (this.config.timeout || 0)) {
-        this._ringT0 = null;
-      }
       this._syncTicker();
     }
   }
@@ -295,11 +306,15 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     const busy = phase === "buzzing";
     const opened = phase === "opened";
     // The bar is the popup-close indicator: it drains from the moment the
-    // ring started, through buzzing and opening alike. No ring window (the
-    // card opened by hand) = no bar.
-    const pct = this.config.timeout > 0 && this._ringT0
+    // ring started, through buzzing and opening alike. With no window (the
+    // card at rest) it sits FULL in the phase's quiet tone — the design's
+    // strip is a permanent element, and an invisible empty track read as
+    // "the bar is missing".
+    const pct = this.config.demo
+      ? 66
+      : this.config.timeout > 0 && this._ringT0
       ? Math.round((this._windowLeft / this.config.timeout) * 100)
-      : 0;
+      : 100;
 
     const cookieWord = busy
       ? t("db_buzz_busy", this.hass)

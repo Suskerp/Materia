@@ -31,6 +31,18 @@ class MateriaDoorbellEditor extends SmartEditorBase {
           },
           { name: "name", label: "Eyebrow while ringing (default: Doorbell)", selector: { text: {} } },
           { name: "place", label: "Where the ring is from (default: Front door)", selector: { text: {} } },
+          {
+            name: "demo",
+            label: "Preview a phase (demo)",
+            helper: "Forces the card's face — the live phases only show during a real ring. Clear it for real use.",
+            selector: { select: { mode: "dropdown", options: [
+              { value: "ringing", label: "Ringing" },
+              { value: "buzzing", label: "Buzzing" },
+              { value: "buzzed", label: "Buzzed" },
+              { value: "opened", label: "Opened" },
+              { value: "lapsed", label: "Lapsed" },
+            ] } },
+          },
         ],
       },
       {
