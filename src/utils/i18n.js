@@ -149,6 +149,8 @@ const STRINGS = {
   db_slide_hint: { en: "Slide to open", nl: "Schuif om te openen" },
   db_hold_hint: { en: "Hold to open", nl: "Houd ingedrukt om te openen" },
   db_slide_done: { en: "Door open", nl: "Deur open" },
+  db_status_buzzed: { en: "Buzzed in", nl: "Binnengezoemd" },
+  db_status_not_buzzed: { en: "Not buzzed in yet", nl: "Nog niet binnengezoemd" },
   db_ignore: { en: "Ignore", nl: "Negeer" },
   db_replay: { en: "Replay ring", nl: "Bel opnieuw" },
   db_mute: { en: "Silence", nl: "Stil" },

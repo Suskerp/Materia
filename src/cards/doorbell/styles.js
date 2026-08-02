@@ -456,6 +456,32 @@ export const styles = [
       min-height: 18px;
     }
 
+    /* Buzzed-in status — quiet answer to "did we let them in downstairs?".
+       Sits right above the gesture it informs. */
+    .open-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: clamp(13px, 2.8cqi, 14px);
+      font-weight: 600;
+      color: var(--md-sys-color-on-surface-variant);
+      transition: color var(--md-sys-motion-default-effects);
+    }
+
+    .open-status ha-icon {
+      --mdc-icon-size: 18px;
+    }
+
+    .open-status.yes {
+      color: var(--md-sys-color-primary);
+    }
+
+    .panel.open.done .open-status,
+    .panel.open.done .open-status.yes {
+      color: inherit;
+    }
+
     materia-drag-confirm {
       width: 100%;
     }

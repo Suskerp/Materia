@@ -92,6 +92,21 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     return this._on(this.config.buzz_entity);
   }
 
+  /** Was the street door buzzed for THIS visit? Derived from the buzz
+   *  entity's last change (a buzz cycle touches it twice — release and
+   *  re-lock — either counts), with the card's own tap as fallback when no
+   *  entity is configured. Feeds the open panel's buzzed/not-buzzed line
+   *  and holds the cookie on its "Buzzed" face past the 6s linger. */
+  get _buzzedRecently() {
+    const win = this.config.timeout || 0;
+    if (this._buzzing) return true;
+    if (this._buzzedVia && (Date.now() - this._buzzedVia) / 1000 <= win) return true;
+    const st = this.config.buzz_entity ? this.hass?.states[this.config.buzz_entity] : null;
+    if (!st) return false;
+    const t0 = Date.parse(st.last_changed);
+    return !Number.isNaN(t0) && (Date.now() - t0) / 1000 <= win;
+  }
+
   get _lockState() {
     const id = this.config.lock;
     return id ? String(this.hass?.states[id]?.state ?? "") : "";
@@ -212,6 +227,7 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
 
   _buzz() {
     if (!this.config.buzz_action) return;
+    this._buzzedVia = Date.now();
     this._handleAction(this.config.buzz_action);
     // Without a buzz_entity there is no on->off transition to start the
     // "Buzzed" linger, so tapping Buzz gave NO feedback at all — the card sat
@@ -354,14 +370,17 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
       ? Math.round((this._windowLeft / this.config.timeout) * 100)
       : 100;
 
+    // The cookie stays on its "Buzzed" face for the whole visit window, not
+    // just the 6s linger — whether they were buzzed in is state, not a toast.
+    const buzzed = phase === "buzzed" || this._buzzedRecently;
     const cookieWord = busy
       ? t("db_buzz_busy", this.hass)
-      : phase === "buzzed"
+      : buzzed
       ? t("db_buzz_done", this.hass)
       : t("db_buzz_cta", this.hass);
     const cookieIcon = busy
       ? "m3o:volume-up"
-      : phase === "buzzed"
+      : buzzed
       ? "m3o:check-circle"
       : "m3o:campaign";
 
@@ -423,6 +442,14 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
                       </div>
                     </div>
                     <div class="open-spacer"></div>
+                    ${this.config.buzz_action
+                      ? html`
+                          <div class="open-status ${buzzed ? "yes" : ""}">
+                            <ha-icon .icon=${buzzed ? "m3o:check-circle" : "m3o:campaign"}></ha-icon>
+                            <span>${buzzed ? t("db_status_buzzed", this.hass) : t("db_status_not_buzzed", this.hass)}</span>
+                          </div>
+                        `
+                      : nothing}
                     <materia-drag-confirm
                       gesture=${this.config.open_gesture === "hold" ? "hold" : "slide"}
                       .label=${this._lockState === "unlocking"
