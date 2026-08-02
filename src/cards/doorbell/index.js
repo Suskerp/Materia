@@ -61,9 +61,15 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
 
   /* ---- derived phases ---- */
 
+  /** Active-ish, not literally "on": buzz_entity is often a LOCK — the
+   *  street-door relay whose 3s "unlocked" IS the buzz — so unlocked/open
+   *  and their transitions count. A strict === "on" meant the buzzing face
+   *  (spin, waves, Buzzed linger) never ran against a lock. */
   _on(id) {
     const st = id ? this.hass?.states[id] : undefined;
-    return st ? st.state === "on" : false;
+    if (!st) return false;
+    return ["on", "true", "open", "opening", "unlocked", "unlocking", "running", "active", "home"]
+      .includes(String(st.state).toLowerCase());
   }
 
   /** How long a ring RINGS — the length of the chime sound, not the popup's
@@ -91,8 +97,28 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     return id ? String(this.hass?.states[id]?.state ?? "") : "";
   }
 
-  get _opened() {
+  /** The lock's LIVE state — drives the open panel, which is the lock
+   *  control and floods whenever the door is really open. */
+  get _unlockedNow() {
     return ["unlocked", "unlocking"].includes(this._lockState);
+  }
+
+  /** The HEADER's "opened" is an event, not a state: someone answered THIS
+   *  ring. With an open_action the ONLY thing that counts is the card's own
+   *  let-them-in having run — the interior lock being open doesn't mean the
+   *  visitor at the street door was buzzed in, so entity state can't stand
+   *  in for it. Without one, the lock is the whole story, but the unlock
+   *  still has to be recent (within the ring timeout): a door that has sat
+   *  unlocked for hours must not dress the card as an answered doorbell. */
+  get _opened() {
+    if (this.config.open_action) {
+      return this._openedVia != null && (Date.now() - this._openedVia) / 1000 <= (this.config.timeout || 0);
+    }
+    if (!this._unlockedNow) return false;
+    const st = this.hass?.states[this.config.lock];
+    const t0 = st ? Date.parse(st.last_changed) : NaN;
+    if (Number.isNaN(t0)) return false;
+    return (Date.now() - t0) / 1000 <= (this.config.timeout || 0);
   }
 
   get _unlocking() {
@@ -103,7 +129,6 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
    *  ring window's start. No client clock to drift, and a replay (turn the
    *  doorbell back on) re-arms the window and resets it. */
   get _left() {
-    if (this.config.demo === "ringing") return this._ringSeconds;
     if (!this._ringT0) return 0;
     return Math.max(0, Math.ceil(this._ringSeconds - (Date.now() - this._ringT0) / 1000));
   }
@@ -130,6 +155,14 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
      one lapsed frame before the ringing face. */
   willUpdate(changed) {
     if (changed.has("hass") || changed.has("config")) {
+      // demo=ringing runs a SYNTHETIC window on loop, so the bar visibly
+      // drains during design checks instead of freezing at one width.
+      if (this.config?.demo === "ringing") {
+        if (!this._ringT0 || (Date.now() - this._ringT0) / 1000 > (this.config.timeout || 0)) {
+          this._ringT0 = Date.now();
+        }
+        return;
+      }
       if (!this._ringT0) {
         const st = this.hass?.states[this.config?.entity];
         const t0 = st ? Date.parse(st.last_changed) : NaN;
@@ -207,7 +240,10 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     // door is already open — the visitor still needs buzzing in — so this
     // control never flips into lock mode; locking lives on the lock card.
     if (this.config.open_action) {
+      // Header truth: with open_action, "opened" exists only when THIS ran.
+      this._openedVia = Date.now();
       this._handleAction(this.config.open_action);
+      this.requestUpdate();
       return;
     }
     const service = this._lockState === "unlocked" ? "lock" : "unlock";
@@ -305,14 +341,16 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     const c = this._copy(phase);
     const busy = phase === "buzzing";
     const opened = phase === "opened";
+    // What the open PANEL floods on: its own action having run (open_action
+    // mode — an ambient interior unlock is NOT the visitor buzzed in), or
+    // the live lock state when the panel IS the lock control.
+    const doorOpen = this.config.open_action ? opened : this._unlockedNow;
     // The bar is the popup-close indicator: it drains from the moment the
     // ring started, through buzzing and opening alike. With no window (the
     // card at rest) it sits FULL in the phase's quiet tone — the design's
     // strip is a permanent element, and an invisible empty track read as
     // "the bar is missing".
-    const pct = this.config.demo
-      ? 66
-      : this.config.timeout > 0 && this._ringT0
+    const pct = this.config.timeout > 0 && this._ringT0
       ? Math.round((this._windowLeft / this.config.timeout) * 100)
       : 100;
 
@@ -374,10 +412,10 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
               : nothing}
             ${this.config.lock
               ? html`
-                  <div class="panel open ${opened ? "done" : ""}">
+                  <div class="panel open ${doorOpen ? "done" : ""}">
                     <div class="open-head">
                       <div class="open-glyph">
-                        <ha-icon .icon=${opened ? "m3o:lock-open-right" : "m3o:door-front"}></ha-icon>
+                        <ha-icon .icon=${doorOpen ? "m3o:lock-open-right" : "m3o:door-front"}></ha-icon>
                       </div>
                       <div class="open-copy">
                         <span class="big">${this.config.open_title ?? t("db_open_title", this.hass)}</span>
