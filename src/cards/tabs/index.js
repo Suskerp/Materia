@@ -12,12 +12,11 @@ import "./editor.js";
  * holds its own `cards:` list, like a small vertical-stack per tab) or
  * external conditional cards (design 13a: "tabs, not a taller column").
  *
- * Spec anchors (androidx NavigationRailTokens): active indicator is
- * secondary-container with on-secondary-container ink, inactive ink is
- * on-surface-variant, icons 24dp, labels label-medium, active shape
- * CornerFull — which is why the selected tab morphs to a stadium while it
- * grows. Growth itself is the design's move, not the rail spec's: the
- * selected tab doubles as the "you are here" indicator.
+ * Spec anchors: the M3 Tabs component (secondary tabs with inline icon) —
+ * 48dp rows, title-small labels, on-surface-variant inactive ink, primary
+ * active ink, a 2dp primary indicator over a 1dp outline-variant divider
+ * on the edge facing the content. The vertical rail is that same grammar
+ * rotated; no per-tab containers, no growth.
  *
  * Selection state: CLIENT-SIDE by default — tabs are a viewing choice, so
  * each device keeps its own (the phone flipping to Map must not flip the

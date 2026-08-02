@@ -21,138 +21,57 @@ export const styles = [
       height: 100%;
     }
 
+    /* M3 Tabs (secondary style, inline icon + label): a quiet bar, not a
+       column of buttons. The container is transparent with a 1dp
+       outline-variant divider on the edge facing the content; the active
+       tab wears primary ink and a 2dp primary indicator on that edge.
+       Vertical is the same grammar rotated. */
     .rail {
       display: flex;
       flex-direction: column;
-      gap: 6px;
       height: 100%;
-    }
-
-    /* Embedded pages: content left, rail right, one seam. */
-    .wrap {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) var(--mtabs-rail-width, 92px);
-      gap: 8px;
-      height: 100%;
-    }
-
-    /* Every pane occupies the SAME cell; hidden ones keep their box so the
-       stage holds the tallest pane's height — no reflow on switch, and
-       pane-internal state (a map's zoom) survives. */
-    .stage {
-      display: grid;
-      min-width: 0;
-    }
-
-    .pane {
-      grid-area: 1 / 1;
-      min-width: 0;
-      /* Heavy panes (a live map) must not tax the rest of the page. */
-      contain: layout style;
-    }
-
-    /* visibility alone is NOT enough: a child may set visibility:visible
-       under a hidden ancestor — the map card's zoom overlay does exactly
-       that and punched through the rooms grid. Opacity can't be overridden
-       from below. Both stay applied: visibility skips paint for honest
-       children, opacity guarantees the rest. */
-    .pane:not(.on) {
-      visibility: hidden;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    /* A pane is a small stack of its own cards. */
-    .pane {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .pane-card > * {
-      display: block;
-    }
-
-    /* ---- horizontal bar (vertical: false) ---- */
-
-    :host([horizontal]) .rail {
-      flex-direction: row;
-      height: auto;
-    }
-
-    :host([horizontal]) .tab {
-      min-height: 64px;
-      flex-direction: row;
-      gap: 8px;
-      padding: 8px 14px;
-    }
-
-    :host([horizontal]) .tab:first-child {
-      border-radius: 28px 16px 16px 28px;
-    }
-
-    :host([horizontal]) .tab:last-child {
-      border-radius: 16px 28px 28px 16px;
-    }
-
-    /* Bar above, pages below — markup stays stage-then-rail. */
-    :host([horizontal]) .wrap {
-      display: flex;
-      flex-direction: column-reverse;
-      gap: 8px;
-      height: auto;
+      border-left: 1px solid var(--md-sys-color-outline-variant);
     }
 
     .tab {
-      flex: 1 1 0;
-      /* Standalone (nothing to stretch against) the tabs still need a body. */
-      min-height: 84px;
+      position: relative;
+      flex: none;
+      min-height: 48px;
       border: none;
-      padding: 10px 8px;
+      padding: 0 16px;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 8px;
       cursor: pointer;
       font-family: inherit;
-      position: relative;
-      overflow: hidden;
+      background: transparent;
+      color: var(--md-sys-color-on-surface-variant);
       -webkit-tap-highlight-color: transparent;
-      /* Quiet filled surface when unselected — the carousel-tile treatment,
-         so an unselected tab never reads as disabled. */
-      background: var(--md-sys-color-surface-container-high, color-mix(in srgb, var(--md-sys-color-on-surface, #1c1b1f) 5%, transparent));
-      color: var(--md-sys-color-on-surface-variant, var(--primary-text-color));
-      border-radius: 16px;
-      /* The selected tab grows AND rounds in one gesture, both on the
-         expressive spatial spring; colours ride the flat effects curve.
-         Default-speed spring — the slow one read as lag next to a heavy
-         pane swap. */
-      transition: flex-grow var(--md-sys-motion-expressive-default-spatial),
-        border-radius var(--md-sys-motion-expressive-default-spatial),
-        background-color var(--md-sys-motion-fast-effects),
-        color var(--md-sys-motion-fast-effects);
+      transition: color var(--md-sys-motion-fast-effects);
     }
 
-    /* Connected-group ends: the rail's outer corners are larger, the same
-       seam grammar as the split panels. */
-    .tab:first-child {
-      border-radius: 28px 28px 16px 16px;
+    .tab.on {
+      color: var(--md-sys-color-primary);
     }
 
-    .tab:last-child {
-      border-radius: 16px 16px 28px 28px;
+    /* The indicator: 2dp primary, on the divider edge, growing in on the
+       spatial spring. */
+    .tab::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--md-sys-color-primary);
+      transform: scaleY(0);
+      transform-origin: center;
+      transition: transform var(--md-sys-motion-expressive-default-spatial);
     }
 
-    /* Active = the nav-rail indicator itself: secondary-container pair,
-       CornerFull. Growth makes the rail double as a "you are here". */
-    .tab.on,
-    .tab.on:first-child,
-    .tab.on:last-child {
-      flex-grow: 1.9;
-      border-radius: 999px;
-      background: var(--md-sys-color-secondary-container);
-      color: var(--md-sys-color-on-secondary-container);
+    .tab.on::after {
+      transform: scaleY(1);
     }
 
     .glyph {
@@ -160,9 +79,10 @@ export const styles = [
     }
 
     .label {
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
+      /* title-small — the tabs spec's label style. */
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
       line-height: 1.2;
     }
 
@@ -185,9 +105,87 @@ export const styles = [
       opacity: 0.12;
     }
 
+    /* Embedded pages: content left, rail right, one seam. */
+    .wrap {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--mtabs-rail-width, 148px);
+      gap: 8px;
+      height: 100%;
+    }
+
+    /* Every pane occupies the SAME cell; hidden ones keep their box so the
+       stage holds the tallest pane's height — no reflow on switch, and
+       pane-internal state (a map's zoom) survives. */
+    .stage {
+      display: grid;
+      min-width: 0;
+    }
+
+    .pane {
+      grid-area: 1 / 1;
+      min-width: 0;
+      /* Heavy panes (a live map) must not tax the rest of the page. */
+      contain: layout style;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* visibility alone is NOT enough: a child may set visibility:visible
+       under a hidden ancestor — the map card's zoom overlay does exactly
+       that and punched through the rooms grid. Opacity can't be overridden
+       from below. Both stay applied: visibility skips paint for honest
+       children, opacity guarantees the rest. */
+    .pane:not(.on) {
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .pane-card > * {
+      display: block;
+    }
+
+    /* ---- horizontal bar (vertical: false) ---- */
+
+    :host([horizontal]) .rail {
+      flex-direction: row;
+      height: auto;
+      border-left: none;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    :host([horizontal]) .tab {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    :host([horizontal]) .tab::after {
+      left: 0;
+      right: 0;
+      top: auto;
+      bottom: 0;
+      width: auto;
+      height: 2px;
+      transform: scaleX(0);
+    }
+
+    :host([horizontal]) .tab.on::after {
+      transform: scaleX(1);
+    }
+
+    /* Bar above, pages below — markup stays stage-then-rail. */
+    :host([horizontal]) .wrap {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 8px;
+      height: auto;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .tab,
-      .tab::before {
+      .tab::before,
+      .tab::after {
         transition: none;
       }
     }
