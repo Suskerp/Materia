@@ -11,6 +11,27 @@ export const styles = [hostStyles, haCardReset, css`
     overflow: visible;
   }
 
+  /* THE TILT IS DECORATION, NOT LAYOUT — and that is the whole fix.
+
+     Every earlier version rotated .blob itself, which meant the readout and
+     the glyph lived in a rotated coordinate space and each had to
+     counter-rotate to stay upright. Two things go wrong with that, and both
+     bit repeatedly:
+
+       1. A counter-rotated box's BOUNDING box is much larger than its
+          content — a 50x37cqi readout turned 45deg occupies ~62cqi square —
+          so its corners punch outside the stadium's curve and get clipped,
+          however carefully the anchor is placed.
+       2. Anchoring inside that space needs top/bottom percentages (a % of
+          HEIGHT) mixed with cqi sizes (a % of WIDTH). Those two agree at
+          exactly one aspect ratio and drift at every other, which is why
+          five straight attempts at re-tuning the numbers each drifted again.
+
+     So the pill is now a ::before layer that carries the rotation alone. The
+     content sits in a plain, upright, centred flex column — no rotation, no
+     counter-rotation, no anchor percentages, nothing to clip against. It is
+     correct at any aspect ratio, width, icon size or text size because
+     there is no longer any geometry to get wrong. */
   .blob {
     position: relative;
     width: var(--wt-width, 100%);
@@ -19,65 +40,43 @@ export const styles = [hostStyles, haCardReset, css`
     aspect-ratio: 1 / var(--wt-ratio, 0.64);
     box-sizing: border-box;
     container-type: inline-size;
-    overflow: hidden;
     cursor: pointer;
-    /* Defaults to the SAME surface as the clock face so the two read as a set. */
-    background: var(--wt-bg, var(--md-sys-color-surface-container-high, var(--card-background-color)));
     color: var(--wt-fg, var(--md-sys-color-primary, var(--primary-text-color)));
-    /* M3 pill shape: stadium (flat top/bottom, fully rounded ends) — not an
-       ellipse. The large radius clamps to half the shorter (height) side. */
-    border-radius: 9999px;
-    /* Tilt the whole pill diagonally (Pixel-widget style). --wt-tilt is set
-       per-config; scale keeps the rotated stadium inside its cell — 0.86
-       instead of 0.8 so the temperature and icon get breathing room. */
-    transform: rotate(var(--wt-tilt, -26deg)) scale(0.86);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--wt-gap, 4cqi);
+    /* NO overflow:hidden. The pill deliberately spills past this box (it is
+       rotated), and the content is centred well inside the shape, so there
+       is nothing to clip — clipping here is what cut the min/max row's
+       arrow off at the curve. */
   }
 
-  /* THE LAYOUT, and why it isn't corner-anchored.
-
-     The pill is a STADIUM rotated ~45deg, so its long axis runs diagonally
-     across the screen and its bounding-box corners fall OUTSIDE the visible
-     shape entirely (border-radius 9999px eats them). Anchoring content to
-     those corners — which every previous version did, via top/right/bottom/
-     left percentages — therefore needs an inset guess to pull it back inside
-     the curve, and that guess is a % of the box's HEIGHT while every size
-     here (icon, font) is in cqi, a % of its WIDTH. Two different reference
-     lengths feeding one position: correct only at the exact aspect ratio it
-     was eyeballed against, drifting at every other. Four separate patches
-     re-guessed those insets; each one drifted again.
-
-     Instead: both children are pinned to the pill's CENTRE and pushed apart
-     ALONG THE PILL'S OWN AXES, symmetrically, in cqi only. --wt-spread is
-     one number in one unit, the offsets are mirror images, and the result is
-     independent of aspect ratio, height, icon size and text size.
-
-     The box's +x axis points up-right on screen under the default -45deg
-     tilt and its +y axis points down-right, so an offset of (+S, -S) sums to
-     straight UP and (-S, +S) to straight DOWN — the readout sits above
-     centre, the glyph below it, both horizontally centred, on any tilt.
-     .flip mirrors the tilt, which mirrors +x; mirroring the x term back
-     keeps the pair stacked vertically rather than swinging horizontal. */
-  .readout,
-  .wx,
-  .wx-mono {
+  /* The pill itself: an M3 stadium (flat sides, fully rounded ends — not an
+     ellipse; the large radius clamps to half the shorter side), tilted
+     diagonally Pixel-widget style. scale keeps the rotated shape from
+     spilling too far into neighbouring cards. Defaults to the SAME surface
+     as the clock face so the two read as a set. */
+  .blob::before {
+    content: "";
     position: absolute;
-    left: 50%;
-    top: 50%;
+    inset: 0;
+    border-radius: 9999px;
+    background: var(--wt-bg, var(--md-sys-color-surface-container-high, var(--card-background-color)));
+    transform: rotate(var(--wt-tilt, -26deg)) scale(0.86);
+    z-index: 0;
   }
 
-  /* Rotation is the RIGHTMOST function so it applies to the element alone,
-     about its own centre, leaving the translations in the box's coordinate
-     space — reverse the order and the offset direction rotates too, sending
-     both children off along the screen axes instead of the pill's. */
+  /* Content stacks above the pill in DOM order: min/max, temperature, glyph.
+     position:relative only so z-index applies. */
   .readout {
-    z-index: 0; /* icon draws in front of the temperature */
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.5cqi;
-    transform: translate(-50%, -50%)
-      translate(var(--wt-spread, 18cqi), calc(-1 * var(--wt-spread, 18cqi)))
-      rotate(calc(-1 * var(--wt-tilt, -26deg)));
   }
 
   .temp {
@@ -96,37 +95,20 @@ export const styles = [hostStyles, haCardReset, css`
     opacity: var(--wt-minmax-opacity, 0.75);
   }
 
-  .wx,
-  .wx-mono {
-    z-index: 1;
-    transform: translate(-50%, -50%)
-      translate(calc(-1 * var(--wt-spread, 18cqi)), var(--wt-spread, 18cqi))
-      rotate(calc(-1 * var(--wt-tilt, -26deg)));
-  }
-
   .wx {
+    position: relative;
+    z-index: 1;
     width: var(--wt-icon-size, 27cqi);
     height: var(--wt-icon-size, 27cqi);
+    flex-shrink: 0;
   }
 
   .wx-mono {
+    position: relative;
+    z-index: 1;
     --mdc-icon-size: var(--wt-icon-size, 27cqi);
     display: flex;
-  }
-
-  /* Mirrored tilt: the x term flips back so the pair stays stacked (see the
-     axis note above), which also swaps which diagonal they travel. */
-  .blob.flip .readout {
-    transform: translate(-50%, -50%)
-      translate(calc(-1 * var(--wt-spread, 18cqi)), calc(-1 * var(--wt-spread, 18cqi)))
-      rotate(calc(-1 * var(--wt-tilt, -26deg)));
-  }
-
-  .blob.flip .wx,
-  .blob.flip .wx-mono {
-    transform: translate(-50%, -50%)
-      translate(var(--wt-spread, 18cqi), var(--wt-spread, 18cqi))
-      rotate(calc(-1 * var(--wt-tilt, -26deg)));
+    flex-shrink: 0;
   }
 
   .blob.unavailable {

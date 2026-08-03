@@ -1686,6 +1686,27 @@ const w=globalThis,k=e=>e,$=w.trustedTypes,C=$?$.createPolicy("lit-html",{create
     overflow: visible;
   }
 
+  /* THE TILT IS DECORATION, NOT LAYOUT — and that is the whole fix.
+
+     Every earlier version rotated .blob itself, which meant the readout and
+     the glyph lived in a rotated coordinate space and each had to
+     counter-rotate to stay upright. Two things go wrong with that, and both
+     bit repeatedly:
+
+       1. A counter-rotated box's BOUNDING box is much larger than its
+          content — a 50x37cqi readout turned 45deg occupies ~62cqi square —
+          so its corners punch outside the stadium's curve and get clipped,
+          however carefully the anchor is placed.
+       2. Anchoring inside that space needs top/bottom percentages (a % of
+          HEIGHT) mixed with cqi sizes (a % of WIDTH). Those two agree at
+          exactly one aspect ratio and drift at every other, which is why
+          five straight attempts at re-tuning the numbers each drifted again.
+
+     So the pill is now a ::before layer that carries the rotation alone. The
+     content sits in a plain, upright, centred flex column — no rotation, no
+     counter-rotation, no anchor percentages, nothing to clip against. It is
+     correct at any aspect ratio, width, icon size or text size because
+     there is no longer any geometry to get wrong. */
   .blob {
     position: relative;
     width: var(--wt-width, 100%);
@@ -1694,65 +1715,43 @@ const w=globalThis,k=e=>e,$=w.trustedTypes,C=$?$.createPolicy("lit-html",{create
     aspect-ratio: 1 / var(--wt-ratio, 0.64);
     box-sizing: border-box;
     container-type: inline-size;
-    overflow: hidden;
     cursor: pointer;
-    /* Defaults to the SAME surface as the clock face so the two read as a set. */
-    background: var(--wt-bg, var(--md-sys-color-surface-container-high, var(--card-background-color)));
     color: var(--wt-fg, var(--md-sys-color-primary, var(--primary-text-color)));
-    /* M3 pill shape: stadium (flat top/bottom, fully rounded ends) — not an
-       ellipse. The large radius clamps to half the shorter (height) side. */
-    border-radius: 9999px;
-    /* Tilt the whole pill diagonally (Pixel-widget style). --wt-tilt is set
-       per-config; scale keeps the rotated stadium inside its cell — 0.86
-       instead of 0.8 so the temperature and icon get breathing room. */
-    transform: rotate(var(--wt-tilt, -26deg)) scale(0.86);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--wt-gap, 4cqi);
+    /* NO overflow:hidden. The pill deliberately spills past this box (it is
+       rotated), and the content is centred well inside the shape, so there
+       is nothing to clip — clipping here is what cut the min/max row's
+       arrow off at the curve. */
   }
 
-  /* THE LAYOUT, and why it isn't corner-anchored.
-
-     The pill is a STADIUM rotated ~45deg, so its long axis runs diagonally
-     across the screen and its bounding-box corners fall OUTSIDE the visible
-     shape entirely (border-radius 9999px eats them). Anchoring content to
-     those corners — which every previous version did, via top/right/bottom/
-     left percentages — therefore needs an inset guess to pull it back inside
-     the curve, and that guess is a % of the box's HEIGHT while every size
-     here (icon, font) is in cqi, a % of its WIDTH. Two different reference
-     lengths feeding one position: correct only at the exact aspect ratio it
-     was eyeballed against, drifting at every other. Four separate patches
-     re-guessed those insets; each one drifted again.
-
-     Instead: both children are pinned to the pill's CENTRE and pushed apart
-     ALONG THE PILL'S OWN AXES, symmetrically, in cqi only. --wt-spread is
-     one number in one unit, the offsets are mirror images, and the result is
-     independent of aspect ratio, height, icon size and text size.
-
-     The box's +x axis points up-right on screen under the default -45deg
-     tilt and its +y axis points down-right, so an offset of (+S, -S) sums to
-     straight UP and (-S, +S) to straight DOWN — the readout sits above
-     centre, the glyph below it, both horizontally centred, on any tilt.
-     .flip mirrors the tilt, which mirrors +x; mirroring the x term back
-     keeps the pair stacked vertically rather than swinging horizontal. */
-  .readout,
-  .wx,
-  .wx-mono {
+  /* The pill itself: an M3 stadium (flat sides, fully rounded ends — not an
+     ellipse; the large radius clamps to half the shorter side), tilted
+     diagonally Pixel-widget style. scale keeps the rotated shape from
+     spilling too far into neighbouring cards. Defaults to the SAME surface
+     as the clock face so the two read as a set. */
+  .blob::before {
+    content: "";
     position: absolute;
-    left: 50%;
-    top: 50%;
+    inset: 0;
+    border-radius: 9999px;
+    background: var(--wt-bg, var(--md-sys-color-surface-container-high, var(--card-background-color)));
+    transform: rotate(var(--wt-tilt, -26deg)) scale(0.86);
+    z-index: 0;
   }
 
-  /* Rotation is the RIGHTMOST function so it applies to the element alone,
-     about its own centre, leaving the translations in the box's coordinate
-     space — reverse the order and the offset direction rotates too, sending
-     both children off along the screen axes instead of the pill's. */
+  /* Content stacks above the pill in DOM order: min/max, temperature, glyph.
+     position:relative only so z-index applies. */
   .readout {
-    z-index: 0; /* icon draws in front of the temperature */
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.5cqi;
-    transform: translate(-50%, -50%)
-      translate(var(--wt-spread, 18cqi), calc(-1 * var(--wt-spread, 18cqi)))
-      rotate(calc(-1 * var(--wt-tilt, -26deg)));
   }
 
   .temp {
@@ -1771,47 +1770,30 @@ const w=globalThis,k=e=>e,$=w.trustedTypes,C=$?$.createPolicy("lit-html",{create
     opacity: var(--wt-minmax-opacity, 0.75);
   }
 
-  .wx,
-  .wx-mono {
-    z-index: 1;
-    transform: translate(-50%, -50%)
-      translate(calc(-1 * var(--wt-spread, 18cqi)), var(--wt-spread, 18cqi))
-      rotate(calc(-1 * var(--wt-tilt, -26deg)));
-  }
-
   .wx {
+    position: relative;
+    z-index: 1;
     width: var(--wt-icon-size, 27cqi);
     height: var(--wt-icon-size, 27cqi);
+    flex-shrink: 0;
   }
 
   .wx-mono {
+    position: relative;
+    z-index: 1;
     --mdc-icon-size: var(--wt-icon-size, 27cqi);
     display: flex;
-  }
-
-  /* Mirrored tilt: the x term flips back so the pair stays stacked (see the
-     axis note above), which also swaps which diagonal they travel. */
-  .blob.flip .readout {
-    transform: translate(-50%, -50%)
-      translate(calc(-1 * var(--wt-spread, 18cqi)), calc(-1 * var(--wt-spread, 18cqi)))
-      rotate(calc(-1 * var(--wt-tilt, -26deg)));
-  }
-
-  .blob.flip .wx,
-  .blob.flip .wx-mono {
-    transform: translate(-50%, -50%)
-      translate(var(--wt-spread, 18cqi), var(--wt-spread, 18cqi))
-      rotate(calc(-1 * var(--wt-tilt, -26deg)));
+    flex-shrink: 0;
   }
 
   .blob.unavailable {
     opacity: 0.5;
     pointer-events: none;
   }
-`];customElements.define("materia-weather-tile-editor",class extends Ie{_formData(){return{show_minmax:!1,mirror:!1,size:10,...this._config}}get _sections(){return[{title:"Content",icon:"mdi:card-text-outline",fields:[{name:"entity",required:!0,selector:{entity:{domain:"weather"}}},{name:"moon_entity",label:"Moon phase sensor (default: sensor.moon)",selector:{entity:{domain:"sensor"}}},{name:"temperature_entity",label:"Temperature sensor (optional)",selector:{entity:{domain:"sensor",device_class:"temperature"}}},{name:"icon",label:"Custom icon (overrides the colored glyph)",template:!0,selector:{icon:{}},context:{icon_entity:"entity"}}]},{title:"Min / Max",icon:"mdi:thermometer-lines",fields:[{name:"show_minmax",label:"Show min / max",selector:{boolean:{}}},{name:"high_entity",label:"High sensor (optional)",selector:{entity:{domain:"sensor"}}},{name:"low_entity",label:"Low sensor (optional)",selector:{entity:{domain:"sensor"}}}]},{title:"Appearance",icon:"mdi:palette-outline",fields:[{name:"size",label:"Size (10 = fill)",selector:{number:{min:1,max:10,step:1,mode:"slider"}}},{name:"spread",label:"Spread (gap between temperature and glyph)",helper:"How far each sits from the pill's centre, in % of its width. Defaults to 20 with min/max shown, 18 without.",selector:{number:{min:0,max:40,step:1,mode:"slider"}}},{name:"mirror",label:"Mirror (temperature left, icon right)",selector:{boolean:{}}},{name:"color",label:"Background",color:!0,template:!0,selector:{text:{}}},{name:"color_on",label:"Text / temperature",color:!0,template:!0,selector:{text:{}}},{name:"minmax_color",label:"Min / max color",color:!0,template:!0,selector:{text:{}}}]},{title:"Actions",icon:"mdi:gesture-tap",fields:[{name:"tap_action",selector:{ui_action:{default_action:"more-info"}}}]}]}});class Tt extends(Ce(ce)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedMinmaxColor:{state:!0},_forecast:{state:!0}};static styles=At;static getConfigElement(){return document.createElement("materia-weather-tile-editor")}static getStubConfig(e){const t=Object.keys(e?.states||{}).find(e=>e.startsWith("weather."))||"";return{entity:t,show_minmax:!0}}setConfig(e){if(!e.entity)throw new Error("entity is required");this.config={...e},this._fcEntity=void 0}updated(e){e.has("hass")&&this.hass&&(this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("minmax_color","_resolvedMinmaxColor"),this._subscribeForecast())}connectedCallback(){super.connectedCallback(),this._resubOnConnect()}disconnectedCallback(){super.disconnectedCallback(),this._unsubForecast()}_resubOnConnect(){this._subscribeForecast()}_subscribeForecast(){const e=this.config?.entity;if(!this.hass||!e||this._fcEntity===e)return;this._unsubForecast(),this._fcEntity=e,this._forecast=[];const t=this.hass.connection.subscribeMessage(e=>{this._forecast=e?.forecast||[]},{type:"weather/subscribe_forecast",forecast_type:"daily",entity_id:e});this._fcUnsub=t,t.catch(()=>{})}_unsubForecast(){this._fcUnsub&&(this._fcUnsub.then(e=>e&&e()).catch(()=>{}),this._fcUnsub=null),this._fcEntity=void 0}_num(e){if(null==e||""===e||"unknown"===e||"unavailable"===e)return null;const t=Number(e);return Number.isFinite(t)?Math.round(t):null}render(){if(!this.hass||!this.config)return I``;const e=this.hass.states[this.config.entity],t=this._isUnavailable(e),i=e?.state??"";let s=e?.attributes?.temperature;if(this.config.temperature_entity){const e=this.hass.states[this.config.temperature_entity];e&&(s=e.state)}const o=null!=this._num(s)?`${this._num(s)}°`:"—",n=e=>{const t=e?this.hass.states[e]:null;return t&&!this._isUnavailable(t)?t.state:null};let a=n(this.config.low_entity),r=n(this.config.high_entity);const l=this._forecast?.[0]||e?.attributes?.forecast?.[0];null==a&&null!=l?.templow&&(a=l.templow),null==r&&null!=l?.temperature&&(r=l.temperature);const c=this.config.show_minmax&&(null!=this._num(a)||null!=this._num(r)),d=this._isTemplate(this.config.color)?this._resolvedColor:this.config.color,h=this._isTemplate(this.config.color_on)?this._resolvedColorOn:this.config.color_on,p=this._isTemplate(this.config.minmax_color)?this._resolvedMinmaxColor:this.config.minmax_color;let u="number"==typeof this.config.tilt?this.config.tilt:{right:-45,left:45,none:0}[this.config.tilt]??-45;this.config.mirror&&(u=-u);const m=this.config.icon_size??53,g=this.config.text_size??30,f=this.config.width??115,_=(this.config.height??85)/100,b=this.config.spread??(c?20:18),v=`--wt-size:${["120px","150px","185px","225px","270px","320px","380px","460px","560px","none"][Math.min(10,Math.max(1,this.config.size??10))-1]};--wt-tilt:${u}deg;--wt-icon-size:${m}cqi;--wt-temp-size:${g}cqi;--wt-width:${f}%;--wt-ratio:${_};--wt-spread:${b}cqi;${d?`--wt-bg:${d};`:""}${h?`--wt-fg:${h};`:""}`+(p?`--wt-minmax:${p};--wt-minmax-opacity:1;`:""),y=this.config.icon;return I`
+`];customElements.define("materia-weather-tile-editor",class extends Ie{_formData(){return{show_minmax:!1,mirror:!1,size:10,...this._config}}get _sections(){return[{title:"Content",icon:"mdi:card-text-outline",fields:[{name:"entity",required:!0,selector:{entity:{domain:"weather"}}},{name:"moon_entity",label:"Moon phase sensor (default: sensor.moon)",selector:{entity:{domain:"sensor"}}},{name:"temperature_entity",label:"Temperature sensor (optional)",selector:{entity:{domain:"sensor",device_class:"temperature"}}},{name:"icon",label:"Custom icon (overrides the colored glyph)",template:!0,selector:{icon:{}},context:{icon_entity:"entity"}}]},{title:"Min / Max",icon:"mdi:thermometer-lines",fields:[{name:"show_minmax",label:"Show min / max",selector:{boolean:{}}},{name:"high_entity",label:"High sensor (optional)",selector:{entity:{domain:"sensor"}}},{name:"low_entity",label:"Low sensor (optional)",selector:{entity:{domain:"sensor"}}}]},{title:"Appearance",icon:"mdi:palette-outline",fields:[{name:"size",label:"Size (10 = fill)",selector:{number:{min:1,max:10,step:1,mode:"slider"}}},{name:"gap",label:"Gap between temperature and glyph",helper:"In % of the tile's width. Default 4.",selector:{number:{min:0,max:20,step:1,mode:"slider"}}},{name:"mirror",label:"Mirror (tilt the pill the other way)",selector:{boolean:{}}},{name:"color",label:"Background",color:!0,template:!0,selector:{text:{}}},{name:"color_on",label:"Text / temperature",color:!0,template:!0,selector:{text:{}}},{name:"minmax_color",label:"Min / max color",color:!0,template:!0,selector:{text:{}}}]},{title:"Actions",icon:"mdi:gesture-tap",fields:[{name:"tap_action",selector:{ui_action:{default_action:"more-info"}}}]}]}});class Tt extends(Ce(ce)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedMinmaxColor:{state:!0},_forecast:{state:!0}};static styles=At;static getConfigElement(){return document.createElement("materia-weather-tile-editor")}static getStubConfig(e){const t=Object.keys(e?.states||{}).find(e=>e.startsWith("weather."))||"";return{entity:t,show_minmax:!0}}setConfig(e){if(!e.entity)throw new Error("entity is required");this.config={...e},this._fcEntity=void 0}updated(e){e.has("hass")&&this.hass&&(this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("minmax_color","_resolvedMinmaxColor"),this._subscribeForecast())}connectedCallback(){super.connectedCallback(),this._resubOnConnect()}disconnectedCallback(){super.disconnectedCallback(),this._unsubForecast()}_resubOnConnect(){this._subscribeForecast()}_subscribeForecast(){const e=this.config?.entity;if(!this.hass||!e||this._fcEntity===e)return;this._unsubForecast(),this._fcEntity=e,this._forecast=[];const t=this.hass.connection.subscribeMessage(e=>{this._forecast=e?.forecast||[]},{type:"weather/subscribe_forecast",forecast_type:"daily",entity_id:e});this._fcUnsub=t,t.catch(()=>{})}_unsubForecast(){this._fcUnsub&&(this._fcUnsub.then(e=>e&&e()).catch(()=>{}),this._fcUnsub=null),this._fcEntity=void 0}_num(e){if(null==e||""===e||"unknown"===e||"unavailable"===e)return null;const t=Number(e);return Number.isFinite(t)?Math.round(t):null}render(){if(!this.hass||!this.config)return I``;const e=this.hass.states[this.config.entity],t=this._isUnavailable(e),i=e?.state??"";let s=e?.attributes?.temperature;if(this.config.temperature_entity){const e=this.hass.states[this.config.temperature_entity];e&&(s=e.state)}const o=null!=this._num(s)?`${this._num(s)}°`:"—",n=e=>{const t=e?this.hass.states[e]:null;return t&&!this._isUnavailable(t)?t.state:null};let a=n(this.config.low_entity),r=n(this.config.high_entity);const l=this._forecast?.[0]||e?.attributes?.forecast?.[0];null==a&&null!=l?.templow&&(a=l.templow),null==r&&null!=l?.temperature&&(r=l.temperature);const c=this.config.show_minmax&&(null!=this._num(a)||null!=this._num(r)),d=this._isTemplate(this.config.color)?this._resolvedColor:this.config.color,h=this._isTemplate(this.config.color_on)?this._resolvedColorOn:this.config.color_on,p=this._isTemplate(this.config.minmax_color)?this._resolvedMinmaxColor:this.config.minmax_color;let u="number"==typeof this.config.tilt?this.config.tilt:{right:-45,left:45,none:0}[this.config.tilt]??-45;this.config.mirror&&(u=-u);const m=this.config.icon_size??(c?40:50),g=this.config.text_size??30,f=this.config.width??115,_=(this.config.height??85)/100,b=this.config.gap??4,v=`--wt-size:${["120px","150px","185px","225px","270px","320px","380px","460px","560px","none"][Math.min(10,Math.max(1,this.config.size??10))-1]};--wt-tilt:${u}deg;--wt-icon-size:${m}cqi;--wt-temp-size:${g}cqi;--wt-width:${f}%;--wt-ratio:${_};--wt-gap:${b}cqi;${d?`--wt-bg:${d};`:""}${h?`--wt-fg:${h};`:""}`+(p?`--wt-minmax:${p};--wt-minmax-opacity:1;`:""),y=this.config.icon;return I`
       <ha-card>
         <div
-          class="blob ${t?"unavailable":""} ${this.config.mirror?"flip":""}"
+          class="blob ${t?"unavailable":""}"
           style=${v}
           @click=${()=>this._handleAction(this.config.tap_action||{action:"more-info"})}
         >
@@ -10125,4 +10107,4 @@ const Hs=As(class extends Ts{constructor(){super(...arguments),this.key=W}render
           <circle class="pin" cx="50" cy="50" r="2.4"></circle>
         </svg>
       </ha-card>
-    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const e=document.createElement("style");e.id="materia-fonts",e.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Display voice: Outfit VARIABLE (true wght 100-900 axis) — hero\n       numerals & titles via --materia-font-display; the weight axis\n       interpolates smoothly, which flavor C's morphs animate. */\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJuktqUYLkn8BJ.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJtEtqUYLknw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Accent voice: Fraunces italic — ONE personality moment (clock date). */\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7frU9kMz3lR27gVA.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7RrU9kMz3lR24.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(e)}();console.info("%c MATERIA %c v0.50.1 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");
+    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const e=document.createElement("style");e.id="materia-fonts",e.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Display voice: Outfit VARIABLE (true wght 100-900 axis) — hero\n       numerals & titles via --materia-font-display; the weight axis\n       interpolates smoothly, which flavor C's morphs animate. */\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJuktqUYLkn8BJ.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJtEtqUYLknw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Accent voice: Fraunces italic — ONE personality moment (clock date). */\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7frU9kMz3lR27gVA.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7RrU9kMz3lR24.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(e)}();console.info("%c MATERIA %c v0.51.0 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");

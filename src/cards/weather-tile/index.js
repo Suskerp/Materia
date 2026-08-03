@@ -131,23 +131,24 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
       typeof this.config.tilt === "number"
         ? this.config.tilt
         : ({ right: -45, left: 45, none: 0 }[this.config.tilt] ?? -45);
-    // Mirror flips the tilt to the opposite diagonal (e.g. -45 → +45) so the
-    // mirrored content (temp left, icon right) still follows the pill's slope.
+    // Mirror throws the pill onto the opposite diagonal (e.g. -45 -> +45).
+    // It used to swap the content sides too, back when content was anchored
+    // to the pill's corners; with the content centred there is nothing left
+    // to mirror but the shape itself.
     if (this.config.mirror) tiltDeg = -tiltDeg;
-    // Layout is one symmetric offset from the pill's centre along its own
-    // axes now (see the long note in styles.js) — NOT four corner insets.
-    // icon_x/icon_y/temp_x/temp_y are gone with it: there is no corner left
-    // to offset from, and they were never exposed in the editor anyway.
-    const iconSize = this.config.icon_size ?? 53;
+    // Content is a plain centred stack now (see the long note in styles.js),
+    // so there are no position knobs left at all: icon_x/icon_y/temp_x/
+    // temp_y and the short-lived `spread` are gone with the geometry that
+    // needed them. Only SIZES remain — and they have to fit the box's own
+    // height, which is `ratio` * the width: the min/max row adds a line
+    // above the temperature, so the glyph gives that line its room back
+    // rather than pushing the stack past the pill.
+    const iconSize = this.config.icon_size ?? (showMinmax ? 40 : 50);
     const textSize = this.config.text_size ?? 30;
     const width = this.config.width ?? 115;
     const ratio = (this.config.height ?? 85) / 100;
-    // How far the readout and the glyph sit from centre, each in the
-    // opposite direction, as a % of the pill's width. The pair separates by
-    // 2 * spread * sqrt(2) on screen once the tilt is applied, so the
-    // minmax row (which makes the readout taller) needs a little more room
-    // than the bare temperature does.
-    const spread = this.config.spread ?? (showMinmax ? 20 : 18);
+    // Breathing room between the temperature and the glyph.
+    const gap = this.config.gap ?? 4;
     // Global size 1–10 caps the tile width (10 = fill the cell). Everything
     // else is in container-query units, so the whole tile scales with it.
     const sizes = ["120px", "150px", "185px", "225px", "270px", "320px", "380px", "460px", "560px", "none"];
@@ -155,7 +156,7 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     const style =
       `--wt-size:${sizes[size - 1]};` +
       `--wt-tilt:${tiltDeg}deg;--wt-icon-size:${iconSize}cqi;--wt-temp-size:${textSize}cqi;` +
-      `--wt-width:${width}%;--wt-ratio:${ratio};--wt-spread:${spread}cqi;` +
+      `--wt-width:${width}%;--wt-ratio:${ratio};--wt-gap:${gap}cqi;` +
       `${bg ? `--wt-bg:${bg};` : ""}${fg ? `--wt-fg:${fg};` : ""}` +
       `${mm ? `--wt-minmax:${mm};--wt-minmax-opacity:1;` : ""}`;
 
@@ -165,7 +166,7 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     return html`
       <ha-card>
         <div
-          class="blob ${unavailable ? "unavailable" : ""} ${this.config.mirror ? "flip" : ""}"
+          class="blob ${unavailable ? "unavailable" : ""}"
           style=${style}
           @click=${() => this._handleAction(this.config.tap_action || { action: "more-info" })}
         >

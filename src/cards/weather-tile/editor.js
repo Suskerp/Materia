@@ -40,12 +40,12 @@ class MateriaWeatherTileEditor extends SmartEditorBase {
         fields: [
           { name: "size", label: "Size (10 = fill)", selector: { number: { min: 1, max: 10, step: 1, mode: "slider" } } },
           {
-            name: "spread",
-            label: "Spread (gap between temperature and glyph)",
-            helper: "How far each sits from the pill's centre, in % of its width. Defaults to 20 with min/max shown, 18 without.",
-            selector: { number: { min: 0, max: 40, step: 1, mode: "slider" } },
+            name: "gap",
+            label: "Gap between temperature and glyph",
+            helper: "In % of the tile's width. Default 4.",
+            selector: { number: { min: 0, max: 20, step: 1, mode: "slider" } },
           },
-          { name: "mirror", label: "Mirror (temperature left, icon right)", selector: { boolean: {} } },
+          { name: "mirror", label: "Mirror (tilt the pill the other way)", selector: { boolean: {} } },
           { name: "color", label: "Background", color: true, template: true, selector: { text: {} } },
           { name: "color_on", label: "Text / temperature", color: true, template: true, selector: { text: {} } },
           { name: "minmax_color", label: "Min / max color", color: true, template: true, selector: { text: {} } },
