@@ -137,18 +137,29 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     // to mirror but the shape itself.
     if (this.config.mirror) tiltDeg = -tiltDeg;
     // Content is a plain centred stack now (see the long note in styles.js),
-    // so there are no position knobs left at all: icon_x/icon_y/temp_x/
-    // temp_y and the short-lived `spread` are gone with the geometry that
-    // needed them. Only SIZES remain — and they have to fit the box's own
-    // height, which is `ratio` * the width: the min/max row adds a line
-    // above the temperature, so the glyph gives that line its room back
-    // rather than pushing the stack past the pill.
-    const iconSize = this.config.icon_size ?? (showMinmax ? 40 : 50);
-    const textSize = this.config.text_size ?? 30;
+    // so there are no position knobs left: icon_x/icon_y/temp_x/temp_y and
+    // the short-lived `spread` all died with the geometry that needed them.
+    //
+    // What DOES still matter is that the stack fits INSIDE the tilted pill.
+    // The pill reads on screen as an ellipse with semi-axes ~43cqi along the
+    // tilt and ~36.5cqi across it (a 100x85 stadium, scaled 0.86), and a
+    // centred box of half-width a / half-height b fits only while
+    //
+    //     ((a·cos45 + b·sin45) / 43)² + ((b·cos45 - a·sin45) / 36.5)² ≤ 1
+    //
+    // The defaults below sit at 0.93 (with min/max) and 0.99 (without) on
+    // that measure. The previous defaults — 30/40 and 30/50 — scored 1.24
+    // and 1.32, i.e. overflowed by a quarter to a third, and because the
+    // pill is tilted the overflow landed LOPSIDED: the min/max row poked out
+    // past the curve on the left while the glyph pushed out at the bottom.
+    // That asymmetry is what read as "not aligned" through several rounds of
+    // this. Raise either size and check it against the inequality first.
+    const iconSize = this.config.icon_size ?? (showMinmax ? 34 : 36);
+    const textSize = this.config.text_size ?? (showMinmax ? 26 : 30);
     const width = this.config.width ?? 115;
     const ratio = (this.config.height ?? 85) / 100;
     // Breathing room between the temperature and the glyph.
-    const gap = this.config.gap ?? 4;
+    const gap = this.config.gap ?? 3;
     // Global size 1–10 caps the tile width (10 = fill the cell). Everything
     // else is in container-query units, so the whole tile scales with it.
     const sizes = ["120px", "150px", "185px", "225px", "270px", "320px", "380px", "460px", "560px", "none"];
