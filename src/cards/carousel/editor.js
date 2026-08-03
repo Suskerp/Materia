@@ -63,19 +63,29 @@ class MateriaCarouselEditor extends SmartEditorBase {
 
   get _sections() {
     const sortable = !!this._config?.sort_by_history;
+    // A tracked entity and per-item entities are two DIFFERENT ways of
+    // reading selection — mutually exclusive in practice, since an item's
+    // own entity already wins per-tile (see _tap/render). Showing the
+    // tracked-entity fields on a card that's fully per-item (a room of
+    // independent booleans) is just noise nobody needs to read past.
+    const hasItemEntities = (this._config?.items || []).some((i) => i.entity);
     return [
       {
         title: "Content",
         icon: "mdi:card-text-outline",
         fields: [
-          {
-            name: "entity",
-            label: "Entity holding the selection (optional)",
-            helper: "Only needed when items don't carry their own entity — a room queue's text, an input_select.",
-            selector: { entity: {} },
-          },
-          { name: "attribute", label: "Attribute (instead of the state)", selector: { text: {} } },
-          { name: "multi_select", label: "Multi-select (state is a comma-separated list)", selector: { boolean: {} } },
+          ...(hasItemEntities
+            ? []
+            : [
+                {
+                  name: "entity",
+                  label: "Entity holding the selection (optional)",
+                  helper: "Only needed when items don't carry their own entity — a room queue's text, an input_select.",
+                  selector: { entity: {} },
+                },
+                { name: "attribute", label: "Attribute (instead of the state)", selector: { text: {} } },
+                { name: "multi_select", label: "Multi-select (state is a comma-separated list)", selector: { boolean: {} } },
+              ]),
           {
             name: "carousel",
             label: "Carousel (horizontal scroll instead of a wrapped grid)",
