@@ -150,9 +150,14 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     const iconSize = this.config.icon_size ?? (showMinmax ? 34 : 36);
     const textSize = this.config.text_size ?? (showMinmax ? 26 : 30);
     const minmaxSize = this.config.minmax_size ?? 5.5;
-    const tempX = this.config.temp_x ?? 0;
+    // The x offsets lean the pair along the pill's own tilt — temperature
+    // up-and-right, glyph down-and-left — which is where the tilted stadium
+    // is actually widest, so both sit in the fat part of the shape instead
+    // of near the narrowing ends. Hand-tuned on a real tile; these two
+    // numbers are the whole reason the layout finally reads straight.
+    const tempX = this.config.temp_x ?? 5;
     const tempY = this.config.temp_y ?? -18;
-    const iconX = this.config.icon_x ?? 0;
+    const iconX = this.config.icon_x ?? -5;
     const iconY = this.config.icon_y ?? 18;
     const width = this.config.width ?? 115;
     const ratio = (this.config.height ?? 85) / 100;
