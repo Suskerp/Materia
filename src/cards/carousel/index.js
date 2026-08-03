@@ -26,6 +26,7 @@ class MateriaCards extends DisabledMixin(ActionMixin(LitElement)) {
     config: { state: true },
     _resolvedColor: { state: true },
     _resolvedColorOn: { state: true },
+    _historyRank: { state: true },
   };
 
   static styles = styles;
@@ -52,6 +53,46 @@ class MateriaCards extends DisabledMixin(ActionMixin(LitElement)) {
         ? !config.wrap
         : this.localName === "materia-carousel";
     this.toggleAttribute("wrap", !scroll);
+    this._histEntity = undefined; // (re)fetch history for the (new) entity
+  }
+
+  /** Once per entity, on load: how many times each value has appeared in
+   *  the tracked entity's recent history — a room queue's comma-separated
+   *  history says which rooms actually get picked, not just which are
+   *  configured. Re-sorting live as new history trickled in would shuffle
+   *  tiles under a thumb mid-tap, so this runs once per mount, not on every
+   *  hass update. */
+  async _loadHistoryRank() {
+    const entity = this.config?.entity;
+    if (!this.config?.sort_by_history || !entity || !this.hass || this._histEntity === entity) return;
+    this._histEntity = entity;
+    const days = this.config.sort_history_days ?? 30;
+    const start = new Date(Date.now() - days * 24 * 3600 * 1000).toISOString();
+    try {
+      const result = await this.hass.connection.sendMessagePromise({
+        type: "history/history_during_period",
+        start_time: start,
+        entity_ids: [entity],
+        minimal_response: true,
+        no_attributes: true,
+      });
+      const counts = new Map();
+      for (const s of result?.[entity] || []) {
+        const val = s.s ?? s.state;
+        if (val == null || val === "" || val === "unknown" || val === "unavailable") continue;
+        // Multi-select values are a CSV of rooms, not one token — each
+        // named room in a historical value counts once for that value.
+        const parts = this.config.multi_select
+          ? String(val).split(",").map((v) => v.trim()).filter(Boolean)
+          : [String(val).trim()];
+        for (const p of parts) counts.set(p, (counts.get(p) || 0) + 1);
+      }
+      this._historyRank = counts;
+    } catch (_) {
+      // No recorder, no permission, entity never existed — fall back to
+      // configured order rather than leaving the rail half-broken.
+      this._historyRank = null;
+    }
   }
 
   get _stateObj() {
@@ -79,7 +120,13 @@ class MateriaCards extends DisabledMixin(ActionMixin(LitElement)) {
   }
 
   _items() {
-    return (this.config.items || []).map((i) => (typeof i === "string" ? { label: i, value: i } : i));
+    const items = (this.config.items || []).map((i) => (typeof i === "string" ? { label: i, value: i } : i));
+    if (!this.config.sort_by_history || !this._historyRank) return items;
+    // Stable sort: ties keep their configured relative order, so a tile
+    // with no history yet doesn't jump around against its equally-unranked
+    // neighbours.
+    const rankOf = (it) => this._historyRank.get(String(it.value ?? it.label)) || 0;
+    return [...items].sort((a, b) => rankOf(b) - rankOf(a));
   }
 
   updated(changedProps) {
@@ -90,6 +137,7 @@ class MateriaCards extends DisabledMixin(ActionMixin(LitElement)) {
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("color", "_resolvedColor");
       this._resolveField("color_on", "_resolvedColorOn");
+      this._loadHistoryRank();
     }
     // The active set covers BOTH selection mechanisms — tracked-entity value
     // AND per-item entities. Watching only _selected meant per-item tiles
