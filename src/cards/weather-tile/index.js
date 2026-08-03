@@ -134,24 +134,19 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     // Mirror flips the tilt to the opposite diagonal (e.g. -45 → +45) so the
     // mirrored content (temp left, icon right) still follows the pill's slope.
     if (this.config.mirror) tiltDeg = -tiltDeg;
-    // The minmax row stacks ON TOP of the big temp, pushing the readout's
-    // block taller — an icon sized for the no-minmax case ran straight into
-    // it. Shrinking the icon a notch (not just repositioning it) is what
-    // actually buys clearance; iconY alone chased the overlap without
-    // fixing it (predicted and confirmed at the defaults, independent of
-    // any per-card override).
+    // Position is FLEXBOX now (styles.js) — the readout and icon dock to
+    // opposite corners via justify-content:space-between, which measures
+    // the box's real rendered height every time, instead of a hand-tuned
+    // top/bottom % fighting cqi (width-relative) sizes. That mismatch was
+    // the actual bug: at any aspect ratio other than the exact one a given
+    // percentage was eyeballed against, the two units drift apart — the
+    // show_minmax case just made the taller block visible enough to
+    // notice. icon_x/y and temp_x/y are gone; nothing left for them to
+    // offset now that layout isn't computed from a corner + a guess.
     const iconSize = this.config.icon_size ?? (showMinmax ? 40 : 53);
     const textSize = this.config.text_size ?? 30;
     const width = this.config.width ?? 115;
     const ratio = (this.config.height ?? 85) / 100;
-    const iconX = this.config.icon_x ?? 5;
-    const iconY = this.config.icon_y ?? (showMinmax ? 2 : 10);
-    // 13, not 10: the big numeral was kissing the pill's curve on the right.
-    const tempX = this.config.temp_x ?? 13;
-    // The min/max row stacks ABOVE the temperature, so with it shown the
-    // readout's top edge is the small hi/lo text hugging the pill's curve —
-    // give it more clearance than the big temp needs on its own.
-    const tempY = this.config.temp_y ?? (showMinmax ? 21 : 15);
     // Global size 1–10 caps the tile width (10 = fill the cell). Everything
     // else is in container-query units, so the whole tile scales with it.
     const sizes = ["120px", "150px", "185px", "225px", "270px", "320px", "380px", "460px", "560px", "none"];
@@ -160,7 +155,6 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
       `--wt-size:${sizes[size - 1]};` +
       `--wt-tilt:${tiltDeg}deg;--wt-icon-size:${iconSize}cqi;--wt-temp-size:${textSize}cqi;` +
       `--wt-width:${width}%;--wt-ratio:${ratio};` +
-      `--wt-icon-x:${iconX}%;--wt-icon-y:${iconY}%;--wt-temp-x:${tempX}%;--wt-temp-y:${tempY}%;` +
       `${bg ? `--wt-bg:${bg};` : ""}${fg ? `--wt-fg:${fg};` : ""}` +
       `${mm ? `--wt-minmax:${mm};--wt-minmax-opacity:1;` : ""}`;
 

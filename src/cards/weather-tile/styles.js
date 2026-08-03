@@ -31,13 +31,26 @@ export const styles = [hostStyles, haCardReset, css`
        per-config; scale keeps the rotated stadium inside its cell — 0.86
        instead of 0.8 so the temperature and icon get breathing room. */
     transform: rotate(var(--wt-tilt, -26deg)) scale(0.86);
+    /* Readout and icon are laid out by FLEXBOX now, not hand-tuned top/
+       left/right/bottom percentages. Those percentages were resolved
+       against the box's HEIGHT while every size (icon, font) is in cqi
+       (the box's WIDTH) — the two units drift apart the moment the pill's
+       aspect ratio isn't the exact one they were eyeballed against, which
+       is what put the readout and icon far apart (or overlapping) at the
+       show_minmax defaults. flex + justify-content:space-between finds
+       the real available gap every time, from the box's ACTUAL rendered
+       height, whatever that turns out to be. */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10cqi 8cqi;
   }
 
-  /* Content counter-rotates so the temperature / icon stay upright. */
+  /* Content counter-rotates so the temperature / icon stay upright.
+     DOM order does the vertical placement (first child docks to the top
+     via space-between, see .blob); align-self does the horizontal side. */
   .readout {
-    position: absolute;
-    top: var(--wt-temp-y, 17%);
-    right: var(--wt-temp-x, 16%);
+    align-self: flex-end;
     z-index: 0; /* icon draws in front of the temperature */
     display: flex;
     flex-direction: column;
@@ -63,37 +76,33 @@ export const styles = [hostStyles, haCardReset, css`
   }
 
   .wx {
-    position: absolute;
-    left: var(--wt-icon-x, 16%);
-    bottom: var(--wt-icon-y, 20%);
+    align-self: flex-start;
     z-index: 1;
     width: var(--wt-icon-size, 27cqi);
     height: var(--wt-icon-size, 27cqi);
+    flex-shrink: 0;
     transform: rotate(calc(-1 * var(--wt-tilt, -26deg)));
   }
 
   .wx-mono {
-    position: absolute;
-    left: var(--wt-icon-x, 16%);
-    bottom: var(--wt-icon-y, 20%);
+    align-self: flex-start;
     z-index: 1;
     --mdc-icon-size: var(--wt-icon-size, 27cqi);
     display: flex;
+    flex-shrink: 0;
     transform: rotate(calc(-1 * var(--wt-tilt, -26deg)));
   }
 
   /* Positive tilt (top-left → bottom-right): mirror the layout so the
      temperature and icon follow the opposite diagonal. */
   .blob.flip .readout {
-    right: auto;
-    left: var(--wt-temp-x, 16%);
+    align-self: flex-start;
     align-items: flex-start;
   }
 
   .blob.flip .wx,
   .blob.flip .wx-mono {
-    left: auto;
-    right: var(--wt-icon-x, 16%);
+    align-self: flex-end;
   }
 
   .blob.unavailable {
