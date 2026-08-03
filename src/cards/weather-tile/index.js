@@ -159,11 +159,19 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     const tempY = this.config.temp_y ?? -18;
     const iconX = this.config.icon_x ?? -5;
     const iconY = this.config.icon_y ?? 18;
-    const width = this.config.width ?? 115;
+    // 100, not the old 115: the tile must not spill out of its own card. At
+    // 115 the box was wider than its parent, which silently defeated the
+    // centring (see the note in styles.js) and pushed the pill's right edge
+    // to ~105% of the cell.
+    const width = this.config.width ?? 100;
     const ratio = (this.config.height ?? 85) / 100;
-    // The pill's own scale, so the shape can grow to meet the content
-    // instead of the content always having to shrink to meet the shape.
-    const pillScale = (this.config.pill_scale ?? 86) / 100;
+    // 88 is the largest scale that keeps the TILTED pill inside the box on
+    // both axes. A 45deg-tilted stadium's screen bounding box is
+    // (long - short)·cos45 + short, so at 100x85 it measures 95.6 before
+    // scaling; the box's own height (85) is the binding limit, and
+    // 95.6 × 0.88 = 84.1 clears it. Raising this spills over the neighbours
+    // again — 0.95 already measures 90.8 against a box only 85 tall.
+    const pillScale = (this.config.pill_scale ?? 88) / 100;
     // Global size 1–10 caps the tile width (10 = fill the cell). Everything
     // else is in container-query units, so the whole tile scales with it.
     const sizes = ["120px", "150px", "185px", "225px", "270px", "320px", "380px", "460px", "560px", "none"];

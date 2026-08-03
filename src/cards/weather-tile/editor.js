@@ -7,21 +7,27 @@ class MateriaWeatherTileEditor extends SmartEditorBase {
   _formData() {
     // show_minmax is a plain truthy check in the card, so a card without the
     // key hides the range — even though getStubConfig hands new cards `true`.
-    return { show_minmax: false, mirror: false, size: 10, ...this._config };
+    return { show_minmax: false, size: 10, ...this._config };
   }
 
-  /* NO POSITION OR GEOMETRY FIELDS, deliberately.
+  /* NO POSITION OR SHAPE FIELDS, deliberately.
 
      This card briefly exposed temp_x/temp_y/icon_x/icon_y, text_size,
-     icon_size, minmax_size, tilt, pill_scale, width and height as sliders, to
-     hand-tune the layout against the tilted pill. That tuning is done and its
-     result is now the card's defaults — a weather tile should look right out
-     of the box, not ask its owner to nudge glyphs around.
+     icon_size, minmax_size, tilt, pill_scale, width, height and mirror as
+     editable options, to hand-tune the layout against the tilted pill. That
+     tuning is done and its result is now the card's defaults — a weather tile
+     should look right out of the box, not ask its owner to nudge glyphs
+     around or reason about how a rotated stadium clips.
 
-     Every one of those keys still WORKS in YAML for anyone who wants to
-     re-shape the pill; they are simply not advertised, the same way
-     materia-lock keeps shape_style without offering a picker. See the note in
-     index.js for why the offsets are the values they are. */
+     The shape ones especially: they interact. `width` above 100 defeats the
+     centring, and `pill_scale` above 88 pushes the tilted pill past the box's
+     height onto neighbouring cards. Both are one-way traps for anyone poking
+     at a slider, so neither is offered.
+
+     Every key still WORKS in YAML for anyone re-shaping the pill on purpose;
+     they are simply not advertised, the same way materia-lock keeps
+     shape_style without offering a picker. See index.js for why each default
+     is the number it is. */
   get _sections() {
     return [
       {
@@ -54,7 +60,6 @@ class MateriaWeatherTileEditor extends SmartEditorBase {
         icon: "mdi:palette-outline",
         fields: [
           { name: "size", label: "Size (10 = fill)", selector: { number: { min: 1, max: 10, step: 1, mode: "slider" } } },
-          { name: "mirror", label: "Mirror (tilt the pill the other way)", selector: { boolean: {} } },
           { name: "color", label: "Background", color: true, template: true, selector: { text: {} } },
           { name: "color_on", label: "Text / temperature", color: true, template: true, selector: { text: {} } },
           { name: "minmax_color", label: "Min / max color", color: true, template: true, selector: { text: {} } },

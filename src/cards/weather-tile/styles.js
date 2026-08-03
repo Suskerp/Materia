@@ -30,7 +30,15 @@ export const styles = [hostStyles, haCardReset, css`
     position: relative;
     width: var(--wt-width, 100%);
     max-width: var(--wt-size, none);
-    margin: 0 auto;
+    /* Centred with left+translate rather than margin:0 auto, because auto
+       margins FLOOR AT ZERO: the moment the box is wider than its parent they
+       give up silently and the box goes flush-left, dumping every bit of
+       overflow on the right edge. That is exactly what pushed the pill out of
+       its card at the old 115% width — it was never centred at all, it just
+       looked centred while it happened to fit. This construction stays
+       centred at any width. */
+    left: 50%;
+    transform: translateX(-50%);
     aspect-ratio: 1 / var(--wt-ratio, 0.64);
     box-sizing: border-box;
     container-type: inline-size;
