@@ -53,39 +53,67 @@ class MateriaCards extends DisabledMixin(ActionMixin(LitElement)) {
         ? !config.wrap
         : this.localName === "materia-carousel";
     this.toggleAttribute("wrap", !scroll);
-    this._histEntity = undefined; // (re)fetch history for the (new) entity
+    this._histKey = undefined; // (re)fetch history for the (new) set of entities
   }
 
-  /** Once per entity, on load: how many times each value has appeared in
-   *  the tracked entity's recent history — a room queue's comma-separated
-   *  history says which rooms actually get picked, not just which are
-   *  configured. Re-sorting live as new history trickled in would shuffle
-   *  tiles under a thumb mid-tap, so this runs once per mount, not on every
-   *  hass update. */
+  /** Once per mount, on load: how often each tile has actually been picked,
+   *  from real history — not just which tiles are configured. Two sources,
+   *  because a room queue can be modeled either way:
+   *    - ONE tracked entity (`config.entity`) whose value is the pick, or a
+   *      CSV of picks when `multi_select` — a room queue's text history.
+   *    - PER-ITEM entities (each tile's own `entity`, no shared tracked
+   *      one) — a room of independent booleans. Ranked by how many times
+   *      each one's history shows it going "on".
+   *  Re-sorting live as new history trickled in would shuffle tiles under
+   *  a thumb mid-tap, so this runs once per mount, not on every hass
+   *  update. */
   async _loadHistoryRank() {
-    const entity = this.config?.entity;
-    if (!this.config?.sort_by_history || !entity || !this.hass || this._histEntity === entity) return;
-    this._histEntity = entity;
+    if (!this.config?.sort_by_history || !this.hass) return;
+    const items = this._items();
+    const perItemEntities = items.map((i) => i.entity).filter(Boolean);
+    const trackedEntity = this.config.entity;
+    // The key names WHICH set of entities this rank was built from, so a
+    // later config change (new items, or an entity finally configured)
+    // re-fetches instead of staying stuck on the first mount's set.
+    const key = trackedEntity || perItemEntities.join(",");
+    if (!key || this._histKey === key) return;
+    this._histKey = key;
+
     const days = this.config.sort_history_days ?? 30;
     const start = new Date(Date.now() - days * 24 * 3600 * 1000).toISOString();
+    const entityIds = trackedEntity ? [trackedEntity] : perItemEntities;
+    if (!entityIds.length) return;
     try {
       const result = await this.hass.connection.sendMessagePromise({
         type: "history/history_during_period",
         start_time: start,
-        entity_ids: [entity],
+        entity_ids: entityIds,
         minimal_response: true,
         no_attributes: true,
       });
       const counts = new Map();
-      for (const s of result?.[entity] || []) {
-        const val = s.s ?? s.state;
-        if (val == null || val === "" || val === "unknown" || val === "unavailable") continue;
-        // Multi-select values are a CSV of rooms, not one token — each
-        // named room in a historical value counts once for that value.
-        const parts = this.config.multi_select
-          ? String(val).split(",").map((v) => v.trim()).filter(Boolean)
-          : [String(val).trim()];
-        for (const p of parts) counts.set(p, (counts.get(p) || 0) + 1);
+      if (trackedEntity) {
+        for (const s of result?.[trackedEntity] || []) {
+          const val = s.s ?? s.state;
+          if (val == null || val === "" || val === "unknown" || val === "unavailable") continue;
+          // Multi-select values are a CSV of rooms, not one token — each
+          // named room in a historical value counts once for that value.
+          const parts = this.config.multi_select
+            ? String(val).split(",").map((v) => v.trim()).filter(Boolean)
+            : [String(val).trim()];
+          for (const p of parts) counts.set(p, (counts.get(p) || 0) + 1);
+        }
+      } else {
+        // Per-item entities: count how many times EACH ONE's own history
+        // shows it turning on — a boolean's "on" runs are its pick count.
+        for (const entity of perItemEntities) {
+          let n = 0;
+          for (const s of result?.[entity] || []) {
+            const val = String(s.s ?? s.state ?? "").toLowerCase();
+            if (["on", "true", "open", "unlocked", "cleaning", "home"].includes(val)) n++;
+          }
+          counts.set(entity, n);
+        }
       }
       this._historyRank = counts;
     } catch (_) {
@@ -125,7 +153,10 @@ class MateriaCards extends DisabledMixin(ActionMixin(LitElement)) {
     // Stable sort: ties keep their configured relative order, so a tile
     // with no history yet doesn't jump around against its equally-unranked
     // neighbours.
-    const rankOf = (it) => this._historyRank.get(String(it.value ?? it.label)) || 0;
+    // Per-item entities rank by their OWN entity_id (that's what the fetch
+    // counted); a tracked entity ranks by the item's value/label instead.
+    const rankOf = (it) =>
+      this._historyRank.get(this.config.entity ? String(it.value ?? it.label) : it.entity) || 0;
     return [...items].sort((a, b) => rankOf(b) - rankOf(a));
   }
 
