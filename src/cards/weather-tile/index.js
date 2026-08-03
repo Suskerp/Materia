@@ -136,38 +136,40 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     // to the pill's corners; with the content centred there is nothing left
     // to mirror but the shape itself.
     if (this.config.mirror) tiltDeg = -tiltDeg;
-    // Content is a plain centred stack now (see the long note in styles.js),
-    // so there are no position knobs left: icon_x/icon_y/temp_x/temp_y and
-    // the short-lived `spread` all died with the geometry that needed them.
+    // EVERY number below is manual and unclamped on purpose. Auto-fitting the
+    // content to the tilted pill was tried repeatedly and kept being wrong in
+    // one direction or another, so the card now just does what it is told:
+    // place each piece where the config says, at the size the config says,
+    // and let the pill be whatever shape the config says. Nothing here
+    // second-guesses those values or quietly nudges them to fit.
     //
-    // What DOES still matter is that the stack fits INSIDE the tilted pill.
-    // The pill reads on screen as an ellipse with semi-axes ~43cqi along the
-    // tilt and ~36.5cqi across it (a 100x85 stadium, scaled 0.86), and a
-    // centred box of half-width a / half-height b fits only while
-    //
-    //     ((a·cos45 + b·sin45) / 43)² + ((b·cos45 - a·sin45) / 36.5)² ≤ 1
-    //
-    // The defaults below sit at 0.93 (with min/max) and 0.99 (without) on
-    // that measure. The previous defaults — 30/40 and 30/50 — scored 1.24
-    // and 1.32, i.e. overflowed by a quarter to a third, and because the
-    // pill is tilted the overflow landed LOPSIDED: the min/max row poked out
-    // past the curve on the left while the glyph pushed out at the bottom.
-    // That asymmetry is what read as "not aligned" through several rounds of
-    // this. Raise either size and check it against the inequality first.
+    // All offsets are cqi — 1% of the TILE'S OWN WIDTH — for both axes, so x
+    // and y move by the same amount per unit and neither drifts when the
+    // tile's aspect ratio changes. (Mixing % of height with cqi is what
+    // broke every previous attempt.) 0,0 is dead centre.
     const iconSize = this.config.icon_size ?? (showMinmax ? 34 : 36);
     const textSize = this.config.text_size ?? (showMinmax ? 26 : 30);
+    const minmaxSize = this.config.minmax_size ?? 5.5;
+    const tempX = this.config.temp_x ?? 0;
+    const tempY = this.config.temp_y ?? -18;
+    const iconX = this.config.icon_x ?? 0;
+    const iconY = this.config.icon_y ?? 18;
     const width = this.config.width ?? 115;
     const ratio = (this.config.height ?? 85) / 100;
-    // Breathing room between the temperature and the glyph.
-    const gap = this.config.gap ?? 3;
+    // The pill's own scale, so the shape can grow to meet the content
+    // instead of the content always having to shrink to meet the shape.
+    const pillScale = (this.config.pill_scale ?? 86) / 100;
     // Global size 1–10 caps the tile width (10 = fill the cell). Everything
     // else is in container-query units, so the whole tile scales with it.
     const sizes = ["120px", "150px", "185px", "225px", "270px", "320px", "380px", "460px", "560px", "none"];
     const size = Math.min(10, Math.max(1, this.config.size ?? 10));
     const style =
       `--wt-size:${sizes[size - 1]};` +
-      `--wt-tilt:${tiltDeg}deg;--wt-icon-size:${iconSize}cqi;--wt-temp-size:${textSize}cqi;` +
-      `--wt-width:${width}%;--wt-ratio:${ratio};--wt-gap:${gap}cqi;` +
+      `--wt-tilt:${tiltDeg}deg;--wt-pill-scale:${pillScale};` +
+      `--wt-icon-size:${iconSize}cqi;--wt-temp-size:${textSize}cqi;--wt-minmax-size:${minmaxSize}cqi;` +
+      `--wt-width:${width}%;--wt-ratio:${ratio};` +
+      `--wt-temp-x:${tempX}cqi;--wt-temp-y:${tempY}cqi;` +
+      `--wt-icon-x:${iconX}cqi;--wt-icon-y:${iconY}cqi;` +
       `${bg ? `--wt-bg:${bg};` : ""}${fg ? `--wt-fg:${fg};` : ""}` +
       `${mm ? `--wt-minmax:${mm};--wt-minmax-opacity:1;` : ""}`;
 
