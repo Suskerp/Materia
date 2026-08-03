@@ -134,19 +134,20 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     // Mirror flips the tilt to the opposite diagonal (e.g. -45 → +45) so the
     // mirrored content (temp left, icon right) still follows the pill's slope.
     if (this.config.mirror) tiltDeg = -tiltDeg;
-    // Position is FLEXBOX now (styles.js) — the readout and icon dock to
-    // opposite corners via justify-content:space-between, which measures
-    // the box's real rendered height every time, instead of a hand-tuned
-    // top/bottom % fighting cqi (width-relative) sizes. That mismatch was
-    // the actual bug: at any aspect ratio other than the exact one a given
-    // percentage was eyeballed against, the two units drift apart — the
-    // show_minmax case just made the taller block visible enough to
-    // notice. icon_x/y and temp_x/y are gone; nothing left for them to
-    // offset now that layout isn't computed from a corner + a guess.
-    const iconSize = this.config.icon_size ?? (showMinmax ? 40 : 53);
+    // Layout is one symmetric offset from the pill's centre along its own
+    // axes now (see the long note in styles.js) — NOT four corner insets.
+    // icon_x/icon_y/temp_x/temp_y are gone with it: there is no corner left
+    // to offset from, and they were never exposed in the editor anyway.
+    const iconSize = this.config.icon_size ?? 53;
     const textSize = this.config.text_size ?? 30;
     const width = this.config.width ?? 115;
     const ratio = (this.config.height ?? 85) / 100;
+    // How far the readout and the glyph sit from centre, each in the
+    // opposite direction, as a % of the pill's width. The pair separates by
+    // 2 * spread * sqrt(2) on screen once the tilt is applied, so the
+    // minmax row (which makes the readout taller) needs a little more room
+    // than the bare temperature does.
+    const spread = this.config.spread ?? (showMinmax ? 20 : 18);
     // Global size 1–10 caps the tile width (10 = fill the cell). Everything
     // else is in container-query units, so the whole tile scales with it.
     const sizes = ["120px", "150px", "185px", "225px", "270px", "320px", "380px", "460px", "560px", "none"];
@@ -154,7 +155,7 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
     const style =
       `--wt-size:${sizes[size - 1]};` +
       `--wt-tilt:${tiltDeg}deg;--wt-icon-size:${iconSize}cqi;--wt-temp-size:${textSize}cqi;` +
-      `--wt-width:${width}%;--wt-ratio:${ratio};` +
+      `--wt-width:${width}%;--wt-ratio:${ratio};--wt-spread:${spread}cqi;` +
       `${bg ? `--wt-bg:${bg};` : ""}${fg ? `--wt-fg:${fg};` : ""}` +
       `${mm ? `--wt-minmax:${mm};--wt-minmax-opacity:1;` : ""}`;
 

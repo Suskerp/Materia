@@ -39,6 +39,12 @@ class MateriaWeatherTileEditor extends SmartEditorBase {
         icon: "mdi:palette-outline",
         fields: [
           { name: "size", label: "Size (10 = fill)", selector: { number: { min: 1, max: 10, step: 1, mode: "slider" } } },
+          {
+            name: "spread",
+            label: "Spread (gap between temperature and glyph)",
+            helper: "How far each sits from the pill's centre, in % of its width. Defaults to 20 with min/max shown, 18 without.",
+            selector: { number: { min: 0, max: 40, step: 1, mode: "slider" } },
+          },
           { name: "mirror", label: "Mirror (temperature left, icon right)", selector: { boolean: {} } },
           { name: "color", label: "Background", color: true, template: true, selector: { text: {} } },
           { name: "color_on", label: "Text / temperature", color: true, template: true, selector: { text: {} } },
