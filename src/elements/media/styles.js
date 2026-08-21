@@ -25,7 +25,7 @@ export const styles = css`
     max-width: var(--mm-art, 240px);
     aspect-ratio: 1;
     border-radius: 18px;
-    background-color: var(--md-sys-color-surface-variant, rgba(127, 127, 127, 0.2));
+    background-color: var(--md-sys-color-surface-container-highest, var(--md-sys-color-surface-variant, rgba(127, 127, 127, 0.2)));
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

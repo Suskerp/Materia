@@ -49,7 +49,7 @@ export const styles = [
 
     .track {
       fill: none;
-      stroke: var(--md-sys-color-surface-variant, rgba(0, 0, 0, 0.08));
+      stroke: var(--md-sys-color-secondary-container, var(--md-sys-color-surface-variant, rgba(0, 0, 0, 0.08)));
       stroke-width: 5;
       stroke-linecap: round;
     }

@@ -46,7 +46,7 @@ export const styles = css`
   }
 
   .track {
-    stroke: var(--md-sys-color-surface-variant, rgba(127, 127, 127, 0.3));
+    stroke: var(--md-sys-color-secondary-container, var(--md-sys-color-surface-variant, rgba(127, 127, 127, 0.3)));
     stroke-width: 4;
     stroke-linecap: round;
     fill: none;

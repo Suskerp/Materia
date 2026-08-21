@@ -81,7 +81,7 @@ class MateriaClimate extends ActionMixin(LitElement) {
       case "heat": return "var(--md-sys-cust-color-climate-heat-container)";
       case "cool": return "var(--md-sys-cust-color-climate-cool-container)";
       case "auto": return "var(--md-sys-cust-color-climate-auto-container)";
-      default: return "var(--md-sys-color-surface-variant)";
+      default: return "var(--md-sys-color-surface-container-highest, var(--md-sys-color-surface-variant))";
     }
   }
 
