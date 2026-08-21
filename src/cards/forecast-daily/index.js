@@ -1,4 +1,5 @@
 import { LitElement, html, svg } from "lit";
+import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
 import { hourlyItems } from "../forecast-hourly/row.js";
@@ -138,7 +139,7 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
     if (Number.isNaN(d.getTime())) return "";
     const today = new Date();
     if (index === 0 && this._dayKey(datetime) === this._dayKey(today)) {
-      return this.config.today_label ?? "Today";
+      return this.config.today_label ?? t("fc_today", this.hass);
     }
     const locale = this.hass?.locale?.language || navigator.language || "en";
     return d.toLocaleDateString(locale, { weekday: "short" });

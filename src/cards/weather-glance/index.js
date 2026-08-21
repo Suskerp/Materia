@@ -1,4 +1,5 @@
 import { LitElement, html, svg } from "lit";
+import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
 import { styles } from "./styles.js";
@@ -165,7 +166,7 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
         const n = p == null ? null : Number(p);
         if (n == null || !Number.isFinite(n)) return null;
         // Labeled — a bare "2 mm" in a metric line reads as nothing in particular.
-        text = `${entry.label ?? "Rain"} ${n} ${a.precipitation_unit ?? "mm"}`;
+        text = `${entry.label ?? t("wg_rain", this.hass)} ${n} ${a.precipitation_unit ?? "mm"}`;
         sev = n >= 10 ? 3 : n >= 2 ? 2 : n > 0 ? 1 : 0;
         break;
       }
@@ -195,7 +196,7 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
         if (!worst) return null;
         // Labeled so the subtitle reads "Pollen Grass High", not a bare
         // species name floating in the line.
-        const prefix = entry.label ?? this.config.pollen_label ?? "Pollen";
+        const prefix = entry.label ?? this.config.pollen_label ?? t("wm_pollen", this.hass);
         text = worst.v === 0
           ? (this.config.no_pollen_label ?? `${prefix} none`)
           : `${prefix} ${worst.label} ${LABELS[worst.v + 1] ?? worst.v}`;

@@ -38,7 +38,10 @@ class MateriaBadge extends ActionMixin(LitElement) {
   static getStubConfig(hass) {
     const entities = hass ? Object.keys(hass.states) : [];
     const entity = entities.find((e) => e.startsWith("light.") || e.startsWith("switch.")) || "";
-    return { name: "Badge", icon: "mdi:power-plug", variant: "primary", show_state: false, active_state: "on", entity };
+    // No active_state: the per-domain default in _isActive covers light/switch
+    // ("on") as well as cover/lock/vacuum/media_player. Baking "on" in here is
+    // what silently broke every badge whose entity was later swapped to a cover.
+    return { name: "Badge", icon: "mdi:power-plug", variant: "primary", show_state: false, entity };
   }
 
   static styles = [unavailableStyles, styles];
@@ -51,7 +54,6 @@ class MateriaBadge extends ActionMixin(LitElement) {
     // falls back to toggle for badges that never set one.
     this.config = {
       show_state: false,
-      active_state: "on",
       variant: "secondary",
       ...config,
     };

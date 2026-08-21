@@ -1,4 +1,5 @@
 import { LitElement, html, svg } from "lit";
+import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
 import { styles } from "./styles.js";
@@ -138,8 +139,8 @@ class MateriaWeatherHero extends ActionMixin(LitElement) {
     const lowNum = this._num(low);
     const highNum = this._num(high);
 
-    const nightLabel = this.config.night_label ?? "Night";
-    const dayLabel = this.config.day_label ?? "Day";
+    const nightLabel = this.config.night_label ?? t("wh_night", this.hass);
+    const dayLabel = this.config.day_label ?? t("wh_day", this.hass);
     const sep = this.config.separator ?? "•";
 
     const fg = this._isTemplate(this.config.color_on) ? this._resolvedColorOn : this.config.color_on;
@@ -163,7 +164,7 @@ class MateriaWeatherHero extends ActionMixin(LitElement) {
             <span class="temp-value">${unavailable || tempNum == null ? "—" : tempNum}</span><span class="temp-deg">°</span>
           </div>
           ${this.config.show_feels_like !== false && feelsNum != null && !unavailable
-            ? html`<div class="feels">${this.config.feels_like_label ?? "Feels like"} ${feelsNum}°</div>`
+            ? html`<div class="feels">${this.config.feels_like_label ?? t("wh_feels_like", this.hass)} ${feelsNum}°</div>`
             : ""}
           ${this.config.show_minmax !== false && (lowNum != null || highNum != null) && !unavailable
             ? html`<div class="minmax">

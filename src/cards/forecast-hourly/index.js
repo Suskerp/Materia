@@ -1,4 +1,5 @@
 import { LitElement, html } from "lit";
+import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { hourlyItems } from "./row.js";
 import { moonPhaseFrac } from "../weather-tile/icons.js";
@@ -120,7 +121,7 @@ class MateriaForecastHourly extends ActionMixin(LitElement) {
         ${this.config.show_header !== false
           ? html`<div class="header">
               <ha-icon icon="mdi:clock-outline"></ha-icon>
-              <span>${this.config.name ?? "Hourly forecast"}</span>
+              <span>${this.config.name ?? t("fc_hourly_forecast", this.hass)}</span>
             </div>`
           : ""}
         <div

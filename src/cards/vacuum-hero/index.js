@@ -411,7 +411,7 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
     const value = showProgress ? Math.round(progress) : batt;
     const caption = showProgress
       ? (this.config.progress_caption ?? "done")
-      : (this.config.battery_caption ?? "battery");
+      : (this.config.battery_caption ?? t("vh_battery_caption", this.hass));
 
     // Sub-line, in priority order.
     let secondary = null;

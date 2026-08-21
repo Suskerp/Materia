@@ -1,4 +1,5 @@
 import { LitElement, html, svg, nothing } from "lit";
+import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { cookiePath, arrowPath, moonPath, materialCookiePath, arcPath } from "../../utils/shapes.js";
 import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
@@ -241,7 +242,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     let bearing = this.config.bearing_entity
       ? this._numRaw(this.hass.states[this.config.bearing_entity]?.state)
       : this._numRaw(this._weatherAttr("wind_bearing"));
-    const from = bearing != null ? `${this.config.from_label ?? "From"} ${compass(bearing)}` : "";
+    const from = bearing != null ? `${this.config.from_label ?? t("wm_wind_from", this.hass)} ${compass(bearing)}` : "";
     // The canonical MaterialShapes ARROW (notched base — you can SEE where it
     // points), rotated to where the wind blows toward (bearing is the
     // direction it comes FROM), like the Pixel tile. No strength modulation:
@@ -386,9 +387,9 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     }
     if (amount == null) return nothing;
     const unit = this.config.unit ?? this._weatherAttr("precipitation_unit") ?? "mm";
-    const none = this.config.none_label ?? "No precipitation expected";
+    const none = this.config.none_label ?? t("wm_no_precip", this.hass);
     // Pixel layout: left-aligned value + subtitle, rainy glyph bottom-right.
-    const subtitle = amount > 0 ? (this.config.total_label ?? "Total rain for the day") : none;
+    const subtitle = amount > 0 ? (this.config.total_label ?? t("wm_total_rain", this.hass)) : none;
     return html`
       <div class="rect-tile precip">
         ${this._header("m3o:rainy", this.config.name ?? "Precipitation")}
@@ -425,7 +426,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
         ${this._header("mdi:water-percent", this.config.name ?? "Humidity")}
         <div class="big">${Math.round(hum)}<span class="unit">%</span></div>
         ${dew != null
-          ? html`<div class="dew"><span class="dew-chip">${Math.round(dew)}°</span> ${this.config.dew_label ?? "Dew point"}</div>`
+          ? html`<div class="dew"><span class="dew-chip">${Math.round(dew)}°</span> ${this.config.dew_label ?? t("wm_dew_point", this.hass)}</div>`
           : ""}
       </div>
     `;

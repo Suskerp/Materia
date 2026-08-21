@@ -1,4 +1,5 @@
 import { LitElement, html, svg, nothing } from "lit";
+import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { roundedPolygonPath } from "../../utils/shapes.js";
 import { styles } from "./styles.js";
@@ -164,10 +165,10 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     const critDry = this.config.critical_dry ?? 10;
     const dryBelow = this.config.dry_below ?? 20;
     const soggyAbove = this.config.soggy_above ?? 60;
-    if (v <= critDry) return { fill: SCALE.red, status: this.config.dry_label ?? "Needs water now" };
-    if (v <= dryBelow) return { fill: SCALE.orange, status: this.config.soon_label ?? "Water soon" };
-    if (v <= soggyAbove) return { fill: SCALE.green, status: this.config.optimal_label ?? "Optimal" };
-    return { fill: SCALE.blue, status: this.config.wet_label ?? "Overwatered" };
+    if (v <= critDry) return { fill: SCALE.red, status: this.config.dry_label ?? t("gt_needs_water_now", this.hass) };
+    if (v <= dryBelow) return { fill: SCALE.orange, status: this.config.soon_label ?? t("gt_water_soon", this.hass) };
+    if (v <= soggyAbove) return { fill: SCALE.green, status: this.config.optimal_label ?? t("gt_optimal", this.hass) };
+    return { fill: SCALE.blue, status: this.config.wet_label ?? t("gt_overwatered", this.hass) };
   }
 
   /* ---- percent: cookie that fills with the value -------------------------- */

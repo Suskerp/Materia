@@ -219,7 +219,6 @@ const STRINGS = {
   vh_water_shortage: { en: "Water shortage - cannot mop", nl: "Te weinig water - kan niet dweilen" },
   vh_clean_water_refill: { en: "Clean water tank needs refilling", nl: "Schoonwatertank moet bijgevuld worden" },
   vh_dirty_water_empty: { en: "Dirty water tank needs emptying", nl: "Vuilwatertank moet geleegd worden" },
-  vh_docked: { en: "Docked", nl: "In het dock" },
   vh_drying_mop: { en: "Drying the mop", nl: "Dweil wordt gedroogd" },
   vh_done_caption: { en: "done", nl: "klaar" },
   vh_battery_caption: { en: "battery", nl: "batterij" },
