@@ -15,6 +15,10 @@ export const styles = [
        passed wide) flexes while the trailing stays a fixed icon-button width. */
     :host([wide]) {
       flex: 1;
+      /* A flex item defaults to min-width:auto, which refuses to shrink below
+         its content — so the label's ellipsis never engaged and a long label
+         pushed the whole row past the viewport on a phone. */
+      min-width: 0;
     }
     :host([wide]) .wrap,
     :host([wide]) .split {

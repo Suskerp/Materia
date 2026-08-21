@@ -71,8 +71,16 @@ export const styles = [
       align-items: center;
     }
 
+    /* Truncates rather than growing. M3 buttons ellipsize a long label; nowrap
+       on its own cannot shrink below its content, so one long label (a
+       translated string is routinely half again the English) forced the whole
+       button row wider than a phone. The .sub rule below already did this —
+       .label was simply missed. */
     .label {
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
     }
 
     /* Substate line: the selected preset on a split button, the mode on a
