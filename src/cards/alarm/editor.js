@@ -84,6 +84,7 @@ class MateriaAlarmEditor extends SmartEditorBase {
       footnote: true,
       direct_switch: false,
       zones_start_expanded: false,
+      show_unavailable: true,
       hold_ms: 800,
       hint_ms: 2000,
       pending_timeout_ms: 10000,
@@ -213,6 +214,11 @@ class MateriaAlarmEditor extends SmartEditorBase {
           {
             name: "zones_start_expanded",
             label: "Start with the ready zones expanded",
+            selector: { boolean: {} },
+          },
+          {
+            name: "show_unavailable",
+            label: "List zones the panel cannot see",
             selector: { boolean: {} },
           },
         ],

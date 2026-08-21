@@ -442,7 +442,15 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
         out.skippable = this._canSkip(out);
         out.unskippable = this._canUnskip(out);
         return out;
-      });
+      })
+      // show_unavailable: false drops them here, at the single point every
+      // other reader goes through — the groups, the counts and the summary
+      // rows all derive from this list, so nothing can disagree about whether
+      // they exist. Default stays true: a zone the panel cannot see is worth
+      // saying out loud on a panel where it is news. On an install where seven
+      // of them are permanently dark it is just noise, which is what the flag
+      // is for. They were never in the not-ready count either way.
+      .filter((z) => this.config.show_unavailable !== false || !z.unavailable);
     // Attention first, the unknowns next, then the fine ones, and last the
     // ones deliberately being ignored. Ties break on the panel's own zone
     // number so zone 2 never sorts after zone 10.
