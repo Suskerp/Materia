@@ -289,6 +289,9 @@ const STRINGS = {
   al_aria_bypass: { en: "Bypass {name}", nl: "{name} blokkeren" },
   al_aria_unbypass: { en: "Stop bypassing {name}", nl: "{name} niet meer blokkeren" },
   al_aria_zones_toggle: { en: "Show ready zones", nl: "Toon zones die gereed zijn" },
+  al_zones_unavailable: { en: "{n} zones unavailable", nl: "{n} zones niet beschikbaar" },
+  al_zones_unavailable_one: { en: "{n} zone unavailable", nl: "{n} zone niet beschikbaar" },
+  al_aria_unavail_toggle: { en: "Show unavailable zones", nl: "Toon zones die niet beschikbaar zijn" },
 
   al_needs_entity: { en: "Set an alarm_control_panel entity", nl: "Stel een alarm_control_panel-entiteit in" },
   al_no_modes: { en: "This panel offers no arm modes", nl: "Dit paneel biedt geen alarmmodi" },

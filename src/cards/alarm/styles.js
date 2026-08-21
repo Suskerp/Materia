@@ -499,7 +499,7 @@ export const styles = [
     }
 
     /* A bypassed zone is a deliberate hole in the perimeter, so its chip is
-        drawn as an outline that is not quite closed. */
+       drawn as an outline that is not quite closed. */
     .chips {
       display: flex;
       flex-wrap: wrap;
@@ -510,6 +510,14 @@ export const styles = [
     .chip.bypassed {
       border-style: dashed;
       opacity: 0.8;
+    }
+
+    /* A bypassed zone with nothing to un-bypass it: still stated, but not
+       dressed as a control. Rendered as a span, so it also needs the cursor
+       and the state layer taken back off. */
+    .chip.inert {
+      cursor: default;
+      pointer-events: none;
     }
 
     /* The collapsed summary. A real button because it is a real control. */
@@ -534,6 +542,22 @@ export const styles = [
 
     .zrow.ok > ha-icon {
       color: var(--md-sys-color-primary);
+    }
+
+    /* UNAVAILABLE is deliberately NOT the warning role. A zone the panel
+       cannot see is an unknown, not an open door, and spending the amber here
+       would leave nothing louder to say "this one is actually open" — the
+       seven permanently unavailable zones on this install would have owned the
+       warning colour forever. Outline-variant ink on the plain row: present,
+       readable, and visibly not a verdict. */
+    .zrow.unavail {
+      background: color-mix(in srgb, var(--ma-fg) 6%, transparent);
+    }
+
+    .zrow.unavail > ha-icon,
+    .zrow.unavail .zname {
+      color: var(--md-sys-color-on-surface-variant, var(--ma-fg));
+      opacity: 0.85;
     }
 
     .note {

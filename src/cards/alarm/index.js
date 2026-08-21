@@ -108,6 +108,9 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     /** Whether the ready-zone list is expanded. Undefined until the reader
      *  touches it, so the config default can seed it at render time. */
     _zonesOpen: { state: true },
+    /** Whether the unavailable-zone list is expanded. Always starts closed:
+     *  it is a footnote about the install, not something to read every time. */
+    _unavailOpen: { state: true },
   };
 
   static styles = styles;
@@ -119,10 +122,27 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
   static getStubConfig(hass) {
     // Point at whatever panel this install actually has, so the card is useful
     // the moment it is dropped in rather than showing an entity-not-found.
-    const first = hass
-      ? Object.keys(hass.states).find((id) => id.startsWith("alarm_control_panel."))
-      : undefined;
-    return first ? { entity: first } : {};
+    const ids = hass ? Object.keys(hass.states) : [];
+    const first = ids.find((id) => id.startsWith("alarm_control_panel."));
+    const config = first ? { entity: first } : {};
+
+    /* Zone discovery and the bypass actions are SNIFFED, never assumed. The
+       card knows nothing about any particular alarm integration; it only
+       recognises that if an install has zone entities in a known shape AND the
+       services to skip them, pre-filling that is strictly better than handing
+       someone an empty zone list and a regex to write. An install without them
+       gets a plain panel card and no dead config keys. */
+    const zoneish = ids.find((id) => /^sensor\..*zone\d+state$/i.test(id));
+    if (zoneish) {
+      const domain = zoneish.split(".")[1].replace(/_?zone\d+state$/i, "");
+      config.zone_filter = "sensor." + domain + "_zone";
+      const svc = hass?.services?.[domain];
+      if (svc?.bypass && svc?.unbypass) {
+        config.bypass_action = { action: "perform-action", perform_action: domain + ".bypass", data: { zone: "{zone}" } };
+        config.unbypass_action = { action: "perform-action", perform_action: domain + ".unbypass", data: { zone: "{zone}" } };
+      }
+    }
+    return config;
   }
 
   setConfig(config) {
@@ -139,6 +159,7 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     this._hint = null;
     this._refused = null;
     this._zonesOpen = undefined;
+    this._unavailOpen = false;
   }
 
   connectedCallback() {
@@ -270,48 +291,209 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     clearTimeout(this._pinTimer);
   }
 
-  /* ---- zones ------------------------------------------------------------ */
+  /* ---- zones ------------------------------------------------------------
+     A zone is EITHER a plain binary contact (on / open / unlocked) or a panel
+     sensor reporting a human word ("Ready" / "Not Ready" / "Bypassed"), because
+     those are the two shapes real installs come in. Both go through the same
+     three predicates below rather than through a per-integration branch.
 
-  _on(id) {
-    const st = id ? this.hass?.states[id] : undefined;
-    if (!st) return false;
-    return ON_STATES.has(String(st.state).toLowerCase());
+     WHAT CHANGED AND WHY. This used to read bypass state out of a mirror
+     helper (an input_boolean per zone) and write to it. A panel that bypasses
+     NATIVELY makes that wrong twice over: the helper is a second truth to
+     drift from, and the panel already answers both questions itself — whether
+     a zone IS bypassed (its own state word) and whether it MAY be (can_bypass).
+     So the card now reads the zone and fires a real service action. */
+
+  /** The word a zone's readiness is judged from. The entity state comes first
+   *  and deliberately so: an unavailable entity has NO attributes at all, so
+   *  anything that read an attribute first would score those zones as ready
+   *  and quietly claim a perimeter that is not being watched. The attribute
+   *  fallbacks are for integrations that park the interesting word there. */
+  _zoneWord(st) {
+    const raw = String(st?.state ?? "").trim();
+    if (raw && raw !== "unknown") return raw;
+    return String(st?.attributes?.status ?? st?.attributes?.state ?? raw).trim();
   }
 
-  /** Config zones, resolved against hass. Sorted so the ones needing a
-   *  decision come first and the bypassed ones sit last. */
+  _zoneUnavailable(st) {
+    if (!st) return true;
+    const w = this._zoneWord(st).toLowerCase();
+    return w === "" || w === "unavailable" || w === "unknown" || w === "none";
+  }
+
+  /** Bypassed, from the zone's OWN word rather than from a helper: a panel
+   *  that bypasses natively is the authority on what it is currently ignoring.
+   *  Matched on the "bypass" STEM, case-insensitively, because the exact
+   *  spelling is unobserved on this install (nothing is bypassed right now) —
+   *  so "Bypassed", "Bypass" and "Bypassing" all have to land. Guessing one
+   *  exact string and being wrong would silently show a skipped zone as armed. */
+  _zoneBypassed(st) {
+    return /^bypass/i.test(this._zoneWord(st));
+  }
+
+  /** Not ready: the panel's own words, or the binary-contact vocabulary for an
+   *  ordinary door sensor. Only ever consulted after bypassed and unavailable
+   *  have been ruled out, so nothing is counted twice. */
+  _zoneNotReady(st) {
+    const w = this._zoneWord(st).toLowerCase();
+    if (w === "not ready" || w === "notready") return true;
+    return ON_STATES.has(w);
+  }
+
+  get _zonePattern() {
+    // The UltraSync entity_id shape, which is also the pattern the user wrote.
+    return this.config.zone_pattern ?? "zone(\\d+)state$";
+  }
+
+  /** The panel's zone NUMBER, parsed out of the entity_id, because the bypass
+   *  services take a number and not an entity — without this there is nothing
+   *  to send. A pattern that does not match yields null, and a zone with a
+   *  null number offers no skip action at all: firing the service anyway would
+   *  be a blind write to whatever the panel considers zone 0. */
+  _zoneNumber(entityId) {
+    const src = this._zonePattern;
+    if (this.__zoneReSrc !== src) {
+      this.__zoneReSrc = src;
+      try {
+        this.__zoneRe = new RegExp(src, "i");
+      } catch (_) {
+        // A typo in a user-supplied regex must not take the whole card down.
+        this.__zoneRe = null;
+      }
+    }
+    if (!this.__zoneRe) return null;
+    const m = this.__zoneRe.exec(String(entityId ?? ""));
+    if (!m || m[1] === undefined) return null;
+    const n = Number(m[1]);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  /** Zone auto-discovery. Forty-seven hand-written zone entries is not a
+   *  reasonable ask, so `zone_filter` finds them instead — a plain entity_id
+   *  prefix, or a regex when it looks like one. An explicit `zones` list still
+   *  wins, so a curated subset (four doors on a bedside dashboard) is intact. */
+  _discoverZones() {
+    const f = this.config.zone_filter;
+    if (!f || !this.hass?.states) return [];
+    const src = String(f);
+    let test;
+    // A bare prefix is the common case and must not be misread as a pattern:
+    // only a string carrying regex metacharacters is compiled as one.
+    if (/[\\^$.*+?()[\]{}|]/.test(src)) {
+      try {
+        const re = new RegExp(src, "i");
+        test = (id) => re.test(id);
+      } catch (_) {
+        test = (id) => id.startsWith(src);
+      }
+    } else {
+      test = (id) => id.startsWith(src);
+    }
+    return Object.keys(this.hass.states)
+      .filter(test)
+      .map((entity) => ({ entity }));
+  }
+
+  /** Whether to offer the skip action on a zone at all.
+   *
+   *  THE PANEL DECIDES. can_bypass is the panel's own answer and a false is
+   *  final — a Skip button on a 24-hour or fire zone is a button that cannot
+   *  work, and offering it would be a lie the user only discovers mid-arm.
+   *  When the attribute is ABSENT (an unavailable zone has no attributes at
+   *  all, and integrations other than this one never had the attribute) it
+   *  falls back to "offer it if there is an action to fire and a number to
+   *  fire it with", which is the most this card can honestly know. */
+  _canSkip(z) {
+    if (z.unavailable) return false;
+    if (!this.config.bypass_action || z.zone == null) return false;
+    const attr = z.st?.attributes?.can_bypass;
+    if (attr === undefined || attr === null) return true;
+    return attr === true || attr === 1 || /^(true|yes|1)$/i.test(String(attr));
+  }
+
+  /** Whether a bypassed zone can be brought back in. */
+  _canUnskip(z) {
+    return !!this.config.unbypass_action && z.zone != null;
+  }
+
+  /** Zones, from config or discovery, resolved against hass and sorted. */
   get _zones() {
-    const list = Array.isArray(this.config.zones) ? this.config.zones : [];
+    const explicit = Array.isArray(this.config.zones) ? this.config.zones : null;
+    const list = explicit && explicit.length ? explicit : this._discoverZones();
     const resolved = list
       .filter((z) => z && z.entity)
       .map((z) => {
         const st = this.hass?.states[z.entity];
-        const bypassed = !!z.bypass_entity && this._on(z.bypass_entity);
-        return {
+        const unavailable = this._zoneUnavailable(st);
+        const bypassed = !unavailable && this._zoneBypassed(st);
+        const out = {
           ...z,
           st,
-          open: this._on(z.entity),
+          zone: this._zoneNumber(z.entity),
+          unavailable,
           bypassed,
-          name: z.name || st?.attributes?.friendly_name || z.entity,
+          open: !unavailable && !bypassed && this._zoneNotReady(st),
+          // friendly_name beats the panel's short `name` attribute on purpose:
+          // "Raam Pool Badkamer" is a room, "MC pool badkamer" is a wiring
+          // label. An explicit config name still wins over both.
+          name: z.name || st?.attributes?.friendly_name || st?.attributes?.name || z.entity,
           icon: z.icon || st?.attributes?.icon || "m3o:sensors",
         };
+        out.skippable = this._canSkip(out);
+        out.unskippable = this._canUnskip(out);
+        return out;
       });
-    const rank = (z) => (z.bypassed ? 2 : z.open ? 0 : 1);
-    return resolved.sort((a, b) => rank(a) - rank(b));
+    // Attention first, the unknowns next, then the fine ones, and last the
+    // ones deliberately being ignored. Ties break on the panel's own zone
+    // number so zone 2 never sorts after zone 10.
+    const rank = (z) => (z.bypassed ? 3 : z.open ? 0 : z.unavailable ? 1 : 2);
+    return resolved.sort((a, b) => {
+      const d = rank(a) - rank(b);
+      if (d) return d;
+      if (a.zone != null && b.zone != null) return a.zone - b.zone;
+      return String(a.name).localeCompare(String(b.name));
+    });
   }
 
-  /** Zones standing in the way of a clean arm: open, and not deliberately
-   *  skipped. This is the number the sweep turns amber for. */
+  /** Zones standing in the way of a clean arm. This is the number the sweep
+   *  turns amber for, and UNAVAILABLE ZONES ARE NOT IN IT — a zone the panel
+   *  cannot see is not a zone that is open, and counting the seven permanently
+   *  unavailable ones here would leave the gesture amber forever, which is the
+   *  fastest way to teach someone to ignore a warning colour. They get their
+   *  own honest row instead. */
   _notReady(zones) {
-    return zones.filter((z) => z.open && !z.bypassed);
+    return zones.filter((z) => z.open);
   }
 
-  _setBypass(zone, on) {
-    if (!zone.bypass_entity) return;
-    // homeassistant.turn_on/off rather than the entity domain service, so an
-    // input_boolean, a switch and a helper all work without a domain table.
-    this._callService("homeassistant", on ? "turn_on" : "turn_off", { entity_id: zone.bypass_entity });
-    this._fireHaptic("selection");
+  /** Substitute the panel's zone number into an action config.
+   *
+   *  A value that is EXACTLY the placeholder becomes a real NUMBER, because
+   *  UltraSync's `zone` field is numeric and the string "7" is not the same
+   *  thing to a service schema. A placeholder embedded in a longer string
+   *  splices in as text. Deliberately not a template language: one
+   *  placeholder, no expressions, nothing to evaluate. The whole action is
+   *  walked, not only `data`, so `target` and `service_data` work too. */
+  _withZone(value, zone) {
+    if (typeof value === "string") {
+      if (value.trim() === "{zone}") return zone;
+      return value.includes("{zone}") ? value.split("{zone}").join(String(zone)) : value;
+    }
+    if (Array.isArray(value)) return value.map((v) => this._withZone(v, zone));
+    if (value && typeof value === "object") {
+      const out = {};
+      for (const [k, v] of Object.entries(value)) out[k] = this._withZone(v, zone);
+      return out;
+    }
+    return value;
+  }
+
+  /** Fire the skip / un-skip action for one zone. Never fires without a parsed
+   *  number, and never for a zone the panel said it will not bypass. */
+  _fireZoneAction(z, which) {
+    const action = which === "bypass" ? this.config.bypass_action : this.config.unbypass_action;
+    if (!action || z.zone == null) return;
+    if (which === "bypass" && !z.skippable) return;
+    this._handleAction(this._withZone(action, z.zone));
   }
 
   /* ---- the gesture -----------------------------------------------------
@@ -903,10 +1085,64 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     return this._zonesOpen ?? !!this.config.zones_start_expanded;
   }
 
+  get _unavailExpanded() {
+    return !!this._unavailOpen;
+  }
+
+  /** One zone row. Shared by every group so a zone looks like itself
+   *  wherever it appears, and so the substate line always comes from HA's own
+   *  formatter (which already localises "Ready" / "Not Ready" for us). */
+  _zoneRow(z, cls = "") {
+    return html`
+      <div class="zrow ${cls}">
+        <ha-icon .icon=${z.icon}></ha-icon>
+        <div class="ztext">
+          <span class="zname">${z.name}</span>
+          <span class="zstate">${this.hass.formatEntityState?.(z.st) ?? this._zoneWord(z.st)}</span>
+        </div>
+        ${z.skippable
+          ? html`
+              <button
+                class="chip"
+                aria-label=${t("al_aria_bypass", this.hass, { name: z.name })}
+                @click=${() => this._fireZoneAction(z, "bypass")}
+              >
+                <ha-icon icon="m3o:visibility-off"></ha-icon>
+                <span>${t("al_zone_bypass", this.hass)}</span>
+              </button>
+            `
+          : nothing}
+      </div>
+    `;
+  }
+
+  /** A collapsed count that opens into its rows. Used for both the ready
+   *  zones and the unavailable ones: with discovery on, either list can be
+   *  forty rows long, and a card that dumps forty rows to say "everything is
+   *  fine" has buried the two lines that matter. */
+  _zoneSummary({ icon, cls, label, aria, open, toggle, rows }) {
+    return html`
+      <div class="zgroup">
+        <button
+          class="zrow summary ${cls} ${open ? "open" : ""}"
+          aria-expanded=${open ? "true" : "false"}
+          aria-label=${aria || label}
+          @click=${toggle}
+        >
+          <ha-icon .icon=${icon}></ha-icon>
+          <div class="ztext"><span class="zname">${label}</span></div>
+          <ha-icon class="chev" icon="m3of:arrow-drop-down"></ha-icon>
+        </button>
+        ${open ? rows.map((z) => this._zoneRow(z)) : nothing}
+      </div>
+    `;
+  }
+
   _renderZones(zones) {
-    const notReady = zones.filter((z) => z.open && !z.bypassed);
+    const notReady = zones.filter((z) => z.open);
+    const unavailable = zones.filter((z) => z.unavailable);
     const bypassed = zones.filter((z) => z.bypassed);
-    const ready = zones.filter((z) => !z.open && !z.bypassed);
+    const ready = zones.filter((z) => !z.open && !z.bypassed && !z.unavailable);
 
     return html`
       <div class="zones">
@@ -914,69 +1150,43 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
           ? html`
               <div class="zgroup">
                 <div class="zgroup-title">${t("al_zones_not_ready", this.hass)}</div>
-                ${notReady.map(
-                  (z) => html`
-                    <div class="zrow notready">
-                      <ha-icon .icon=${z.icon}></ha-icon>
-                      <div class="ztext">
-                        <span class="zname">${z.name}</span>
-                        <span class="zstate">${this.hass.formatEntityState?.(z.st) ?? t("state_open", this.hass)}</span>
-                      </div>
-                      ${z.bypass_entity
-                        ? html`
-                            <button
-                              class="chip"
-                              aria-label=${t("al_aria_bypass", this.hass, { name: z.name })}
-                              @click=${() => this._setBypass(z, true)}
-                            >
-                              <ha-icon icon="m3o:visibility-off"></ha-icon>
-                              <span>${t("al_zone_bypass", this.hass)}</span>
-                            </button>
-                          `
-                        : nothing}
-                    </div>
-                  `
-                )}
+                ${notReady.map((z) => this._zoneRow(z, "notready"))}
               </div>
             `
           : nothing}
 
+        ${unavailable.length
+          ? this._zoneSummary({
+              icon: "m3o:sensors-off",
+              cls: "unavail",
+              label: t(
+                unavailable.length === 1 ? "al_zones_unavailable_one" : "al_zones_unavailable",
+                this.hass,
+                { n: unavailable.length }
+              ),
+              aria: t("al_aria_unavail_toggle", this.hass),
+              open: this._unavailExpanded,
+              toggle: () => {
+                this._unavailOpen = !this._unavailExpanded;
+              },
+              rows: unavailable,
+            })
+          : nothing}
+
         ${ready.length
-          ? html`
-              <div class="zgroup">
-                <button
-                  class="zrow ok summary ${this._zonesExpanded ? "open" : ""}"
-                  aria-expanded=${this._zonesExpanded ? "true" : "false"}
-                  aria-label=${t("al_aria_zones_toggle", this.hass)}
-                  @click=${() => {
-                    this._zonesOpen = !this._zonesExpanded;
-                  }}
-                >
-                  <ha-icon icon="m3of:check-circle"></ha-icon>
-                  <div class="ztext">
-                    <span class="zname">
-                      ${t(ready.length === 1 ? "al_zones_ready_one" : "al_zones_ready_count", this.hass, {
-                        n: ready.length,
-                      })}
-                    </span>
-                  </div>
-                  <ha-icon class="chev" icon="m3of:arrow-drop-down"></ha-icon>
-                </button>
-                ${this._zonesExpanded
-                  ? ready.map(
-                      (z) => html`
-                        <div class="zrow">
-                          <ha-icon .icon=${z.icon}></ha-icon>
-                          <div class="ztext">
-                            <span class="zname">${z.name}</span>
-                            <span class="zstate">${this.hass.formatEntityState?.(z.st) ?? ""}</span>
-                          </div>
-                        </div>
-                      `
-                    )
-                  : nothing}
-              </div>
-            `
+          ? this._zoneSummary({
+              icon: "m3of:check-circle",
+              cls: "ok",
+              label: t(ready.length === 1 ? "al_zones_ready_one" : "al_zones_ready_count", this.hass, {
+                n: ready.length,
+              }),
+              aria: t("al_aria_zones_toggle", this.hass),
+              open: this._zonesExpanded,
+              toggle: () => {
+                this._zonesOpen = !this._zonesExpanded;
+              },
+              rows: ready,
+            })
           : nothing}
 
         ${bypassed.length
@@ -984,18 +1194,28 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
               <div class="zgroup">
                 <div class="zgroup-title">${t("al_zones_bypassed", this.hass)}</div>
                 <div class="chips">
-                  ${bypassed.map(
-                    (z) => html`
-                      <button
-                        class="chip bypassed"
-                        aria-label=${t("al_aria_unbypass", this.hass, { name: z.name })}
-                        @click=${() => this._setBypass(z, false)}
-                      >
-                        <ha-icon .icon=${z.icon}></ha-icon>
-                        <span>${z.name}</span>
-                        <ha-icon icon="m3o:close"></ha-icon>
-                      </button>
-                    `
+                  ${bypassed.map((z) =>
+                    z.unskippable
+                      ? html`
+                          <button
+                            class="chip bypassed"
+                            aria-label=${t("al_aria_unbypass", this.hass, { name: z.name })}
+                            @click=${() => this._fireZoneAction(z, "unbypass")}
+                          >
+                            <ha-icon .icon=${z.icon}></ha-icon>
+                            <span>${z.name}</span>
+                            <ha-icon icon="m3o:close"></ha-icon>
+                          </button>
+                        `
+                      : // No un-skip action configured, or no zone number to
+                        // send: still SAY the zone is being skipped, just
+                        // without a control that would do nothing.
+                        html`
+                          <span class="chip bypassed inert">
+                            <ha-icon .icon=${z.icon}></ha-icon>
+                            <span>${z.name}</span>
+                          </span>
+                        `
                   )}
                 </div>
               </div>
@@ -1011,7 +1231,12 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
 
   getCardSize() {
     // Hero plus the mode row, plus roughly a row per zone group on screen.
-    return 6 + (Array.isArray(this.config?.zones) && this.config.zones.length ? 2 : 0);
+    // Reads whether zones are CONFIGURED rather than counting resolved ones:
+    // this is called before hass lands, so discovery would return nothing and
+    // report a card two rows shorter than it renders.
+    const hasZones = !!this.config?.zone_filter
+      || (Array.isArray(this.config?.zones) && this.config.zones.length > 0);
+    return 6 + (hasZones ? 2 : 0);
   }
 }
 

@@ -101,6 +101,8 @@ class MateriaAlarmEditor extends SmartEditorBase {
       st?.attributes?.code_arm_required ? "c" : "",
       (this._config?.zones || []).length,
       (this._config?.modes || []).join(","),
+      this._config?.zone_filter ? "f" : "",
+      this._config?.bypass_action ? "b" : "",
     ].join("|");
   }
 
@@ -165,6 +167,40 @@ class MateriaAlarmEditor extends SmartEditorBase {
             name: "hint_ms",
             label: "How long a refusal hint stays up (ms, default 2000)",
             selector: { number: { min: 500, max: 8000, step: 100, mode: "box" } },
+          },
+        ],
+      },
+      {
+        title: "Zones",
+        icon: "mdi:door-closed-lock",
+        expanded: false,
+        fields: [
+          {
+            name: "zone_filter",
+            label: "Find zones automatically",
+            helper:
+              "An entity_id prefix (sensor.ultrasync_zone) or a regex. Leave empty and add zones by hand below instead. A hand-written list always wins over this.",
+            selector: { text: {} },
+          },
+          {
+            name: "zone_pattern",
+            label: "Zone number pattern (default zone(\\d+)state$)",
+            helper:
+              "How to read the panel's zone NUMBER out of an entity_id — the bypass services take a number, not an entity. A zone this does not match offers no Bypass button rather than firing a call with no zone.",
+            selector: { text: {} },
+          },
+          {
+            name: "bypass_action",
+            label: "Bypass action",
+            helper:
+              'Fired by the Bypass button. Write {zone} anywhere in the data and the zone number is substituted in — e.g. ultrasync.bypass with data zone: {zone}. Leave empty to hide the button everywhere.',
+            selector: { ui_action: { default_action: "none" } },
+          },
+          {
+            name: "unbypass_action",
+            label: "Un-bypass action",
+            helper: "Fired by tapping a bypassed chip. Same {zone} substitution.",
+            selector: { ui_action: { default_action: "none" } },
           },
         ],
       },
@@ -246,18 +282,12 @@ class MateriaAlarmEditor extends SmartEditorBase {
       {
         name: "entity",
         label: "Zone sensor",
-        helper: "A door, window or contact. Not ready means on / open / unlocked.",
+        helper:
+          'A door, window or contact. Not ready means on / open / unlocked, or the panel\'s own "Not Ready"; a state starting with "Bypass" counts as bypassed. Whether a Bypass button appears is the panel\'s call, via its can_bypass attribute.',
         selector: { entity: { domain: ["binary_sensor", "sensor", "lock", "cover", "input_boolean", "switch"] } },
       },
       { name: "name", label: "Name (optional — defaults to the entity name)", selector: { text: {} } },
       { name: "icon", label: "Icon (optional)", selector: { icon: {} } },
-      {
-        name: "bypass_entity",
-        label: "Bypass helper (optional)",
-        helper:
-          "Usually an input_boolean your automation reads when arming. Zones without one simply do not offer the Bypass action.",
-        selector: { entity: { domain: ["input_boolean", "switch"] } },
-      },
     ];
   }
 
@@ -320,9 +350,11 @@ class MateriaAlarmEditor extends SmartEditorBase {
         </ha-icon-button>
       </div>
       <div class="options-note">
-        The card sorts these itself — whatever needs a decision floats to the
-        top and anything bypassed drops to the bottom — so this order only
-        matters as a tie-break between zones in the same group.
+        Only needed when you are NOT using "Find zones automatically" above, or
+        when you want a curated subset. The card sorts these itself — whatever
+        needs a decision floats to the top, unavailable zones next, and
+        anything bypassed drops to the bottom — so this order only matters as a
+        tie-break inside a group.
       </div>
 
       ${sortableList(
