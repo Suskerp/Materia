@@ -40,6 +40,9 @@ import "./cards/select-hero/index.js";
 import "./cards/heading/index.js";
 import "./cards/doorbell/index.js";
 import "./cards/tabs/index.js";
+import "./cards/expander/index.js";
+import "./cards/level/index.js";
+import "./cards/alarm/index.js";
 
 // Elements (native Lit)
 import "./elements/badge/index.js";
@@ -57,7 +60,7 @@ import "./elements/clock/index.js";
 injectFonts();
 
 // Version info
-const VERSION = "0.53.3";
+const VERSION = "0.54.0";
 console.info(
   `%c MATERIA %c v${VERSION} `,
   "color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;",

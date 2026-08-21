@@ -1,0 +1,364 @@
+import { html, css } from "lit";
+import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
+import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
+
+/** Every arm mode the card knows how to offer, for the mode-order picker.
+ *  The CARD derives what a panel actually supports from supported_features;
+ *  this list only exists so a config can narrow or reorder that. */
+const MODE_OPTIONS = [
+  { value: "home", label: "Home" },
+  { value: "away", label: "Away" },
+  { value: "night", label: "Night" },
+  { value: "vacation", label: "Vacation" },
+  { value: "custom", label: "Custom bypass" },
+];
+
+class MateriaAlarmEditor extends SmartEditorBase {
+  static properties = {
+    _expanded: { state: true },
+  };
+
+  static styles = [
+    SmartEditorBase.styles,
+    css`
+      .options-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 16px;
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .options-note {
+        font-size: 12px;
+        opacity: 0.65;
+        padding: 0 4px 4px;
+      }
+      .option-card {
+        border: 1px solid var(--divider-color, rgba(0, 0, 0, 0.12));
+        border-radius: 12px;
+        margin-top: 8px;
+        overflow: hidden;
+      }
+      .option-header {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 4px 4px 12px;
+        background: var(--secondary-background-color, rgba(0, 0, 0, 0.04));
+      }
+      .option-header span {
+        flex: 1;
+        font-size: 13px;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .option-body {
+        padding: 8px 12px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .option-body ha-form {
+        display: block;
+        width: 100%;
+      }
+    `,
+  ];
+
+  setConfig(config) {
+    super.setConfig(config);
+    this._expanded ??= null;
+  }
+
+  /* EVERY boolean and number is seeded with the card's own default.
+     An option absent from config arrives as `undefined`, which ha-form draws
+     as OFF or 0 — so the toggle claims a feature is disabled when it is
+     actually on, and merely opening this editor and saving would write that
+     wrong value for real. Config still wins, so an explicit false survives. */
+  _formData() {
+    return {
+      hero: true,
+      footnote: true,
+      direct_switch: false,
+      zones_start_expanded: false,
+      hold_ms: 800,
+      hint_ms: 2000,
+      pending_timeout_ms: 10000,
+      ...this._config,
+    };
+  }
+
+  /* Fields appear and disappear with whether the panel wants a code and
+     whether any zone is configured, so the memoized sections have to be
+     invalidated on both. */
+  _sectionsSignature() {
+    const st = this.hass?.states[this._config?.entity];
+    return [
+      this._config?.entity || "",
+      st?.attributes?.code_arm_required ? "c" : "",
+      (this._config?.zones || []).length,
+      (this._config?.modes || []).join(","),
+    ].join("|");
+  }
+
+  get _sections() {
+    const st = this.hass?.states[this._config?.entity];
+    const codeWanted = !!st?.attributes?.code_arm_required || !!st?.attributes?.code_format;
+
+    return [
+      {
+        title: "Setup",
+        icon: "mdi:tune",
+        fields: [
+          {
+            name: "entity",
+            label: "Alarm panel",
+            selector: { entity: { domain: ["alarm_control_panel"] } },
+            required: true,
+          },
+          {
+            name: "modes",
+            label: "Modes to offer (optional)",
+            helper:
+              "Leave empty to offer exactly what the panel reports it supports. Set this only to narrow the row or to change its order.",
+            selector: { select: { multiple: true, mode: "list", options: MODE_OPTIONS } },
+          },
+          ...(codeWanted
+            ? [{
+                name: "code",
+                label: "Code",
+                helper:
+                  "This panel asks for a code. Without one the hold is refused rather than firing a call the panel will reject. Note it is stored in plain text in the dashboard config.",
+                selector: { text: { type: "password" } },
+              }]
+            : []),
+        ],
+      },
+      {
+        title: "Gesture",
+        icon: "mdi:gesture-tap-hold",
+        fields: [
+          {
+            name: "hold_ms",
+            label: "Hold for (ms, default 800)",
+            helper:
+              "Keep this above 500ms — the platform long-press timeout — or an ordinary long-press on the dashboard commits by accident.",
+            selector: { number: { min: 300, max: 5000, step: 50, mode: "box" } },
+          },
+          {
+            name: "direct_switch",
+            label: "Allow switching between armed modes",
+            helper:
+              "Off by default: while armed, the other modes are inert and must be disarmed through first. Leaving a house armed in the wrong shape is the mistake that gating prevents.",
+            selector: { boolean: {} },
+          },
+          {
+            name: "pending_timeout_ms",
+            label: "Give up waiting for the panel after (ms, default 10000)",
+            helper: "How long the card keeps showing the state you asked for before admitting the panel never answered.",
+            selector: { number: { min: 1000, max: 60000, step: 500, mode: "box" } },
+          },
+          {
+            name: "hint_ms",
+            label: "How long a refusal hint stays up (ms, default 2000)",
+            selector: { number: { min: 500, max: 8000, step: 100, mode: "box" } },
+          },
+        ],
+      },
+      {
+        title: "Layout",
+        icon: "mdi:view-agenda-outline",
+        fields: [
+          { name: "hero", label: "Show the shape, state and sub-line", selector: { boolean: {} } },
+          { name: "footnote", label: "Show the explanation line under the buttons", selector: { boolean: {} } },
+          {
+            name: "zones_start_expanded",
+            label: "Start with the ready zones expanded",
+            selector: { boolean: {} },
+          },
+        ],
+      },
+      {
+        title: "Appearance",
+        icon: "mdi:palette-outline",
+        fields: [
+          {
+            name: "armed_color",
+            label: "Accent while armed (default primary)",
+            helper: "Worn by the shape and by the active mode button, so the two read as one object.",
+            color: true,
+            selector: { text: {} },
+          },
+          { name: "armed_color_on", label: "Ink on that accent", color: true, selector: { text: {} } },
+          { name: "background", label: "Card background", color: true, selector: { text: {} } },
+          { name: "background_on", label: "Card text", color: true, selector: { text: {} } },
+          {
+            name: "disarmed_icon",
+            label: 'Shape glyph while disarmed (default "shield")',
+            selector: { icon: {} },
+          },
+          {
+            name: "triggered_icon",
+            label: 'Shape glyph while triggered (default "crisis-alert")',
+            selector: { icon: {} },
+          },
+        ],
+      },
+      {
+        title: "Mode labels and icons",
+        icon: "mdi:text-short",
+        expanded: false,
+        fields: MODE_OPTIONS.flatMap((m) => [
+          { name: `label_${m.value}`, label: `${m.label} — label`, selector: { text: {} } },
+          { name: `icon_${m.value}`, label: `${m.label} — icon`, selector: { icon: {} } },
+        ]),
+      },
+      {
+        title: "Actions",
+        icon: "mdi:gesture-tap",
+        // Only the SHAPE takes a tap. The mode buttons deliberately have no tap
+        // path at all — an alarm that can be armed by a stray tap while
+        // scrolling defeats the whole control.
+        fields: [
+          {
+            name: "tap_action",
+            label: "Tapping the shape",
+            selector: { ui_action: { default_action: "more-info" } },
+          },
+        ],
+      },
+      {
+        title: "Disabled",
+        icon: "mdi:cancel",
+        expanded: false,
+        fields: [DISABLED_FIELD],
+      },
+    ];
+  }
+
+  /* ---- zones: a repeatable list, same pattern as materia-carousel ------- */
+
+  get _zoneSchema() {
+    return [
+      {
+        name: "entity",
+        label: "Zone sensor",
+        helper: "A door, window or contact. Not ready means on / open / unlocked.",
+        selector: { entity: { domain: ["binary_sensor", "sensor", "lock", "cover", "input_boolean", "switch"] } },
+      },
+      { name: "name", label: "Name (optional — defaults to the entity name)", selector: { text: {} } },
+      { name: "icon", label: "Icon (optional)", selector: { icon: {} } },
+      {
+        name: "bypass_entity",
+        label: "Bypass helper (optional)",
+        helper:
+          "Usually an input_boolean your automation reads when arming. Zones without one simply do not offer the Bypass action.",
+        selector: { entity: { domain: ["input_boolean", "switch"] } },
+      },
+    ];
+  }
+
+  _zones() {
+    return Array.isArray(this._config?.zones) ? this._config.zones : [];
+  }
+
+  _commitZones(zones) {
+    const next = { ...this._config };
+    if (zones.length) next.zones = zones;
+    else delete next.zones;
+    this._commit(next);
+  }
+
+  _addZone() {
+    const zones = [...this._zones(), { entity: "" }];
+    this._expanded = zones.length - 1;
+    this._commitZones(zones);
+  }
+
+  _removeZone(index) {
+    const zones = [...this._zones()];
+    zones.splice(index, 1);
+    if (this._expanded === index) this._expanded = null;
+    this._commitZones(zones);
+  }
+
+  _moveZone(from, to) {
+    const zones = [...this._zones()];
+    const [m] = zones.splice(from, 1);
+    zones.splice(to, 0, m);
+    if (this._expanded === from) this._expanded = to;
+    this._commitZones(zones);
+  }
+
+  _updateZone(index, value) {
+    const zones = [...this._zones()];
+    // Spread preserves keys the form does not manage.
+    zones[index] = { ...zones[index], ...value };
+    this._commitZones(zones);
+  }
+
+  _toggleExpand(i) {
+    this._expanded = this._expanded === i ? null : i;
+  }
+
+  _zoneTitle(zone, i) {
+    if (zone.name) return zone.name;
+    const st = zone.entity ? this.hass?.states[zone.entity] : null;
+    return st?.attributes?.friendly_name || zone.entity || `Zone ${i + 1}`;
+  }
+
+  _renderExtra() {
+    const zones = this._zones();
+    return html`
+      <div class="options-header">
+        <span>Zones</span>
+        <ha-icon-button @click=${this._addZone}>
+          <ha-icon icon="mdi:plus"></ha-icon>
+        </ha-icon-button>
+      </div>
+      <div class="options-note">
+        The card sorts these itself — whatever needs a decision floats to the
+        top and anything bypassed drops to the bottom — so this order only
+        matters as a tie-break between zones in the same group.
+      </div>
+
+      ${sortableList(
+        (from, to) => this._moveZone(from, to),
+        zones.map(
+          (zone, i) => html`
+            <div class="option-card">
+              <div class="option-header">
+                <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
+                <span>${this._zoneTitle(zone, i)}</span>
+                <ha-icon-button @click=${() => this._toggleExpand(i)}>
+                  <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
+                </ha-icon-button>
+                <ha-icon-button @click=${() => this._removeZone(i)}>
+                  <ha-icon icon="mdi:delete"></ha-icon>
+                </ha-icon-button>
+              </div>
+              ${this._expanded === i
+                ? html`
+                    <div class="option-body">
+                      <ha-form
+                        .hass=${this.hass}
+                        .data=${zone}
+                        .schema=${this._zoneSchema}
+                        .computeLabel=${computeLabel}
+                        @value-changed=${(e) => this._updateZone(i, e.detail.value)}
+                      ></ha-form>
+                    </div>
+                  `
+                : ""}
+            </div>
+          `
+        )
+      )}
+    `;
+  }
+}
+
+customElements.define("materia-alarm-editor", MateriaAlarmEditor);

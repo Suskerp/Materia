@@ -66,5 +66,34 @@ export const styles = [
     .body > * {
       --ha-card-box-shadow: none;
     }
+
+    /* Re-scope the inherited pressed-thumb state. materia-switch keys it on
+       the whole row being active, which is right when the row IS the switch —
+       here the row is also the disclosure, so pressing the header to open it
+       made the thumb swell as though you had grabbed the toggle. Undo the
+       inherited rule and hang it off the switch itself. */
+    ha-card.row.exp:active .m3-switch i {
+      width: 13px;
+      height: 13px;
+    }
+    ha-card.row.exp:active .m3-switch:not(.on) i {
+      left: 4px;
+    }
+    ha-card.row.exp:active .m3-switch.on i {
+      left: 19px;
+      width: 20px;
+      height: 20px;
+    }
+
+    .m3-switch:active i {
+      width: 22px;
+      height: 22px;
+    }
+    .m3-switch:not(.on):active i {
+      left: 2px;
+    }
+    .m3-switch.on:active i {
+      left: 16px;
+    }
   `,
 ];

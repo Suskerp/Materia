@@ -13,7 +13,11 @@ export const unavailableStyles = css`
   .container.unavailable,
   ha-card.unavailable,
   .title-row.unavailable,
-  .group.unavailable {
+  .group.unavailable,
+  /* .tile was missing, so materia-bar-select's unavailable branch — which puts
+     the class on a .tile div — matched NOTHING: no dimming, no grayscale, and
+     no pointer-events:none, leaving an unavailable ladder fully interactive. */
+  .tile.unavailable {
     /* 0.38 is the M3 disabled-content opacity the rest of the library uses;
        the grayscale is a DELIBERATE extra beyond M3 so unavailability never
        reads as just a dimmer state of the same colour. */

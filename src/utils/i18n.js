@@ -225,9 +225,77 @@ const STRINGS = {
   vh_about_min_left: { en: "about {mins} min left", nl: "nog {mins} min" },
   vh_last_cleaned_ago: { en: "Last cleaned {rel} ago", nl: "Laatst gestofzuigd {rel} geleden" },
   vh_needs_attention: { en: "{name} needs attention", nl: "{name} heeft aandacht nodig" },
-  unit_min: { en: "min", nl: "min" },
-  unit_hour: { en: "h", nl: "u" },
-  unit_day: { en: "d", nl: "d" },
+
+  /* ---- materia-alarm ------------------------------------------------------
+     Mode labels and armed titles are looked up with COMPUTED keys
+     (t(`al_mode_${mode.key}`) / t(`al_state_armed_${mode.key}`)), so every
+     MODES entry in cards/alarm/index.js needs a pair here. A missing key
+     renders as its own name, and a grep for t("...") will not find these. */
+  al_mode_home: { en: "Home", nl: "Aanwezig" },
+  al_mode_away: { en: "Away", nl: "Afwezig" },
+  al_mode_night: { en: "Night", nl: "Nacht" },
+  al_mode_vacation: { en: "Vacation", nl: "Vakantie" },
+  al_mode_custom: { en: "Custom", nl: "Aangepast" },
+
+  al_state_armed_home: { en: "Home", nl: "Aanwezig" },
+  al_state_armed_away: { en: "Away", nl: "Afwezig" },
+  al_state_armed_night: { en: "Night", nl: "Nacht" },
+  al_state_armed_vacation: { en: "Vacation", nl: "Vakantie" },
+  al_state_armed_custom: { en: "Custom", nl: "Aangepast" },
+
+  al_state_disarmed: { en: "Disarmed", nl: "Uitgeschakeld" },
+  al_state_arming: { en: "Arming", nl: "Wordt ingeschakeld" },
+  al_state_pending: { en: "Entry delay", nl: "Ingangsvertraging" },
+  al_state_triggered: { en: "Alarm!", nl: "Alarm!" },
+  al_state_unknown: { en: "Unknown", nl: "Onbekend" },
+
+  al_sub_ready: { en: "Ready to arm", nl: "Klaar om in te schakelen" },
+  al_sub_not_ready: { en: "{n} zones not ready", nl: "{n} zones niet gereed" },
+  al_sub_not_ready_one: { en: "{n} zone not ready", nl: "{n} zone niet gereed" },
+  al_sub_armed_since: { en: "Armed since {time}", nl: "Ingeschakeld sinds {time}" },
+  al_sub_triggered: { en: "Triggered at {time}", nl: "Alarm afgegaan om {time}" },
+  al_sub_pending: { en: "Entry delay running", nl: "Ingangsvertraging loopt" },
+  al_sub_arming: { en: "Arming...", nl: "Wordt ingeschakeld..." },
+  al_sub_disarming: { en: "Disarming...", nl: "Wordt uitgeschakeld..." },
+  al_sub_unavailable: { en: "Panel unavailable", nl: "Paneel niet beschikbaar" },
+
+  al_hint_hold_to_arm: { en: "Hold to arm", nl: "Houd vast om in te schakelen" },
+  al_hint_hold_to_disarm: { en: "Hold to disarm", nl: "Houd vast om uit te schakelen" },
+  al_hint_holding: { en: "Keep holding...", nl: "Blijf vasthouden..." },
+  al_hint_disarm_first: { en: "Disarm first", nl: "Schakel eerst uit" },
+  al_hint_code_required: { en: "Code required", nl: "Code vereist" },
+  al_hint_arming: { en: "Arming...", nl: "Inschakelen..." },
+  al_hint_disarming: { en: "Disarming...", nl: "Uitschakelen..." },
+
+  al_foot_disarmed: { en: "Hold a mode to arm.", nl: "Houd een modus vast om in te schakelen." },
+  al_foot_disarmed_warn: { en: "{n} zones open - holding arms anyway.", nl: "{n} zones open - vasthouden schakelt toch in." },
+  al_foot_armed: { en: "Armed in {mode}.", nl: "Ingeschakeld in {mode}." },
+  al_foot_locked_modes: { en: "Disarm before choosing another mode.", nl: "Schakel eerst uit voor je een andere modus kiest." },
+  al_foot_pending: { en: "Entry delay - disarm now.", nl: "Ingangsvertraging - schakel nu uit." },
+  al_foot_triggered: { en: "Alarm triggered while armed in {mode}.", nl: "Alarm afgegaan terwijl ingeschakeld in {mode}." },
+  al_foot_arming: { en: "Arming...", nl: "Wordt ingeschakeld..." },
+  al_foot_disarming: { en: "Disarming...", nl: "Wordt uitgeschakeld..." },
+
+  al_zones_not_ready: { en: "Not ready", nl: "Niet gereed" },
+  al_zones_bypassed: { en: "Bypassed", nl: "Geblokkeerd" },
+  al_zone_bypass: { en: "Bypass", nl: "Blokkeer" },
+  al_zones_ready_count: { en: "{n} zones ready", nl: "{n} zones gereed" },
+  al_zones_ready_one: { en: "{n} zone ready", nl: "{n} zone gereed" },
+
+  al_aria_modes: { en: "Alarm modes", nl: "Alarmmodi" },
+  al_aria_hold_arm: { en: "Hold to arm in {mode}", nl: "Houd vast om in te schakelen in {mode}" },
+  al_aria_hold_disarm: { en: "Hold to disarm", nl: "Houd vast om uit te schakelen" },
+  al_aria_inert: { en: "{mode} unavailable - disarm first", nl: "{mode} niet beschikbaar - schakel eerst uit" },
+  al_aria_bypass: { en: "Bypass {name}", nl: "{name} blokkeren" },
+  al_aria_unbypass: { en: "Stop bypassing {name}", nl: "{name} niet meer blokkeren" },
+  al_aria_zones_toggle: { en: "Show ready zones", nl: "Toon zones die gereed zijn" },
+
+  al_needs_entity: { en: "Set an alarm_control_panel entity", nl: "Stel een alarm_control_panel-entiteit in" },
+  al_no_modes: { en: "This panel offers no arm modes", nl: "Dit paneel biedt geen alarmmodi" },
+
+  /* ---- materia-expander -------------------------------------------------- */
+  expander_expand: { en: "Expand", nl: "Uitvouwen" },
+  expander_collapse: { en: "Collapse", nl: "Invouwen" },
 
   /* ---- materia-calendar (locale is a plain string prop, not hass) ----- */
   cal_prev_month: { en: "Previous month", nl: "Vorige maand" },
