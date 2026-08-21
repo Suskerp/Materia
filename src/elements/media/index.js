@@ -92,7 +92,19 @@ class MateriaMedia extends ActionMixin(LitElement) {
     const image = this._image;
     const title = this._title;
     const subtitle = this._subtitle;
-    const artStyle = `${this.config.art_size ? `--mm-art:${this.config.art_size}px;` : ""}${image ? `background-image:url('${image}');` : ""}`;
+    // Primary art over the fallback as TWO background layers, not one. A CSS
+    // background has no error event, so this is the only hook available — and
+    // it is the right one: layers paint in order and a layer that fails to
+    // decode just reveals the next. Until now fallback_image was consulted
+    // only when the URL was EMPTY, so a URL that resolved but served garbage
+    // (an amp streaming its album art as a malformed octet-stream, a device
+    // that went offline, a stale CDN logo) left a blank square.
+    const fb = this.config.fallback_image;
+    const layers = [image, fb && fb !== image ? fb : null]
+      .filter(Boolean)
+      .map((u) => `url('${u}')`)
+      .join(", ");
+    const artStyle = `${this.config.art_size ? `--mm-art:${this.config.art_size}px;` : ""}${layers ? `background-image:${layers};` : ""}`;
 
     // Editorial typography only when a real track is showing — a device name
     // (off/idle) is not a headline.
