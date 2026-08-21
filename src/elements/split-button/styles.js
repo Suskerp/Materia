@@ -28,11 +28,13 @@ export const styles = [
     .wrap {
       position: relative;
       display: inline-flex;
+      min-width: 0;
     }
 
     .split {
       display: inline-flex;
       align-items: stretch;
+      min-width: 0;
       gap: 2px; /* M3: the inner space is always 2dp */
       height: var(--sb-h, 40px);
     }
@@ -40,6 +42,10 @@ export const styles = [
     /* The leading materia-button colors and sizes itself from its own config. */
     .leading {
       display: flex;
+      /* takes the slack and gives it back: the trailing chevron keeps its
+         fixed icon width while this half absorbs and truncates. */
+      flex: 1;
+      min-width: 0;
     }
 
     .trailing {

@@ -12,6 +12,9 @@ export const styles = [
     /* "wide" buttons grow to fill the row (and stretch when standalone) */
     :host([wide]) {
       flex: 1;
+      /* min-width:auto would refuse to shrink, so a long label overflows
+         instead of ellipsizing. Every flex ancestor of .label needs this. */
+      min-width: 0;
     }
     :host([wide]) .btn {
       width: 100%;
