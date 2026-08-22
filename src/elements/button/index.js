@@ -107,7 +107,19 @@ class MateriaButton extends ActionMixin(LitElement) {
     return this.config.tap_action || this._defaultTapAction();
   }
 
-  _handleTap() {
+  _handleTap(ev) {
+    // A completed hold still produces the native button click when the finger
+    // is released. The confirm handler has already performed the action, so
+    // allowing that release click through would immediately toggle the entity
+    // a second time (on -> off). Consume exactly that click; later taps remain
+    // the deliberately unguarded way to deactivate the control.
+    if (this.__suppressNextClick) {
+      this.__suppressNextClick = false;
+      clearTimeout(this.__suppressClickTimer);
+      ev?.preventDefault?.();
+      ev?.stopImmediatePropagation?.();
+      return;
+    }
     if (this._disabled) return;
     if (this._confirmMode) return; // a confirm button has no tap path at all
     this._handleAction(this._resolveTapAction());
@@ -181,6 +193,13 @@ class MateriaButton extends ActionMixin(LitElement) {
   }
 
   _onConfirmed() {
+    this.__suppressNextClick = true;
+    clearTimeout(this.__suppressClickTimer);
+    // Fallback for cancelled pointer sequences that never generate a click.
+    // A real tap must not be swallowed indefinitely.
+    this.__suppressClickTimer = setTimeout(() => {
+      this.__suppressNextClick = false;
+    }, 3000);
     this._handleAction(this._resolveTapAction());
   }
 
@@ -196,6 +215,7 @@ class MateriaButton extends ActionMixin(LitElement) {
   disconnectedCallback() {
     super.disconnectedCallback?.();
     this.removeEventListener("confirm", this.__onConfirm);
+    clearTimeout(this.__suppressClickTimer);
     this.__gesture?.destroy();
   }
 
