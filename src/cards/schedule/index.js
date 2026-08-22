@@ -11,12 +11,9 @@ import "./editor.js";
  * Schedule picker (materia-schedule) — design doc 7a and 7b as ONE card.
  *
  * 7b is the collapsed strip on the page; 7a is the picker. They are the same
- * card in two states rather than a page plus a modal, and that is a deliberate
- * platform decision: a Lovelace card cannot open a real bottom sheet without
- * either a position:fixed overlay that fights hui-view's stacking and ignores
- * Esc and the back button, or browser_mod, which is not installed here.
- * Expanding in place is the idiom this dashboard already uses (expander-card on
- * the vacuum page) and costs nothing in fidelity — every element of 7a is here.
+ * card in two states rather than separate implementations. Manager cards may
+ * also open that same picker in Browser Mod, keeping long dashboards compact;
+ * inline remains the dependency-free fallback.
  *
  * THE PREMISE IS SHORTCUTS FIRST. Nine times in ten the answer is "in an hour"
  * or "tonight", so those are big chips and the calendar stays folded until it is
@@ -93,7 +90,21 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     // their choice wins, so re-entering the editor cannot yank the tab out from
     // under them mid-edit.
     if (!this._modeTouched) this._mode = this._modes[0];
-    if (this._isManager && !this._targetEntity) this._selectTarget(this._managerTargets[0]?.entity);
+    if (this._isManagerEditor) {
+      this._open = true;
+      this._activeScheduleEntity = config.schedule_entity || null;
+      if (this._activeScheduleEntity) {
+        // hass arrives after setConfig; updated() seeds the live entry once it
+        // is available. Do not select a default here because that marks the
+        // draft dirty and would block the seed.
+        this._dirty = false;
+      } else if (!this._targetEntity) {
+        this._selectTarget(this._managerTargets[0]?.entity);
+        this._days = [true, true, true, true, true, true, true];
+      }
+    } else if (this._isManager && !this._targetEntity) {
+      this._selectTarget(this._managerTargets[0]?.entity);
+    }
   }
 
   /** "sheet" drops the collapsed strip and renders the picker directly, for
@@ -101,7 +112,11 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  it in place. The strip stays the default because a bare picker sitting on a
    *  dashboard has nothing to summarise and no way to be dismissed. */
   get _isSheet() {
-    return this.config.presentation === "sheet";
+    return this.config.presentation === "sheet" || this._isManagerEditor;
+  }
+
+  get _isManagerEditor() {
+    return this.config.presentation === "manager-editor";
   }
 
   /** Design 7b: the page-level summary. Not a picker at all — it shows what is
@@ -874,6 +889,10 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   }
 
   _openNewSchedule() {
+    if (this.config.editor_presentation === "popup") {
+      this._openManagerPopup();
+      return;
+    }
     this._activeScheduleEntity = null;
     this._selectTarget(this._managerTargets[0]?.entity);
     this._hour = 9;
@@ -888,11 +907,45 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   }
 
   _openSchedule(stateObj) {
+    if (this.config.editor_presentation === "popup") {
+      this._openManagerPopup(stateObj.entity_id);
+      return;
+    }
     this._activeScheduleEntity = stateObj.entity_id;
     this._dirty = false;
     this._removeArmed = false;
     this._seedFromEntity();
     this._open = true;
+  }
+
+  _openManagerPopup(scheduleEntity = null) {
+    const content = {
+      ...this.config,
+      type: "custom:materia-schedule",
+      presentation: "manager-editor",
+      editor_presentation: "inline",
+    };
+    delete content.grid_options;
+    delete content.visibility;
+    if (scheduleEntity) content.schedule_entity = scheduleEntity;
+    else delete content.schedule_entity;
+
+    this._handleAction({
+      action: "fire-dom-event",
+      browser_mod: {
+        service: "browser_mod.popup",
+        data: {
+          title: scheduleEntity ? t("sched_edit", this.hass) : t("sched_new", this.hass),
+          dismissable: true,
+          size: "normal",
+          content,
+          popup_styles: [{
+            style: "all",
+            styles: "ha-dialog { --mdc-dialog-max-width: 640px; --mdc-dialog-min-width: min(92vw, 420px); --mdc-dialog-max-height: 88vh; } .content .container { padding: 0 !important; overflow: auto !important; }",
+          }],
+        },
+      },
+    });
   }
 
   _formatNext(stateObj) {
@@ -979,12 +1032,13 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     this._activeScheduleEntity = null;
     this._removeArmed = false;
     this._open = false;
+    if (this._isManagerEditor) this._dismiss();
   }
 
   render() {
     if (!this.config) return html``;
 
-    if (this._isManager && !this._open) return this._renderManager();
+    if (this._isManager && !this._open && !this._isManagerEditor) return this._renderManager();
     if (this._isSummary) return this._renderSummary();
 
     if (!this._open && !this._isSheet) {

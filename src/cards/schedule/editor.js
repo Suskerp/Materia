@@ -92,6 +92,15 @@ class MateriaScheduleEditor extends SmartEditorBase {
             selector: { boolean: {} },
           },
           {
+            name: "editor_presentation",
+            label: "Open schedule editor",
+            helper: "Popup keeps the dashboard compact. Requires Browser Mod; inline remains available as a dependency-free fallback.",
+            selector: { select: { mode: "dropdown", options: [
+              { value: "popup", label: "Popup" },
+              { value: "inline", label: "Expand inline" },
+            ] } },
+          },
+          {
             name: "targets",
             label: "Devices and friendly actions",
             helper: 'List of {entity, name, icon, actions:[{service,label,icon}]}. Schedules controlling these devices are discovered automatically.',
