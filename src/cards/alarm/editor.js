@@ -96,6 +96,7 @@ class MateriaAlarmEditor extends SmartEditorBase {
       zone_flap_detect: true,
       zone_flap_count: 6,
       zone_flap_window_ms: 60000,
+      allow_safety_bypass: false,
       /* arming_duration_ms and pending_duration_ms are deliberately NOT seeded.
          Absent means "nobody has told us how long this takes", which selects
          the indeterminate breathe — seeding a number here would invent a
@@ -244,6 +245,13 @@ class MateriaAlarmEditor extends SmartEditorBase {
             selector: { number: { min: 1000, max: 600000, step: 1000, mode: "box" } },
           },
           {
+            name: "allow_safety_bypass",
+            label: "Allow bypassing smoke and heat detectors",
+            helper:
+              "Off by default. The panel permits it, but skipping a 24-hour zone arms the house with fire detection deliberately excluded, and it does not fix the fault it hides. Turn this on only if you mean it.",
+            selector: { boolean: {} },
+          },
+          {
             name: "bypass_action",
             label: "Bypass action",
             helper:
@@ -347,6 +355,13 @@ class MateriaAlarmEditor extends SmartEditorBase {
       },
       { name: "name", label: "Name (optional — defaults to the entity name)", selector: { text: {} } },
       { name: "icon", label: "Icon (optional)", selector: { icon: {} } },
+      {
+        name: "safety",
+        label: "24-hour zone (smoke, heat, gas, water)",
+        helper:
+          "Normally detected from device_class or the integration's icon, and remembered if the zone goes offline. Pin it here for a zone that is already unavailable when the dashboard loads, since there is nothing to read then. A 24-hour zone always blocks arming, never counts as a movement detector, and is not offered a Bypass button.",
+        selector: { boolean: {} },
+      },
       {
         name: "transient",
         label: "Movement detector",

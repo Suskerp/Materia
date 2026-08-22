@@ -166,6 +166,10 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     /** Whether the unavailable-zone list is expanded. Always starts closed:
      *  it is a footnote about the install, not something to read every time. */
     _unavailOpen: { state: true },
+    /** Whether the 24-hour zone list is expanded. Starts closed even in fault:
+     *  the summary row already says how many, and opening twelve rows on a
+     *  reader who has not asked is the layout jump this group exists to avoid. */
+    _safetyOpen: { state: true },
     /** One-shot ARRIVAL turn: the panel has finished doing the thing we were
      *  already claiming it had done. See _punctuate. */
     _turn: { state: true },
@@ -223,6 +227,7 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     this._refused = null;
     this._zonesOpen = undefined;
     this._unavailOpen = false;
+    this._safetyOpen = false;
     this._turn = false;
     this._shake = false;
     this._sweeping = false;
@@ -744,30 +749,58 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
 
   /** Classification, most specific source first. */
   _classify(zoneCfg, st, b, now) {
-    /* Explicit config first, and it can even override a safety class: someone
-       who has typed transient on a zone knows their own install better than
-       any inference here does. It is the only thing that can. */
+    /* Explicit config first, and it can even override an inferred safety
+       class: someone who has typed this on a zone knows their own install
+       better than any inference here does.
+    
+       `safety` exists as an override because there is one case data cannot
+       reach: a zone that is ALREADY unavailable when the card mounts has no
+       attributes and no remembered verdict, so nothing identifies it. A
+       detector that is often offline can be pinned here rather than silently
+       falling out of the 24-hour group. */
+    if (typeof zoneCfg?.safety === "boolean") {
+      return { transient: false, safety: zoneCfg.safety, by: "config" };
+    }
     if (typeof zoneCfg?.transient === "boolean") {
       return { transient: zoneCfg.transient, safety: false, by: "config" };
     }
 
-    const dc = st?.attributes?.device_class;
+    /* CLASSIFICATION MUST OUTLIVE AVAILABILITY. An unavailable entity in Home
+       Assistant carries NO attributes at all — no device_class, no icon — so a
+       detector that drops offline would lose the very thing that identifies it
+       as a detector, fall out of the 24-hour group, and reappear in the generic
+       unavailable one. That breaks the group's central promise: its presence is
+       supposed to be a fact about the installation, not about who is answering
+       right now. It would also quietly drop the bypass suppression, since that
+       hangs off the same flag.
+
+       So a verdict earned from a real attribute is remembered, and reused while
+       there is nothing to read. `by` deliberately keeps naming the original
+       source: the zone WAS classified by its icon, and that is still why. A
+       zone unavailable since before this card mounted has no remembered verdict
+       and falls through to the safe default, which is stable — it cannot flap,
+       because it stays there until the entity comes back and can be read. */
+    const attrs = st?.attributes;
+    const readable = !!(attrs && (attrs.device_class || attrs.icon));
+    if (!readable && b.known) return { ...b.known };
+
+    const dc = attrs?.device_class;
     if (dc) {
-      if (SAFETY_CLASSES.has(dc)) return { transient: false, safety: true, by: "device_class" };
-      if (TRANSIENT_CLASSES.has(dc)) return { transient: true, safety: false, by: "device_class" };
-      if (BLOCKING_CLASSES.has(dc)) return { transient: false, safety: false, by: "device_class" };
+      if (SAFETY_CLASSES.has(dc)) return this._remember(b, { transient: false, safety: true, by: "device_class" });
+      if (TRANSIENT_CLASSES.has(dc)) return this._remember(b, { transient: true, safety: false, by: "device_class" });
+      if (BLOCKING_CLASSES.has(dc)) return this._remember(b, { transient: false, safety: false, by: "device_class" });
     }
 
     /* The ENTITY's icon, never the zone's display icon. Those are different
        fields on purpose: `icon` in a zone config is a presentation choice, and
        repainting a row must not silently change whether that zone can block an
        arm. Explicit config for that is `transient`, right above. */
-    const icon = String(st?.attributes?.icon ?? "").toLowerCase();
+    const icon = String(attrs?.icon ?? "").toLowerCase();
     if (icon) {
       const has = (stems) => stems.some((k) => icon.includes(k));
-      if (has(SAFETY_ICON_STEMS)) return { transient: false, safety: true, by: "icon" };
-      if (has(TRANSIENT_ICON_STEMS)) return { transient: true, safety: false, by: "icon" };
-      if (has(BLOCKING_ICON_STEMS)) return { transient: false, safety: false, by: "icon" };
+      if (has(SAFETY_ICON_STEMS)) return this._remember(b, { transient: false, safety: true, by: "icon" });
+      if (has(TRANSIENT_ICON_STEMS)) return this._remember(b, { transient: true, safety: false, by: "icon" });
+      if (has(BLOCKING_ICON_STEMS)) return this._remember(b, { transient: false, safety: false, by: "icon" });
     }
 
     // Nothing to read: default to BLOCKING (the safe reading of an unknown
@@ -779,6 +812,15 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     }
     const flapping = this._flapping(b, now);
     return { transient: flapping, safety: false, by: flapping ? "flapping" : "default" };
+  }
+
+  /** Keep a verdict that came from a real attribute, so it survives the entity
+   *  going unavailable and taking its attributes with it. Only attribute-based
+   *  verdicts are remembered — a behavioural guess is re-derived, because the
+   *  evidence for it is the flip history, which is still there. */
+  _remember(b, verdict) {
+    b.known = verdict;
+    return verdict;
   }
 
   willUpdate(changed) {
@@ -895,15 +937,60 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
    *  fire it with", which is the most this card can honestly know. */
   _canSkip(z) {
     if (z.unavailable) return false;
+    /* A 24-HOUR ZONE DOES NOT OFFER SKIP, even though the panel permits it.
+       can_bypass is true on every zone on this install, but that says the panel
+       ALLOWS it, not that it is a sensible thing to put one tap away: skipping
+       a smoke or heat detector means arming a house with fire detection
+       deliberately excluded. It also would not fix anything — a detector
+       reading not-ready is a fault, and bypassing it files a maintenance
+       condition under "handled decisions" where nobody will look at it again.
+       allow_safety_bypass: true is there for someone who genuinely means it;
+       the default protects and the flag respects the choice. */
+    if (z.safety && this.config.allow_safety_bypass !== true) return false;
     if (!this.config.bypass_action || z.zone == null) return false;
     const attr = z.st?.attributes?.can_bypass;
     if (attr === undefined || attr === null) return true;
     return attr === true || attr === 1 || /^(true|yes|1)$/i.test(String(attr));
   }
 
-  /** Whether a bypassed zone can be brought back in. */
+  /** Whether a bypassed zone can be brought back in.
+   *
+   *  Deliberately does NOT consult allow_safety_bypass. That flag guards
+   *  REMOVING protection; putting a detector back is the opposite act and must
+   *  never be the thing you cannot do. A card that can skip a smoke detector
+   *  but not restore it would be strictly worse than one that could do
+   *  neither. */
   _canUnskip(z) {
     return !!this.config.unbypass_action && z.zone != null;
+  }
+
+  /** Zones this card has bypassed in this session.
+   *
+   *  WHY REMEMBER AT ALL: the only route back used to be the chip in the
+   *  Bypassed group, which requires the PANEL to report the zone as bypassed.
+   *  If it does not — and whether this panel does was my flagged
+   *  highest-risk assumption, since no zone was bypassed when the vocabulary
+   *  was chosen — then a zone could be skipped and never un-skipped. Bypass
+   *  became a one-way door.
+   *
+   *  What this memory does NOT do is change any grouping or the sweep colour.
+   *  It only ever ADDS a way back. That asymmetry is the safety property: on
+   *  our word alone the card must never move an open zone out of the warning,
+   *  because if the panel refused the bypass we would have quietly stopped
+   *  warning about a real gap. Adding an undo can only restore protection.
+   *
+   *  Session-scoped and never auto-cleared except by un-bypassing, which
+   *  bounds it without needing a TTL to guess at. A stale entry costs one
+   *  offered action that turns out to be a no-op. */
+  get _selfBypassed() {
+    this.__selfBypassed ??= new Set();
+    return this.__selfBypassed;
+  }
+
+  /** True when the card can offer to put this zone back. */
+  _canUndo(z) {
+    if (!this._canUnskip(z)) return false;
+    return z.bypassed || this._selfBypassed.has(z.entity);
   }
 
   /** Zones, from config or discovery, resolved against hass and sorted. */
@@ -952,6 +1039,7 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
         };
         out.skippable = this._canSkip(out);
         out.unskippable = this._canUnskip(out);
+        out.undoable = this._canUndo(out);
         return out;
       })
       // show_unavailable: false drops them here, at the single point every
@@ -1017,7 +1105,12 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     const action = which === "bypass" ? this.config.bypass_action : this.config.unbypass_action;
     if (!action || z.zone == null) return;
     if (which === "bypass" && !z.skippable) return;
+    if (which === "bypass") this._selfBypassed.add(z.entity);
+    else this._selfBypassed.delete(z.entity);
     this._handleAction(this._withZone(action, z.zone));
+    // The undo affordance appears on the row immediately, without waiting to
+    // learn whether the panel reflects a bypass in the zone's own state.
+    this.requestUpdate();
   }
 
   /* ---- the gesture -----------------------------------------------------
@@ -1369,8 +1462,24 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     if (s === "triggered") {
       return { text: t("al_sub_triggered", this.hass, { time: this._time(st?.last_changed) }), warn: true };
     }
-    if (s === "pending") return { text: t("al_sub_pending", this.hass), warn: true };
+    /* Entry delay reaches this branch before the busy one below, so it needs
+       the same rule: with no pin the title already reads "Ingangsvertraging"
+       and the sub-line would only say it again. The urgency is not lost — the
+       footnote carries the actionable half ("schakel nu uit"), which is the
+       layer whose job that is. */
+    if (s === "pending") {
+      return this._pending == null
+        ? { text: "", warn: false }
+        : { text: t("al_sub_pending", this.hass), warn: true };
+    }
     if (this._busy) {
+      /* SAY IT ONCE. When there is no pin the TITLE is already the state word
+         ("Wordt ingeschakeld"), so repeating it underneath is the same sentence
+         twice. With a pin the title is the destination mode ("Afwezig") and the
+         sub-line is the only thing saying what is happening to it, so it earns
+         its place. Decided structurally rather than by comparing strings,
+         which would break in one language and not another. */
+      if (this._pending == null) return { text: "", warn: false };
       return { text: t(this._disarming ? "al_sub_disarming" : "al_sub_arming", this.hass), warn: false };
     }
     if (s === "disarmed") {
@@ -1420,7 +1529,14 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     }
     if (s === "pending") return { text: t("al_foot_pending", this.hass), tone: "alert" };
     if (this._busy) {
-      return { text: t(this._disarming ? "al_foot_disarming" : "al_foot_arming", this.hass), tone: "" };
+      /* THE FOOTNOTE'S JOB IS "what can I do right now", and during a commit
+         that is not "it is arming" — the hero says that and the active mode
+         button says which mode. Three copies of one word was the bug. What the
+         footnote can add is the way out: an exit delay is abortable, and
+         nothing else on the card says so. A disarm has nothing to offer, so it
+         says nothing rather than narrating. */
+      if (this._disarming) return { text: "", tone: "" };
+      return { text: t("al_hint_hold_to_disarm", this.hass), tone: "" };
     }
     if (active) {
       const base = t("al_foot_armed", this.hass, { mode: this._modeLabel(active) });
@@ -1567,7 +1683,9 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
                   </div>
                   <div>
                     <div class="title">${this._title()}</div>
-                    <div class="sub ${sub.warn ? "warn" : ""}">${sub.text}</div>
+                    ${sub.text
+                      ? html`<div class="sub ${sub.warn ? "warn" : ""}">${sub.text}</div>`
+                      : nothing}
                   </div>
                 </div>
               `}
@@ -1673,6 +1791,10 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     return !!this._unavailOpen;
   }
 
+  get _safetyExpanded() {
+    return !!this._safetyOpen;
+  }
+
   /** One zone row. Shared by every group so a zone looks like itself
    *  wherever it appears, and so the substate line always comes from HA's own
    *  formatter (which already localises "Ready" / "Not Ready" for us). */
@@ -1691,7 +1813,18 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
           <span class="zname">${z.name}</span>
           <span class="zstate">${state}</span>
         </div>
-        ${z.skippable
+        ${z.undoable
+          ? html`
+              <button
+                class="chip undo"
+                aria-label=${t("al_aria_unbypass", this.hass, { name: z.name })}
+                @click=${() => this._fireZoneAction(z, "unbypass")}
+              >
+                <ha-icon icon="m3o:visibility"></ha-icon>
+                <span>${t("al_zone_unbypass", this.hass)}</span>
+              </button>
+            `
+          : z.skippable
           ? html`
               <button
                 class="chip"
@@ -1730,11 +1863,34 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
   }
 
   _renderZones(zones) {
-    const notReady = zones.filter((z) => z.open);
-    const unavailable = zones.filter((z) => z.unavailable);
-    const bypassed = zones.filter((z) => z.bypassed);
-    const ready = zones.filter((z) => !z.open && !z.bypassed && !z.unavailable);
+    /* THE SAFETY GROUP OWNS ITS ZONES EXCLUSIVELY, so a detector appears in
+       exactly one place. Its PRESENCE is a fact about the installation — how
+       many 24-hour zones are wired — and never about their current states, so
+       nothing a detector does can make the group appear or disappear. Its
+       contents change; its existence does not.
+
+       Note what is NOT filtered: _notReady() still counts safety faults, so a
+       faulty detector still turns the arming sweep amber. Amber means "not
+       everything is ready", which is equally true of a detector in fault; WHICH
+       kind of not-ready it is belongs to the zone list, not to a one-bar
+       gesture. Giving the sweep a third colour would ask it to carry a taxonomy
+       it cannot explain. */
+    const safety = zones.filter((z) => z.safety);
+    const safetyFaults = safety.filter((z) => z.open || z.unavailable);
+    const notReady = zones.filter((z) => z.open && !z.safety);
+    const unavailable = zones.filter((z) => z.unavailable && !z.safety);
+    const bypassed = zones.filter((z) => z.bypassed && !z.safety);
+    const ready = zones.filter((z) => !z.open && !z.bypassed && !z.unavailable && !z.safety);
     const sensing = ready.filter((z) => z.sensing).length;
+    /* Faults first inside the group, then by zone number — the same ordering
+       rule the flat list uses, applied within one category. */
+    const safetyRows = [...safety].sort((a, b) => {
+      const fa = (a.open || a.unavailable) ? 0 : 1;
+      const fb = (b.open || b.unavailable) ? 0 : 1;
+      if (fa !== fb) return fa - fb;
+      if (a.zone != null && b.zone != null) return a.zone - b.zone;
+      return String(a.name).localeCompare(String(b.name));
+    });
 
     return html`
       <div class="zones">
@@ -1745,6 +1901,35 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
                 ${notReady.map((z) => this._zoneRow(z, "notready"))}
               </div>
             `
+          : nothing}
+
+        ${safety.length
+          ? this._zoneSummary({
+              /* ALWAYS EXACTLY ONE ROW, whatever the fault count. That is what
+                 makes the group height-stable: all-clear and five-faults
+                 occupy the same space, so the only thing that can change this
+                 group's height is the reader tapping it open. Expanding on a
+                 tap is a response to them, not a layout surprise. */
+              icon: safetyFaults.length ? "m3o:warning" : "m3of:check-circle",
+              cls: safetyFaults.length ? "safety-fault" : "safety-ok",
+              label: safetyFaults.length
+                ? t(
+                    safetyFaults.length === 1 ? "al_zones_safety_fault_one" : "al_zones_safety_fault",
+                    this.hass,
+                    { n: safetyFaults.length }
+                  )
+                : t(
+                    safety.length === 1 ? "al_zones_safety_ok_one" : "al_zones_safety_ok",
+                    this.hass,
+                    { n: safety.length }
+                  ),
+              aria: t("al_aria_safety_toggle", this.hass),
+              open: this._safetyExpanded,
+              toggle: () => {
+                this._safetyOpen = !this._safetyExpanded;
+              },
+              rows: safetyRows,
+            })
           : nothing}
 
         ${unavailable.length

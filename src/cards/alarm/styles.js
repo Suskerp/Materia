@@ -110,11 +110,27 @@ export const styles = [
 
     /* ---- hero ------------------------------------------------------------ */
 
+    /* THE GAP HAS TO CLEAR A ROTATED SQUARE, which is what the earlier
+       headroom sum missed: it counted the breathe and forgot the pose.
+       transform does not affect layout, so the shape's box stays put while its
+       CONTENT turns 45 degrees and its corners swing outside that box.
+
+       For a rounded square of side s with a 30% corner, the farthest point is
+       the corner arc: its centre sits sqrt(2) * (0.5s - 0.3s) = 0.283s from the
+       middle, plus the 0.3s radius, so 0.583s against an unrotated half-width
+       of 0.5s. The corners therefore overhang the box by 0.083s per side, and
+       the breathe adds another 0.035s. Call it 0.118s of overhang: 20px at the
+       168px ceiling, 17px at the 144px a phone actually renders, 13px at the
+       112px floor.
+
+       clamp(16px, 5cqi, 26px) covers all three — 16 against 13, 20 against 17,
+       26 against 20 — and it is not a new number: it is the gap .body already
+       uses, so the hero now breathes on the same rhythm as the card. */
     .hero {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: clamp(10px, 3cqi, 14px);
+      gap: clamp(16px, 5cqi, 26px);
       text-align: center;
     }
 
@@ -667,6 +683,15 @@ export const styles = [
       opacity: 0.8;
     }
 
+    /* The way back. Solid outline and the primary role, against the dashed
+       outline a bypassed zone wears — this chip RESTORES protection, so it
+       should not look like the same kind of act as removing it. */
+    .chip.undo {
+      border-style: solid;
+      border-color: var(--md-sys-color-primary);
+      color: var(--md-sys-color-primary);
+    }
+
     /* A bypassed zone with nothing to un-bypass it: still stated, but not
        dressed as a control. Rendered as a span, so it also needs the cursor
        and the state layer taken back off. */
@@ -713,6 +738,24 @@ export const styles = [
 
     .zrow.sensing > ha-icon {
       opacity: 1;
+    }
+
+    /* THE 24-HOUR GROUP. A detector in fault is a FAULT, not a decision — you
+       cannot go and close a smoke detector — so it takes the error role rather
+       than the amber that means "not ready, and you can act on it". All clear
+       takes the same primary check the ready summary uses, because a fault
+       category is one where confirming nothing is wrong is information the
+       reader wants rather than absence they should infer.
+
+       Only the ink changes between the two states. The row's geometry is
+       identical either way, which is what keeps the group height-stable. */
+    .zrow.safety-fault > ha-icon,
+    .zrow.safety-fault .zname {
+      color: var(--md-sys-color-error);
+    }
+
+    .zrow.safety-ok > ha-icon {
+      color: var(--md-sys-color-primary);
     }
 
     /* UNAVAILABLE is deliberately NOT the warning role. A zone the panel
