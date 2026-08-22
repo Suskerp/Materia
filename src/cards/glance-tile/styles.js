@@ -525,117 +525,6 @@ export const styles = [
       transition: stroke-dasharray var(--md-sys-motion-expressive-default-spatial);
     }
 
-    /* ---- status: a tonal row ------------------------------------------- */
-
-    .status-row {
-      container-type: inline-size;
-      box-sizing: border-box;
-      display: flex;
-      align-items: center;
-      gap: clamp(10px, 3cqi, 16px);
-      /* extra-large 28dp */
-      border-radius: 28px;
-      padding: clamp(12px, 3cqi, 18px) clamp(14px, 3.5cqi, 20px);
-      background: var(--ms-color, var(--md-sys-color-surface-container-high, var(--ha-card-background, var(--card-background-color))));
-      color: var(--ms-color-on, var(--md-sys-color-on-surface, var(--primary-text-color)));
-      max-width: var(--ms-size-row, none);
-      transition: background-color var(--md-sys-motion-default-effects),
-        color var(--md-sys-motion-default-effects);
-    }
-
-    /* Tonal while active — the concept's teal row, taken as a ROLE pair. */
-    .status-row.active {
-      background: var(--ms-color, var(--md-sys-color-primary-container, #d7e3ff));
-      color: var(--ms-color-on, var(--md-sys-color-on-primary-container, #001b3f));
-    }
-
-    .status-badge {
-      flex: none;
-      width: clamp(38px, 9cqi, 48px);
-      height: clamp(38px, 9cqi, 48px);
-      border-radius: 999px;
-      display: grid;
-      place-items: center;
-      background: color-mix(in srgb, currentColor 12%, transparent);
-    }
-
-    .status-badge ha-icon {
-      --mdc-icon-size: clamp(20px, 5cqi, 26px);
-    }
-
-    .status-main {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    /* headline-small 24sp */
-    .status-state {
-      font-family: var(--materia-font-display, inherit);
-      font-size: clamp(17px, 4.4cqi, 24px);
-      font-weight: 400;
-      line-height: 1.33;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    /* body-small 12sp */
-    .status-sub {
-      font-size: clamp(11px, 2.6cqi, 12px);
-      font-weight: 400;
-      line-height: 1.33;
-      letter-spacing: 0.4px;
-      opacity: 0.72;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .status-dots {
-      flex: none;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .status-dots i {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: color-mix(in srgb, currentColor 20%, transparent);
-      transition: background-color var(--md-sys-motion-default-effects);
-    }
-
-    .status-dots i.on {
-      background: currentColor;
-    }
-
-    /* No number to show progress against: the dots travel instead, which is
-       an activity indicator rather than a false reading. */
-    .status-dots.pulse i {
-      animation: ms-dots 1.4s ease-in-out infinite;
-      animation-delay: calc(var(--i) * 0.16s);
-    }
-
-    @keyframes ms-dots {
-      0%,
-      100% {
-        opacity: 0.35;
-      }
-      50% {
-        opacity: 1;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .status-dots.pulse i {
-        animation: none;
-      }
-    }
-
     /* ================= the history family (19b) ============================
 
        Geometry is the concept's, verbatim; colour is tokens. The alphas (14%
@@ -772,7 +661,7 @@ export const styles = [
        hand-mixed alpha has no contrast guarantee, and my reasoning that "the
        text and its wash are the same hue" only holds if the wash lands on a
        surface that happens to cooperate. Every other filled surface in this
-       library (status-row.active, the lock, the alarm) uses the pair. */
+       library (the lock and alarm) uses the pair. */
     .delta-pill {
       flex: none;
       display: inline-flex;

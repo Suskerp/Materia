@@ -16,7 +16,6 @@ const VARIANTS = [
   { value: "bar", label: "Gauge · value over a track" },
   { value: "ladder", label: "Gauge · ladder of bars" },
   { value: "ring", label: "Gauge · ring beside the value" },
-  { value: "status", label: "Status row (tonal, icon badge + state)" },
   { value: "scale", label: "Gauge · position on a ramp, with reference marks" },
   // The history family: these ask the recorder for the measurement's past.
   { value: "spark", label: "History · area sparkline hero" },
@@ -61,9 +60,7 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
             { max: 3000, bars: 5 }
           : v === "ladder"
             ? { bars: 5 }
-            : v === "status"
-              ? { dots: 4 }
-              : v === "spark" || v === "sparkline"
+            : v === "spark" || v === "sparkline"
                 ? // 24h and 48 points are the card's real defaults, and
                   // show_delta is true only for the area hero.
                   { hours: 24, points: 48, history_refresh: 5, show_delta: v === "spark" }
@@ -179,23 +176,6 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
           label: "Show the change pill",
           helper: "Fetches history only when switched on, since a change needs a window to measure over.",
           selector: { boolean: {} },
-        },
-      );
-    }
-    if (v === "status") {
-      extras.fields.push(
-        {
-          name: "active_state",
-          label: "State(s) that count as active",
-          helper:
-            "Comma-separated. Left empty it is derived from the domain (cover open, vacuum cleaning, media_player playing…), falling back to \"on\" — so a sensor reading \"Connected\" needs it spelled out here.",
-          selector: { text: {} },
-        },
-        {
-          name: "dots",
-          label: "Indicator dots (default 4)",
-          helper: "Filled to the value when the entity has a scale; otherwise they pulse while it is active.",
-          selector: { number: { min: 2, max: 12, mode: "box" } },
         },
       );
     }

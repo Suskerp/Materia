@@ -36,6 +36,7 @@ import "./cards/climate-panel/index.js";
 import "./cards/icon-row/index.js";
 import "./cards/lock/index.js";
 import "./cards/schedule/index.js";
+import "./cards/time-input/index.js";
 import "./cards/select-hero/index.js";
 import "./cards/heading/index.js";
 import "./cards/doorbell/index.js";
@@ -62,7 +63,7 @@ import "./elements/clock/index.js";
 injectFonts();
 
 // Version info
-const VERSION = "0.68.6";
+const VERSION = "0.68.7";
 console.info(
   `%c MATERIA %c v${VERSION} `,
   "color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;",

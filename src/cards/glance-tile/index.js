@@ -2,7 +2,6 @@ import { LitElement, html, svg, nothing } from "lit";
 import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { roundedPolygonPath } from "../../utils/shapes.js";
-import { isActiveState } from "../../utils/active-state.js";
 import { fetchNumericHistory, resample, segments, bucketDays, delta, withLiveSample, lastDistinctChange } from "../../utils/history.js";
 import { styles } from "./styles.js";
 import "./editor.js";
@@ -90,10 +89,6 @@ const SPARK_DEFAULT_DAYS = 3;
  *                  a compatibility adapter, not a second copy of it.
  *   ring         — circular progress BESIDE the value rather than behind it,
  *                  so the number is never read through its own gauge.
- *   status       — a wide tonal row: icon badge, state, subtitle and a dot
- *                  indicator. The one variant that is a row, not a square,
- *                  and the one that reads `active_state` rather than assuming
- *                  a fixed list of on-ish words.
  *   scale        — the value's POSITION on a ramp, with any number of
  *                  author-supplied reference marks beside it. A number only
  *                  means something next to something else. Passes no
@@ -220,7 +215,6 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
       fill: () => this._fill(),
       bar: () => this._bar(),
       ring: () => this._ring(),
-      status: () => this._status(),
       scale: () => this._scale(),
       spark: () => this._spark({ area: true }),
       sparkline: () => this._spark({ area: false }),
@@ -819,41 +813,6 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     `;
   }
 
-  /* ---- status: a wide tonal row, not a square -----------------------------
-     The one variant whose shape is a row: an icon badge, the state large
-     enough to read across a room, a subtitle, and a dot indicator on the
-     right. Tonal container per the M3 mapping (primary-container on
-     on-primary-container), so it reads as a state rather than a measurement. */
-  _status() {
-    // NOT the module-level ACTIVE_STATES list the `binary` variant uses: that
-    // is a fixed set of light-and-switch words, which is exactly why a sensor
-    // reporting "Connected" or "Available" read as inert. active_state (a
-    // string or a list) wins; with nothing configured the answer is derived
-    // from the entity's DOMAIN, and "on" is only the last rung.
-    const active = isActiveState(this._stateObj, this.config.active_state);
-    const dots = Math.max(2, Math.min(12, Math.round(this._num(this.config.dots) ?? 4)));
-    // A calibratable number turns the dots into a coarse progress read;
-    // without one they are an activity indicator, dim at rest.
-    const g = this._gauge();
-    const filled = g ? Math.max(0, Math.min(dots, Math.ceil(g.frac * dots))) : active ? dots : 0;
-    return html`
-      <div class="status-row ${active ? "active" : ""}">
-        <div class="status-badge">
-          <ha-icon icon=${this._icon(active ? "m3o:check-circle" : "m3o:info")}></ha-icon>
-        </div>
-        <div class="status-main">
-          <div class="status-state">${this._fmtState()}</div>
-          <div class="status-sub">${this._label ?? this._name}</div>
-        </div>
-        <div class="status-dots ${!g && active ? "pulse" : ""}">
-          ${Array.from({ length: dots }, (_, i) =>
-            html`<i class=${i < filled ? "on" : ""} style="--i:${i}"></i>`
-          )}
-        </div>
-      </div>
-    `;
-  }
-
   /* ---- energy: value + quiet bolt glyph ------------------------------------ */
   _energy() {
     const v = this._num(this._stateObj.state);
@@ -1442,7 +1401,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
    *  to read at 6 and at 12 columns; the two ROW presentations start wide
    *  because squeezing a row into a third of the grid wastes it. */
   getGridOptions() {
-    if (["status", "events", "detail", "progress_summary"].includes(this._variant)) {
+    if (["events", "detail", "progress_summary"].includes(this._variant)) {
       return { columns: 12, rows: "auto", min_columns: 6 };
     }
     if (this._variant === "spark") return { columns: 12, rows: "auto", min_columns: 4 };

@@ -410,7 +410,7 @@ battery_entity: sensor.roborock_qrevo_battery
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `entity` | string | **required** | Any entity |
-| `variant` | string | **required** | Current value: `percent`, `battery`, `temperature`, `power`, `energy`, `binary`, `plain`, `vacuum`; gauge: `fill`, `bar`, `ladder`, `ring`, `status`, `scale`; history: `spark`, `sparkline`, `weekbars`, `events`; summary: `detail`, `progress_summary` |
+| `variant` | string | **required** | Current value: `percent`, `battery`, `temperature`, `power`, `energy`, `binary`, `plain`, `vacuum`; gauge: `fill`, `bar`, `ladder`, `ring`, `scale`; history: `spark`, `sparkline`, `weekbars`, `events`; summary: `detail`, `progress_summary` |
 | `label` | string (templatable) | | Subtitle — literal text or a Jinja template |
 | `show_icon` | boolean | `true` | Show the icon beside the tile heading |
 | `min` / `max` | number | per variant | Scale (temperature/power) |

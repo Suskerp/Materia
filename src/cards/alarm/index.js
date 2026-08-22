@@ -1841,15 +1841,15 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
        same hierarchy with the warning-container pair. */
     const armingWithHole = !isActive && ctx.notReady.length > 0;
     const sweep = armingWithHole
-      ? "var(--md-sys-cust-color-warning-container, var(--md-sys-color-error-container))"
+      ? "var(--md-sys-cust-color-warning-container, var(--md-sys-color-tertiary-container))"
       : isActive
       ? ctx.idleBg
-      : "var(--md-sys-color-primary-container)";
+      : "var(--md-sys-color-secondary-container)";
     const sweepInk = armingWithHole
-      ? "var(--md-sys-cust-color-on-warning-container, var(--md-sys-color-on-error-container))"
+      ? "var(--md-sys-cust-color-on-warning-container, var(--md-sys-color-on-tertiary-container))"
       : isActive
       ? ctx.idleFg
-      : "var(--md-sys-color-on-primary-container)";
+      : "var(--md-sys-color-on-secondary-container)";
 
     const aria = inert
       ? t("al_aria_inert", this.hass, { mode: label })
