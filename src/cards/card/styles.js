@@ -1,6 +1,22 @@
 import { css } from "lit";
 
 export const styles = css`
+  /* Artwork in the icon slot. Sized to fill .icon-container's own 42px
+     footprint exactly (see rowCardStyles) so a row that switches between icon
+     and thumbnail never changes height — it's a same-box swap, not a layout
+     change. The surface-tint background-color is the same "nothing decoded
+     yet" placeholder materia-media uses for its art tile. */
+  .thumb {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background-color: var(--md-sys-color-surface-container-highest, var(--md-sys-color-surface-variant, rgba(127, 127, 127, 0.2)));
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    flex-shrink: 0;
+  }
+
   .container.slider-active {
     touch-action: pan-y pinch-zoom;
     overscroll-behavior: contain;

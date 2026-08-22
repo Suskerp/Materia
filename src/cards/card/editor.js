@@ -98,6 +98,8 @@ export class MateriaCardEditor extends SmartEditorBase {
             selector: { icon: {} },
             context: { icon_entity: "entity" },
           },
+          { name: "image", label: "Image (replaces icon)", template: true, selector: { text: {} } },
+          { name: "fallback_image", label: "Fallback image (shown instead of the icon when there's no image)", selector: { text: {} } },
         ],
       },
       {

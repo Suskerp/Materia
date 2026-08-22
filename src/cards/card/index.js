@@ -95,6 +95,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
     _resolvedColor: { state: true },
     _resolvedColorOn: { state: true },
     _resolvedIcon: { state: true },
+    _resolvedImage: { state: true },
     _resolvedName: { state: true },
     _resolvedSubtitle: { state: true },
     _resolvedShowState: { state: true },
@@ -268,6 +269,19 @@ export class MateriaCard extends ActionMixin(LitElement) {
     return undefined; // let HA choose
   }
 
+  /**
+   * Optional artwork for the icon slot — a URL or a Jinja2 template, same
+   * literal-or-template convention as `icon`/`color`. Generic on purpose:
+   * nothing here knows about media players or album art, just "a picture
+   * instead of a glyph" for a person, a camera, a book cover, anything.
+   * Empty/unresolved falls through to the icon (see render()) — the row
+   * still needs a non-empty resolvable URL to switch away from the glyph.
+   */
+  get _image() {
+    if (!this.config.image) return "";
+    return this._isTemplate(this.config.image) ? this._resolvedImage || "" : this.config.image;
+  }
+
   get _subtitle() {
     const val = this.config.subtitle;
     if (!val) return "";
@@ -412,6 +426,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
     if (this._isTemplate(c?.color) && this._resolvedColor === undefined) return false;
     if (this._isTemplate(c?.color_on) && this._resolvedColorOn === undefined) return false;
     if (this._isTemplate(c?.icon) && this._resolvedIcon === undefined) return false;
+    if (this._isTemplate(c?.image) && this._resolvedImage === undefined) return false;
     if (this._isTemplate(c?.name) && this._resolvedName === undefined) return false;
     return true;
   }
@@ -422,6 +437,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
     this._resolveField("color", "_resolvedColor");
     this._resolveField("color_on", "_resolvedColorOn");
     this._resolveField("icon", "_resolvedIcon");
+    this._resolveField("image", "_resolvedImage");
     this._resolveField("name", "_resolvedName");
     this._resolveField("subtitle", "_resolvedSubtitle");
     this._resolveField("show_state", "_resolvedShowState");
@@ -782,6 +798,19 @@ export class MateriaCard extends ActionMixin(LitElement) {
       this._domainConfig.sliderColor || this._domainConfig.colorActive;
 
     const icon = this._icon;
+    // Primary art over the fallback as TWO background layers, not one — same
+    // trick materia-media uses (see src/elements/media/index.js). A CSS
+    // background has no error event, so this is the only way to recover from
+    // a URL that resolves but 404s or fails to decode: layers paint in
+    // order, and a layer that fails to decode just reveals the one behind it.
+    // Empty layers (nothing set, or a template that resolved to nothing) is
+    // the common case and renders the icon exactly as before.
+    const image = this._image;
+    const fb = this.config.fallback_image;
+    const layers = [image, fb && fb !== image ? fb : null]
+      .filter(Boolean)
+      .map((u) => `url('${u}')`)
+      .join(", ");
     const stateDisplay = unavailable ? t("unavailable", this.hass) : this._stateDisplay;
 
     // Optionally merge the subtitle into the state line ("State · Subtitle")
@@ -813,13 +842,15 @@ export class MateriaCard extends ActionMixin(LitElement) {
             : ""}
 
           <div class="icon-container">
-            ${icon
-              ? html`<ha-icon .icon=${icon} style="color: ${textColor};"></ha-icon>`
-              : html`<ha-state-icon
-                  .hass=${this.hass}
-                  .stateObj=${stateObj}
-                  style="color: ${textColor};"
-                ></ha-state-icon>`}
+            ${layers
+              ? html`<div class="thumb" style="background-image: ${layers};"></div>`
+              : icon
+                ? html`<ha-icon .icon=${icon} style="color: ${textColor};"></ha-icon>`
+                : html`<ha-state-icon
+                    .hass=${this.hass}
+                    .stateObj=${stateObj}
+                    style="color: ${textColor};"
+                  ></ha-state-icon>`}
           </div>
 
           <div class="name-container">
