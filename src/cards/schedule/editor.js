@@ -103,7 +103,7 @@ class MateriaScheduleEditor extends SmartEditorBase {
           {
             name: "targets",
             label: "Devices and friendly actions",
-            helper: 'List of {entity, name, icon, actions:[{service,label,icon}]}. Schedules controlling these devices are discovered automatically.',
+            helper: 'List of {entity, name, icon, actions:[{service,label,icon}]}. People may combine devices that share an action; matching schedules are discovered automatically.',
             selector: { object: {} },
           },
           {

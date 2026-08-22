@@ -127,6 +127,7 @@ const STRINGS = {
   sched_manager_sub: { en: "Choose a schedule to change it", nl: "Kies een planning om ze aan te passen" },
   sched_choose_device: { en: "Choose a device", nl: "Kies een toestel" },
   sched_device: { en: "Device", nl: "Toestel" },
+  sched_devices: { en: "Devices", nl: "Toestellen" },
   sched_action: { en: "Action", nl: "Actie" },
   sched_new: { en: "New schedule", nl: "Nieuwe planning" },
   sched_edit: { en: "Change schedule", nl: "Planning aanpassen" },

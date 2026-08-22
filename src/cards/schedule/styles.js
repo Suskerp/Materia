@@ -31,7 +31,7 @@ export const styles = [
        mode and repeats the dialog heading. Popup presentation therefore keeps
        only the picker's controls; inline/manager cards retain their own skin. */
     .sheet.manager-editor {
-      padding: 0 2px 8px;
+      padding: 0 clamp(16px, 4cqi, 24px) clamp(16px, 4cqi, 24px);
       border-radius: 0;
       background: transparent;
     }
@@ -751,7 +751,8 @@ export const styles = [
       font-weight: 600;
     }
 
-    .win-head .val {
+    .win-head .val,
+    .native-time-input {
       font-family: var(--materia-font-display, inherit);
       font-size: 22px;
       font-weight: 700;
@@ -768,17 +769,20 @@ export const styles = [
     }
 
     .native-time-input {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
       margin: 0;
       padding: 0;
       border: 0;
-      opacity: 0;
+      width: 6.5em;
+      min-width: 0;
+      text-align: right;
+      background: transparent;
+      outline: none;
       cursor: pointer;
-      appearance: none;
-      -webkit-appearance: none;
+      color-scheme: light dark;
+    }
+
+    .native-time-input::-webkit-calendar-picker-indicator {
+      display: none;
     }
 
     /* Non-normative affordance: a window whose stop <= start crosses midnight

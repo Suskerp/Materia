@@ -68,6 +68,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     _resolvedNextSub: { state: true },
     _activeScheduleEntity: { state: true },
     _targetEntity: { state: true },
+    _targetEntities: { state: true },
     _targetAction: { state: true },
     _removeArmed: { state: true },
   };
@@ -96,11 +97,11 @@ class MateriaSchedule extends ActionMixin(LitElement) {
         // is available. Do not select a default here because that marks the
         // draft dirty and would block the seed.
         this._dirty = false;
-      } else if (!this._targetEntity) {
+      } else if (!this._targetEntities.length) {
         this._selectTarget(this._managerTargets[0]?.entity);
         this._days = [true, true, true, true, true, true, true];
       }
-    } else if (this._isManager && !this._targetEntity) {
+    } else if (this._isManager && !this._targetEntities.length) {
       this._selectTarget(this._managerTargets[0]?.entity);
     }
   }
@@ -176,15 +177,44 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     ];
   }
 
+  get _selectedTargets() {
+    return this._targetEntities?.length
+      ? this._targetEntities
+      : (this._targetEntity ? [this._targetEntity] : []);
+  }
+
+  _commonTargetActions(entities = this._selectedTargets) {
+    if (!entities.length) return [];
+    const first = this._targetActions(entities[0]);
+    return first.filter((action) => entities.every((entity) =>
+      this._targetActions(entity).some((candidate) => candidate.service === action.service)
+    ));
+  }
+
+  _targetSelectionName(entities = this._selectedTargets) {
+    if (!entities.length) return t("sched_choose_device", this.hass);
+    return entities.map((entity) => this._targetName(entity)).join(" + ");
+  }
+
   _actionName(service = this._targetAction, entity = this._targetEntity) {
     const action = this._targetActions(entity).find((item) => item.service === service);
     return action?.label || (String(service).endsWith("turn_off") ? t("state_off", this.hass) : t("state_on", this.hass));
   }
 
   _selectTarget(entity) {
-    if (!entity) return;
-    this._targetEntity = entity;
-    this._targetAction = this._targetActions(entity)[0]?.service || null;
+    this._selectTargets(entity ? [entity] : []);
+  }
+
+  _selectTargets(value) {
+    const requested = Array.isArray(value) ? value : (value ? [value] : []);
+    const allowed = new Set(this._managerTargets.map((item) => item.entity));
+    const entities = [...new Set(requested)].filter((entity) => allowed.has(entity));
+    this._targetEntities = entities;
+    this._targetEntity = entities[0] || null;
+    const actions = this._commonTargetActions(entities);
+    if (!actions.some((action) => action.service === this._targetAction)) {
+      this._targetAction = actions[0]?.service || null;
+    }
     this._dirty = true;
   }
 
@@ -242,6 +272,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     this._multipleSlots = false;
     this._activeScheduleEntity = null;
     this._targetEntity = null;
+    this._targetEntities = [];
     this._targetAction = null;
     this._removeArmed = false;
     // Plain fields, not reactive props: neither is ever read by render()
@@ -268,7 +299,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   get _hasSelection() {
     if (this._isWindow) return !this._windowBlocked
       && this._days.some(Boolean)
-      && (!this._isManager || (!!this._targetEntity && !!this._targetAction));
+      && (!this._isManager || (this._selectedTargets.length > 0 && !!this._targetAction));
     return this._mode === "event" ? this._event != null : this._pick != null;
   }
 
@@ -338,10 +369,18 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     this._multipleSlots = slots.length > 1;
     this._entityActions = st.attributes.actions ?? null;
     if (this._isManager) {
-      const entity = (st.attributes.entities || [])[0];
-      if (entity) this._targetEntity = entity;
-      const service = (st.attributes.actions || [])[0]?.service;
-      this._targetAction = service || this._targetActions(entity)[0]?.service || null;
+      const allowed = new Set(this._managerTargets.map((item) => item.entity));
+      const entities = [...new Set(st.attributes.entities || [])].filter((entity) => allowed.has(entity));
+      this._targetEntities = entities;
+      this._targetEntity = entities[0] || null;
+      const services = (st.attributes.actions || []).map((action) => action?.service).filter(Boolean);
+      const sharedService = services.length && services.every((service) => service === services[0])
+        ? services[0]
+        : null;
+      const common = this._commonTargetActions(entities);
+      this._targetAction = common.some((action) => action.service === sharedService)
+        ? sharedService
+        : common[0]?.service || null;
     }
 
     const raw = slots[0];
@@ -784,7 +823,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     // yet); otherwise whatever was read off schedule_entity survives
     // untouched — losing it would turn the pump's schedule into a no-op.
     const actions = this._isManager
-      ? [{ service: this._targetAction, entity_id: this._targetEntity }]
+      ? this._selectedTargets.map((entity) => ({ service: this._targetAction, entity_id: entity }))
       : (this.config.actions ?? this._entityActions ?? []);
     return {
       start,
@@ -792,7 +831,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       weekdays,
       actions,
       entity: this._scheduleEntity,
-      name: `${this._targetName()} · ${this._windowLabel}`,
+      name: `${this._targetSelectionName()} · ${this._windowLabel}`,
       label: this._windowLabel,
     };
   }
@@ -958,14 +997,15 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       </div>
       <div class="schedule-list">
         ${schedules.length ? schedules.map((stateObj) => {
-          const target = (stateObj.attributes.entities || [])[0];
+          const targets = stateObj.attributes.entities || [];
+          const target = targets[0];
           const service = (stateObj.attributes.actions || [])[0]?.service;
           const time = (stateObj.attributes.timeslots || [])[0] || "";
           return html`<div class="schedule-row">
             <button class="schedule-main" @click=${() => this._openSchedule(stateObj)}>
-              <ha-icon icon=${this._targetConfig(target)?.icon ?? "m3o:schedule"}></ha-icon>
+              <ha-icon icon=${targets.length > 1 ? "m3o:devices" : (this._targetConfig(target)?.icon ?? "m3o:schedule")}></ha-icon>
               <span class="schedule-text">
-                <span class="schedule-name">${this._targetName(target)} · ${this._actionName(service, target)}</span>
+                <span class="schedule-name">${this._targetSelectionName(targets)} · ${this._actionName(service, target)}</span>
                 <span class="schedule-sub">${time} · ${this._formatNext(stateObj)}</span>
               </span>
               <ha-icon icon="m3o:edit"></ha-icon>
@@ -988,14 +1028,14 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
   _renderManagerFields() {
     const targetOptions = this._managerTargets.map((item) => ({ value: item.entity, label: this._targetName(item.entity) }));
-    const actionOptions = this._targetActions().map((item) => ({ value: item.service, label: item.label || this._actionName(item.service) }));
+    const actionOptions = this._commonTargetActions().map((item) => ({ value: item.service, label: item.label || this._actionName(item.service) }));
     return html`<div class="manager-fields">
-      <label><span>${t("sched_device", this.hass)}</span>
+      <label><span>${t("sched_devices", this.hass)}</span>
         <ha-selector
           .hass=${this.hass}
-          .selector=${{ select: { mode: "dropdown", options: targetOptions } }}
-          .value=${this._targetEntity || ""}
-          @value-changed=${(event) => this._selectTarget(event.detail.value)}
+          .selector=${{ select: { mode: "dropdown", multiple: true, options: targetOptions } }}
+          .value=${this._selectedTargets}
+          @value-changed=${(event) => this._selectTargets(event.detail.value)}
         ></ha-selector>
       </label>
       <label><span>${t("sched_action", this.hass)}</span>
@@ -1337,6 +1377,18 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  each styled row, so a direct tap invokes the operating system's time
    *  picker: wheel on iOS, native dialog on Android, browser picker on desktop.
    *  There is no expanding imitation of a picker to maintain or scroll past. */
+  _showNativeTimePicker(event) {
+    const input = event.currentTarget.querySelector("input[type='time']");
+    if (!input || event.composedPath().includes(input)) return;
+    input.focus();
+    try {
+      input.showPicker?.();
+    } catch (_) {
+      // Firefox and older WebViews have no programmatic picker; focus still
+      // exposes their native editable time field.
+    }
+  }
+
   _renderWindow() {
     if (this._windowBlocked) {
       return html`
@@ -1357,52 +1409,50 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     return html`
       <div class="window">
         <div class="win-edge native-time">
-          <div class="win-head">
+          <div class="win-head" @click=${this._showNativeTimePicker}>
             <span class="lbl">${t("sched_window_start", this.hass)}</span>
-            <span class="val">${this._pad(this._hour)}:${this._pad(this._minute)}</span>
+            <input
+              class="native-time-input"
+              type="time"
+              step="60"
+              aria-label=${t("sched_window_start", this.hass)}
+              .value=${`${this._pad(this._hour)}:${this._pad(this._minute)}`}
+              @input=${(event) => {
+                const [hour, minute] = String(event.currentTarget.value || "").split(":").map(Number);
+                if (Number.isFinite(hour) && Number.isFinite(minute)) {
+                  this._hour = hour;
+                  this._minute = minute;
+                  this._dirty = true;
+                }
+              }}
+            />
             ${chev}
           </div>
-          <input
-            class="native-time-input"
-            type="time"
-            step="60"
-            aria-label=${t("sched_window_start", this.hass)}
-            .value=${`${this._pad(this._hour)}:${this._pad(this._minute)}`}
-            @input=${(event) => {
-              const [hour, minute] = String(event.currentTarget.value || "").split(":").map(Number);
-              if (Number.isFinite(hour) && Number.isFinite(minute)) {
-                this._hour = hour;
-                this._minute = minute;
-                this._dirty = true;
-              }
-            }}
-          />
         </div>
 
         <div class="win-edge native-time">
-          <div class="win-head">
+          <div class="win-head" @click=${this._showNativeTimePicker}>
             <span class="lbl">${t("sched_window_stop", this.hass)}</span>
-            <span class="val">${this._pad(this._stopHour)}:${this._pad(this._stopMinute)}</span>
             <!-- Non-normative: crossing midnight round-trips exactly as entered,
                  this is only here so the reversed order doesn't read as a mistake. -->
             ${this._windowOvernight ? html`<span class="overnight-badge">${t("sched_window_overnight", this.hass)}</span>` : nothing}
+            <input
+              class="native-time-input"
+              type="time"
+              step="60"
+              aria-label=${t("sched_window_stop", this.hass)}
+              .value=${`${this._pad(this._stopHour)}:${this._pad(this._stopMinute)}`}
+              @input=${(event) => {
+                const [hour, minute] = String(event.currentTarget.value || "").split(":").map(Number);
+                if (Number.isFinite(hour) && Number.isFinite(minute)) {
+                  this._stopHour = hour;
+                  this._stopMinute = minute;
+                  this._dirty = true;
+                }
+              }}
+            />
             ${chev}
           </div>
-          <input
-            class="native-time-input"
-            type="time"
-            step="60"
-            aria-label=${t("sched_window_stop", this.hass)}
-            .value=${`${this._pad(this._stopHour)}:${this._pad(this._stopMinute)}`}
-            @input=${(event) => {
-              const [hour, minute] = String(event.currentTarget.value || "").split(":").map(Number);
-              if (Number.isFinite(hour) && Number.isFinite(minute)) {
-                this._stopHour = hour;
-                this._stopMinute = minute;
-                this._dirty = true;
-              }
-            }}
-          />
         </div>
 
         <div class="win-days">
