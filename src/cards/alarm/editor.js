@@ -97,6 +97,7 @@ class MateriaAlarmEditor extends SmartEditorBase {
       zone_flap_count: 6,
       zone_flap_window_ms: 60000,
       allow_safety_bypass: false,
+      bypass_from_can_bypass: true,
       /* arming_duration_ms and pending_duration_ms are deliberately NOT seeded.
          Absent means "nobody has told us how long this takes", which selects
          the indeterminate breathe — seeding a number here would invent a
@@ -243,6 +244,13 @@ class MateriaAlarmEditor extends SmartEditorBase {
             name: "zone_flap_window_ms",
             label: "Window those changes are counted over (ms, default 60000)",
             selector: { number: { min: 1000, max: 600000, step: 1000, mode: "box" } },
+          },
+          {
+            name: "bypass_from_can_bypass",
+            label: "Read can_bypass as the bypass indicator",
+            helper:
+              "On by default. Some panels never mark a zone's state as bypassed and instead stop allowing further bypass on it, so a can_bypass of false on an otherwise-ready zone means it is already skipped. Turn this off if your panel uses can_bypass to mean a zone can never be bypassed at all, or every such zone will be reported as skipped.",
+            selector: { boolean: {} },
           },
           {
             name: "allow_safety_bypass",

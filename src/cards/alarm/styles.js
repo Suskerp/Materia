@@ -669,20 +669,6 @@ export const styles = [
       outline-offset: 2px;
     }
 
-    /* A bypassed zone is a deliberate hole in the perimeter, so its chip is
-       drawn as an outline that is not quite closed. */
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 0 4px;
-    }
-
-    .chip.bypassed {
-      border-style: dashed;
-      opacity: 0.8;
-    }
-
     /* The way back. Solid outline and the primary role, against the dashed
        outline a bypassed zone wears — this chip RESTORES protection, so it
        should not look like the same kind of act as removing it. */
@@ -690,14 +676,6 @@ export const styles = [
       border-style: solid;
       border-color: var(--md-sys-color-primary);
       color: var(--md-sys-color-primary);
-    }
-
-    /* A bypassed zone with nothing to un-bypass it: still stated, but not
-       dressed as a control. Rendered as a span, so it also needs the cursor
-       and the state layer taken back off. */
-    .chip.inert {
-      cursor: default;
-      pointer-events: none;
     }
 
     /* The collapsed summary. A real button because it is a real control. */
@@ -756,6 +734,40 @@ export const styles = [
 
     .zrow.safety-ok > ha-icon {
       color: var(--md-sys-color-primary);
+    }
+
+    /* A BYPASSED ZONE IS A HOLE IN THE PERIMETER, and it used to be the
+       quietest thing on the card: a small dashed chip in a group sitting below
+       the "everything is fine" summary. That is the dangerous direction — a
+       skipped zone read as indistinguishable from a covered one.
+
+       It is now a full row like a not-ready zone, in a group placed second from
+       the top, with its count in the heading. The dashed outline stays, and is
+       now the only thing carrying "deliberate exception" rather than "fault";
+       everything else about the row says read me.
+
+       Deliberately NOT the amber container. Amber is what the arming sweep
+       turns for a zone blocking the arm, and a bypassed zone does not block it
+       — it is excluded from it, which is a different fact. Tertiary is the role
+       for a genuine third state that is neither all-clear nor warning, and a
+       knowingly excluded zone is exactly that. */
+    .zrow.bypassed {
+      background: color-mix(in srgb, var(--md-sys-color-tertiary, var(--ma-fg)) 12%, transparent);
+      /* Inside the box, so the row does not grow 2px against its neighbours. */
+      border: 1px dashed var(--md-sys-color-tertiary, var(--md-sys-color-outline));
+      box-sizing: border-box;
+    }
+
+    .zrow.bypassed > ha-icon,
+    .zrow.bypassed .zname {
+      color: var(--md-sys-color-tertiary, var(--ma-fg));
+    }
+
+    /* A heading that states a hole rather than labelling a list. */
+    .zgroup-title.warn {
+      color: var(--md-sys-color-tertiary, var(--ma-fg));
+      opacity: 1;
+      font-weight: 600;
     }
 
     /* UNAVAILABLE is deliberately NOT the warning role. A zone the panel

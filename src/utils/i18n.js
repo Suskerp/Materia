@@ -282,15 +282,15 @@ const STRINGS = {
   al_hint_disarming: { en: "Disarming...", nl: "Uitschakelen..." },
 
   al_foot_disarmed: { en: "Hold a mode to arm.", nl: "Houd een modus vast om in te schakelen." },
-  al_foot_disarmed_warn: { en: "{n} zones open - holding arms anyway.", nl: "{n} zones open - vasthouden schakelt toch in." },
   al_foot_armed: { en: "Armed in {mode}.", nl: "Ingeschakeld in {mode}." },
   al_foot_locked_modes: { en: "Disarm before choosing another mode.", nl: "Schakel eerst uit voor je een andere modus kiest." },
   al_foot_pending: { en: "Entry delay - disarm now.", nl: "Ingangsvertraging - schakel nu uit." },
   al_foot_triggered: { en: "Alarm triggered while armed in {mode}.", nl: "Alarm afgegaan terwijl ingeschakeld in {mode}." },
 
   al_zones_not_ready: { en: "Not ready", nl: "Niet gereed" },
-  al_zones_bypassed: { en: "Bypassed", nl: "Geblokkeerd" },
   al_zone_bypass: { en: "Bypass", nl: "Blokkeer" },
+  al_zones_bypassed_count: { en: "{n} zones bypassed", nl: "{n} zones geblokkeerd" },
+  al_zones_bypassed_one: { en: "{n} zone bypassed", nl: "{n} zone geblokkeerd" },
   al_zone_unbypass: { en: "Restore", nl: "Deblokkeer" },
   al_zones_safety_ok: { en: "{n} detectors OK", nl: "{n} detectoren in orde" },
   al_zones_safety_ok_one: { en: "{n} detector OK", nl: "{n} detector in orde" },

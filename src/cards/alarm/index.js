@@ -637,6 +637,59 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     return /^bypass/i.test(this._zoneWord(st));
   }
 
+  /** Is this zone currently bypassed?
+   *
+   *  TWO SIGNALS, because this panel does not use the obvious one. Its zone
+   *  status stays "Ready" when bypassed — which is exactly why the Bypassed
+   *  group never populated — and the tell is instead that `can_bypass` flips to
+   *  false: the panel refuses to bypass a zone it has already bypassed, and
+   *  that refusal is observable.
+   *
+   *  The attribute is genuinely ambiguous, so the inference is fenced. It means
+   *  "the panel will not let me bypass this", which on a zone that is otherwise
+   *  fine means already-bypassed, but on other hardware could mean never
+   *  bypassable at all. Three gates:
+   *    - an unbypass action must be configured, so we only infer bypass on a
+   *      panel that has told us bypassing is a thing it does;
+   *    - the zone must read plainly ready, since a refusal on an open or
+   *      unreachable zone means something else entirely;
+   *    - 24-hour zones are excluded, because a fire zone refusing bypass is far
+   *      more likely to be unbypassable by design than currently skipped. (It
+   *      costs nothing here: all twelve detectors report can_bypass true.)
+   *
+   *  Which way the remaining error falls matters, and it falls safe. A false
+   *  positive claims a hole that is not there — alarming but honest-ish. A
+   *  false negative would report a perimeter as whole while a zone sits
+   *  excluded, which is the dangerous direction. This inference can only
+   *  produce the former, since it fires on zones already counted as ready.
+   *
+   *  NOT USED: `priority` (one sample of 3 against 5 proves nothing) and
+   *  `bank_state` (a plausible per-bank bitmap, but one sample is not an
+   *  encoding). Either could become a better signal with more evidence. */
+  _inferBypassed(st, safety) {
+    if (this._zoneBypassed(st)) return true; // the panel said so in words
+    if (safety) return false;
+    /* THE ESCAPE HATCH, and it earns its place: on hardware where can_bypass
+       false means "this zone can never be bypassed" rather than "it already
+       is", every such zone reads as a hole that is not there. That is not
+       hypothetical — the card's own older test fixture models exactly that
+       shape and produced seven false positives the moment this inference went
+       in. The ambiguity is irreducible from one attribute at one instant, so
+       the panel that needs the inference keeps it and the panel that does not
+       can say so.
+    
+       Why not use the FLIP instead (true, then false, therefore just
+       bypassed)? Because it fails the case that matters most: a dashboard
+       loaded while a zone is already bypassed has never observed the true, so
+       the strongest evidence is precisely the evidence a reload throws away. */
+    if (this.config?.bypass_from_can_bypass === false) return false;
+    if (!this.config?.unbypass_action) return false;
+    const cb = st?.attributes?.can_bypass;
+    const refused = cb === false || String(cb).toLowerCase() === "false";
+    if (!refused) return false;
+    return !this._zoneUnavailable(st) && !this._zoneNotReady(st);
+  }
+
   /** Not ready: the panel's own words, or the binary-contact vocabulary for an
    *  ordinary door sensor. Only ever consulted after bypassed and unavailable
    *  have been ruled out, so nothing is counted twice. */
@@ -856,7 +909,7 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
       b.classifiedBy = cls.by;
 
       const unavailable = this._zoneUnavailable(st);
-      const bypassed = !unavailable && this._zoneBypassed(st);
+      const bypassed = !unavailable && this._inferBypassed(st, cls.safety);
       // Only a BLOCKING zone can be latched; a transient one is never in the
       // group whose height the latch exists to protect.
       const live = !transient && !unavailable && !bypassed && this._zoneNotReady(st);
@@ -998,17 +1051,20 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     const resolved = this._zoneConfigs()
       .map((z) => {
         const st = this.hass?.states[z.entity];
-        const unavailable = this._zoneUnavailable(st);
-        const bypassed = !unavailable && this._zoneBypassed(st);
         /* Verdicts come from the stability book, which the survey has already
            advanced this cycle. The book is consulted rather than recomputed so
            the getter stays free of side effects and every reader — the groups,
            the counts, the sweep colour — agrees by construction. Falling back
            to the live read costs nothing and covers a getter reached before any
-           survey has run. */
+           survey has run.
+
+           Read BEFORE the bypass inference, which needs the safety verdict:
+           a 24-hour zone refusing bypass is not a bypassed zone. */
         const b = this._zoneBook?.get(z.entity);
         const transient = b?.transient ?? false;
         const safety = b?.safety ?? false;
+        const unavailable = this._zoneUnavailable(st);
+        const bypassed = !unavailable && this._inferBypassed(st, safety);
         const liveNotReady = !unavailable && !bypassed && this._zoneNotReady(st);
         const out = {
           ...z,
@@ -1545,9 +1601,13 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
         : ` ${t("al_foot_locked_modes", this.hass)}`;
       return { text: base + extra, tone: "" };
     }
-    if (notReady.length) {
-      return { text: t("al_foot_disarmed_warn", this.hass, { n: notReady.length }), tone: "warn" };
-    }
+    /* The "N zones open - holding arms anyway" line is deliberately gone. It
+       was ungrammatical at n=1, it sat in the warning role saying something the
+       reader could already see, and the information is carried three times over
+       without it: the sub-line counts the zones, the zone list names them, and
+       the arming sweep turns amber inside the gesture itself. Noise in the
+       error role is worse than nothing, because it teaches the reader to skip
+       the place real warnings appear. */
     return { text: t("al_foot_disarmed", this.hass), tone: "" };
   }
 
@@ -1903,6 +1963,21 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
             `
           : nothing}
 
+        ${bypassed.length
+          ? html`
+              <div class="zgroup">
+                <div class="zgroup-title warn">
+                  ${t(
+                    bypassed.length === 1 ? "al_zones_bypassed_one" : "al_zones_bypassed_count",
+                    this.hass,
+                    { n: bypassed.length }
+                  )}
+                </div>
+                ${bypassed.map((z) => this._zoneRow(z, "bypassed"))}
+              </div>
+            `
+          : nothing}
+
         ${safety.length
           ? this._zoneSummary({
               /* ALWAYS EXACTLY ONE ROW, whatever the fault count. That is what
@@ -1973,38 +2048,6 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
             })
           : nothing}
 
-        ${bypassed.length
-          ? html`
-              <div class="zgroup">
-                <div class="zgroup-title">${t("al_zones_bypassed", this.hass)}</div>
-                <div class="chips">
-                  ${bypassed.map((z) =>
-                    z.unskippable
-                      ? html`
-                          <button
-                            class="chip bypassed"
-                            aria-label=${t("al_aria_unbypass", this.hass, { name: z.name })}
-                            @click=${() => this._fireZoneAction(z, "unbypass")}
-                          >
-                            <ha-icon .icon=${z.icon}></ha-icon>
-                            <span>${z.name}</span>
-                            <ha-icon icon="m3o:close"></ha-icon>
-                          </button>
-                        `
-                      : // No un-skip action configured, or no zone number to
-                        // send: still SAY the zone is being skipped, just
-                        // without a control that would do nothing.
-                        html`
-                          <span class="chip bypassed inert">
-                            <ha-icon .icon=${z.icon}></ha-icon>
-                            <span>${z.name}</span>
-                          </span>
-                        `
-                  )}
-                </div>
-              </div>
-            `
-          : nothing}
       </div>
     `;
   }
