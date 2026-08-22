@@ -689,9 +689,13 @@ export const styles = [
       min-height: 172px;
     }
 
-    .spark-row {
+    /* Shared by every variant that leads with a number and may carry a pill.
+       flex-end rather than baseline: the pill is a fixed-height box, and
+       baseline-aligning it against a 36sp numeral hangs it off the digits'
+       baseline instead of sitting it on their optical bottom. */
+    .value-row {
       display: flex;
-      align-items: baseline;
+      align-items: flex-end;
       justify-content: space-between;
       gap: 10px;
       width: 100%;
@@ -768,6 +772,121 @@ export const styles = [
 
     .delta-pill ha-icon {
       --mdc-icon-size: 17px;
+    }
+
+    /* ---- scale: a ramp, the value on it, and reference marks ------------
+       Geometry is the concept's. The marker OFFSETS are not: it centres each
+       mark by subtracting half its own width in px (-2px on a 5px mark, -1px
+       on a 2px one), which only stays centred while the widths never change.
+       translateX(-50%) says the same thing about the mark rather than about
+       one arithmetic result, so it survives a restyle — the same reason the
+       level card's value column is measured rather than counted. */
+
+    .ramp {
+      position: relative;
+      width: 100%;
+      height: 12px;
+      border-radius: 6px;
+      /* The neutral track when the author has named no direction and no stops:
+         position without judgement. */
+      background: var(--md-sys-color-secondary-container, color-mix(in srgb, currentColor 12%, transparent));
+    }
+
+    /* The value. Taller than the ramp and overhanging it top and bottom, so it
+       reads as a position ON the scale rather than a segment of it. */
+    .ramp .here {
+      position: absolute;
+      top: -5px;
+      width: 5px;
+      height: 22px;
+      border-radius: 3px;
+      transform: translateX(-50%);
+      background: var(--md-sys-color-on-surface, var(--primary-text-color));
+      box-shadow: 0 0 0 2px var(--ms-color, var(--ha-card-background, var(--card-background-color)));
+      transition: left var(--md-sys-motion-expressive-default-spatial);
+    }
+
+    /* A reference mark: quieter than the value, and translucent so a ramp
+       colour still reads through it. */
+    .ramp .ref {
+      position: absolute;
+      top: -3px;
+      width: 2px;
+      height: 18px;
+      border-radius: 1px;
+      transform: translateX(-50%);
+      background: color-mix(
+        in srgb,
+        var(--ref-color, var(--md-sys-color-on-surface, currentColor)) 45%,
+        transparent
+      );
+    }
+
+    .scale-labels {
+      position: relative;
+      height: 16px;
+      width: 100%;
+      /* body-small territory; the concept's 11.5px is not a step, and
+         label-small is 11sp. */
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 16px;
+      letter-spacing: 0.5px;
+      opacity: 0.7;
+    }
+
+    .scale-labels .lo {
+      position: absolute;
+      left: 0;
+    }
+
+    .scale-labels .hi {
+      position: absolute;
+      right: 0;
+    }
+
+    /* Centred under its mark by the same mechanism, not by guessing at half a
+       label's width. */
+    .scale-labels .ref-label {
+      position: absolute;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .rect-tile.scale-tile {
+      aspect-ratio: auto;
+      justify-content: flex-start;
+      /* The concept's 16px value-row-to-ramp and 8px ramp-to-labels. A single
+         flex gap cannot be two values, so the ramp carries the difference. */
+      gap: 8px;
+    }
+
+    .rect-tile.scale-tile .ramp {
+      margin-top: 8px;
+    }
+
+    /* A landscape card, so it fills its column rather than sitting in the
+       squares' 200px cap — the same escape the area spark uses. This is not
+       cosmetic: at 200px the concept's OWN labels collide ("zuinig 13" runs
+       into "gem. 15,6", because a reference at 29% of 180px lands at 52px and
+       the left label is about 50px wide). At the width the concept draws it
+       they clear each other comfortably. */
+    .rect-tile.left.scale-tile {
+      max-width: var(--ms-size-row, none);
+    }
+
+    /* Narrow enough and they collide anyway, so the reference labels drop to
+       their own line rather than overprinting the bounds. Costs 16dp, and only
+       where it is needed — the bounds define the scale and the references are
+       the point of the variant, so neither can simply be dropped. */
+    @container (max-width: 320px) {
+      .scale-labels {
+        height: 32px;
+      }
+
+      .scale-labels .ref-label {
+        top: 16px;
+      }
     }
 
     /* ---- week bars ------------------------------------------------------ */

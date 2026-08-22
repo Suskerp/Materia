@@ -78,6 +78,11 @@ const SPARK_DEFAULT_DAYS = 3;
  *                  indicator. The one variant that is a row, not a square,
  *                  and the one that reads `active_state` rather than assuming
  *                  a fixed list of on-ish words.
+ *   scale        — the value's POSITION on a ramp, with any number of
+ *                  author-supplied reference marks beside it. A number only
+ *                  means something next to something else. Passes no
+ *                  judgement unless the author names a direction or supplies
+ *                  colour stops; otherwise the ramp is a neutral track.
  *
  * View only: tap opens more-info (or any configured tap_action).
  */
@@ -90,6 +95,8 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     _resolvedLabel: { state: true },
     _resolvedCaption: { state: true },
     _resolvedDeltaLabel: { state: true },
+    _resolvedMinLabel: { state: true },
+    _resolvedMaxLabel: { state: true },
     /** The fetched series. Reactive: arriving history must repaint. */
     _hist: { state: true },
   };
@@ -118,6 +125,13 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
       this._resolveField("label", "_resolvedLabel");
       this._resolveField("caption", "_resolvedCaption");
       this._resolveField("delta_label", "_resolvedDeltaLabel");
+      this._resolveField("min_label", "_resolvedMinLabel");
+      this._resolveField("max_label", "_resolvedMaxLabel");
+      // Marker labels live inside a list, so they take the per-item template
+      // path (same machinery materia-bars and materia-schedule use).
+      (Array.isArray(this.config.markers) ? this.config.markers : []).forEach((m, i) =>
+        this._resolveTemplateValue(`marker_${i}`, m?.label)
+      );
       // Keyed on (entity, window), so this is one fetch per mount and one per
       // config change — not one per hass tick. The interval owns refreshing.
       this._loadHistory();
@@ -183,6 +197,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
       bar: () => this._bar(),
       ring: () => this._ring(),
       status: () => this._status(),
+      scale: () => this._scale(),
       spark: () => this._spark({ area: true }),
       sparkline: () => this._spark({ area: false }),
       weekbars: () => this._bucketBars({ events: false }),
@@ -649,6 +664,132 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     `;
   }
 
+  /** The value row — big number, unit, and an optional pill on the right.
+   *  Extracted rather than inlined because it is the one piece of markup a
+   *  value-plus-context variant always has, so a later variant that leads with
+   *  a headline number composes with this instead of copying it. */
+  _valueRow(g, trailing = nothing) {
+    return html`<div class="value-row">${this._gaugeValueLine(g)}${trailing}</div>`;
+  }
+
+  /* ---- scale: where a value sits on a range it can be judged against ------
+     A bare number cannot say whether it is good; 17 kWh/100km only means
+     something next to a reference. So this draws the range as a ramp, the
+     value as a marker on it, and any number of author-supplied reference
+     marks beside it.
+
+     NOTHING HERE DECIDES WHAT GOOD MEANS. The card will not infer a direction
+     from a device class or a unit, and it does not ship an opinion:
+
+       - `ramp` given      -> the author's own stops, painted as a gradient.
+       - `good: low|high`  -> the library's severity scale, oriented that way.
+       - neither           -> a NEUTRAL track. The value's position and the
+                              reference marks are still shown, but the card
+                              passes no judgement it was not asked for.
+
+     That last rung is the same discipline as _gauge refusing to invent a
+     scale and _caption refusing to invent a sentence. */
+
+  /** Author stops -> a gradient. Each colour sits at the MIDPOINT of the band
+   *  it governs, with the first anchored at 0% and the last at 100%, so a
+   *  colour dominates its own band and the transitions fall between them. */
+  _rampGradient(stops) {
+    const valid = (stops || []).filter((s) => s && s.color);
+    if (!valid.length) return null;
+    const parts = [];
+    let lo = 0;
+    valid.forEach((s, i) => {
+      const declared = this._num(s.below);
+      const hi = declared == null ? 100 : Math.max(lo, Math.min(100, declared));
+      const mid = (lo + hi) / 2;
+      if (i === 0) parts.push(`${s.color} 0%`);
+      parts.push(`${s.color} ${mid.toFixed(1)}%`);
+      if (i === valid.length - 1) parts.push(`${s.color} 100%`);
+      lo = hi;
+    });
+    return `linear-gradient(90deg, ${parts.join(", ")})`;
+  }
+
+  _scaleRamp() {
+    const authored = this._rampGradient(this.config.ramp);
+    if (authored) return authored;
+    const good = String(this.config.good ?? "").toLowerCase();
+    if (good !== "low" && good !== "high") return null; // neutral track
+    // 55% for the middle stop is the concept's own number, and it is a real
+    // one: it pushes the turn past centre so the "fine" band reads wider than
+    // the "bad" one.
+    const seq = good === "low" ? [SCALE.green, SCALE.yellow, SCALE.red] : [SCALE.red, SCALE.yellow, SCALE.green];
+    return `linear-gradient(90deg, ${seq[0]} 0%, ${seq[1]} 55%, ${seq[2]} 100%)`;
+  }
+
+  /** Reference marks. `value` is a number OR an entity id, so an install can
+   *  point one at a long-term-statistics sensor and have it move on its own.
+   *  A marker with no reading does not render — null is not zero — and one
+   *  outside the range clamps to the end rather than escaping the ramp. */
+  _scaleMarkers(g) {
+    const list = Array.isArray(this.config.markers) ? this.config.markers : [];
+    const out = [];
+    list.forEach((m, i) => {
+      const raw = m?.value;
+      let v = this._num(raw);
+      if (v == null && typeof raw === "string" && raw.includes(".")) {
+        v = this._num(this.hass?.states?.[raw]?.state);
+      }
+      if (v == null) return;
+      const frac = Math.min(1, Math.max(0, (v - g.min) / (g.max - g.min)));
+      const vars = { marker: this._fmtNum(v), unit: g.unit ?? "" };
+      const rawLabel = m?.label;
+      let label = "";
+      if (rawLabel != null && rawLabel !== "") {
+        label = this._isTemplate(rawLabel)
+          ? this._interpolate(this._tplResults?.[`marker_${i}`] ?? "", g, vars)
+          : this._interpolate(rawLabel, g, vars);
+      }
+      out.push({ frac, label, color: m?.color });
+    });
+    return out;
+  }
+
+  _endLabel(configKey, resolvedKey, fallbackValue, g) {
+    const raw = this.config[configKey];
+    if (raw == null || raw === "") return this._fmtNum(fallbackValue);
+    const text = this._isTemplate(raw) ? this[resolvedKey] : raw;
+    if (text == null) return "";
+    return this._interpolate(text, g, { bound: this._fmtNum(fallbackValue), unit: g.unit ?? "" });
+  }
+
+  _scale() {
+    const g = this._gauge();
+    if (!g) return this._plain();
+    const ramp = this._scaleRamp();
+    const markers = this._scaleMarkers(g);
+    const pill = this.config.show_delta ? this._deltaPill(this._histSeries) : nothing;
+    const pct = (f) => `${(f * 100).toFixed(3)}%`;
+    return html`
+      <div class="rect-tile left gauge scale-tile">
+        ${this._header("m3o:straighten")}
+        ${this._valueRow(g, pill)}
+        <div class="ramp" style=${ramp ? `background:${ramp}` : nothing}>
+          ${markers.map(
+            (m) =>
+              html`<i
+                class="ref"
+                style="left:${pct(m.frac)}${m.color ? `;--ref-color:${m.color}` : ""}"
+              ></i>`
+          )}
+          <i class="here" style="left:${pct(g.frac)}"></i>
+        </div>
+        <div class="scale-labels">
+          <span class="lo">${this._endLabel("min_label", "_resolvedMinLabel", g.min, g)}</span>
+          ${markers.map((m) =>
+            m.label ? html`<span class="ref-label" style="left:${pct(m.frac)}">${m.label}</span>` : nothing
+          )}
+          <span class="hi">${this._endLabel("max_label", "_resolvedMaxLabel", g.max, g)}</span>
+        </div>
+      </div>
+    `;
+  }
+
   /* ---- status: a wide tonal row, not a square -----------------------------
      The one variant whose shape is a row: an icon badge, the state large
      enough to read across a room, a subtitle, and a dot indicator on the
@@ -823,8 +964,12 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     return Math.max(1, Math.min(2160, Math.round(this._num(this.config.hours) ?? SPARK_DEFAULT_HOURS)));
   }
 
+  /** The four 19b variants always need history. Anything else needs it only
+   *  when it has asked for a delta pill — the pill is a change over a window,
+   *  so it cannot exist without one, and no other variant should be costing
+   *  the recorder a fetch it will not draw. */
   get _needsHistory() {
-    return SPARK_VARIANTS.has(this._variant);
+    return SPARK_VARIANTS.has(this._variant) || this.config?.show_delta === true;
   }
 
   /** The fetched series with the entity's live state appended — see
@@ -990,10 +1135,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
              rather than needing a z-index to undo a later sibling. -->
         ${opts.area ? chart : nothing}
         ${this._header("m3o:show-chart")}
-        <div class="spark-row">
-          ${this._gaugeValueLine({ display, unit: this._unit })}
-          ${opts.area ? this._deltaPill(series) : nothing}
-        </div>
+        ${this._valueRow({ display, unit: this._unit }, opts.area ? this._deltaPill(series) : nothing)}
         ${!opts.area ? chart : nothing}
         ${caption ? html`<div class="gauge-caption">${caption}</div>` : nothing}
       </div>

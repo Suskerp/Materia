@@ -17,6 +17,7 @@ const VARIANTS = [
   { value: "ladder", label: "Gauge · ladder of bars" },
   { value: "ring", label: "Gauge · ring beside the value" },
   { value: "status", label: "Status row (tonal, icon badge + state)" },
+  { value: "scale", label: "Gauge · position on a ramp, with reference marks" },
   // The history family: these ask the recorder for the measurement's past.
   { value: "spark", label: "History · area sparkline hero" },
   { value: "sparkline", label: "History · bare line" },
@@ -30,7 +31,7 @@ const HISTORIC = ["spark", "sparkline", "weekbars", "events"];
 const BUCKETED = ["weekbars", "events"];
 
 /** Variants that read _gaugeRange and so accept min/max. */
-const SCALED = ["fill", "bar", "ladder", "ring"];
+const SCALED = ["fill", "bar", "ladder", "ring", "scale"];
 
 class MateriaGlanceTileEditor extends SmartEditorBase {
   /* The threshold/label defaults belong to the soil-moisture scale the percent
@@ -138,6 +139,45 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
     // The bar variant needs no caption field of its own: the Content
     // section's Subtitle IS the caption override, and repeating that same
     // name in a second section would put it in the schema twice.
+    if (v === "scale") {
+      extras.fields.push(
+        {
+          name: "good",
+          label: "Which end is good",
+          helper:
+            "Left empty the ramp is a neutral track and the card passes no judgement — the value's position and the reference marks still show. Set it and the ramp runs through the severity scale in that direction. Never inferred from the entity.",
+          selector: {
+            select: {
+              mode: "dropdown",
+              options: [
+                { value: "low", label: "Low values are good (consumption, latency)" },
+                { value: "high", label: "High values are good (efficiency, signal)" },
+              ],
+            },
+          },
+        },
+        {
+          name: "min_label",
+          label: "Label at the low end",
+          helper: "Your words. Placeholders: {bound} {unit} {value} {min} {max}. Empty shows the bare bound.",
+          template: true,
+          selector: { text: {} },
+        },
+        {
+          name: "max_label",
+          label: "Label at the high end",
+          helper: "Same placeholders. Empty shows the bare bound.",
+          template: true,
+          selector: { text: {} },
+        },
+        {
+          name: "show_delta",
+          label: "Show the change pill",
+          helper: "Fetches history only when switched on, since a change needs a window to measure over.",
+          selector: { boolean: {} },
+        },
+      );
+    }
     if (v === "status") {
       extras.fields.push(
         {
