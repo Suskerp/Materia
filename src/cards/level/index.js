@@ -279,10 +279,15 @@ class MateriaLevel extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement)
     const fg = this._field("color_on", "_resolvedColorOn");
     // The slider's own accent falls back to color_on, so a tile that tints
     // itself from state carries the track with it.
+    // SliderTokens puts the handle and the active track on PRIMARY. A Materia
+    // custom role must never pre-empt a spec role: --md-sys-cust-color-device
+    // is #004E58 on a dark harmonised theme, so defaulting to it rendered every
+    // slider teal beside a materia-switch that was correctly lavender. An
+    // install that wants the device tint sets slider_color.
     const accent =
       this._field("slider_color", "_resolvedSliderColor") ||
       fg ||
-      "var(--md-sys-cust-color-device, var(--md-sys-color-primary))";
+      "var(--md-sys-color-primary, var(--primary-color))";
     const trackColor = this._field("slider_track_color", "_resolvedSliderTrackColor") || "";
 
     const shown = this._display(value, scale);
@@ -310,6 +315,7 @@ class MateriaLevel extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement)
             .color=${accent}
             .trackColor=${trackColor}
             .label=${label}
+            .stops=${!this.config.hide_stops}
             ?disabled=${dead}
             @value-dragging=${this._onDragging}
             @value-changed=${this._onCommit}

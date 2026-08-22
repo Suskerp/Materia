@@ -21,11 +21,12 @@ export const styles = [
       background: var(--ha-card-background, var(--card-background-color));
       border-radius: 24px;
       /* Asymmetric on purpose: the 44dp handle already overhangs the 16dp
-         track by 14dp, so an equal bottom pad reads as too much air. */
-      padding: 14px 16px 6px;
+         track by 14dp, so the slider brings its own bottom air and an equal
+         pad below it reads as a hole. */
+      padding: 14px 16px 4px;
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 0;
       box-sizing: border-box;
       color: var(--md-sys-color-on-surface, var(--primary-text-color));
       transition: background-color var(--md-sys-motion-default-effects),
@@ -48,33 +49,48 @@ export const styles = [
       opacity: 0.9;
     }
 
+    /* The head row is a NAME and a READING side by side, so both sit on the
+       M3 type scale one step apart rather than three. The 11px uppercase
+       eyebrow over a 20px/700 numeral that shipped first came from
+       materia-bar-select, where the two are stacked in a narrow column and
+       the size jump is what separates them; laid out horizontally and
+       baseline-aligned the same pair reads as a mismatch. title-small against
+       title-medium keeps the reading dominant without shouting. */
+
+    /* M3 title-small: 14sp / 500 / 20sp line / +0.1px tracking. */
     .label {
       flex: 1;
       min-width: 0;
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      opacity: 0.65;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 20px;
+      letter-spacing: 0.1px;
+      opacity: 0.85;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
+    /* M3 title-medium: 16sp / 500 / 24sp line / +0.15px tracking. Accent
+       coloured so the number and the track it belongs to read as one thing. */
     .value {
       flex: none;
       font-family: var(--materia-font-display, inherit);
-      font-size: clamp(16px, 5.6cqi, 20px);
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      line-height: 1.25;
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 24px;
+      letter-spacing: 0.15px;
+      color: var(--ml-accent);
       white-space: nowrap;
       font-variant-numeric: tabular-nums;
     }
 
+    /* M3 label-medium: 12sp / 500 / 16sp line / +0.5px tracking. */
     .unit {
-      font-size: 0.65em;
-      font-weight: 600;
-      opacity: 0.6;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      opacity: 0.7;
       margin-left: 0.15em;
     }
 

@@ -126,9 +126,23 @@ const w=globalThis,k=e=>e,$=w.trustedTypes,C=$?$.createPolicy("lit-html",{create
         /* The one piece of geometry everything else is derived from: the
            handle slides its own width inside the track, exactly as the native
            range thumb does, so its left edge travels 0 .. (width - 4dp).
-           The active track stops one 6dp gap short of that edge. */
+           The active track stops one 6dp gap short of that edge, and the
+           inactive track resumes one gap past it.
+
+           material-web insets the TRACK instead, by
+           calc(state-layer-size / 2 - tick-size), because its handle is a
+           round nub centred ON the value and overhanging both track ends.
+           The expressive handle lives INSIDE the 16dp track, so the same
+           alignment job is done by shortening the handle's TRAVEL by its own
+           width rather than by padding the track. Same intent, opposite side
+           of the equation. */
         --_slot-x: calc(var(--_p) * (100% - var(--slider-handle-width)));
         --_active-w: max(0px, calc(var(--_slot-x) - var(--slider-gap)));
+        --_inactive-x: calc(var(--_slot-x) + var(--slider-handle-width) + var(--slider-gap));
+
+        /* CornerFull for a 16dp track, stated outright — see the radius note
+           on .active for why this may NOT be written as 999px. */
+        --_cap: calc(var(--slider-track-height) / 2);
       }
 
       .active,
@@ -136,40 +150,61 @@ const w=globalThis,k=e=>e,$=w.trustedTypes,C=$?$.createPolicy("lit-html",{create
         position: absolute;
         top: 0;
         bottom: 0;
-        /* CornerFull on the outer end, trackInsideCornerSize 2dp on the end
-           that faces the handle. 999px clamps to the full 8dp radius. */
         transition: background-color var(--md-sys-motion-default-effects);
       }
 
       .active {
         left: 0;
         width: var(--_active-w);
-        border-radius: 999px var(--slider-inside-corner) var(--slider-inside-corner) 999px;
+        /* CornerFull on the outer end, trackInsideCornerSize 2dp on the end
+           facing the handle.
+
+           The outer radius is 8dp SPELLED OUT, not the usual 999px shorthand.
+           CSS Backgrounds 5.5 (Overlapping Curves) scales every corner of a
+           box by ONE factor when any side is over-subscribed, and with 999px
+           that factor is 16/1998 = 0.008: the outer corners land on 8dp by
+           luck, but the 2dp inside corners are scaled to 0.016px, i.e. square.
+           At 8dp the left side (8 + 8) fits its 16dp height exactly and the
+           top side (8 + 2) fits any track wider than 10dp, so nothing is
+           scaled and the 2dp survives. */
+        border-radius: var(--_cap) var(--slider-inside-corner) var(--slider-inside-corner) var(--_cap);
         background: var(--_fill);
       }
 
       .inactive {
-        /* Starts one gap past the far edge of the handle. Over-constrained on
-           purpose: past the end the computed width clamps to zero. */
-        left: calc(var(--_slot-x) + var(--slider-handle-width) + var(--slider-gap));
+        /* Over-constrained on purpose: past the end the width clamps to zero. */
+        left: var(--_inactive-x);
         right: 0;
-        border-radius: var(--slider-inside-corner) 999px 999px var(--slider-inside-corner);
+        border-radius: var(--slider-inside-corner) var(--_cap) var(--_cap) var(--slider-inside-corner);
         background: var(--_track);
       }
 
-      /* Stop indicators, drawn twice: the base layer in the ACTIVE colour
-         (which is what reads against the inactive track — MCA paints inactive
-         tick marks colorPrimary) and, clipped to the active track's own
-         width, a second layer in the INACTIVE colour (SliderTokens puts
-         StopIndicators on SecondaryContainer, the colour that reads against
-         the primary fill). No measuring: the clip does the deciding. */
+      /* Stop indicators, drawn as two layers of the same dots — the structure
+         material-web uses for tick marks, where .tickmarks::before carries the
+         inactive-coloured set and .tickmarks::after the active-coloured one.
+         Each layer is CLIPPED TO ITS OWN FILL, which does three jobs at once:
+         it picks the colour that reads against whatever is behind the dot, it
+         hides dots the handle has reached, and — the reason both layers are
+         clipped rather than just one — it stops a dot ever painting on the
+         transparent 6dp gap beside the handle. An unclipped base layer left a
+         stop indicator floating in that gap at value 0, next to a handle with
+         no fill behind it, which is exactly the stray dot it looked like.
+
+         Colour roles are inverted per layer: MCA paints inactive tick marks
+         colorPrimary (so a dot ON the inactive track takes the ACTIVE colour),
+         and SliderTokens puts StopIndicators on SecondaryContainer (so a dot
+         ON the active fill takes the INACTIVE colour). */
       .dots {
         position: absolute;
         inset: 0;
         pointer-events: none;
       }
 
-      .dots.over {
+      .dots.on-inactive {
+        clip-path: inset(0 0 0 var(--_inactive-x));
+      }
+
+      .dots.on-active {
         clip-path: inset(0 calc(100% - var(--_active-w)) 0 0);
       }
 
@@ -180,15 +215,21 @@ const w=globalThis,k=e=>e,$=w.trustedTypes,C=$?$.createPolicy("lit-html",{create
         height: var(--slider-stop-size);
         margin-top: calc(var(--slider-stop-size) / -2);
         border-radius: 999px;
+      }
+
+      .dots.on-inactive .dot {
         background: var(--_fill);
       }
 
-      .dots.over .dot {
+      .dots.on-active .dot {
         background: var(--_track);
       }
 
       /* The two end indicators sit centred in the track's round caps, half a
-         track height in from each edge. */
+         track height in from each edge. Neither needs a visibility rule of
+         its own: at value 0 the start dot falls in the gap and both clips
+         reject it, and at maximum the end dot lands exactly on the active
+         fill's outer edge and is clipped away there. */
       .dot.start {
         left: calc(var(--slider-track-height) / 2 - var(--slider-stop-size) / 2);
       }
@@ -224,6 +265,9 @@ const w=globalThis,k=e=>e,$=w.trustedTypes,C=$?$.createPolicy("lit-html",{create
       .handle {
         width: var(--slider-handle-width);
         height: var(--slider-handle-height);
+        /* 999px is safe HERE, unlike on the track fills: all four corners are
+           equal, so the uniform down-scaling leaves a pill at any width —
+           including the 2dp pressed one. */
         border-radius: 999px;
         background: var(--_fill);
         transition: width var(--md-sys-motion-fast-effects),
@@ -352,8 +396,8 @@ const w=globalThis,k=e=>e,$=w.trustedTypes,C=$?$.createPolicy("lit-html",{create
         <div class="track">
           <div class="active"></div>
           <div class="inactive"></div>
-          ${e.length?I`<div class="dots base">${e}</div>
-                <div class="dots over">${e}</div>`:W}
+          ${e.length?I`<div class="dots on-inactive">${e}</div>
+                <div class="dots on-active">${e}</div>`:W}
         </div>
 
         <div class="slot"><div class="handle"></div></div>
@@ -9433,11 +9477,12 @@ const Vs=Ts(class extends As{constructor(){super(...arguments),this.key=W}render
       background: var(--ha-card-background, var(--card-background-color));
       border-radius: 24px;
       /* Asymmetric on purpose: the 44dp handle already overhangs the 16dp
-         track by 14dp, so an equal bottom pad reads as too much air. */
-      padding: 14px 16px 6px;
+         track by 14dp, so the slider brings its own bottom air and an equal
+         pad below it reads as a hole. */
+      padding: 14px 16px 4px;
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 0;
       box-sizing: border-box;
       color: var(--md-sys-color-on-surface, var(--primary-text-color));
       transition: background-color var(--md-sys-motion-default-effects),
@@ -9460,33 +9505,48 @@ const Vs=Ts(class extends As{constructor(){super(...arguments),this.key=W}render
       opacity: 0.9;
     }
 
+    /* The head row is a NAME and a READING side by side, so both sit on the
+       M3 type scale one step apart rather than three. The 11px uppercase
+       eyebrow over a 20px/700 numeral that shipped first came from
+       materia-bar-select, where the two are stacked in a narrow column and
+       the size jump is what separates them; laid out horizontally and
+       baseline-aligned the same pair reads as a mismatch. title-small against
+       title-medium keeps the reading dominant without shouting. */
+
+    /* M3 title-small: 14sp / 500 / 20sp line / +0.1px tracking. */
     .label {
       flex: 1;
       min-width: 0;
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      opacity: 0.65;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 20px;
+      letter-spacing: 0.1px;
+      opacity: 0.85;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
+    /* M3 title-medium: 16sp / 500 / 24sp line / +0.15px tracking. Accent
+       coloured so the number and the track it belongs to read as one thing. */
     .value {
       flex: none;
       font-family: var(--materia-font-display, inherit);
-      font-size: clamp(16px, 5.6cqi, 20px);
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      line-height: 1.25;
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 24px;
+      letter-spacing: 0.15px;
+      color: var(--ml-accent);
       white-space: nowrap;
       font-variant-numeric: tabular-nums;
     }
 
+    /* M3 label-medium: 12sp / 500 / 16sp line / +0.5px tracking. */
     .unit {
-      font-size: 0.65em;
-      font-weight: 600;
-      opacity: 0.6;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      opacity: 0.7;
       margin-left: 0.15em;
     }
 
@@ -9494,7 +9554,7 @@ const Vs=Ts(class extends As{constructor(){super(...arguments),this.key=W}render
       display: block;
       width: 100%;
     }
-  `];customElements.define("materia-level-editor",class extends He{_formData(){return{...this._config}}get _sections(){return[{title:"Content",icon:"mdi:card-text-outline",fields:[{name:"entity",required:!0,selector:{entity:{}}},{name:"label",label:"Label",template:!0,selector:{text:{}}},{name:"attribute",label:"Attribute holding the level",helper:"Defaults per domain: volume_level, brightness, percentage, current_position. Leave empty for number helpers.",selector:{text:{}}},{name:"icon",label:"Leading icon",template:!0,selector:{icon:{}}}]},{title:"Range",icon:"mdi:ruler",secondary:"Left empty, these come from the entity",fields:[{name:"min",label:"Minimum (entity units)",selector:{number:{mode:"box",step:"any"}}},{name:"max",label:"Maximum (entity units)",selector:{number:{mode:"box",step:"any"}}},{name:"step",label:"Step (entity units)",selector:{number:{mode:"box",step:"any"}}},{name:"unit",label:"Unit shown after the value",helper:"Defaults to the entity's unit, or % for volume and brightness.",selector:{text:{}}}]},{title:"Appearance",icon:"mdi:palette-outline",fields:[{name:"color",label:"Tile background",color:!0,template:!0,selector:{text:{}}},{name:"color_on",label:"Content color on it",color:!0,template:!0,selector:{text:{}}},{name:"slider_color",label:"Active track & handle",color:!0,template:!0,selector:{text:{}}},{name:"slider_track_color",label:"Inactive track",color:!0,template:!0,selector:{text:{}}}]},{title:"Advanced",icon:"mdi:tune",fields:[{name:"service",label:"Override service (domain.service)",selector:{text:{}}},{name:"service_key",label:"Override service data key",selector:{text:{}}}]},{title:"Disabled",icon:"mdi:cancel",expanded:!1,fields:[Ie]}]}});const pn={volume_level:{min:0,max:1,step:.01,factor:100,unit:"%"},brightness:{min:0,max:255,step:1,factor:100/255,unit:"%"},percentage:{min:0,max:100,step:1,factor:1,unit:"%"},current_position:{min:0,max:100,step:1,factor:1,unit:"%"}},un={media_player:"volume_level",light:"brightness",fan:"percentage",cover:"current_position"},mn={media_player:["media_player.volume_set","volume_level"],light:["light.turn_on","brightness"],number:["number.set_value","value"],input_number:["input_number.set_value","value"],fan:["fan.set_percentage","percentage"],cover:["cover.set_cover_position","position"]},gn=(e,t)=>{const i=Number(e);return Number.isFinite(i)?i:t},fn=e=>{const t=String(e),i=t.indexOf(".");return i<0?0:Math.min(6,t.length-i-1)};class _n extends(Vi(ci(Se(ce)))){static properties={hass:{attribute:!1},config:{state:!0},_resolvedLabel:{state:!0},_resolvedIcon:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedSliderColor:{state:!0},_resolvedSliderTrackColor:{state:!0},_dragging:{state:!0}};static styles=[hn,di];static getConfigElement(){return document.createElement("materia-level-editor")}static getStubConfig(e){const t=Object.keys(e?.states||{}),i=t.find(e=>e.startsWith("media_player."))||t.find(e=>e.startsWith("input_number."))||t.find(e=>e.startsWith("number."))||t.find(e=>e.startsWith("light."))||"";return{entity:i}}setConfig(e){if(!e.entity)throw new Error("Materia Level: entity is required");this.config={...e}}updated(e){e.has("hass")&&this.hass&&(this._resolveField("label","_resolvedLabel"),this._resolveField("icon","_resolvedIcon"),this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("slider_color","_resolvedSliderColor"),this._resolveField("slider_track_color","_resolvedSliderTrackColor"),this._optimisticReconcile())}get _stateObj(){return this.hass?.states[this.config.entity]}get _domain(){return String(this.config.entity||"").split(".")[0]}get _attribute(){return this.config.attribute??un[this._domain]??null}get _scale(){const e=this._stateObj?.attributes||{},t=pn[this._attribute]||{min:gn(e.min,0),max:gn(e.max,100),step:gn(e.step,1),factor:1,unit:e.unit_of_measurement??""},i="percentage"===this._attribute?gn(e.percentage_step,t.step):t.step;return{min:gn(this.config.min,t.min),max:gn(this.config.max,t.max),step:gn(this.config.step,i),factor:t.factor,unit:this.config.unit??t.unit}}_optimisticActual(){const e=this._stateObj;if(!e)return null;const t=this._attribute?e.attributes?.[this._attribute]:e.state,i=Number(t);return Number.isFinite(i)?String(i):"light"===this._domain&&"off"===e.state?"0":null}get _current(){if(null!=this._dragging)return this._dragging;const e=Number(this._optimistic);return Number.isFinite(e)?e:null}_quantize(e,t){const{min:i,max:s,step:n}=t,o=n>0?Math.round((e-i)/n)*n+i:e,a=Math.min(s,Math.max(i,o));return Number(a.toFixed(fn(n)))}_display(e,t){if(null==e)return"—";const i=e*t.factor,s=1===t.factor?fn(t.step):0;return Number(i.toFixed(s)).toLocaleString(this.hass?.locale?.language||"en",{minimumFractionDigits:s,maximumFractionDigits:s})}_onDragging(e){e.stopPropagation();const t=Number(e.detail?.value);this._dragging=Number.isFinite(t)?t:null}_onCommit(e){e.stopPropagation();const t=Number(e.detail?.value);if(this._dragging=null,!Number.isFinite(t))return;const i=this._quantize(t,this._scale),s=this._stateObj;if(!s)return;const[n,o]=this._writeTarget();if(!n)return;if(this._fireHaptic("selection"),this._optimisticSet(i),!this.config.service&&"light"===this._domain&&i<=0)return void this._callService("light","turn_off",{entity_id:s.entity_id});const[a,r]=n.split(".");this._callService(a,r,{entity_id:s.entity_id,[o]:i})}_writeTarget(){if(this.config.service){const e=this.config.service_key||this._attribute||"value";return[String(this.config.service),e]}const e=mn[this._domain];return e?[e[0],this.config.service_key||e[1]]:this._attribute?[`${this._domain}.set_${this._attribute}`,this.config.service_key||this._attribute]:[null,null]}_field(e,t){const i=this.config[e],s=this._isTemplate(i)?this[t]:i;return"string"==typeof s?s.trim():s}render(){if(!this.hass||!this.config)return I``;const e=this._stateObj,t=this._scale,i=this._current,s=!e||this._isUnavailable(e)||"unknown"===e.state||null==i,n=this._field("label","_resolvedLabel")||e?.attributes?.friendly_name||this.config.entity,o=this._field("icon","_resolvedIcon"),a=this._field("color","_resolvedColor"),r=this._field("color_on","_resolvedColorOn"),l=this._field("slider_color","_resolvedSliderColor")||r||"var(--md-sys-cust-color-device, var(--md-sys-color-primary))",c=this._field("slider_track_color","_resolvedSliderTrackColor")||"",d=this._display(i,t),h=t.unit;return I`
+  `];customElements.define("materia-level-editor",class extends He{_formData(){return{...this._config}}get _sections(){return[{title:"Content",icon:"mdi:card-text-outline",fields:[{name:"entity",required:!0,selector:{entity:{}}},{name:"label",label:"Label",template:!0,selector:{text:{}}},{name:"attribute",label:"Attribute holding the level",helper:"Defaults per domain: volume_level, brightness, percentage, current_position. Leave empty for number helpers.",selector:{text:{}}},{name:"icon",label:"Leading icon",template:!0,selector:{icon:{}}}]},{title:"Range",icon:"mdi:ruler",secondary:"Left empty, these come from the entity",fields:[{name:"min",label:"Minimum (entity units)",selector:{number:{mode:"box",step:"any"}}},{name:"max",label:"Maximum (entity units)",selector:{number:{mode:"box",step:"any"}}},{name:"step",label:"Step (entity units)",selector:{number:{mode:"box",step:"any"}}},{name:"unit",label:"Unit shown after the value",helper:"Defaults to the entity's unit, or % for volume and brightness.",selector:{text:{}}}]},{title:"Appearance",icon:"mdi:palette-outline",fields:[{name:"color",label:"Tile background",color:!0,template:!0,selector:{text:{}}},{name:"color_on",label:"Content color on it",color:!0,template:!0,selector:{text:{}}},{name:"slider_color",label:"Active track & handle",color:!0,template:!0,selector:{text:{}}},{name:"slider_track_color",label:"Inactive track",color:!0,template:!0,selector:{text:{}}},{name:"hide_stops",label:"Hide the stop indicators",helper:"The small M3 dots at each end of the track. Shown by default.",selector:{boolean:{}}}]},{title:"Advanced",icon:"mdi:tune",fields:[{name:"service",label:"Override service (domain.service)",selector:{text:{}}},{name:"service_key",label:"Override service data key",selector:{text:{}}}]},{title:"Disabled",icon:"mdi:cancel",expanded:!1,fields:[Ie]}]}});const pn={volume_level:{min:0,max:1,step:.01,factor:100,unit:"%"},brightness:{min:0,max:255,step:1,factor:100/255,unit:"%"},percentage:{min:0,max:100,step:1,factor:1,unit:"%"},current_position:{min:0,max:100,step:1,factor:1,unit:"%"}},un={media_player:"volume_level",light:"brightness",fan:"percentage",cover:"current_position"},mn={media_player:["media_player.volume_set","volume_level"],light:["light.turn_on","brightness"],number:["number.set_value","value"],input_number:["input_number.set_value","value"],fan:["fan.set_percentage","percentage"],cover:["cover.set_cover_position","position"]},gn=(e,t)=>{const i=Number(e);return Number.isFinite(i)?i:t},fn=e=>{const t=String(e),i=t.indexOf(".");return i<0?0:Math.min(6,t.length-i-1)};class _n extends(Vi(ci(Se(ce)))){static properties={hass:{attribute:!1},config:{state:!0},_resolvedLabel:{state:!0},_resolvedIcon:{state:!0},_resolvedColor:{state:!0},_resolvedColorOn:{state:!0},_resolvedSliderColor:{state:!0},_resolvedSliderTrackColor:{state:!0},_dragging:{state:!0}};static styles=[hn,di];static getConfigElement(){return document.createElement("materia-level-editor")}static getStubConfig(e){const t=Object.keys(e?.states||{}),i=t.find(e=>e.startsWith("media_player."))||t.find(e=>e.startsWith("input_number."))||t.find(e=>e.startsWith("number."))||t.find(e=>e.startsWith("light."))||"";return{entity:i}}setConfig(e){if(!e.entity)throw new Error("Materia Level: entity is required");this.config={...e}}updated(e){e.has("hass")&&this.hass&&(this._resolveField("label","_resolvedLabel"),this._resolveField("icon","_resolvedIcon"),this._resolveField("color","_resolvedColor"),this._resolveField("color_on","_resolvedColorOn"),this._resolveField("slider_color","_resolvedSliderColor"),this._resolveField("slider_track_color","_resolvedSliderTrackColor"),this._optimisticReconcile())}get _stateObj(){return this.hass?.states[this.config.entity]}get _domain(){return String(this.config.entity||"").split(".")[0]}get _attribute(){return this.config.attribute??un[this._domain]??null}get _scale(){const e=this._stateObj?.attributes||{},t=pn[this._attribute]||{min:gn(e.min,0),max:gn(e.max,100),step:gn(e.step,1),factor:1,unit:e.unit_of_measurement??""},i="percentage"===this._attribute?gn(e.percentage_step,t.step):t.step;return{min:gn(this.config.min,t.min),max:gn(this.config.max,t.max),step:gn(this.config.step,i),factor:t.factor,unit:this.config.unit??t.unit}}_optimisticActual(){const e=this._stateObj;if(!e)return null;const t=this._attribute?e.attributes?.[this._attribute]:e.state,i=Number(t);return Number.isFinite(i)?String(i):"light"===this._domain&&"off"===e.state?"0":null}get _current(){if(null!=this._dragging)return this._dragging;const e=Number(this._optimistic);return Number.isFinite(e)?e:null}_quantize(e,t){const{min:i,max:s,step:n}=t,o=n>0?Math.round((e-i)/n)*n+i:e,a=Math.min(s,Math.max(i,o));return Number(a.toFixed(fn(n)))}_display(e,t){if(null==e)return"—";const i=e*t.factor,s=1===t.factor?fn(t.step):0;return Number(i.toFixed(s)).toLocaleString(this.hass?.locale?.language||"en",{minimumFractionDigits:s,maximumFractionDigits:s})}_onDragging(e){e.stopPropagation();const t=Number(e.detail?.value);this._dragging=Number.isFinite(t)?t:null}_onCommit(e){e.stopPropagation();const t=Number(e.detail?.value);if(this._dragging=null,!Number.isFinite(t))return;const i=this._quantize(t,this._scale),s=this._stateObj;if(!s)return;const[n,o]=this._writeTarget();if(!n)return;if(this._fireHaptic("selection"),this._optimisticSet(i),!this.config.service&&"light"===this._domain&&i<=0)return void this._callService("light","turn_off",{entity_id:s.entity_id});const[a,r]=n.split(".");this._callService(a,r,{entity_id:s.entity_id,[o]:i})}_writeTarget(){if(this.config.service){const e=this.config.service_key||this._attribute||"value";return[String(this.config.service),e]}const e=mn[this._domain];return e?[e[0],this.config.service_key||e[1]]:this._attribute?[`${this._domain}.set_${this._attribute}`,this.config.service_key||this._attribute]:[null,null]}_field(e,t){const i=this.config[e],s=this._isTemplate(i)?this[t]:i;return"string"==typeof s?s.trim():s}render(){if(!this.hass||!this.config)return I``;const e=this._stateObj,t=this._scale,i=this._current,s=!e||this._isUnavailable(e)||"unknown"===e.state||null==i,n=this._field("label","_resolvedLabel")||e?.attributes?.friendly_name||this.config.entity,o=this._field("icon","_resolvedIcon"),a=this._field("color","_resolvedColor"),r=this._field("color_on","_resolvedColorOn"),l=this._field("slider_color","_resolvedSliderColor")||r||"var(--md-sys-color-primary, var(--primary-color))",c=this._field("slider_track_color","_resolvedSliderTrackColor")||"",d=this._display(i,t),h=t.unit;return I`
       <ha-card class=${s?"unavailable":""} style="--ml-accent:${l};">
         <div class="tile" style="${a?`background:${a};`:""}${r?`color:${r};`:""}">
           <div class="head">
@@ -9516,6 +9576,7 @@ const Vs=Ts(class extends As{constructor(){super(...arguments),this.key=W}render
             .color=${l}
             .trackColor=${c}
             .label=${n}
+            .stops=${!this.config.hide_stops}
             ?disabled=${s}
             @value-dragging=${this._onDragging}
             @value-changed=${this._onCommit}
@@ -11508,4 +11569,4 @@ const Vs=Ts(class extends As{constructor(){super(...arguments),this.key=W}render
           <circle class="pin" cx="50" cy="50" r="2.4"></circle>
         </svg>
       </ha-card>
-    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const e=document.createElement("style");e.id="materia-fonts",e.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Display voice: Outfit VARIABLE (true wght 100-900 axis) — hero\n       numerals & titles via --materia-font-display; the weight axis\n       interpolates smoothly, which flavor C's morphs animate. */\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJuktqUYLkn8BJ.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJtEtqUYLknw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Accent voice: Fraunces italic — ONE personality moment (clock date). */\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7frU9kMz3lR27gVA.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7RrU9kMz3lR24.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(e)}();console.info("%c MATERIA %c v0.54.4 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");
+    `}getCardSize(){return 4}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-clock",name:"Materia Clock",description:"Material You analog clock — cardinal numbers, sweeping hands.",preview:!0}),function(){if(document.querySelector("#materia-fonts"))return;const e=document.createElement("style");e.id="materia-fonts",e.textContent="\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GNAa5o7Cqcs8-2.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: italic;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xmu-HUzqDCFdgfMm4GND65o7Cqcsw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* latin-ext */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4q9DaRvziissg.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    /* latin */\n    @font-face {\n      font-family: 'Figtree';\n      font-style: normal;\n      font-weight: 300 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/figtree/v8/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Display voice: Outfit VARIABLE (true wght 100-900 axis) — hero\n       numerals & titles via --materia-font-display; the weight axis\n       interpolates smoothly, which flavor C's morphs animate. */\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJuktqUYLkn8BJ.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Outfit';\n      font-style: normal;\n      font-weight: 100 900;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/outfit/v15/QGYvz_MVcBeNP4NJtEtqUYLknw.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n    /* Accent voice: Fraunces italic — ONE personality moment (clock date). */\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7frU9kMz3lR27gVA.woff2) format('woff2');\n      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;\n    }\n    @font-face {\n      font-family: 'Fraunces';\n      font-style: italic;\n      font-weight: 500;\n      font-display: swap;\n      src: url(https://fonts.gstatic.com/s/fraunces/v38/6NVf8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChJdt9vIVYX9G37lvd9sPEKsxx664UJf1h5Tc7RrU9kMz3lR24.woff2) format('woff2');\n      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;\n    }\n  ",document.head.appendChild(e)}();console.info("%c MATERIA %c v0.54.5 ","color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;","color: #6750A4; background: #E8DEF8; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;");

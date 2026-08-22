@@ -129,9 +129,23 @@ class MateriaSlider extends LitElement {
         /* The one piece of geometry everything else is derived from: the
            handle slides its own width inside the track, exactly as the native
            range thumb does, so its left edge travels 0 .. (width - 4dp).
-           The active track stops one 6dp gap short of that edge. */
+           The active track stops one 6dp gap short of that edge, and the
+           inactive track resumes one gap past it.
+
+           material-web insets the TRACK instead, by
+           calc(state-layer-size / 2 - tick-size), because its handle is a
+           round nub centred ON the value and overhanging both track ends.
+           The expressive handle lives INSIDE the 16dp track, so the same
+           alignment job is done by shortening the handle's TRAVEL by its own
+           width rather than by padding the track. Same intent, opposite side
+           of the equation. */
         --_slot-x: calc(var(--_p) * (100% - var(--slider-handle-width)));
         --_active-w: max(0px, calc(var(--_slot-x) - var(--slider-gap)));
+        --_inactive-x: calc(var(--_slot-x) + var(--slider-handle-width) + var(--slider-gap));
+
+        /* CornerFull for a 16dp track, stated outright — see the radius note
+           on .active for why this may NOT be written as 999px. */
+        --_cap: calc(var(--slider-track-height) / 2);
       }
 
       .active,
@@ -139,40 +153,61 @@ class MateriaSlider extends LitElement {
         position: absolute;
         top: 0;
         bottom: 0;
-        /* CornerFull on the outer end, trackInsideCornerSize 2dp on the end
-           that faces the handle. 999px clamps to the full 8dp radius. */
         transition: background-color var(--md-sys-motion-default-effects);
       }
 
       .active {
         left: 0;
         width: var(--_active-w);
-        border-radius: 999px var(--slider-inside-corner) var(--slider-inside-corner) 999px;
+        /* CornerFull on the outer end, trackInsideCornerSize 2dp on the end
+           facing the handle.
+
+           The outer radius is 8dp SPELLED OUT, not the usual 999px shorthand.
+           CSS Backgrounds 5.5 (Overlapping Curves) scales every corner of a
+           box by ONE factor when any side is over-subscribed, and with 999px
+           that factor is 16/1998 = 0.008: the outer corners land on 8dp by
+           luck, but the 2dp inside corners are scaled to 0.016px, i.e. square.
+           At 8dp the left side (8 + 8) fits its 16dp height exactly and the
+           top side (8 + 2) fits any track wider than 10dp, so nothing is
+           scaled and the 2dp survives. */
+        border-radius: var(--_cap) var(--slider-inside-corner) var(--slider-inside-corner) var(--_cap);
         background: var(--_fill);
       }
 
       .inactive {
-        /* Starts one gap past the far edge of the handle. Over-constrained on
-           purpose: past the end the computed width clamps to zero. */
-        left: calc(var(--_slot-x) + var(--slider-handle-width) + var(--slider-gap));
+        /* Over-constrained on purpose: past the end the width clamps to zero. */
+        left: var(--_inactive-x);
         right: 0;
-        border-radius: var(--slider-inside-corner) 999px 999px var(--slider-inside-corner);
+        border-radius: var(--slider-inside-corner) var(--_cap) var(--_cap) var(--slider-inside-corner);
         background: var(--_track);
       }
 
-      /* Stop indicators, drawn twice: the base layer in the ACTIVE colour
-         (which is what reads against the inactive track — MCA paints inactive
-         tick marks colorPrimary) and, clipped to the active track's own
-         width, a second layer in the INACTIVE colour (SliderTokens puts
-         StopIndicators on SecondaryContainer, the colour that reads against
-         the primary fill). No measuring: the clip does the deciding. */
+      /* Stop indicators, drawn as two layers of the same dots — the structure
+         material-web uses for tick marks, where .tickmarks::before carries the
+         inactive-coloured set and .tickmarks::after the active-coloured one.
+         Each layer is CLIPPED TO ITS OWN FILL, which does three jobs at once:
+         it picks the colour that reads against whatever is behind the dot, it
+         hides dots the handle has reached, and — the reason both layers are
+         clipped rather than just one — it stops a dot ever painting on the
+         transparent 6dp gap beside the handle. An unclipped base layer left a
+         stop indicator floating in that gap at value 0, next to a handle with
+         no fill behind it, which is exactly the stray dot it looked like.
+
+         Colour roles are inverted per layer: MCA paints inactive tick marks
+         colorPrimary (so a dot ON the inactive track takes the ACTIVE colour),
+         and SliderTokens puts StopIndicators on SecondaryContainer (so a dot
+         ON the active fill takes the INACTIVE colour). */
       .dots {
         position: absolute;
         inset: 0;
         pointer-events: none;
       }
 
-      .dots.over {
+      .dots.on-inactive {
+        clip-path: inset(0 0 0 var(--_inactive-x));
+      }
+
+      .dots.on-active {
         clip-path: inset(0 calc(100% - var(--_active-w)) 0 0);
       }
 
@@ -183,15 +218,21 @@ class MateriaSlider extends LitElement {
         height: var(--slider-stop-size);
         margin-top: calc(var(--slider-stop-size) / -2);
         border-radius: 999px;
+      }
+
+      .dots.on-inactive .dot {
         background: var(--_fill);
       }
 
-      .dots.over .dot {
+      .dots.on-active .dot {
         background: var(--_track);
       }
 
       /* The two end indicators sit centred in the track's round caps, half a
-         track height in from each edge. */
+         track height in from each edge. Neither needs a visibility rule of
+         its own: at value 0 the start dot falls in the gap and both clips
+         reject it, and at maximum the end dot lands exactly on the active
+         fill's outer edge and is clipped away there. */
       .dot.start {
         left: calc(var(--slider-track-height) / 2 - var(--slider-stop-size) / 2);
       }
@@ -227,6 +268,9 @@ class MateriaSlider extends LitElement {
       .handle {
         width: var(--slider-handle-width);
         height: var(--slider-handle-height);
+        /* 999px is safe HERE, unlike on the track fills: all four corners are
+           equal, so the uniform down-scaling leaves a pill at any width —
+           including the 2dp pressed one. */
         border-radius: 999px;
         background: var(--_fill);
         transition: width var(--md-sys-motion-fast-effects),
@@ -444,8 +488,8 @@ class MateriaSlider extends LitElement {
           <div class="active"></div>
           <div class="inactive"></div>
           ${dots.length
-            ? html`<div class="dots base">${dots}</div>
-                <div class="dots over">${dots}</div>`
+            ? html`<div class="dots on-inactive">${dots}</div>
+                <div class="dots on-active">${dots}</div>`
             : nothing}
         </div>
 

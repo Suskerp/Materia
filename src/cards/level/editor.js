@@ -59,6 +59,12 @@ class MateriaLevelEditor extends SmartEditorBase {
           { name: "color_on", label: "Content color on it", color: true, template: true, selector: { text: {} } },
           { name: "slider_color", label: "Active track & handle", color: true, template: true, selector: { text: {} } },
           { name: "slider_track_color", label: "Inactive track", color: true, template: true, selector: { text: {} } },
+          {
+            name: "hide_stops",
+            label: "Hide the stop indicators",
+            helper: "The small M3 dots at each end of the track. Shown by default.",
+            selector: { boolean: {} },
+          },
         ],
       },
       {
