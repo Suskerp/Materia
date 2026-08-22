@@ -204,6 +204,58 @@ export const styles = [
     .btn:hover::before { opacity: 0.08; }
     .btn:active::before { opacity: 0.1; }
 
+    /* ---- the confirm gesture ----
+       The button's OWN surface is the track: a fill sweeps from the leading
+       edge and nothing about the geometry moves. Sits under the content
+       (z-index 0 against the content's own stacking) and inside the button's
+       overflow, so it takes whatever corner the shape ladder gave it — round,
+       square or connected — for free.
+
+       currentColor at 22%, which is a deliberate choice over a second colour
+       token: every variant already guarantees its content is legible on its
+       own surface, so a wash of that same ink is legible on every variant
+       without one new decision per variant. An opaque fill would need an
+       on-colour per variant and would break the moment someone set a role.
+
+       No transition while ARMED — the fill is following a finger, and easing a
+       directly-manipulated element makes it feel like it lags the touch. Easing
+       comes back only when the gesture is released and the fill travels home on
+       its own, and it is the standard spring rather than the expressive one:
+       this fill stops at a hard edge inside a clipped box, where an overshoot
+       has nowhere to go. Same reasoning materia-drag-confirm documents. */
+    .btn .commit-fill {
+      position: absolute;
+      inset: 0;
+      transform-origin: left center;
+      transform: scaleX(var(--mb-p, 0));
+      background: currentColor;
+      opacity: 0.22;
+      pointer-events: none;
+    }
+
+    .btn.settling .commit-fill {
+      transition: transform var(--md-sys-motion-standard-fast-spatial);
+    }
+
+    /* The content has to sit above the fill. The button is already
+       position:relative with overflow:hidden, so this is the only lift needed. */
+    .btn.confirming > ha-icon,
+    .btn.confirming > .text {
+      position: relative;
+    }
+
+    /* A confirm button is never fired by a tap, so it must not advertise one:
+       the press state layer would promise something the control does not do. */
+    .btn.confirming:active::before {
+      opacity: 0.08;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .btn.settling .commit-fill {
+        transition: none;
+      }
+    }
+
     .btn.disabled,
     .btn.unavailable {
       opacity: 0.38;

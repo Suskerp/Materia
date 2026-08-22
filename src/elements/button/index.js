@@ -1,5 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { CommitGesture } from "../../utils/commit-gesture.js";
 import { conditionsMet } from "../../utils/conditions.js";
 import { styles } from "./styles.js";
 import "./editor.js";
@@ -108,7 +109,94 @@ class MateriaButton extends ActionMixin(LitElement) {
 
   _handleTap() {
     if (this._disabled) return;
+    if (this._confirmMode) return; // a confirm button has no tap path at all
     this._handleAction(this._resolveTapAction());
+  }
+
+  /* ---- confirm gesture -------------------------------------------------
+     `confirm: hold` (or `slide`) turns the button into a deliberate COMMIT
+     rather than a tap. Everything about how the button LOOKS is untouched —
+     variant, role, size, shape, connected, stacked, wide all still apply —
+     because the gesture is a property of how it commits, not of what it is.
+
+     THE BUTTON'S OWN SURFACE IS THE TRACK. A fill sweeps from the leading edge
+     across the button and the geometry never changes: no nested control, no
+     second element with its own height and radius to keep in step with the size
+     ladder. That is the whole reason this is a button variant and not a card
+     wrapping a gesture — the previous shape read as a slab because it WAS one.
+
+     There is no tap path. That is the point, and it is why _handleTap bails
+     above: a control whose whole job is to be hard to fire by accident must not
+     also fire on a stray tap. */
+
+  get _confirmMode() {
+    const c = this.config?.confirm;
+    const mode = c === "hold" || c === true ? "hold" : c === "slide" ? "slide" : null;
+    if (!mode) return null;
+    /* THE ASYMMETRY, and it belongs here rather than in a card wrapping this.
+       A gesture exists to guard the direction that is expensive, and by default
+       that is only turning something ON: switching an override off returns the
+       system to normal, costs nothing, and is undone by doing it again. Making
+       the cheap direction ceremonial teaches the reader the hold is a
+       formality, which is exactly how a safety gesture stops working.
+
+       So while the entity reads ACTIVE the button is an ordinary tap — using
+       the same _isActive the shape morph already uses, so there is no second
+       notion of "on" to keep in step. confirm_direction: both puts the gesture
+       on the way out too, for a control that disables a protection rather than
+       enabling a cost. */
+    if (this.config?.confirm_direction === "both") return mode;
+    const st = this.config?.entity ? this.hass?.states?.[this.config.entity] : undefined;
+    return st && this._isActive(st) ? null : mode;
+  }
+
+  get _gesture() {
+    this.__gesture ??= new CommitGesture({
+      host: this,
+      surface: () => this.shadowRoot?.querySelector(".btn"),
+      onChange: () => this.requestUpdate(),
+    });
+    // The fill spans the whole button — there is no handle to leave room for.
+    this.__gesture.travel = "full";
+    return this.__gesture;
+  }
+
+  _syncGesture() {
+    const g = this._gesture;
+    g.gesture = this._confirmMode ?? "hold";
+    g.threshold = Number(this.config?.confirm_threshold ?? 0.55);
+    g.holdMs = Number(this.config?.confirm_hold_ms ?? 800);
+    g.disabled = this._disabled;
+    return g;
+  }
+
+  _onConfirmDown(ev) {
+    if (!this._confirmMode) return;
+    this._syncGesture().pointerDown(ev);
+  }
+
+  _onConfirmKey(ev) {
+    if (!this._confirmMode) return;
+    this._syncGesture().keyDown(ev);
+  }
+
+  _onConfirmed() {
+    this._handleAction(this._resolveTapAction());
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    /* The controller dispatches `confirm` on this host, so the button listens
+       to itself rather than the parent having to wire anything up — a confirm
+       button stays a drop-in for a plain one. */
+    this.__onConfirm ??= () => this._onConfirmed();
+    this.addEventListener("confirm", this.__onConfirm);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback?.();
+    this.removeEventListener("confirm", this.__onConfirm);
+    this.__gesture?.destroy();
   }
 
   render() {
@@ -159,13 +247,18 @@ class MateriaButton extends ActionMixin(LitElement) {
       : this.config.subtitle;
     const stacked = this.config.layout === "stacked";
     const iconOnly = !label && !subtitle;
+    const confirm = this._confirmMode;
+    const g = confirm ? this._syncGesture() : null;
 
     return html`
       <button
-        class="btn variant-${variant} ${role ? `role-${role}` : ""} ${sizeClass} shape-${shape} ${this.config.connected ? `connected-${this.config.connected}` : ""} ${iconOnly ? "icon-only" : ""} ${stacked ? "stacked" : ""} ${disabled ? "disabled" : ""} ${unavailable ? "unavailable" : ""}"
-        style=${sizeStyle}
+        class="btn variant-${variant} ${role ? `role-${role}` : ""} ${sizeClass} shape-${shape} ${this.config.connected ? `connected-${this.config.connected}` : ""} ${iconOnly ? "icon-only" : ""} ${stacked ? "stacked" : ""} ${disabled ? "disabled" : ""} ${unavailable ? "unavailable" : ""} ${confirm ? "confirming" : ""} ${g?.armed ? "armed" : ""} ${g && g.settling && !g.armed ? "settling" : ""}"
+        style=${sizeStyle}${confirm ? `--mb-p:${g.p};` : ""}
         @click=${this._handleTap}
+        @pointerdown=${confirm ? this._onConfirmDown : undefined}
+        @keydown=${confirm ? this._onConfirmKey : undefined}
       >
+        ${confirm ? html`<span class="commit-fill" aria-hidden="true"></span>` : nothing}
         ${icon ? html`<ha-icon .icon=${icon}></ha-icon>` : nothing}
         ${label || subtitle
           ? html`<span class="text">

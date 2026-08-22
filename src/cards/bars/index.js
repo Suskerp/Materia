@@ -5,6 +5,37 @@ import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
+/* DEFAULT BAR COLOURS, one per row, cycling.
+   A single role for every row was a real defect and not a cosmetic one: this
+   card exists so three readings can be compared at a glance, and three bars in
+   the same colour defeat exactly that. The concept gives each row its own hue.
+
+   The first three are the theme's own accent families, which is what M3 defines
+   primary / secondary / tertiary FOR — three harmonised, deliberately distinct
+   accents. Tertiary comes second because it is the spec's designated
+   *contrasting* accent, so the most-used pair (two rows) is the most
+   distinguishable pair; secondary is often a desaturated cousin of primary and
+   makes a poor neighbour to it.
+
+   Beyond three, the harmonised scale roles carry the cycle. Those are NOT
+   defined by any theme file on this install — the library always writes them
+   with a hex fallback, and a bare var() on them paints nothing at all. So every
+   one here carries its light-mode default from dist/custom_colors.json.
+
+   A bar is a filled surface with NO TEXT ON IT — the reading sits outside the
+   track — so an accent role is correct here. The container-pair rule applies to
+   surfaces behind text, which is the card background below, not these. */
+const BAR_COLORS = [
+  "var(--md-sys-color-primary)",
+  "var(--md-sys-color-tertiary)",
+  "var(--md-sys-color-secondary)",
+  "var(--md-sys-cust-color-scale-purple, #8A4DA3)",
+  "var(--md-sys-cust-color-scale-orange, #D9713C)",
+  "var(--md-sys-cust-color-scale-green, #5E9E50)",
+  "var(--md-sys-cust-color-scale-maroon, #7A4040)",
+  "var(--md-sys-cust-color-scale-yellow, #C7A128)",
+];
+
 /** Everything a numeric reading can be when it is not a number. `None` is in
  *  here as a literal string because that is what a Python-side attribute
  *  serialises to when a template exposes it, and on this install it is the
@@ -143,7 +174,7 @@ class MateriaBars extends DisabledMixin(ActionMixin(LitElement)) {
           // An explicit unit wins; otherwise the entity's own, which is absent
           // for an attribute read and that is fine.
           unit: row.unit ?? (row.attribute ? "" : st?.attributes?.unit_of_measurement ?? ""),
-          color: row.color || "var(--md-sys-color-primary)",
+          color: row.color || BAR_COLORS[i % BAR_COLORS.length],
         };
       });
   }
@@ -201,7 +232,16 @@ class MateriaBars extends DisabledMixin(ActionMixin(LitElement)) {
     const statusColor = this._field("status_color", "_resolvedStatusColor");
     const footnote = this._field("footnote", "_resolvedFootnote");
 
-    const bg = this.config.background ?? "var(--md-sys-color-surface-container-low, var(--card-background-color))";
+    /* THE CARD SURFACE, and the old default was wrong on this theme.
+       surface-container-low is a rung on M3's container ladder, which is an
+       elevation system for surfaces INSIDE a card. Which rung reads as "a card
+       against this view" is a decision only the theme can make, and Home
+       Assistant already publishes that answer as --ha-card-background — a
+       theme is obliged to keep it distinct from the view behind it, or every
+       stock HA card would be invisible too. So lead with the theme's own
+       answer and keep the M3 rung as the fallback. */
+    const bg = this.config.background
+      ?? "var(--ha-card-background, var(--md-sys-color-surface-container-low, var(--card-background-color)))";
     const fg = this.config.background_on ?? "var(--md-sys-color-on-surface)";
 
     return html`

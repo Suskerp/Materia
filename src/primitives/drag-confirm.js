@@ -1,5 +1,6 @@
 import { LitElement, html, css, svg, nothing } from "lit";
 import { motionTokens } from "../utils/motion.js";
+import { CommitGesture } from "../utils/commit-gesture.js";
 
 /** The handle's arrow, drawn inline rather than fetched from an icon set.
  *
@@ -292,10 +293,7 @@ class MateriaDragConfirm extends LitElement {
     this.holdMs = 800;
     this.disabled = false;
     this.pending = false;
-    this._p = 0;
-    this._armed = false;
-    this._settling = false;
-    this._travel = 0;
+    // Progress, armed and settling now live on the controller — see below.
   }
 
   disconnectedCallback() {
@@ -309,12 +307,10 @@ class MateriaDragConfirm extends LitElement {
     // not animate a commit nobody made.
     if (changed.has("pending") && changed.get("pending") !== undefined) {
       if (this.pending) {
-        this._p = 1;
-        this._settling = true;
+        this._gesture.setProgress(1, true);
       } else if (!changed.has("direction")) {
         // Cleared WITHOUT the state flipping — refused or timed out. Spring home.
-        this._p = 0;
-        this._settling = true;
+        this._gesture.setProgress(0, true);
       }
     }
     // The consumer flipped state, which makes the end the handle just travelled
@@ -325,274 +321,63 @@ class MateriaDragConfirm extends LitElement {
     // does have to empty, and it should do that instantly rather than draining
     // while the shape is already morphing.
     if (changed.has("direction") && changed.get("direction") !== undefined) {
-      this._p = 0;
-      this._settling = false;
+      this._gesture.setProgress(0, false);
     }
+    this._syncGesture();
   }
 
-  /** Travel in px, for turning a finger delta into progress. The handle is
-   *  `height - 2 * inset` wide, so the distance it can cover is simply
-   *  `width - height` — no need to read the inset or the handle back out. */
-  _measure() {
-    const rect = this._rect();
-    this._travel = rect ? Math.max(0, rect.width - rect.height) : 0;
+  /* ---- the gesture -----------------------------------------------------
+     The pointer state machine lives in utils/commit-gesture.js so that more
+     than one control can hold it — materia-button grows a confirm gesture from
+     the same code rather than a second copy of it. This component keeps its
+     public shape exactly: the same properties in, the same `confirm` event
+     out, and the same _p / _armed / _settling that its stylesheet and its
+     tests read, now mirrored off the controller. */
+
+  get _gesture() {
+    this.__gesture ??= new CommitGesture({
+      host: this,
+      surface: () => this.shadowRoot?.querySelector(".track"),
+      onChange: () => this.requestUpdate(),
+    });
+    return this.__gesture;
   }
 
-  /** Frame-cached rect — repeated getBoundingClientRect() inside pointermove is
-   *  a layout thrash on every frame. Mirrors materia-card's slider. */
-  _rect() {
-    const frame = this._frameId || 0;
-    if (this._rectCache && this._rectCacheFrame === frame) return this._rectCache;
-    this._rectCache = this.shadowRoot?.querySelector(".track")?.getBoundingClientRect();
-    this._rectCacheFrame = frame;
-    if (!this._frameRaf) {
-      this._frameRaf = requestAnimationFrame(() => {
-        this._frameId = (this._frameId || 0) + 1;
-        this._frameRaf = null;
-      });
-    }
-    return this._rectCache;
+  get _p() {
+    return this._gesture.p;
   }
 
-  _eventX(ev) {
-    if (ev.clientX !== undefined && ev.clientX !== 0) return ev.clientX;
-    if (ev.changedTouches?.[0]) return ev.changedTouches[0].clientX;
-    if (ev.touches?.[0]) return ev.touches[0].clientX;
-    return ev.clientX || 0;
+  get _armed() {
+    return this._gesture.armed;
   }
 
-  _haptic(type) {
-    this.dispatchEvent(new CustomEvent("haptic", { detail: type, bubbles: true, composed: true }));
+  get _settling() {
+    return this._gesture.settling;
   }
 
-  /* ---- pointer down: decide nothing yet ------------------------------- */
+  /** Push the declared properties down before anything reads them. */
+  _syncGesture() {
+    const g = this._gesture;
+    g.gesture = this.gesture;
+    g.direction = this.direction;
+    g.threshold = this.threshold;
+    g.holdMs = this.holdMs;
+    g.disabled = this.disabled;
+    g.pending = this.pending;
+  }
 
   _onPointerDown(ev) {
-    if (this.disabled || this.pending) return;
-    if (ev.button && ev.button !== 0) return;
-    if (!ev.isPrimary) return; // secondary touch of a pinch
-    // HA's mobile sidebar owns the left screen edge.
-    if (ev.pointerType === "touch" && ev.clientX <= 30) return;
-
-    this._startX = ev.clientX;
-    this._startY = ev.clientY;
-    this._pointerId = ev.pointerId;
-    this._rectCache = null;
-    this._scrollIntent = false;
-    this._measure();
-
-    this._onUpRef = this._onPointerUp.bind(this);
-    window.addEventListener("pointerup", this._onUpRef);
-    window.addEventListener("pointercancel", this._onUpRef);
-
-    // Both gestures watch for a scroll before claiming the pointer.
-    this._onEarlyMoveRef = this._onEarlyMove.bind(this);
-    window.addEventListener("pointermove", this._onEarlyMoveRef);
-
-    // A hold engages at once, because there is nothing to disambiguate but the
-    // scroll. A slide waits for horizontal movement: pressing the track and not
-    // moving has to do nothing at all, which is the entire point of the control.
-    if (this.gesture === "hold") this._engage(ev);
-  }
-
-  _onEarlyMove(ev) {
-    if (this._scrollIntent) return;
-    const dx = Math.abs(ev.clientX - this._startX);
-    const dy = Math.abs(ev.clientY - this._startY);
-
-    // Vertical dominance → the user is scrolling the dashboard, not us.
-    if (dy > 10 && dy > dx + 4) {
-      this._scrollIntent = true;
-      if (this.gesture === "hold") this._release(false);
-      this._dropEarlyMove();
-      return;
-    }
-
-    if (this.gesture === "hold") {
-      /* OUT-OF-BOUNDS CANCEL, hold only. Sliding a finger off a control and
-         releasing is the platform-standard way to say "I changed my mind", and
-         without this a hold had NO cancel at all: the pointer is captured, so
-         once the timer is running the only way to stop it was to out-race it.
-
-         The slop is 24px because Material's minimum touch target is 48dp and
-         half of that is the radius within which a touch still counts as
-         on-target — so an ordinary finger wobble, or a thumb rolling on a
-         phone, cannot kill a deliberate hold, while a genuine move away does.
-
-         Slide is deliberately exempt: moving the pointer IS how a slide works,
-         and it already has its own cancel (release short of the threshold).
-
-         Coming back inside without lifting does NOT resume. Once the gesture
-         has been abandoned, restarting it should cost a fresh press — a commit
-         that silently re-arms itself is exactly the ambiguity this control
-         exists to remove. */
-      const rect = this._rect();
-      if (rect) {
-        const SLOP = 24;
-        if (
-          ev.clientX < rect.left - SLOP ||
-          ev.clientX > rect.right + SLOP ||
-          ev.clientY < rect.top - SLOP ||
-          ev.clientY > rect.bottom + SLOP
-        ) {
-          this._release(false);
-        }
-      }
-      return; // already engaged; only watching scroll and bounds
-    }
-
-    if (dx > 6 && dx >= dy) {
-      this._dropEarlyMove();
-      this._engage(ev);
-    }
-  }
-
-  _dropEarlyMove() {
-    if (this._onEarlyMoveRef) {
-      window.removeEventListener("pointermove", this._onEarlyMoveRef);
-      this._onEarlyMoveRef = null;
-    }
-  }
-
-  /* ---- engaged -------------------------------------------------------- */
-
-  _engage(ev) {
-    if (this._armed) return;
-    this._armed = true;
-    this._settling = false;
-    this._engagedAt = Date.now();
-    this._grabX = this._eventX(ev);
-    this._grabP = this._p;
-
-    const track = this.shadowRoot?.querySelector(".track");
-    try {
-      track?.setPointerCapture(this._pointerId);
-    } catch (_) {}
-
-    // Stop the page scrolling underneath us for the duration.
-    document.documentElement.style.setProperty("touch-action", "none");
-    document.documentElement.style.setProperty("overscroll-behavior", "contain");
-    track?.addEventListener("touchmove", this._preventTouch, { passive: false });
-
-    this._onVisibilityRef = () => {
-      if (document.hidden) this._release(false);
-    };
-    document.addEventListener("visibilitychange", this._onVisibilityRef);
-
-    if (this.gesture === "hold") {
-      this._tick = this._tick.bind(this);
-      this._raf = requestAnimationFrame(this._tick);
-    } else {
-      this._onMoveRef = this._onDragMove.bind(this);
-      window.addEventListener("pointermove", this._onMoveRef);
-    }
-  }
-
-  _preventTouch(ev) {
-    ev.preventDefault();
-  }
-
-  _tick() {
-    if (!this._armed) return;
-    const p = Math.min(1, (Date.now() - this._engagedAt) / Math.max(1, this.holdMs));
-    this._p = p;
-    if (p >= 1) {
-      this._commit();
-      return;
-    }
-    this._raf = requestAnimationFrame(this._tick);
-  }
-
-  _onDragMove(ev) {
-    if (!this._armed) return;
-    if (ev.pointerType === "touch") ev.preventDefault();
-    const rect = this._rect();
-    if (!rect || this._travel <= 0) return;
-    // Delta from where the handle was grabbed, not an absolute map of the
-    // finger onto the track: grabbing the far end of the track should not
-    // teleport the handle under the finger.
-    const dx = this._eventX(ev) - this._grabX;
-    const signed = this.direction === "backward" ? -dx : dx;
-    this._p = Math.max(0, Math.min(1, this._grabP + signed / this._travel));
-  }
-
-  _onPointerUp(ev) {
-    // iOS fires a spurious pointercancel immediately after a drag starts.
-    // Ignore it, but arm a fallback so a genuine cancel — where no pointerup
-    // ever arrives — still releases the page scroll lock.
-    if (ev.type === "pointercancel" && this._engagedAt) {
-      if (Date.now() - this._engagedAt < 150) {
-        clearTimeout(this._graceTimer);
-        this._graceTimer = setTimeout(() => this._release(false), 400);
-        return;
-      }
-    }
-    clearTimeout(this._graceTimer);
-    this._release(this._armed && this.gesture === "slide" && this._p >= this.threshold);
-  }
-
-  /** End the gesture. `commit` decides whether it counted. */
-  _release(commit) {
-    if (!this._armed && this._startX == null) return;
-    if (commit) {
-      this._commit();
-      return;
-    }
-    this._settling = true;
-    this._p = 0;
-    this._cleanup();
-  }
-
-  _commit() {
-    this._settling = true;
-    this._p = 1;
-    this._cleanup();
-    this._haptic("success");
-    this.dispatchEvent(new CustomEvent("confirm", { bubbles: true, composed: true }));
-  }
-
-  _cleanup() {
-    this._armed = false;
-    this._startX = null;
-    this._scrollIntent = false;
-    this._engagedAt = null;
-    this._rectCache = null;
-    clearTimeout(this._graceTimer);
-
-    if (this._raf) {
-      cancelAnimationFrame(this._raf);
-      this._raf = null;
-    }
-    this._dropEarlyMove();
-
-    const track = this.shadowRoot?.querySelector(".track");
-    document.documentElement.style.removeProperty("touch-action");
-    document.documentElement.style.removeProperty("overscroll-behavior");
-    track?.removeEventListener("touchmove", this._preventTouch);
-    try {
-      track?.releasePointerCapture(this._pointerId);
-    } catch (_) {}
-
-    if (this._onVisibilityRef) {
-      document.removeEventListener("visibilitychange", this._onVisibilityRef);
-      this._onVisibilityRef = null;
-    }
-    if (this._onMoveRef) {
-      window.removeEventListener("pointermove", this._onMoveRef);
-      this._onMoveRef = null;
-    }
-    if (this._onUpRef) {
-      window.removeEventListener("pointerup", this._onUpRef);
-      window.removeEventListener("pointercancel", this._onUpRef);
-      this._onUpRef = null;
-    }
+    this._syncGesture();
+    this._gesture.pointerDown(ev);
   }
 
   _onKeyDown(ev) {
-    if (this.disabled || this.pending) return;
-    if (ev.key !== "Enter" && ev.key !== " " && ev.key !== "Spacebar") return;
-    ev.preventDefault();
-    this._commit();
+    this._syncGesture();
+    this._gesture.keyDown(ev);
+  }
+
+  _cleanup() {
+    this.__gesture?.destroy();
   }
 
   render() {
