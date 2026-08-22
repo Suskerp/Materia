@@ -1219,6 +1219,8 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
       : nothing;
 
     const capVars = {
+      value: this._fmtNum(this._num(this._stateObj.state)),
+      unit: this._unit,
       hours: String(this._histHours),
       // `days` describes the bars, not the potentially wider summary fetch.
       days: String(Math.round(days)),
