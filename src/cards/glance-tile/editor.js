@@ -23,6 +23,8 @@ const VARIANTS = [
   { value: "sparkline", label: "History · bare line" },
   { value: "weekbars", label: "History · a bar per day" },
   { value: "events", label: "History · event ticks (tonal row)" },
+  { value: "detail", label: "Summary · value, history and supporting metrics" },
+  { value: "progress_summary", label: "Summary · progress ring and authored copy" },
 ];
 
 /** Variants that fetch history. */
@@ -31,7 +33,7 @@ const HISTORIC = ["spark", "sparkline", "weekbars", "events"];
 const BUCKETED = ["weekbars", "events"];
 
 /** Variants that read _gaugeRange and so accept min/max. */
-const SCALED = ["fill", "bar", "ladder", "ring", "scale"];
+const SCALED = ["fill", "bar", "ladder", "ring", "scale", "progress_summary"];
 
 class MateriaGlanceTileEditor extends SmartEditorBase {
   /* The threshold/label defaults belong to the soil-moisture scale the percent
@@ -69,7 +71,9 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
                   ? // 3 days, not the concept's 7/14: a window past the
                     // recorder's retention returns NO series at all.
                     { days: 3, aggregate: "delta", history_refresh: 5 }
-                  : {};
+                  : v === "detail"
+                    ? { days: 7, aggregate: "delta", history_refresh: 5 }
+                    : {};
     return { variant: "percent", ...perVariant, ...this._config };
   }
 
@@ -197,6 +201,57 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
     }
     if (v === "plain") {
       extras.fields.push({ name: "battery_entity", label: "Paired battery sensor (adds the vertical bar)", selector: { entity: { domain: "sensor" } } });
+    }
+    if (v === "detail") {
+      extras.fields.push(
+        { name: "days", label: "History bars (days)", selector: { number: { min: 1, max: 90, mode: "box" } } },
+        {
+          name: "aggregate",
+          label: "What each history bar measures",
+          selector: {
+            select: {
+              mode: "dropdown",
+              options: [
+                { value: "delta", label: "Change across the day" },
+                { value: "mean", label: "Average" },
+                { value: "min", label: "Minimum" },
+                { value: "max", label: "Maximum" },
+                { value: "sum", label: "Sum of samples" },
+                { value: "count", label: "Number of samples" },
+              ],
+            },
+          },
+        },
+        { name: "metric_1_entity", label: "Supporting metric 1", selector: { entity: {} } },
+        { name: "metric_1_label", label: "Metric 1 label", template: true, selector: { text: {} } },
+        { name: "metric_1_value", label: "Metric 1 display override", helper: "Optional Jinja or text. Placeholders: {value} {unit} {state}.", template: true, selector: { text: {} } },
+        { name: "metric_2_entity", label: "Supporting metric 2", selector: { entity: {} } },
+        { name: "metric_2_label", label: "Metric 2 label", template: true, selector: { text: {} } },
+        { name: "metric_2_value", label: "Metric 2 display override", template: true, selector: { text: {} } },
+        { name: "metric_3_entity", label: "Supporting metric 3", selector: { entity: {} } },
+        { name: "metric_3_label", label: "Metric 3 label", template: true, selector: { text: {} } },
+        { name: "metric_3_value", label: "Metric 3 display override", template: true, selector: { text: {} } },
+        { name: "history_refresh", label: "Refresh history every N minutes", selector: { number: { min: 1, max: 180, mode: "box" } } },
+      );
+    }
+    if (v === "progress_summary") {
+      extras.fields.push(
+        {
+          name: "headline",
+          label: "Headline",
+          helper: "Optional Jinja or text. Empty uses the entity state. Placeholders: {value} {min} {max} {unit} {percent}.",
+          template: true,
+          selector: { text: {} },
+        },
+        {
+          name: "footer",
+          label: "Footer",
+          helper: "Optional Jinja or text. Uses the same placeholders as the headline.",
+          template: true,
+          selector: { text: {} },
+        },
+        { name: "footer_icon", label: "Footer icon", selector: { icon: {} } },
+      );
     }
     if (v === "vacuum") {
       extras.fields.push(

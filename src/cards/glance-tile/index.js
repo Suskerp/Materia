@@ -36,7 +36,7 @@ const VACUUM_STATE_KEYS = {
 
 /** The 19b variants: these draw the measurement's recent PAST, so they need
  *  the recorder. Everything else renders from the current state alone. */
-const SPARK_VARIANTS = new Set(["spark", "sparkline", "weekbars", "events"]);
+const SPARK_VARIANTS = new Set(["spark", "sparkline", "weekbars", "events", "detail"]);
 
 /** Per-variant window defaults. Deliberately SHORT: a window longer than the
  *  recorder's retention comes back as no series at all — not a truncated one —
@@ -113,6 +113,8 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     _resolvedDeltaLabel: { state: true },
     _resolvedMinLabel: { state: true },
     _resolvedMaxLabel: { state: true },
+    _resolvedHeadline: { state: true },
+    _resolvedFooter: { state: true },
     /** The fetched series. Reactive: arriving history must repaint. */
     _hist: { state: true },
   };
@@ -143,11 +145,17 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
       this._resolveField("delta_label", "_resolvedDeltaLabel");
       this._resolveField("min_label", "_resolvedMinLabel");
       this._resolveField("max_label", "_resolvedMaxLabel");
+      this._resolveField("headline", "_resolvedHeadline");
+      this._resolveField("footer", "_resolvedFooter");
       // Marker labels live inside a list, so they take the per-item template
       // path (same machinery materia-bars and materia-schedule use).
       (Array.isArray(this.config.markers) ? this.config.markers : []).forEach((m, i) =>
         this._resolveTemplateValue(`marker_${i}`, m?.label)
       );
+      this._configuredMetrics().forEach((m, i) => {
+        this._resolveTemplateValue(`metric_label_${i}`, m?.label);
+        this._resolveTemplateValue(`metric_value_${i}`, m?.value);
+      });
       // Keyed on (entity, window), so this is one fetch per mount and one per
       // config change — not one per hass tick. The interval owns refreshing.
       this._loadHistory();
@@ -218,6 +226,8 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
       sparkline: () => this._spark({ area: false }),
       weekbars: () => this._bucketBars({ events: false }),
       events: () => this._bucketBars({ events: true }),
+      detail: () => this._detail(),
+      progress_summary: () => this._progressSummary(),
       energy: () => this._energy(),
       binary: () => this._binary(),
       plain: () => this._plain(),
@@ -980,8 +990,8 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
   /** Hours of history this variant wants. The bucketed variants think in days
    *  and the line variants in hours, but the transport only speaks hours. */
   get _histHours() {
-    if (this._variant === "weekbars" || this._variant === "events") {
-      const days = this._num(this.config.days) ?? SPARK_DEFAULT_DAYS;
+    if (this._variant === "weekbars" || this._variant === "events" || this._variant === "detail") {
+      const days = this._num(this.config.days) ?? (this._variant === "detail" ? 7 : SPARK_DEFAULT_DAYS);
       let wanted = Math.max(1, Math.min(90, Math.round(days)));
       // A compact row may show only the last seven days while its caption
       // answers a wider question such as "distance this month". Fetch through
@@ -1176,6 +1186,125 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     `;
   }
 
+  /* ---- detail: headline measurement + history + supporting facts --------
+     A generic dashboard summary: the primary entity owns the large value and
+     recorder bars; `metrics` supplies up to three independent labelled facts.
+     Nothing here knows whether the subject is a car trip, a workout, energy,
+     or a machine cycle. */
+  _detailMetric(metric, index) {
+    const st = metric?.entity ? this.hass?.states?.[metric.entity] : null;
+    const numeric = this._num(st?.state);
+    const unit = metric?.unit ?? st?.attributes?.unit_of_measurement ?? "";
+    const vars = {
+      value: numeric == null ? st?.state ?? "" : this._fmtNum(numeric),
+      unit,
+      state: st ? (this.hass.formatEntityState?.(st) ?? st.state) : "",
+    };
+    const rawLabel = metric?.label ?? st?.attributes?.friendly_name ?? "";
+    const rawValue = metric?.value;
+    const label = this._isTemplate(rawLabel) ? this._tplResults?.[`metric_label_${index}`] ?? "" : rawLabel;
+    let value;
+    if (rawValue != null && rawValue !== "") {
+      const resolved = this._isTemplate(rawValue) ? this._tplResults?.[`metric_value_${index}`] ?? "" : rawValue;
+      value = this._interpolate(resolved, null, vars);
+    } else {
+      value = vars.state;
+    }
+    return { label, value };
+  }
+
+  _configuredMetrics() {
+    if (Array.isArray(this.config.metrics)) return this.config.metrics;
+    return [1, 2, 3]
+      .map((i) => ({
+        entity: this.config[`metric_${i}_entity`],
+        label: this.config[`metric_${i}_label`],
+        value: this.config[`metric_${i}_value`],
+        unit: this.config[`metric_${i}_unit`],
+      }))
+      .filter((m) => m.entity || m.label || m.value);
+  }
+
+  _detail() {
+    const v = this._num(this._stateObj.state);
+    if (v == null) return this._plain();
+    const days = this._num(this.config.days) ?? 7;
+    const buckets = bucketDays(this._histSeries, { days, aggregate: this.config.aggregate || "delta" });
+    const vmax = Math.max(...buckets.map((b) => Math.max(0, b.v)), 0);
+    const accent = this.config.accent || this._gaugeAccent(1);
+    const metrics = this._configuredMetrics().slice(0, 3);
+    return html`
+      <div class="detail-card">
+        <div class="detail-top">
+          <div class="detail-primary">
+            ${this._header("m3o:analytics")}
+            ${this._gaugeValueLine({ display: this._fmtNum(v), unit: this._unit })}
+          </div>
+          ${buckets.length
+            ? html`<div class="detail-bars" style="--g-accent:${accent}">
+                ${buckets.map((b, i) => {
+                  const val = Math.max(0, b.v);
+                  const h = val <= 0 || vmax <= 0 ? 8 : Math.max(8, (val / vmax) * 52);
+                  return html`<i class=${i === buckets.length - 1 ? "current" : ""} style="height:${h.toFixed(1)}px"></i>`;
+                })}
+              </div>`
+            : nothing}
+        </div>
+        ${metrics.length
+          ? html`<div class="detail-metrics">
+              ${metrics.map((metric, i) => {
+                const m = this._detailMetric(metric, i);
+                return html`<div class="detail-metric"><span>${m.label}</span><strong>${m.value}</strong></div>`;
+              })}
+            </div>`
+          : nothing}
+      </div>
+    `;
+  }
+
+  /* ---- progress summary: ring + authored headline/copy ------------------
+     The entity supplies a generic bounded measurement. Authors decide what
+     the headline, explanation and footer say, using the normal gauge
+     placeholders or Jinja. */
+  _progressSummary() {
+    const g = this._gauge();
+    if (!g) return this._plain();
+    const headlineRaw = this.config.headline;
+    const headline = headlineRaw
+      ? this._interpolate(this._isTemplate(headlineRaw) ? this._resolvedHeadline ?? "" : headlineRaw, g)
+      : this._fmtState();
+    const captionRaw = this.config.caption;
+    const caption = captionRaw
+      ? this._interpolate(this._isTemplate(captionRaw) ? this._resolvedCaption ?? "" : captionRaw, g)
+      : "";
+    const footerRaw = this.config.footer;
+    const footer = footerRaw
+      ? this._interpolate(this._isTemplate(footerRaw) ? this._resolvedFooter ?? "" : footerRaw, g)
+      : "";
+    const pct = g.frac * 100;
+    return html`
+      <div class="progress-summary">
+        <div class="progress-summary-main">
+          <svg class="ring progress-ring" viewBox="0 0 44 44" style="--g-accent:${g.accent}">
+            <circle class="ring-track" cx="22" cy="22" r="19"></circle>
+            ${pct > 0.5
+              ? svg`<circle class="ring-arc" cx="22" cy="22" r="19" pathLength="100"
+                  stroke-dasharray=${`${pct.toFixed(3)} 100`}></circle>`
+              : nothing}
+          </svg>
+          <div class="progress-summary-copy">
+            ${this._header("m3o:build")}
+            <div class="progress-headline">${headline}</div>
+            ${caption ? html`<div class="progress-caption">${caption}</div>` : nothing}
+          </div>
+        </div>
+        ${footer
+          ? html`<div class="progress-footer"><ha-icon icon=${this.config.footer_icon || "m3o:trending-up"}></ha-icon>${footer}</div>`
+          : nothing}
+      </div>
+    `;
+  }
+
   /* ---- weekbars / events -------------------------------------------------
      Concept geometry: seven bars in a 34px row, gap 4, radius 3/3/2/2, height
      max(6, v/vmax*34) so an idle day is a visible stub; the CURRENT bucket is
@@ -1275,7 +1404,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
    *  to read at 6 and at 12 columns; the two ROW presentations start wide
    *  because squeezing a row into a third of the grid wastes it. */
   getGridOptions() {
-    if (this._variant === "status" || this._variant === "events") {
+    if (["status", "events", "detail", "progress_summary"].includes(this._variant)) {
       return { columns: 12, rows: "auto", min_columns: 6 };
     }
     if (this._variant === "spark") return { columns: 12, rows: "auto", min_columns: 4 };

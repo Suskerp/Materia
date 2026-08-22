@@ -69,6 +69,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     _targetEntities: { state: true },
     _targetAction: { state: true },
     _removeArmed: { state: true },
+    _targetPickerOpen: { state: true },
   };
 
   static styles = styles;
@@ -1006,17 +1007,43 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   }
 
   _renderManagerFields() {
-    const targetEntities = this._managerTargets.map((item) => item.entity);
     const actionOptions = this._commonTargetActions().map((item) => ({ value: item.service, label: item.label || this._actionName(item.service) }));
     return html`<div class="manager-fields">
-      <label><span>${t("sched_devices", this.hass)}</span>
-        <ha-selector
-          .hass=${this.hass}
-          .selector=${{ entity: { multiple: true, include_entities: targetEntities } }}
-          .value=${this._selectedTargets}
-          @value-changed=${(event) => this._selectTargets(event.detail.value)}
-        ></ha-selector>
-      </label>
+      <div class="manager-field"><span>${t("sched_devices", this.hass)}</span>
+        <div class="target-selection">
+          ${this._selectedTargets.map((entity) => html`
+            <button
+              class="target-chip"
+              aria-label=${`${t("sched_remove_device", this.hass)} ${this._targetName(entity)}`}
+              @click=${() => this._selectTargets(this._selectedTargets.filter((item) => item !== entity))}
+            >
+              <ha-icon icon=${this._targetConfig(entity)?.icon || "m3o:toggle-on"}></ha-icon>
+              <span>${this._targetName(entity)}</span>
+              <ha-icon class="remove" icon="m3o:close"></ha-icon>
+            </button>
+          `)}
+          <button class="target-add" @click=${() => { this._targetPickerOpen = !this._targetPickerOpen; }}>
+            <ha-icon icon=${this._targetPickerOpen ? "m3o:expand-less" : "m3o:add"}></ha-icon>
+            <span>${t("sched_add_device", this.hass)}</span>
+          </button>
+        </div>
+        ${this._targetPickerOpen ? html`<div class="target-options">
+          ${this._managerTargets.map((item) => {
+            const selected = this._selectedTargets.includes(item.entity);
+            return html`<button
+              class=${selected ? "selected" : ""}
+              aria-pressed=${selected ? "true" : "false"}
+              @click=${() => this._selectTargets(selected
+                ? this._selectedTargets.filter((entity) => entity !== item.entity)
+                : [...this._selectedTargets, item.entity])}
+            >
+              <ha-icon icon=${item.icon || "m3o:toggle-on"}></ha-icon>
+              <span>${this._targetName(item.entity)}</span>
+              ${selected ? html`<ha-icon icon="m3o:check"></ha-icon>` : nothing}
+            </button>`;
+          })}
+        </div>` : nothing}
+      </div>
       <label><span>${t("sched_action", this.hass)}</span>
         <ha-selector
           .hass=${this.hass}

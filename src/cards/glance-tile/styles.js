@@ -981,6 +981,150 @@ export const styles = [
       margin-top: clamp(4px, 2.5cqi, 8px);
     }
 
+    /* ---- detail summary ------------------------------------------------ */
+    .detail-card,
+    .progress-summary {
+      container-type: inline-size;
+      box-sizing: border-box;
+      width: 100%;
+      max-width: var(--ms-size-row, none);
+      border-radius: 28px;
+      padding: clamp(18px, 4cqi, 28px);
+      background: var(--ms-color, var(--ha-card-background, var(--card-background-color)));
+      color: var(--ms-color-on, var(--primary-text-color));
+    }
+
+    .detail-top {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .detail-primary {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .detail-bars {
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      gap: clamp(4px, 1.4cqi, 8px);
+      height: 52px;
+      flex: 0 1 42%;
+    }
+
+    .detail-bars i {
+      width: clamp(8px, 3.2cqi, 20px);
+      max-width: 20px;
+      border-radius: 6px 6px 3px 3px;
+      background: color-mix(in srgb, var(--g-accent) 34%, transparent);
+      transition: height var(--md-sys-motion-expressive-default-spatial);
+    }
+
+    .detail-bars i.current {
+      background: var(--g-accent);
+    }
+
+    .detail-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .detail-metric {
+      min-width: 0;
+      padding: 12px;
+      border-radius: 16px;
+      background: color-mix(in srgb, currentColor 6%, transparent);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .detail-metric span {
+      font-size: 11px;
+      line-height: 16px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      opacity: 0.7;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .detail-metric strong {
+      font-family: var(--materia-font-display, inherit);
+      font-size: clamp(17px, 5cqi, 24px);
+      line-height: 1.15;
+      font-weight: 650;
+      overflow-wrap: anywhere;
+    }
+
+    /* ---- progress summary --------------------------------------------- */
+    .progress-summary-main {
+      display: flex;
+      align-items: center;
+      gap: clamp(18px, 5cqi, 32px);
+    }
+
+    .progress-ring {
+      width: clamp(82px, 25cqi, 120px);
+      height: clamp(82px, 25cqi, 120px);
+      flex: 0 0 auto;
+    }
+
+    .progress-summary-copy {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .progress-headline {
+      font-family: var(--materia-font-display, inherit);
+      font-size: clamp(26px, 8cqi, 42px);
+      line-height: 1.08;
+      font-weight: 650;
+      overflow-wrap: anywhere;
+    }
+
+    .progress-caption,
+    .progress-footer {
+      font-size: clamp(12px, 3.8cqi, 16px);
+      line-height: 1.35;
+      opacity: 0.72;
+    }
+
+    .progress-footer {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 20px;
+      font-weight: 600;
+    }
+
+    .progress-footer ha-icon {
+      --mdc-icon-size: 20px;
+      flex: 0 0 auto;
+    }
+
+    @container (max-width: 300px) {
+      .progress-summary-main {
+        align-items: flex-start;
+      }
+
+      .progress-ring {
+        width: 72px;
+        height: 72px;
+      }
+    }
+
     /* ---- the tonal session row ------------------------------------------ */
     .event-row {
       container-type: inline-size;

@@ -128,6 +128,8 @@ const STRINGS = {
   sched_choose_device: { en: "Choose a device", nl: "Kies een toestel" },
   sched_device: { en: "Device", nl: "Toestel" },
   sched_devices: { en: "Devices", nl: "Toestellen" },
+  sched_add_device: { en: "Add device", nl: "Toestel toevoegen" },
+  sched_remove_device: { en: "Remove", nl: "Verwijder" },
   sched_action: { en: "Action", nl: "Actie" },
   sched_new: { en: "New schedule", nl: "Nieuwe planning" },
   sched_edit: { en: "Change schedule", nl: "Planning aanpassen" },

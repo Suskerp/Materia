@@ -194,18 +194,118 @@ export const styles = [
       gap: 10px;
     }
 
-    .manager-fields label {
+    .manager-fields label,
+    .manager-field {
       min-width: 0;
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
 
-    .manager-fields label > span {
+    .manager-fields label > span,
+    .manager-field > span {
       padding-left: 4px;
       font-size: 12px;
       font-weight: 700;
       color: var(--md-sys-color-on-surface-variant, currentColor);
+    }
+
+    .target-selection {
+      min-height: 56px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 20px;
+      background: var(--md-sys-color-surface-container-high, rgba(0, 0, 0, 0.08));
+      border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 28%, transparent);
+    }
+
+    .target-chip,
+    .target-add {
+      min-width: 0;
+      height: 40px;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .target-chip {
+      flex: 1 1 150px;
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+
+    .target-chip span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .target-chip ha-icon,
+    .target-add ha-icon,
+    .target-options ha-icon {
+      --mdc-icon-size: 20px;
+      flex: 0 0 auto;
+    }
+
+    .target-chip .remove {
+      opacity: 0.7;
+    }
+
+    .target-add {
+      flex: 0 0 auto;
+      background: transparent;
+      color: var(--md-sys-color-primary);
+    }
+
+    .target-options {
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      border-radius: 20px;
+      background: var(--md-sys-color-surface-container-highest, rgba(0, 0, 0, 0.12));
+      box-shadow: var(--md-sys-elevation-level2, 0 2px 6px rgba(0, 0, 0, 0.18));
+    }
+
+    .target-options button {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 14px;
+      border-radius: 14px;
+      text-align: left;
+      color: var(--md-sys-color-on-surface);
+    }
+
+    .target-options button span {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .target-options button.selected {
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+
+    .manager-fields ha-selector {
+      display: block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      overflow: hidden;
+      background: var(--md-sys-color-surface-container-high, rgba(0, 0, 0, 0.08));
+      border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 28%, transparent);
     }
 
     @container (max-width: 420px) {
@@ -729,7 +829,8 @@ export const styles = [
     .win-edge {
       position: relative;
       border-radius: 28px;
-      background: var(--md-sys-color-surface-container-high, rgba(0, 0, 0, 0.06));
+      background: var(--md-sys-color-surface-container-highest, rgba(0, 0, 0, 0.1));
+      border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 24%, transparent);
       overflow: hidden;
     }
 
@@ -780,6 +881,8 @@ export const styles = [
       cursor: pointer;
       color-scheme: light dark;
       accent-color: var(--md-sys-color-primary);
+      -webkit-appearance: none;
+      appearance: none;
     }
 
     .native-time-input::selection,
@@ -788,8 +891,11 @@ export const styles = [
       color: var(--md-sys-color-on-primary);
     }
 
-    .native-time-input::-webkit-calendar-picker-indicator {
+    .native-time-input::-webkit-calendar-picker-indicator,
+    .native-datetime-input::-webkit-calendar-picker-indicator,
+    .native-time-input::-webkit-inner-spin-button {
       display: none;
+      -webkit-appearance: none;
     }
 
     .native-datetime-input {
@@ -806,11 +912,8 @@ export const styles = [
       font: 700 16px/20px var(--materia-font-display, inherit);
       font-variant-numeric: tabular-nums;
       text-align: right;
-    }
-
-    .native-datetime-input::-webkit-calendar-picker-indicator {
-      opacity: 0.72;
-      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
     }
 
     /* Non-normative affordance: a window whose stop <= start crosses midnight

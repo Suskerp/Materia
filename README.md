@@ -390,7 +390,7 @@ secondary: "{{ 'Heating' if ... else 'Idle' }}"
 
 #### `materia-glance-tile`
 
-View-only sensor tile for **any** entity. `variant` is a required, explicit category (like `materia-weather-metric`'s `metric` field — never inferred): percent liquid fill (humidity drifts gently, moisture gets sweet-spot zones), a battery-tiered vertical bar, thermometer for temperatures, load bars for power, energy with a bolt glyph, a slowly turning star for running binaries, a robot-vacuum layout, and a graceful plain fallback.
+View-only sensor tile for **any** entity. `variant` is a required, explicit category (like `materia-weather-metric`'s `metric` field — never inferred): current-value visualizations, calibrated gauges, recorder-backed history, and generic multi-metric summaries.
 
 ```yaml
 type: custom:materia-glance-tile
@@ -410,15 +410,18 @@ battery_entity: sensor.roborock_qrevo_battery
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `entity` | string | **required** | Any entity |
-| `variant` | `percent` \| `battery` \| `temperature` \| `power` \| `energy` \| `binary` \| `plain` \| `vacuum` | **required** | Visualization |
+| `variant` | string | **required** | Current value: `percent`, `battery`, `temperature`, `power`, `energy`, `binary`, `plain`, `vacuum`; gauge: `fill`, `bar`, `ladder`, `ring`, `status`, `scale`; history: `spark`, `sparkline`, `weekbars`, `events`; summary: `detail`, `progress_summary` |
 | `label` | string (templatable) | | Subtitle — literal text or a Jinja template |
 | `min` / `max` | number | per variant | Scale (temperature/power) |
 | `critical_dry` / `dry_below` / `soggy_above` | number | 10/20/60 | `percent` + `device_class: moisture` sweet-spot thresholds |
 | `battery_entity` | string | | `plain` / `vacuum` — a paired battery sensor, rendered as a vertical bar |
 | `status_entity` | string | | `vacuum` only — richer status sensor shown as the centered state (falls back to the entity's own state) |
 | `room_entity` | string | | `vacuum` only — current-room sensor, shown at the bottom while cleaning |
+| `metrics` | array | | `detail` — up to three `{ entity, label, value, unit }` supporting facts; the editor also exposes three friendly metric slots |
+| `days` / `aggregate` | number / string | 7 / `delta` | `detail` — recorder-backed bars and their daily aggregation |
+| `headline` / `caption` / `footer` | string (templatable) | | `progress_summary` authored copy; supports `{value}`, `{min}`, `{max}`, `{unit}`, `{percent}` |
+| `footer_icon` | string | `m3o:trending-up` | `progress_summary` footer icon |
 | `accent` / `color` / `color_on` | string | | Colors |
-| `tap_action` | object | more-info | Tap |
 | `tap_action` | object | more-info | Tap |
 
 ---
