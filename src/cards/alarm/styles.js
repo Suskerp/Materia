@@ -110,10 +110,9 @@ export const styles = [
 
     /* ---- hero ------------------------------------------------------------ */
 
-    /* THE GAP HAS TO CLEAR A ROTATED SQUARE, which is what the earlier
-       headroom sum missed: it counted the breathe and forgot the pose.
-       transform does not affect layout, so the shape's box stays put while its
-       CONTENT turns 45 degrees and its corners swing outside that box.
+    /* THE STAGE RESERVES THE SHAPE'S FULL MOTION ENVELOPE. Transform and scale
+       do not affect layout, so spacing only the shape's resting box lets its
+       rotated, breathing corners crowd the card edge and the title.
 
        For a rounded square of side s with a 30% corner, the farthest point is
        the corner arc: its centre sits sqrt(2) * (0.5s - 0.3s) = 0.283s from the
@@ -125,13 +124,20 @@ export const styles = [
 
        clamp(16px, 5cqi, 26px) covers all three — 16 against 13, 20 against 17,
        26 against 20 — and it is not a new number: it is the gap .body already
-       uses, so the hero now breathes on the same rhythm as the card. */
+       uses. Keeping that clearance in a wrapper makes it real layout space on
+       all four sides instead of only a gap below the nominal box. */
     .hero {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: clamp(16px, 5cqi, 26px);
+      gap: 0;
       text-align: center;
+    }
+
+    .shape-stage {
+      display: grid;
+      place-items: center;
+      padding: clamp(16px, 5cqi, 26px);
     }
 
     /* The concept drew a 150px shape in a 412px frame, which is 36cqi. The

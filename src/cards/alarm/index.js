@@ -1764,26 +1764,28 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
             ? nothing
             : html`
                 <div class="hero">
-                  <div
-                    class="shape ${armedish ? "armed" : ""} ${this._busy ? "busy" : ""} ${sweeping ? "sweeping" : ""} ${this._turn ? "turn" : ""} ${this._shake ? "shake" : ""}"
-                    style="--ma-hero-bg:${heroBg};--ma-hero-fg:${heroFg};--ma-sweep-bg:${accent};--ma-sweep-fg:${accentOn};--ma-turn-dir:${this._turnDir};${heroTappable ? "" : "cursor:default;"}"
-                    role=${heroTappable ? "button" : "img"}
-                    tabindex=${heroTappable ? 0 : -1}
-                    aria-label=${this._title()}
-                    @click=${() => heroTappable && this._handleAction(heroAction)}
-                    @keydown=${(ev) => {
-                      if (!heroTappable) return;
-                      if (ev.key !== "Enter" && ev.key !== " " && ev.key !== "Spacebar") return;
-                      ev.preventDefault();
-                      this._handleAction(heroAction);
-                    }}
-                  >
-                    <ha-icon .icon=${heroIcon}></ha-icon>
-                    ${sweeping
-                      ? html`<div class="shape-fill" aria-hidden="true">
-                          <ha-icon .icon=${heroIcon}></ha-icon>
-                        </div>`
-                      : nothing}
+                  <div class="shape-stage">
+                    <div
+                      class="shape ${armedish ? "armed" : ""} ${this._busy ? "busy" : ""} ${sweeping ? "sweeping" : ""} ${this._turn ? "turn" : ""} ${this._shake ? "shake" : ""}"
+                      style="--ma-hero-bg:${heroBg};--ma-hero-fg:${heroFg};--ma-sweep-bg:${accent};--ma-sweep-fg:${accentOn};--ma-turn-dir:${this._turnDir};${heroTappable ? "" : "cursor:default;"}"
+                      role=${heroTappable ? "button" : "img"}
+                      tabindex=${heroTappable ? 0 : -1}
+                      aria-label=${this._title()}
+                      @click=${() => heroTappable && this._handleAction(heroAction)}
+                      @keydown=${(ev) => {
+                        if (!heroTappable) return;
+                        if (ev.key !== "Enter" && ev.key !== " " && ev.key !== "Spacebar") return;
+                        ev.preventDefault();
+                        this._handleAction(heroAction);
+                      }}
+                    >
+                      <ha-icon .icon=${heroIcon}></ha-icon>
+                      ${sweeping
+                        ? html`<div class="shape-fill" aria-hidden="true">
+                            <ha-icon .icon=${heroIcon}></ha-icon>
+                          </div>`
+                        : nothing}
+                    </div>
                   </div>
                   <div>
                     <div class="title">${this._title()}</div>
