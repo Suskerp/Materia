@@ -96,6 +96,11 @@ class MateriaAlarmEditor extends SmartEditorBase {
       zone_flap_detect: true,
       zone_flap_count: 6,
       zone_flap_window_ms: 60000,
+      /* arming_duration_ms and pending_duration_ms are deliberately NOT seeded.
+         Absent means "nobody has told us how long this takes", which selects
+         the indeterminate breathe — seeding a number here would invent a
+         duration and make the card claim progress it cannot know. Same
+         reasoning as materia-bars' max and precision. */
       ...this._config,
     };
   }
@@ -113,6 +118,7 @@ class MateriaAlarmEditor extends SmartEditorBase {
       this._config?.zone_filter ? "f" : "",
       this._config?.bypass_action ? "b" : "",
       this._config?.zone_flap_detect === false ? "nf" : "",
+      this._config?.arming_duration_ms ? "ad" : "",
     ].join("|");
   }
 
@@ -168,9 +174,23 @@ class MateriaAlarmEditor extends SmartEditorBase {
             selector: { boolean: {} },
           },
           {
+            name: "arming_duration_ms",
+            label: "Exit delay (ms)",
+            helper:
+              "How long this panel takes to arm. Set it and the shape fills across the delay, showing how far through you are. Leave EMPTY and it breathes instead — the honest answer for a wait of unknown length, and better than a progress bar that finishes at the wrong moment. This is not the timeout below: that one is about silence, this one is about how the panel is programmed.",
+            selector: { number: { min: 1000, max: 600000, step: 1000, mode: "box" } },
+          },
+          {
+            name: "pending_duration_ms",
+            label: "Entry delay (ms)",
+            helper: "Same, for the countdown after someone comes in. Leave empty to breathe.",
+            selector: { number: { min: 1000, max: 600000, step: 1000, mode: "box" } },
+          },
+          {
             name: "pending_timeout_ms",
-            label: "Give up waiting for the panel after (ms, default 10000)",
-            helper: "How long the card keeps showing the state you asked for before admitting the panel never answered.",
+            label: "Give up waiting for the panel after (ms, default 20000)",
+            helper:
+              "How long the card keeps showing the state you asked for before admitting the panel never answered. Counts SILENCE only — every arming or entry-delay read restarts it, so a long exit delay does not need a long timeout here.",
             selector: { number: { min: 1000, max: 60000, step: 500, mode: "box" } },
           },
           {

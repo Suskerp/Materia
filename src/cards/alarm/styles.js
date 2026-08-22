@@ -128,6 +128,10 @@ export const styles = [
       place-items: center;
       background: var(--ma-hero-bg);
       color: var(--ma-hero-fg);
+      /* The sweep layer is clipped to the silhouette, so the fill takes the
+         shape's own corner as it grows rather than showing a square edge. */
+      position: relative;
+      overflow: hidden;
       /* DISARMED is the circle and ARMED is the squared shape, so the corner
          itself carries the state. Expressed as a percentage, not px: a px
          radius at or above half the box renders identically to any larger
@@ -191,6 +195,28 @@ export const styles = [
       }
     }
 
+    /* THE ARMING SWEEP. Same two-face reveal the mode buttons use for the hold
+       gesture, and the same --ma-p property driving it — one idea, one variable,
+       one place to reason about it. The duplicate glyph is what keeps the icon
+       legible from 0% to 100%: a single glyph over a fill that crosses it would
+       go unreadable halfway. clip-path rather than width for the same reason it
+       is clip-path there — the face inside must keep its full layout width, or
+       the glyph would slide sideways as the fill passed it.
+
+       No transition: the JS owns every frame, including its own coarsening
+       under reduced motion. Easing this would make it lag the clock it is
+       reporting. */
+    .shape-fill {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: var(--ma-sweep-bg);
+      color: var(--ma-sweep-fg);
+      pointer-events: none;
+      clip-path: inset(0 calc(100% - var(--ma-p, 0) * 100%) 0 0);
+    }
+
     /* THREE ANIMATIONS, ONE PROPERTY. The animation shorthand is a single
        property, so two rules setting it on .shape would silently cancel one
        another. Rather than lean on specificity, the precedence is written out:
@@ -206,18 +232,27 @@ export const styles = [
        and a translateX together, which on this shape would clobber the pose
        turn mid-shake. Same gesture, different channel. */
 
-    /* BUSY, not disabled. arming and pending are the machine working, and the
-       progress guidance says an indeterminate wait must show live activity, so
-       the shape breathes at full strength rather than dimming. Same 1.035
-       amplitude and 2s beat materia-lock and materia-vacuum-hero already use
-       for "the machine is doing something". */
-    .shape.busy:not(.turn):not(.shake) {
-      animation: ma-breathe 2s ease-in-out infinite alternate;
+    /* BUSY AND INDETERMINATE — the fallback, for a wait nobody has told us the
+       length of. It is deliberately NOT shown while the sweep runs: a
+       determinate indicator and an indeterminate one saying the same thing at
+       once is two answers to one question.
+
+       BOTH NUMBERS CHANGED, and neither is taste. The period was 2s per
+       half-cycle, which is off the M3 duration scale entirely — the longest
+       token is extra-long-4 at 1000ms — so it is now exactly that token, which
+       also doubles the pace and is most of what "too subtle" was about. The
+       amplitude was 1.035 with nothing behind it; 7% of the hero's 168px
+       ceiling is about 12px of travel against the roughly 6px that could not be
+       read, and it still fits inside the 10-14px gap below the shape, so
+       nothing collides at any card width. Geometry and a real token, rather
+       than a number that looked nicer. */
+    .shape.busy:not(.turn):not(.shake):not(.sweeping) {
+      animation: ma-breathe 1000ms ease-in-out infinite alternate;
     }
 
     @keyframes ma-breathe {
       to {
-        scale: 1.035;
+        scale: 1.07;
       }
     }
 
@@ -284,7 +319,7 @@ export const styles = [
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .shape.busy:not(.turn):not(.shake),
+      .shape.busy:not(.turn):not(.shake):not(.sweeping),
       .shape.turn:not(.shake),
       .shape.turn:not(.shake) ha-icon,
       .shape.shake {

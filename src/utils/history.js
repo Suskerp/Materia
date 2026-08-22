@@ -189,6 +189,43 @@ export function bucketDays(series, { days = 7, aggregate = "delta", now = Date.n
 }
 
 /**
+ * The entity's CURRENT state, appended as a real sample.
+ *
+ * WHY THIS IS NOT FABRICATION. The recorder only stores changes, so its last
+ * row can be hours old — and when an integration marks an entity unavailable
+ * while a device sleeps, the tail of the series is a legitimate gap even though
+ * the value is known right now. The live state is the most authoritative sample
+ * there is, and `last_changed` is the moment it took effect, so placing it at
+ * that timestamp states something true rather than extending a guess.
+ *
+ * It is timestamped at last_changed and NOT at `now` on purpose: resample reads
+ * each bucket's midpoint, so a sample stamped `now` falls past the last
+ * midpoint and would change nothing.
+ *
+ * WHAT THIS DELIBERATELY DOES NOT DO: it does not close a gap the entity is
+ * still in. A currently-unavailable entity carries no number, so nothing is
+ * appended and the outage runs to the right edge — which is the honest picture.
+ * An outage that has ENDED keeps its break and the tail reaches the edge.
+ */
+export function withLiveSample(series, stateObj, now = Date.now()) {
+  const base = series || [];
+  const raw = stateObj?.state;
+  if (raw == null || GAP_STATES.has(String(raw).toLowerCase())) return base;
+  const v = Number(raw);
+  if (!Number.isFinite(v)) return base;
+
+  const t = readTime({ lu: stateObj.last_changed ?? stateObj.last_updated }) ?? now;
+  const at = Math.min(t, now);
+  const last = base[base.length - 1];
+  // Already covered: the recorder's own last row is this value, at or after
+  // the moment it took effect.
+  if (last && last.v === v && last.t >= at) return base;
+  const out = [...base, { t: at, v }];
+  out.sort((a, b) => a.t - b.t);
+  return out;
+}
+
+/**
  * The change across the whole series, for a delta readout: the first and last
  * values that are actually known, and their difference. Null when fewer than
  * two known values exist — a delta needs two points and guessing one is how

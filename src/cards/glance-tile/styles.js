@@ -467,21 +467,29 @@ export const styles = [
 
     /* ---- ladder: N bars, ramping 32% -> 100% ---------------------------- */
 
+    /* A band ACROSS the card, 52dp at full size, with the value line beneath
+       it — see the note in _ladder. It was a 55%-wide right-hand column,
+       which read as a cluster tucked bottom-right. */
     .ladder {
       display: flex;
       align-items: flex-end;
-      /* Gap and width shrink as the run gets longer, so sixteen bars fit the
-         same box five bars do without overflowing it. */
+      /* space-between rather than a fixed gap: with the cap below, five bars
+         would otherwise bunch at the left of a full-width row. The gap is the
+         floor and this distributes whatever is left over. */
+      justify-content: space-between;
       gap: clamp(1.5px, 1.6cqi, 5px);
-      height: clamp(38px, 20cqi, 58px);
+      height: clamp(36px, 26cqi, 52px);
+      width: 100%;
       flex-shrink: 0;
-      max-width: 55%;
     }
 
     .ladder i {
       flex: 1 1 auto;
       min-width: 2px;
-      max-width: 11px;
+      /* Raised from 11px now that the row is full width: at five bars an 11px
+         cap left them huddled in the first third. 24dp keeps sixteen bars at
+         their natural ~11dp while letting five spread across the card. */
+      max-width: 24px;
       border-radius: 999px;
       background: var(--md-sys-color-secondary-container, color-mix(in srgb, currentColor 12%, transparent));
       transition: background-color var(--md-sys-motion-default-effects);
@@ -732,9 +740,16 @@ export const styles = [
     }
 
     /* ---- the delta pill ------------------------------------------------
-       Tertiary at 14% with tertiary text: the text and its wash are the same
-       hue, so the pair keeps its contrast in either theme without needing the
-       container/on-container roles. */
+       THE CONTAINER PAIR, not an accent role at partial alpha. M3 has two
+       different mechanisms and they are not interchangeable: a *-container /
+       on-*-container pair is a filled surface guaranteed to be a legible
+       pair, while a percentage of an accent over whatever is behind it is a
+       STATE LAYER. Using the second as the first is how this shipped as a
+       flat grey pill with barely-legible text on a harmonised theme — the
+       hand-mixed alpha has no contrast guarantee, and my reasoning that "the
+       text and its wash are the same hue" only holds if the wash lands on a
+       surface that happens to cooperate. Every other filled surface in this
+       library (status-row.active, the lock, the alarm) uses the pair. */
     .delta-pill {
       flex: none;
       display: inline-flex;
@@ -744,8 +759,8 @@ export const styles = [
       padding: 0 12px;
       /* Half of 30: the concept's 15px is corner-full for this height. */
       border-radius: 15px;
-      background: color-mix(in srgb, var(--md-sys-color-tertiary, #7d5260) 14%, transparent);
-      color: var(--md-sys-color-tertiary, #7d5260);
+      background: var(--md-sys-color-tertiary-container, #ffd8e4);
+      color: var(--md-sys-color-on-tertiary-container, #31111d);
       font-size: 13px;
       font-weight: 700;
       white-space: nowrap;

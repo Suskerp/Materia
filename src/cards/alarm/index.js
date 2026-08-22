@@ -171,6 +171,9 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     _turn: { state: true },
     /** One-shot REFUSAL shake: an optimistic pin expired unanswered. */
     _shake: { state: true },
+    /** True while a DETERMINATE arming sweep is running. Not the progress
+     *  itself — that is written straight onto the element, see _applyArmP. */
+    _sweeping: { state: true },
   };
 
   static styles = styles;
@@ -222,6 +225,7 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     this._unavailOpen = false;
     this._turn = false;
     this._shake = false;
+    this._sweeping = false;
     /* +1 turns the way arming turns, -1 retraces it. Not reactive: it is only
        ever read in the same render the class flip triggers. */
     this._turnDir = 1;
@@ -245,6 +249,7 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     clearTimeout(this._turnTimer);
     clearTimeout(this._shakeTimer);
     clearTimeout(this._latchTimer);
+    this._stopSweep();
     this._cleanupGesture();
   }
 
@@ -437,6 +442,120 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     if (performance.now() - (this._poseAt ?? -Infinity) < POSE_MS) return;
 
     this._playTurn(raw === "disarmed" ? -1 : 1);
+  }
+
+  /* ---- the arming sweep -------------------------------------------------
+     WHY THIS IS NOT THE BREATHE, and not a spinner either.
+
+     material-components-android is explicit about where its loading indicator
+     belongs: "use progress indicators, if the processes can transition from
+     indeterminate to determinate", and the loading indicator itself is
+     "designed to show progress that loads in under five seconds". This panel's
+     exit delay is NINETY seconds, measured off its own history, and it ends in
+     a known state. By the spec's own test that is a determinate progress case,
+     so the shape shows how far through arming you are rather than merely that
+     something is happening.
+
+     The indeterminate breathe is KEPT, strictly for when the duration is not
+     configured — which is the spec-correct answer for an unknown wait, and the
+     honest one. A progress indicator that reaches the end before the machine
+     does is worse than no progress indicator at all, so an unconfigured card
+     never guesses a duration.
+
+     Mechanism reused, not reinvented: this is the same swept two-face reveal
+     the mode buttons already use for the hold gesture, driven by the same
+     --ma-p custom property, run once across the delay instead of across a
+     finger press. */
+
+  /** How long the current transitional state is expected to take, or null when
+   *  nobody has said. Deliberately SEPARATE from pending_timeout_ms.
+   *
+   *  Those two numbers answer different questions and conflating them would be
+   *  a bug even when they happen to match: pending_timeout_ms is "how long
+   *  before I stop believing my own optimistic claim", a safety valve against
+   *  silence, and it is RESCHEDULED by every transitional read — so it is not a
+   *  duration at all. This is "how long the panel takes", a fact about how the
+   *  panel is programmed. Raising the exit delay must not extend how long the
+   *  card is willing to lie about an offline panel, and vice versa. */
+  get _armDurationMs() {
+    const raw = this._rawState;
+    const key = raw === "pending" || this._state === "pending"
+      ? "pending_duration_ms"
+      : "arming_duration_ms";
+    const v = Number(this.config?.[key]);
+    return Number.isFinite(v) && v > 0 ? v : null;
+  }
+
+  /** When the current transitional phase started.
+   *
+   *  Prefers the ENTITY's own last_changed, which means a dashboard opened
+   *  part-way through a 90-second exit delay resumes at the right point
+   *  instead of starting a fresh sweep — the anchor is a fact about the panel,
+   *  not about when this card happened to mount. When we also hold an
+   *  optimistic pin, the earlier of the two wins: the phase really began when
+   *  the commit fired, and taking last_changed alone would make the sweep jump
+   *  backwards the moment the panel caught up. */
+  get _armAnchor() {
+    const lc = TRANSITIONAL.has(this._rawState)
+      ? Date.parse(this._stateObj?.last_changed ?? "")
+      : NaN;
+    const pin = this._pending != null ? this._pinAt : undefined;
+    if (pin != null && Number.isFinite(lc)) return Math.min(pin, lc);
+    if (pin != null) return pin;
+    return Number.isFinite(lc) ? lc : null;
+  }
+
+  /** True when there is enough information to show real progress. */
+  get _canSweep() {
+    return this._busy && this._armDurationMs != null && this._armAnchor != null;
+  }
+
+  /** Start, continue or stop the sweep to match the current state. Called from
+   *  willUpdate, so it cannot miss a transition — and idempotent, so being
+   *  called on unrelated ticks neither restarts nor disturbs a running sweep. */
+  _syncSweep() {
+    if (this._canSweep) this._startSweep();
+    else this._stopSweep();
+  }
+
+  _startSweep() {
+    if (this._sweepRaf) return; // already running; the anchor does the rest
+    this._sweeping = true;
+    const tick = () => {
+      if (!this._canSweep) {
+        this._stopSweep();
+        return;
+      }
+      const dur = this._armDurationMs;
+      const p = Math.min(1, Math.max(0, (Date.now() - this._armAnchor) / dur));
+      /* prefers-reduced-motion: the progress is INFORMATION, so it is not
+         suppressed — suppressing it would remove the thing the reader needs.
+         It is coarsened instead, to one step a second, which conveys the same
+         fact with a fraction of the movement. */
+      const grain = this._reduceMotion ? 1 / Math.max(1, dur / 1000) : 0;
+      const q = grain ? Math.floor(p / grain) * grain : p;
+      this._applyArmP(Math.min(1, q));
+      this._sweepRaf = requestAnimationFrame(tick);
+    };
+    this._sweepRaf = requestAnimationFrame(tick);
+  }
+
+  /** Stop, and CLEAR the property off the element while the reference is still
+   *  live. Lit only rewrites an inline style when the interpolated string
+   *  changes, and it does not change here — so an imperatively-set --ma-p
+   *  would otherwise survive at whatever fraction the sweep ended on. That is
+   *  the same bug the mode buttons' fill had. */
+  _stopSweep() {
+    if (this._sweepRaf) {
+      cancelAnimationFrame(this._sweepRaf);
+      this._sweepRaf = null;
+    }
+    this.shadowRoot?.querySelector(".shape")?.style.removeProperty("--ma-p");
+    this._sweeping = false;
+  }
+
+  _applyArmP(p) {
+    this.shadowRoot?.querySelector(".shape")?.style.setProperty("--ma-p", String(p));
   }
 
   /** One full turn of the SHAPE — never the glyph, which counter-rotates.
@@ -665,6 +784,7 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
   willUpdate(changed) {
     super.willUpdate?.(changed);
     this._surveyZones();
+    this._syncSweep();
   }
 
   /** Advance the stability book. Runs before render, so the very first paint is
@@ -1100,6 +1220,10 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     this._p = 0;
 
     this._pinFrom = this._rawState;
+    /* When the arming phase began, for the sweep's anchor. The entity's own
+       last_changed takes over as soon as it reports the transitional state;
+       this covers the gap before it answers. */
+    this._pinAt = Date.now();
     this._pending = target;
     clearTimeout(this._pinTimer);
     // Stop claiming success if the panel never answers. Without this the card
@@ -1374,12 +1498,24 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     const accent = this.config.armed_color ?? "var(--md-sys-color-primary)";
     const accentOn = this.config.armed_color_on ?? "var(--md-sys-color-on-primary)";
 
+    /* WHILE SWEEPING the shape starts as a quiet tint of the accent and FILLS
+       to the full accent, so the fill length is the progress. Optimism is not
+       given up to get it: the corner has already morphed and the pose has
+       already turned, which is what says "armed"; the fill only says "how far".
+       Both tones derive from the configured accent, so there is no second
+       colour key to keep in step. */
+    const sweeping = this._canSweep && !triggered;
+    const mutedAccent = `color-mix(in srgb, ${accent} 30%, transparent)`;
     const heroBg = triggered
       ? "var(--md-sys-color-error)"
       : armedish
-      ? accent
+      ? (sweeping ? mutedAccent : accent)
       : `color-mix(in srgb, ${fg} 12%, transparent)`;
-    const heroFg = triggered ? "var(--md-sys-color-on-error)" : armedish ? accentOn : accent;
+    const heroFg = triggered
+      ? "var(--md-sys-color-on-error)"
+      : armedish
+      ? (sweeping ? accent : accentOn)
+      : accent;
 
     // Quiet tonal pair for a button that is not the current mode — the
     // connected-group unselected treatment.
@@ -1409,8 +1545,8 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
             : html`
                 <div class="hero">
                   <div
-                    class="shape ${armedish ? "armed" : ""} ${this._busy ? "busy" : ""} ${this._turn ? "turn" : ""} ${this._shake ? "shake" : ""}"
-                    style="--ma-hero-bg:${heroBg};--ma-hero-fg:${heroFg};--ma-turn-dir:${this._turnDir};${heroTappable ? "" : "cursor:default;"}"
+                    class="shape ${armedish ? "armed" : ""} ${this._busy ? "busy" : ""} ${sweeping ? "sweeping" : ""} ${this._turn ? "turn" : ""} ${this._shake ? "shake" : ""}"
+                    style="--ma-hero-bg:${heroBg};--ma-hero-fg:${heroFg};--ma-sweep-bg:${accent};--ma-sweep-fg:${accentOn};--ma-turn-dir:${this._turnDir};${heroTappable ? "" : "cursor:default;"}"
                     role=${heroTappable ? "button" : "img"}
                     tabindex=${heroTappable ? 0 : -1}
                     aria-label=${this._title()}
@@ -1423,6 +1559,11 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
                     }}
                   >
                     <ha-icon .icon=${heroIcon}></ha-icon>
+                    ${sweeping
+                      ? html`<div class="shape-fill" aria-hidden="true">
+                          <ha-icon .icon=${heroIcon}></ha-icon>
+                        </div>`
+                      : nothing}
                   </div>
                   <div>
                     <div class="title">${this._title()}</div>

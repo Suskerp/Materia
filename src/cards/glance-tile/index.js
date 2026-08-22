@@ -3,7 +3,7 @@ import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { roundedPolygonPath } from "../../utils/shapes.js";
 import { isActiveState } from "../../utils/active-state.js";
-import { fetchNumericHistory, resample, segments, bucketDays, delta } from "../../utils/history.js";
+import { fetchNumericHistory, resample, segments, bucketDays, delta, withLiveSample } from "../../utils/history.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -588,17 +588,20 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     return html`
       <div class="rect-tile left gauge">
         ${this._header(opts.power ? "m3o:bolt" : "m3o:bar-chart")}
-        <div class="split-row">
-          <div class="split-main">
-            ${this._gaugeValueLine(g)}
-            ${this._captionLine(g)}
-          </div>
-          <div class="ladder" style="--g-accent:${g.accent}">
-            ${Array.from({ length: bars }, (_, i) => {
-              const h = bars > 1 ? 32 + (i / (bars - 1)) * 68 : 100;
-              return html`<i class=${i < lit ? "lit" : ""} style="height:${h.toFixed(2)}%"></i>`;
-            })}
-          </div>
+        <!-- The ladder is a BAND across the card with the value beneath it,
+             not a column beside the value. Tucked into a right-hand column it
+             became a small cluster bottom-right, which throws away the one
+             thing a climbing ramp is for: reading "how much" from the shape
+             before you read the number. -->
+        <div class="ladder" style="--g-accent:${g.accent}">
+          ${Array.from({ length: bars }, (_, i) => {
+            const h = bars > 1 ? 32 + (i / (bars - 1)) * 68 : 100;
+            return html`<i class=${i < lit ? "lit" : ""} style="height:${h.toFixed(2)}%"></i>`;
+          })}
+        </div>
+        <div class="gauge-main">
+          ${this._gaugeValueLine(g)}
+          ${this._captionLine(g)}
         </div>
       </div>
     `;
@@ -824,6 +827,14 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     return SPARK_VARIANTS.has(this._variant);
   }
 
+  /** The fetched series with the entity's live state appended — see
+   *  withLiveSample for why that is a real sample and not an extrapolation.
+   *  Everything that draws the past reads THIS, never `_hist` directly, so the
+   *  line, the bars and the delta all agree about where the series ends. */
+  get _histSeries() {
+    return withLiveSample(this._hist || [], this._stateObj);
+  }
+
   connectedCallback() {
     super.connectedCallback();
     if (!this._needsHistory) return;
@@ -938,7 +949,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     if (v == null) return this._plain();
     const g = this._gauge();
     const accent = g ? g.accent : this._gaugeAccent(1);
-    const series = this._hist || [];
+    const series = this._histSeries;
     const pts = resample(series, this._num(this.config.points) ?? 48, this._histHours);
     const W = opts.area ? 340 : 120;
     const H = opts.area ? 60 : 26;
@@ -999,7 +1010,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
      out-of-retention day is absent while an idle day is a stub. Those are
      different facts and the row says which is which. */
   _bucketBars(opts) {
-    const series = this._hist || [];
+    const series = this._histSeries;
     const days = this._num(this.config.days) ?? SPARK_DEFAULT_DAYS;
     // delta is the default because "how much happened that day" is what a bar
     // per day means for the counters these were drawn for; mean/max/sum/count

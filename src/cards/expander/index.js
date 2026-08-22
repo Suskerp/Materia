@@ -35,6 +35,7 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
     config: { state: true },
     _open: { state: true },
     _cards: { state: true },
+    _resolvedName: { state: true },
     _resolvedSecondary: { state: true },
     _resolvedColor: { state: true },
     _resolvedColorOn: { state: true },
@@ -95,6 +96,10 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
   updated(changed) {
     super.updated?.(changed);
     if (changed.has("hass") && this.hass) {
+      // name went through raw while secondary was resolved, so a templated
+      // name printed literal Jinja on the dashboard. The inconsistency was the
+      // bug, not the template.
+      this._resolveField("name", "_resolvedName");
       this._resolveField("secondary", "_resolvedSecondary");
       this._resolveField("color", "_resolvedColor");
       this._resolveField("color_on", "_resolvedColorOn");
@@ -146,7 +151,10 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
     // instead of borrowing the switch row's dimmed "off" tone.
     const tone = hasEntity ? (on ? "on" : "off") : "on";
     const unavailable = hasEntity && this._isUnavailable(st);
-    const name = this.config.name || st?.attributes.friendly_name || this.config.entity;
+    const name =
+      (this._isTemplate(this.config.name) ? this._resolvedName : this.config.name) ||
+      st?.attributes.friendly_name ||
+      this.config.entity;
     const icon =
       this.config.icon ||
       st?.attributes.icon ||

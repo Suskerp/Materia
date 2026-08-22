@@ -103,8 +103,12 @@ class MateriaExpanderEditor extends SmartEditorBase {
           },
           {
             name: "name",
-            label: hasEntity ? "Name (defaults to the friendly name)" : "Name",
+            label: hasEntity ? "Name / template (defaults to the friendly name)" : "Name / template",
             required: !hasEntity,
+            // The other half of the same inconsistency: the card resolved
+            // secondary and not name, and the editor offered template mode for
+            // secondary and not name. Both now match.
+            template: true,
             selector: { text: {} },
           },
           { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
