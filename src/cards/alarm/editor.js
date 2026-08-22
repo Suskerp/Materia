@@ -210,7 +210,7 @@ class MateriaAlarmEditor extends SmartEditorBase {
             name: "zone_flap_detect",
             label: "Treat zones that flap as movement detectors",
             helper:
-              "For zones with no device_class to go on. A zone that changes repeatedly is behaving like a PIR, not a door: it keeps its place in the list and just recolours, instead of joining the not-ready group and turning the arm gesture amber. Zones carrying a device_class are classified from that instead, and a per-zone override always wins.",
+              "Last-resort fallback, for zones with nothing else to go on. A zone that changes repeatedly is behaving like a PIR, not a door: it keeps its place in the list and just recolours, instead of joining the not-ready group and turning the arm gesture amber. Zones are classified from device_class first, then from the integration's own icon, and a per-zone override always wins. Smoke, heat, gas and water zones are never reached by this.",
             selector: { boolean: {} },
           },
           {

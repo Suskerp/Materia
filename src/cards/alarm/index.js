@@ -53,9 +53,38 @@ const TRANSIENT_CLASSES = new Set([
   "motion", "occupancy", "presence", "vibration", "sound", "moving", "running", "light",
 ]);
 const BLOCKING_CLASSES = new Set([
-  "door", "window", "opening", "garage_door", "lock", "tamper", "safety",
-  "problem", "smoke", "gas", "heat", "moisture", "co",
+  "door", "window", "opening", "garage_door", "lock", "tamper",
 ]);
+
+/* 24-HOUR ZONES. Smoke, heat, gas, water: these block arming, and unlike every
+   other blocking zone they must be UNREACHABLE by any heuristic that could
+   demote them. A faulty smoke detector that starts chattering is the exact
+   input that would make flap detection call it a movement sensor and quietly
+   stop it counting — which is the one misclassification on this card that
+   could matter to somebody. Kept as its own set, checked before anything else,
+   so the guarantee is structural rather than a comment asking future code to
+   be careful. Same BinarySensorDeviceClass enum as above. */
+const SAFETY_CLASSES = new Set(["smoke", "gas", "heat", "moisture", "co", "safety", "problem"]);
+
+/* THIRD RUNG: THE INTEGRATION'S OWN ICON.
+   Measured across this install's 47 zones, 37 carry an integration-supplied
+   `icon` and it separates them cleanly where device_class cannot — these are
+   `sensor` entities, so not one of them has a device_class to read. The 12
+   mdi:motion-sensor zones are exactly the flapping population, and the 12
+   mdi:fire zones are exactly the smoke and heat detectors.
+
+   Matched on mdi STEMS, not on the eight exact strings this panel happens to
+   emit: mdi has a semantic naming scheme, so door / door-sliding /
+   door-closed all mean door, and matching the stem means a firmware update
+   that switches to an icon VARIANT cannot silently reclassify a zone. The
+   lists are deliberately short — anything ambiguous is better left to fall
+   through to the behavioural fallback than guessed at here. */
+const SAFETY_ICON_STEMS = ["fire", "smoke", "heat", "gas", "water", "flood"];
+const TRANSIENT_ICON_STEMS = ["motion", "walk", "presence", "occupancy", "radar"];
+const BLOCKING_ICON_STEMS = [
+  "door", "window", "garage", "gate", "lock", "shield", "bell",
+  "wardrobe", "cupboard", "curtain", "shutter", "blind",
+];
 
 /* Geometry, all off the M3 button ladder — see the spec header in styles.js.
    96px is the large rung (the concept's 104px is not a step on the ladder,
@@ -595,17 +624,42 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
   }
 
   /** Classification, most specific source first. */
-  _isTransient(zoneCfg, st, b, now) {
-    if (typeof zoneCfg?.transient === "boolean") return zoneCfg.transient;
+  _classify(zoneCfg, st, b, now) {
+    /* Explicit config first, and it can even override a safety class: someone
+       who has typed transient on a zone knows their own install better than
+       any inference here does. It is the only thing that can. */
+    if (typeof zoneCfg?.transient === "boolean") {
+      return { transient: zoneCfg.transient, safety: false, by: "config" };
+    }
+
     const dc = st?.attributes?.device_class;
     if (dc) {
-      if (TRANSIENT_CLASSES.has(dc)) return true;
-      if (BLOCKING_CLASSES.has(dc)) return false;
+      if (SAFETY_CLASSES.has(dc)) return { transient: false, safety: true, by: "device_class" };
+      if (TRANSIENT_CLASSES.has(dc)) return { transient: true, safety: false, by: "device_class" };
+      if (BLOCKING_CLASSES.has(dc)) return { transient: false, safety: false, by: "device_class" };
     }
-    // Unclassifiable: default to BLOCKING (the safe reading of an unknown
-    // zone), unless it has demonstrated otherwise.
-    if (this.config.zone_flap_detect === false) return false;
-    return this._flapping(b, now);
+
+    /* The ENTITY's icon, never the zone's display icon. Those are different
+       fields on purpose: `icon` in a zone config is a presentation choice, and
+       repainting a row must not silently change whether that zone can block an
+       arm. Explicit config for that is `transient`, right above. */
+    const icon = String(st?.attributes?.icon ?? "").toLowerCase();
+    if (icon) {
+      const has = (stems) => stems.some((k) => icon.includes(k));
+      if (has(SAFETY_ICON_STEMS)) return { transient: false, safety: true, by: "icon" };
+      if (has(TRANSIENT_ICON_STEMS)) return { transient: true, safety: false, by: "icon" };
+      if (has(BLOCKING_ICON_STEMS)) return { transient: false, safety: false, by: "icon" };
+    }
+
+    // Nothing to read: default to BLOCKING (the safe reading of an unknown
+    // zone) unless it has demonstrated otherwise. Only zones that reach HERE
+    // are ever subject to the behavioural guess, which is what keeps it away
+    // from the safety classes above.
+    if (this.config.zone_flap_detect === false) {
+      return { transient: false, safety: false, by: "default" };
+    }
+    const flapping = this._flapping(b, now);
+    return { transient: flapping, safety: false, by: flapping ? "flapping" : "default" };
   }
 
   willUpdate(changed) {
@@ -633,8 +687,11 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
         b.word = word;
       }
 
-      const transient = this._isTransient(z, st, b, now);
+      const cls = this._classify(z, st, b, now);
+      const transient = cls.transient;
       b.transient = transient;
+      b.safety = cls.safety;
+      b.classifiedBy = cls.by;
 
       const unavailable = this._zoneUnavailable(st);
       const bypassed = !unavailable && this._zoneBypassed(st);
@@ -744,6 +801,7 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
            survey has run. */
         const b = this._zoneBook?.get(z.entity);
         const transient = b?.transient ?? false;
+        const safety = b?.safety ?? false;
         const liveNotReady = !unavailable && !bypassed && this._zoneNotReady(st);
         const out = {
           ...z,
@@ -752,6 +810,13 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
           unavailable,
           bypassed,
           transient,
+          /* A 24-hour zone (smoke, heat, gas, water). Blocking, and no
+             heuristic can demote it — see SAFETY_CLASSES. */
+          safety,
+          /* Which rung of the chain decided: config | device_class | icon |
+             flapping | default. Carried for diagnosis, and so a test can prove
+             the precedence rather than infer it from the outcome. */
+          classifiedBy: b?.classifiedBy ?? "default",
           /* SENSING: a transient zone currently detecting. It holds its row,
              recolours, and is deliberately absent from `open` — so it can
              neither move a group's height nor turn the sweep amber. */

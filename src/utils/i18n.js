@@ -231,6 +231,14 @@ const STRINGS = {
      (t(`al_mode_${mode.key}`) / t(`al_state_armed_${mode.key}`)), so every
      MODES entry in cards/alarm/index.js needs a pair here. A missing key
      renders as its own name, and a grep for t("...") will not find these. */
+  cf_hold_to_confirm: { en: "Hold to confirm", nl: "Houd vast om te bevestigen" },
+  cf_active: { en: "Active", nl: "Actief" },
+  cf_working: { en: "Working…", nl: "Bezig…" },
+  cf_tap_to_stop: { en: "Tap to stop", nl: "Tik om te stoppen" },
+  cf_tap_to_stop_aria: { en: "Stop {what}", nl: "{what} stoppen" },
+  bars_no_rows: { en: "Add a bar in the card settings", nl: "Voeg een balk toe bij de kaartinstellingen" },
+  bars_aria_unknown: { en: "{label}: no reading", nl: "{label}: geen meting" },
+  bars_unknown_title: { en: "No reading available", nl: "Geen meting beschikbaar" },
   al_mode_home: { en: "Home", nl: "Aanwezig" },
   al_mode_away: { en: "Away", nl: "Afwezig" },
   al_mode_night: { en: "Night", nl: "Nacht" },

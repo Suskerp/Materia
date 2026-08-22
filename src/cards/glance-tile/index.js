@@ -2,6 +2,8 @@ import { LitElement, html, svg, nothing } from "lit";
 import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { roundedPolygonPath } from "../../utils/shapes.js";
+import { isActiveState } from "../../utils/active-state.js";
+import { fetchNumericHistory, resample, segments, bucketDays, delta } from "../../utils/history.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -15,6 +17,18 @@ const SCALE = {
 };
 
 const ACTIVE_STATES = ["on", "open", "running", "playing", "heat", "heating", "home", "true", "active"];
+
+/** The 19b variants: these draw the measurement's recent PAST, so they need
+ *  the recorder. Everything else renders from the current state alone. */
+const SPARK_VARIANTS = new Set(["spark", "sparkline", "weekbars", "events"]);
+
+/** Per-variant window defaults. Deliberately SHORT: a window longer than the
+ *  recorder's retention comes back as no series at all — not a truncated one —
+ *  so the concept's 14 days would render empty on the install this is for.
+ *  Three days is inside the measured working range; `days` raises it where a
+ *  recorder keeps more. */
+const SPARK_DEFAULT_HOURS = 24;
+const SPARK_DEFAULT_DAYS = 3;
 
 /**
  * Expressive view-only sensor tile (materia-glance-tile): the weather-metric look
@@ -39,6 +53,32 @@ const ACTIVE_STATES = ["on", "open", "running", "playing", "heat", "heating", "h
  *                  Pairs the vacuum entity with optional status_entity
  *                  (richer state text) / room_entity / battery_entity.
  *
+ * THE GAUGE FAMILY. Five variants answer a question the plain square cannot:
+ * seven equal tiles present 47 and 64705 as the same kind of fact, so none of
+ * them says whether its number is GOOD. These spend the tile's empty half on
+ * the measurement's RANGE, so the number arrives already judged.
+ *
+ * NONE OF THEM KNOWS WHAT IT IS MEASURING. There is no domain, device class,
+ * unit or entity-id pattern in any of them: they take a value, a range, a
+ * unit string to echo back and a caption the author wrote. The scale comes
+ * from config, else the entity's own min/max attributes, else nothing — in
+ * which case the tile draws a plain value rather than a gauge it cannot
+ * calibrate. See _gauge(), which is the ONLY place a fraction is derived.
+ *
+ *   fill         — the tile's own background floods left-to-right to the
+ *                  value fraction, with a bright 3dp edge line AT the
+ *                  boundary. Reads at any aspect ratio.
+ *   bar          — big value over a 6dp track, plus a caption.
+ *   ladder       — N discrete bars, the first k lit, heights ramping across
+ *                  the run. The `power` variant IS this renderer fed through
+ *                  a compatibility adapter, not a second copy of it.
+ *   ring         — circular progress BESIDE the value rather than behind it,
+ *                  so the number is never read through its own gauge.
+ *   status       — a wide tonal row: icon badge, state, subtitle and a dot
+ *                  indicator. The one variant that is a row, not a square,
+ *                  and the one that reads `active_state` rather than assuming
+ *                  a fixed list of on-ish words.
+ *
  * View only: tap opens more-info (or any configured tap_action).
  */
 class MateriaGlanceTile extends ActionMixin(LitElement) {
@@ -48,6 +88,10 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     _resolvedColor: { state: true },
     _resolvedColorOn: { state: true },
     _resolvedLabel: { state: true },
+    _resolvedCaption: { state: true },
+    _resolvedDeltaLabel: { state: true },
+    /** The fetched series. Reactive: arriving history must repaint. */
+    _hist: { state: true },
   };
 
   static styles = styles;
@@ -72,6 +116,11 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
       this._resolveField("color", "_resolvedColor");
       this._resolveField("color_on", "_resolvedColorOn");
       this._resolveField("label", "_resolvedLabel");
+      this._resolveField("caption", "_resolvedCaption");
+      this._resolveField("delta_label", "_resolvedDeltaLabel");
+      // Keyed on (entity, window), so this is one fetch per mount and one per
+      // config change — not one per hass tick. The interval owns refreshing.
+      this._loadHistory();
     }
   }
 
@@ -123,16 +172,29 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
         <div class="sub hint">${st ? this._fmtState() : "Entity not found"}</div>
       </div></ha-card>`;
     }
-    const body = {
+    const bodies = {
       percent: () => this._percent(),
       battery: () => this._battery(),
       temperature: () => this._temperature(),
-      power: () => this._power(),
+      // power is the ladder with a watts-aware scale — one implementation.
+      power: () => this._ladder({ power: true }),
+      ladder: () => this._ladder({}),
+      fill: () => this._fill(),
+      bar: () => this._bar(),
+      ring: () => this._ring(),
+      status: () => this._status(),
+      spark: () => this._spark({ area: true }),
+      sparkline: () => this._spark({ area: false }),
+      weekbars: () => this._bucketBars({ events: false }),
+      events: () => this._bucketBars({ events: true }),
       energy: () => this._energy(),
       binary: () => this._binary(),
       plain: () => this._plain(),
       vacuum: () => this._vacuum(),
-    }[this._variant]();
+    };
+    // A variant typo used to throw straight out of render() and blank the
+    // card with no clue why; the plain tile at least shows the entity.
+    const body = (bodies[this._variant] || bodies.plain)();
     const bg = this._isTemplate(this.config.color) ? this._resolvedColor : this.config.color;
     const fg = this._isTemplate(this.config.color_on) ? this._resolvedColorOn : this.config.color_on;
     // Unset `size` keeps a fixed, consistent tile width (200px) regardless of
@@ -142,9 +204,12 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     const sizes = ["120px", "150px", "185px", "225px", "270px", "320px", "380px", "460px", "560px", "none"];
     const size = this.config.size != null ? Math.min(10, Math.max(1, this.config.size)) : null;
     const sizeVar = size != null ? sizes[size - 1] : "200px";
+    // The status ROW has no business being capped at the square tile's 200px,
+    // so it reads a separate var that is only set when a size was asked for.
+    const rowSize = size != null ? `--ms-size-row:${sizeVar};` : "";
     return html`
       <ha-card
-        style="--ms-size:${sizeVar};${bg ? `--ms-color:${bg};` : ""}${fg ? `--ms-color-on:${fg};` : ""}${this.config.accent ? `--ms-accent:${this.config.accent};` : ""}"
+        style="--ms-size:${sizeVar};${rowSize}${bg ? `--ms-color:${bg};` : ""}${fg ? `--ms-color-on:${fg};` : ""}${this.config.accent ? `--ms-accent:${this.config.accent};` : ""}"
         @click=${() => this._handleAction(this.config.tap_action || { action: "more-info", entity: this.config.entity })}
       >
         ${body}
@@ -288,29 +353,329 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     `;
   }
 
-  /* ---- power: value + load equalizer bars ---------------------------------- */
-  _power() {
-    const raw = this._num(this._stateObj.state);
-    if (raw == null) return this._plain();
-    const unit = this._stateObj.attributes.unit_of_measurement || "W";
-    const watts = unit === "kW" ? raw * 1000 : raw;
-    const max = this.config.max ?? 3000;
-    const frac = Math.min(1, Math.max(0, watts / max));
-    const lit = Math.ceil(frac * 5);
-    const display = watts >= 1000 ? `${Math.round(watts / 100) / 10}` : `${Math.round(watts)}`;
-    const dUnit = watts >= 1000 ? "kW" : "W";
-    const heights = [32, 48, 64, 82, 100];
+  /* ================= the gauge family (19a) =================================
+
+     FOUR PRESENTATIONS, ONE MODEL. fill, bar, ladder and ring are the same
+     abstraction: a fraction in [0,1] and a way of drawing it. _gauge() is the
+     only place that fraction is derived, so a variant cannot disagree with
+     another about where a value sits in its range, and adding a fifth drawing
+     style costs a render method and nothing else.
+
+     NOTHING HERE KNOWS WHAT IT IS MEASURING. No domain, no device class, no
+     unit and no entity-id pattern appears in any of it. The ladder does not
+     know what an amp is; the bar does not know what a kilometre is. They take
+     a value, a range, a unit string to echo back, and a caption the author
+     wrote. Everything that could vary by install is either config or derived
+     from the entity itself. ===================================================
+
+     Compatibility presets adapt a READING before the model sees it — the only
+     place a variant may be opinionated, and only to keep a config that
+     shipped earlier working. */
+
+  /** power predates the gauge family: it normalised kW to W, defaulted to a
+   *  3000 W full load and displayed W below 1 kW and kW above. All of that
+   *  survives HERE, as an adapter, so 3000 is the last rung of this variant's
+   *  max chain instead of a rule anyone else inherits. */
+  static _POWER_PRESET = {
+    adapt(raw, stateObj) {
+      const u = stateObj.attributes.unit_of_measurement || "W";
+      const watts = u === "kW" ? raw * 1000 : raw;
+      return { value: watts, unit: watts >= 1000 ? "kW" : "W", maxDefault: 3000 };
+    },
+    // Returns the NUMBER to show, not a string, so the shared locale-aware
+    // formatter still owns the decimal separator. The old code built the
+    // string itself and so printed "1.2 kW" on a Dutch install; the digits
+    // are unchanged, the separator is now the reader's.
+    displayValue(watts) {
+      return watts >= 1000 ? Math.round(watts / 100) / 10 : Math.round(watts);
+    },
+  };
+
+  /**
+   * THE model. Returns null when the scale cannot be known, and every caller
+   * falls back to _plain() on null rather than invent a range and lie about
+   * where the value sits in it.
+   *
+   * The max chain, in order, each rung only reached when the one above is
+   * absent: explicit config -> the entity's own `max` attribute (number,
+   * input_number and climate all publish one) -> a compatibility preset's
+   * default -> 100 when the entity itself declares its unit is a percentage
+   * -> nothing, so no gauge. `min` follows the same chain down to 0.
+   */
+  _gauge(preset = null) {
+    const st = this._stateObj;
+    const raw = this._num(st?.state);
+    if (raw == null) return null;
+
+    const adapted = preset?.adapt ? preset.adapt(raw, st) : {};
+    const value = adapted.value ?? raw;
+    const unit = adapted.unit ?? this._unit;
+
+    const a = st.attributes || {};
+    const min = this._num(this.config.min) ?? this._num(a.min) ?? adapted.minDefault ?? 0;
+    // A "%" here is the ENTITY declaring its own range, not this card
+    // special-casing a unit — the same reading of unit_of_measurement the
+    // formatting uses. Any other unit without a max simply has no gauge.
+    const max =
+      this._num(this.config.max) ??
+      this._num(a.max) ??
+      adapted.maxDefault ??
+      (unit === "%" ? 100 : null);
+    if (max == null || !(max > min)) return null;
+
+    const frac = Math.min(1, Math.max(0, (value - min) / (max - min)));
+    const shown = preset?.displayValue ? preset.displayValue(value) : value;
+    const g = { value, min, max, frac, unit, display: this._fmtNum(shown), accent: this._gaugeAccent(frac) };
+    // The bare-scale default belongs to `bar` alone, because that is the
+    // presentation the concept captioned. Everywhere else an unset caption
+    // means no caption — but a caption the AUTHOR set is honoured by all four.
+    g.caption = this._caption(g, this._variant === "bar");
+    return g;
+  }
+
+  /** Locale-aware, unit-agnostic, and the same shape _energy() has always
+   *  used: at most one decimal, trailing zeros dropped by the formatter.
+   *  `precision` pins it when an author wants more or fewer. */
+  _fmtNum(n) {
+    const locale = this.hass?.locale?.language || "en";
+    const p = this._num(this.config.precision);
+    if (p != null) {
+      const dp = Math.max(0, Math.min(6, Math.round(p)));
+      return n.toLocaleString(locale, { minimumFractionDigits: dp, maximumFractionDigits: dp });
+    }
+    return (Math.round(n * 10) / 10).toLocaleString(locale);
+  }
+
+  /** Placeholders an author can put in `caption`, resolved against the model
+   *  so one string works for a battery, a range or a rain gauge. */
+  _interpolate(text, g, extra = null) {
+    let out = String(text);
+    if (g) {
+      out = out
+        .replaceAll("{value}", g.display)
+        .replaceAll("{min}", this._fmtNum(g.min))
+        .replaceAll("{max}", this._fmtNum(g.max))
+        .replaceAll("{unit}", g.unit ?? "")
+        .replaceAll("{percent}", String(Math.round(g.frac * 100)));
+    }
+    for (const [k, v] of Object.entries(extra || {})) out = out.replaceAll(`{${k}}`, String(v));
+    return out;
+  }
+
+  /** The caption is the AUTHOR'S sentence, never ours. It takes the same
+   *  literal-or-Jinja path label/color/color_on take, and the placeholders
+   *  above, so an install writes whatever fits its entity in its own
+   *  language ("van {max} vol", "{percent}% of the tank").
+   *
+   *  With nothing configured the default is deliberately not a sentence in
+   *  anybody's language: it is the bare top of the scale, which says "out of
+   *  this much" without saying it in words. */
+  _caption(g, fallbackToScale) {
+    const raw = this.config.caption;
+    if (raw != null && raw !== "") {
+      const resolved = this._isTemplate(raw) ? this._resolvedCaption : raw;
+      if (resolved == null) return "";
+      return this._interpolate(resolved, g);
+    }
+    if (!fallbackToScale) return "";
+    return `${this._fmtNum(g.max)}${g.unit ? ` ${g.unit}` : ""}`;
+  }
+
+  /** The gauge's colour, as a chain rather than a rule.
+   *
+   *  `accent` pins it outright. `ramp` is a generic severity scale — a list
+   *  of { below, color } stops in percent of the range, so ANY measurement
+   *  can carry a warning colour, not only the one device class this card
+   *  happened to know about. Only if neither is given does a battery fall
+   *  back to the tiered ramp this card already shipped, because a battery is
+   *  the reading whose COLOUR is the warning and dropping it would be a
+   *  regression. That is the last rung, and it is overridable. */
+  _gaugeAccent(frac) {
+    if (this.config.accent) return this.config.accent;
+    const ramp = this.config.ramp;
+    if (Array.isArray(ramp) && ramp.length) {
+      const pct = frac * 100;
+      for (const stop of ramp) {
+        const below = this._num(stop?.below);
+        if (below == null || pct <= below) return stop?.color || "var(--md-sys-color-primary, #6750a4)";
+      }
+      return ramp[ramp.length - 1]?.color || "var(--md-sys-color-primary, #6750a4)";
+    }
+    if (this._stateObj?.attributes?.device_class === "battery") return this._batteryColor(frac);
+    return "var(--md-sys-color-primary, #6750a4)";
+  }
+
+  /** The M3 step for the big number, chosen by how much of it there is:
+   *  display-small for up to 3 characters, headline-large to 5, then
+   *  headline-medium — so "64,705" does not have to shrink the tile. */
+  _valueSizeClass(text) {
+    const n = String(text).replace(/\s/g, "").length;
+    return n <= 3 ? "v-display" : n <= 5 ? "v-headline" : "v-headline-sm";
+  }
+
+  /** The line under the value: the subtitle when there is one, otherwise the
+   *  caption. Identical in all four presentations, so no variant grows its own
+   *  idea of what belongs there. */
+  _captionLine(g) {
+    const text = this._label != null && this._label !== "" ? this._label : g.caption;
+    return text ? html`<div class="gauge-caption">${text}</div>` : nothing;
+  }
+
+  /** The value line, identical in all four presentations. */
+  _gaugeValueLine(g) {
+    return html`<div class="gauge-value ${this._valueSizeClass(g.display)}">
+      ${g.display}${g.unit ? html`<span class="gauge-unit">${g.unit}</span>` : nothing}
+    </div>`;
+  }
+
+  /* ---- fill: the tile IS the gauge ----------------------------------------
+     The flood carries its own 3dp edge line as an inset shadow on its
+     trailing edge, so the bright line is the flood's last 3dp and the
+     boundary lands exactly at frac x width — no second element to keep in
+     step, and nothing to drift by a pixel. */
+  _fill() {
+    const g = this._gauge();
+    if (!g) return this._plain();
     return html`
-      <div class="rect-tile left">
-        ${this._header("mdi:flash")}
+      <div class="rect-tile left clip gauge">
+        <div class="flood" style="width:${(g.frac * 100).toFixed(3)}%;--g-accent:${g.accent}"></div>
+        <div class="gauge-body">
+          ${this._header("m3o:speed")}
+          <div class="gauge-main">
+            ${this._gaugeValueLine(g)}
+            ${this._captionLine(g)}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ---- bar: value over a 6dp track, captioned with the scale -------------- */
+  _bar() {
+    const g = this._gauge();
+    if (!g) return this._plain();
+    return html`
+      <div class="rect-tile left gauge">
+        ${this._header("m3o:speed")}
+        <div class="gauge-main">
+          ${this._gaugeValueLine(g)}
+          <div class="track" style="--g-accent:${g.accent}">
+            <i style="width:${(g.frac * 100).toFixed(3)}%"></i>
+          </div>
+          ${this._captionLine(g)}
+        </div>
+      </div>
+    `;
+  }
+
+  /* ---- ladder: N bars, first k lit, heights ramping across the run --------
+     ONE renderer, two entry points. `power` passes the watts-aware scale it
+     always had (kW normalised, 3000 W full load, five bars, W/kW display);
+     `ladder` reads the generic range like every other gauge.
+
+     The ramp is 32% -> 100% of the ladder's height. That is not a taste
+     pick: the five heights this variant shipped with ([32,48,64,82,100])
+     ARE 32 + i/(N-1) x 68 to within a percent, and the concept's sixteen-bar
+     run (16px rising to 50px) has the identical 16/50 = 32% floor. Two
+     independent sources agreeing on one formula is what makes it the formula. */
+  _ladder(opts = {}) {
+    const g = this._gauge(opts.power ? MateriaGlanceTile._POWER_PRESET : null);
+    if (!g) return this._plain();
+    const bars = Math.max(2, Math.min(40, Math.round(this._num(this.config.bars) ?? 5)));
+    // ceil, so ANY value above the floor lights the first bar and only a full
+    // scale lights the last: 0 -> 0, one step -> 1, N-1 steps -> N-1, full -> N.
+    const lit = Math.max(0, Math.min(bars, Math.ceil(g.frac * bars)));
+    return html`
+      <div class="rect-tile left gauge">
+        ${this._header(opts.power ? "m3o:bolt" : "m3o:bar-chart")}
         <div class="split-row">
           <div class="split-main">
-            <div class="big">${display}<span class="unit"> ${dUnit}</span></div>
-            ${this._label ? html`<div class="sub">${this._label}</div>` : ""}
+            ${this._gaugeValueLine(g)}
+            ${this._captionLine(g)}
           </div>
-          <div class="bars">
-            ${heights.map((h, i) => html`<i class=${i < lit ? "lit" : ""} style="height:${h}%"></i>`)}
+          <div class="ladder" style="--g-accent:${g.accent}">
+            ${Array.from({ length: bars }, (_, i) => {
+              const h = bars > 1 ? 32 + (i / (bars - 1)) * 68 : 100;
+              return html`<i class=${i < lit ? "lit" : ""} style="height:${h.toFixed(2)}%"></i>`;
+            })}
           </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ---- ring: circular progress BESIDE the value ---------------------------
+     44-unit viewBox with a 6-wide stroke, so r = (44 - 6) / 2 = 19 and the
+     stroke stays inside the box.
+
+     THE DASH IS IN PERCENT, NOT USER UNITS, and that is a measured decision.
+     The obvious arithmetic is dasharray = frac x 2*pi*r = frac x 119.381 —
+     and it is wrong, because a browser renders <circle> as four cubic
+     Beziers whose length is not 2*pi*r. Chrome measures this exact circle at
+     getTotalLength() = 118.611, so a 47% ring drawn as 56.109 units covers
+     47.3% of the real path: every ring reads about 0.65% high. pathLength=100
+     hands the renderer the normalisation instead, so a dash of 47 IS 47% of
+     whatever the engine's approximation actually measures — exact, and
+     immune to a different engine approximating differently.
+
+     The arc is also not rendered at all below half a percent: a zero-length
+     dash with stroke-linecap:round paints a DOT in most engines, which would
+     put a stray blob at twelve o'clock on every empty ring. */
+  _ring() {
+    const g = this._gauge();
+    if (!g) return this._plain();
+    const R = 19;
+    const pct = g.frac * 100;
+    return html`
+      <div class="rect-tile left gauge">
+        ${this._header("m3o:donut-large")}
+        <div class="split-row">
+          <div class="split-main">
+            ${this._gaugeValueLine(g)}
+            ${this._captionLine(g)}
+          </div>
+          <svg class="ring" viewBox="0 0 44 44" style="--g-accent:${g.accent}">
+            <circle class="ring-track" cx="22" cy="22" r=${R}></circle>
+            ${pct > 0.5
+              ? svg`<circle class="ring-arc" cx="22" cy="22" r=${R} pathLength="100"
+                  stroke-dasharray=${`${pct.toFixed(3)} 100`}></circle>`
+              : nothing}
+          </svg>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ---- status: a wide tonal row, not a square -----------------------------
+     The one variant whose shape is a row: an icon badge, the state large
+     enough to read across a room, a subtitle, and a dot indicator on the
+     right. Tonal container per the M3 mapping (primary-container on
+     on-primary-container), so it reads as a state rather than a measurement. */
+  _status() {
+    // NOT the module-level ACTIVE_STATES list the `binary` variant uses: that
+    // is a fixed set of light-and-switch words, which is exactly why a sensor
+    // reporting "Connected" or "Available" read as inert. active_state (a
+    // string or a list) wins; with nothing configured the answer is derived
+    // from the entity's DOMAIN, and "on" is only the last rung.
+    const active = isActiveState(this._stateObj, this.config.active_state);
+    const dots = Math.max(2, Math.min(12, Math.round(this._num(this.config.dots) ?? 4)));
+    // A calibratable number turns the dots into a coarse progress read;
+    // without one they are an activity indicator, dim at rest.
+    const g = this._gauge();
+    const filled = g ? Math.max(0, Math.min(dots, Math.ceil(g.frac * dots))) : active ? dots : 0;
+    return html`
+      <div class="status-row ${active ? "active" : ""}">
+        <div class="status-badge">
+          <ha-icon icon=${this._icon(active ? "m3o:check-circle" : "m3o:info")}></ha-icon>
+        </div>
+        <div class="status-main">
+          <div class="status-state">${this._fmtState()}</div>
+          <div class="status-sub">${this._label ?? this._name}</div>
+        </div>
+        <div class="status-dots ${!g && active ? "pulse" : ""}">
+          ${Array.from({ length: dots }, (_, i) =>
+            html`<i class=${i < filled ? "on" : ""} style="--i:${i}"></i>`
+          )}
         </div>
       </div>
     `;
@@ -435,7 +800,283 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     `;
   }
 
+  /* ================= the history family (19b) ==============================
+
+     "Every number gets its past." Four presentations again, one pipeline: the
+     recorder's step function -> even time buckets -> gaps kept as nulls ->
+     drawn. See src/utils/history.js for why each of those steps exists.
+
+     NOTHING HERE KNOWS WHAT IT IS PLOTTING either. No domain, no device class,
+     no unit. A spark takes a series; a bucket row takes an aggregate and a day
+     count. What the numbers mean is the author's business. ================== */
+
+  /** Hours of history this variant wants. The bucketed variants think in days
+   *  and the line variants in hours, but the transport only speaks hours. */
+  get _histHours() {
+    if (this._variant === "weekbars" || this._variant === "events") {
+      const days = this._num(this.config.days) ?? SPARK_DEFAULT_DAYS;
+      return Math.max(1, Math.min(90, Math.round(days))) * 24;
+    }
+    return Math.max(1, Math.min(2160, Math.round(this._num(this.config.hours) ?? SPARK_DEFAULT_HOURS)));
+  }
+
+  get _needsHistory() {
+    return SPARK_VARIANTS.has(this._variant);
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    if (!this._needsHistory) return;
+    // POLLED, never per hass tick. hass fires on every state change anywhere
+    // in the house; one fetch per tick would hammer the recorder for a chart
+    // that moves once a minute at most.
+    const mins = Math.max(1, Math.min(180, Math.round(this._num(this.config?.history_refresh) ?? 5)));
+    this._histTimer = setInterval(() => this._loadHistory(true), mins * 60 * 1000);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    clearInterval(this._histTimer);
+    this._histTimer = null;
+  }
+
+  /** Fetch once per (entity, window), then only on the poll tick. `_histToken`
+   *  drops a reply that a later request has already superseded — otherwise a
+   *  slow answer for the previous entity can land after the new one's. */
+  _loadHistory(force = false) {
+    if (!this._needsHistory || !this.hass || !this.config?.entity) return;
+    const key = `${this.config.entity}|${this._histHours}`;
+    if (!force && this._histKey === key) return;
+    this._histKey = key;
+    const token = (this._histToken = (this._histToken || 0) + 1);
+    fetchNumericHistory(this.hass, this.config.entity, this._histHours).then((series) => {
+      if (token !== this._histToken) return;
+      this._hist = series;
+    });
+  }
+
+  /** Signed and locale-formatted, so a rise reads as a rise. */
+  _fmtSigned(n) {
+    return (n >= 0 ? "+" : "") + this._fmtNum(n);
+  }
+
+  /** The delta pill: a trend glyph and a number, with the words left to the
+   *  author. `delta_label` takes {delta} {delta_pct} {from} {to} {unit}
+   *  {hours} {days}, so an install writes "−18% / 24u" or "18% in a day" in
+   *  its own language; unset, the pill is just the signed change. */
+  _deltaPill(series) {
+    if (this.config.show_delta === false) return nothing;
+    const d = delta(series);
+    if (!d) return nothing;
+    const unit = this._unit;
+    const vars = {
+      delta: this._fmtSigned(d.abs) + (unit ? ` ${unit}` : ""),
+      delta_pct: d.pct == null ? "" : `${this._fmtSigned(d.pct)}%`,
+      from: this._fmtNum(d.from),
+      to: this._fmtNum(d.to),
+      unit,
+      hours: String(this._histHours),
+      days: String(Math.round(this._histHours / 24)),
+    };
+    const raw = this.config.delta_label;
+    const text =
+      raw != null && raw !== ""
+        ? this._interpolate(this._isTemplate(raw) ? this._resolvedDeltaLabel : raw, null, vars)
+        : vars.delta;
+    if (text == null || text === "") return nothing;
+    const glyph = d.abs > 0 ? "m3o:trending-up" : d.abs < 0 ? "m3o:trending-down" : "m3o:trending-flat";
+    return html`<div class="delta-pill">
+      <ha-icon icon=${glyph}></ha-icon><span>${text}</span>
+    </div>`;
+  }
+
+  /**
+   * Build one SVG path per unbroken run. The scale spans the whole series so
+   * runs share it, and `pad` keeps the stroke's own width inside the box.
+   *
+   * A flat series has no range to normalise against; it draws down the middle
+   * rather than dividing by zero and vanishing.
+   */
+  _sparkPaths(points, w, h, pad) {
+    const known = points.filter((p) => p.v != null).map((p) => p.v);
+    if (!known.length) return [];
+    const lo = Math.min(...known);
+    const hi = Math.max(...known);
+    const span = hi - lo;
+    const inner = h - 2 * pad;
+    const n = points.length;
+    const xAt = (i) => (n > 1 ? (i / (n - 1)) * w : w / 2);
+    const yAt = (v) => (span === 0 ? pad + inner / 2 : pad + (1 - (v - lo) / span) * inner);
+
+    const out = [];
+    for (const run of segments(points)) {
+      const idx = run.map((p) => points.indexOf(p));
+      let d = "";
+      run.forEach((p, k) => {
+        d += `${k === 0 ? "M" : " L"}${xAt(idx[k]).toFixed(2)} ${yAt(p.v).toFixed(2)}`;
+      });
+      // A single-sample run is a dot, not a line: give it a hairline segment
+      // so a round linecap actually paints something.
+      if (run.length === 1) d += ` L${(xAt(idx[0]) + 0.01).toFixed(2)} ${yAt(run[0].v).toFixed(2)}`;
+      const x0 = xAt(idx[0]);
+      const x1 = xAt(idx[idx.length - 1]);
+      // Each run closes its OWN area to the baseline, so a gap is a gap in the
+      // fill too rather than a wedge spanning the outage.
+      out.push({ line: d, area: `${d} L${x1.toFixed(2)} ${h} L${x0.toFixed(2)} ${h} Z` });
+    }
+    return out;
+  }
+
+  /* ---- spark / sparkline --------------------------------------------------
+     Concept geometry: the hero's area+line is a 340x60 viewBox stretched with
+     preserveAspectRatio=none so it bleeds to the card's bottom edge, area at
+     14% of the accent, line at 2.5 with round caps, pad 6. The bare line is
+     120x26 at stroke 2 — pad 3, which is the same tenth-of-the-height the
+     hero's 6-of-60 works out to. */
+  _spark(opts) {
+    const v = this._num(this._stateObj.state);
+    if (v == null) return this._plain();
+    const g = this._gauge();
+    const accent = g ? g.accent : this._gaugeAccent(1);
+    const series = this._hist || [];
+    const pts = resample(series, this._num(this.config.points) ?? 48, this._histHours);
+    const W = opts.area ? 340 : 120;
+    const H = opts.area ? 60 : 26;
+    const paths = this._sparkPaths(pts, W, H, opts.area ? 6 : 3);
+    const display = this._fmtNum(v);
+    const caption = this.config.caption
+      ? this._interpolate(
+          this._isTemplate(this.config.caption) ? this._resolvedCaption ?? "" : this.config.caption,
+          g,
+          { hours: String(this._histHours), days: String(Math.round(this._histHours / 24)) }
+        )
+      : this._label ?? "";
+
+    // No history is a first-class layout, not a hole: the tile is simply a
+    // value tile, sized by its content, with nothing reserved for a chart
+    // that is not coming.
+    const chart = paths.length
+      ? html`<svg
+          class=${opts.area ? "spark spark-area" : "spark spark-line"}
+          viewBox="0 0 ${W} ${H}"
+          preserveAspectRatio="none"
+          style="--g-accent:${accent}"
+        >
+          ${opts.area
+            ? paths.map((p) => svg`<path class="spark-fill" d=${p.area}></path>`)
+            : nothing}
+          ${paths.map((p) => svg`<path class="spark-stroke" d=${p.line}></path>`)}
+        </svg>`
+      : nothing;
+
+    return html`
+      <div
+        class="rect-tile left gauge spark-tile ${opts.area ? "spark-bleed" : ""} ${paths.length
+          ? "has-spark"
+          : ""}"
+      >
+        <!-- The bled chart goes FIRST so the text paints over it in DOM order,
+             rather than needing a z-index to undo a later sibling. -->
+        ${opts.area ? chart : nothing}
+        ${this._header("m3o:show-chart")}
+        <div class="spark-row">
+          ${this._gaugeValueLine({ display, unit: this._unit })}
+          ${opts.area ? this._deltaPill(series) : nothing}
+        </div>
+        ${!opts.area ? chart : nothing}
+        ${caption ? html`<div class="gauge-caption">${caption}</div>` : nothing}
+      </div>
+    `;
+  }
+
+  /* ---- weekbars / events -------------------------------------------------
+     Concept geometry: seven bars in a 34px row, gap 4, radius 3/3/2/2, height
+     max(6, v/vmax*34) so an idle day is a visible stub; the CURRENT bucket is
+     the full accent and the rest 32% of it. Event ticks are the same idea at
+     32px with gap 3 and radius 2, where a zero day is a 6px stub at 18%.
+
+     A day with NO DATA is not drawn at all — bucketDays omits it — so an
+     out-of-retention day is absent while an idle day is a stub. Those are
+     different facts and the row says which is which. */
+  _bucketBars(opts) {
+    const series = this._hist || [];
+    const days = this._num(this.config.days) ?? SPARK_DEFAULT_DAYS;
+    // delta is the default because "how much happened that day" is what a bar
+    // per day means for the counters these were drawn for; mean/max/sum/count
+    // are there for measurements.
+    const aggregate = this.config.aggregate || "delta";
+    const buckets = bucketDays(series, { days, aggregate });
+    const g = this._gauge();
+    const accent = g ? g.accent : this._gaugeAccent(1);
+    const vmax = Math.max(...buckets.map((b) => Math.max(0, b.v)), 0);
+    const H = opts.events ? 32 : 34;
+
+    const row = buckets.length
+      ? html`<div class=${opts.events ? "ticks" : "weekbars"} style="--g-accent:${accent}">
+          ${buckets.map((b, i) => {
+            const val = Math.max(0, b.v);
+            const zero = val <= 0;
+            // 6px floor from the concept: an empty bucket must still be
+            // visible, or "nothing happened" looks like "no bar drawn".
+            const h = zero || vmax <= 0 ? 6 : Math.max(6, (val / vmax) * H);
+            const cls = opts.events
+              ? zero
+                ? "stub"
+                : "on"
+              : i === buckets.length - 1
+                ? "current"
+                : "past";
+            return html`<i class=${cls} style="height:${h.toFixed(1)}px"></i>`;
+          })}
+        </div>`
+      : nothing;
+
+    const capVars = {
+      hours: String(this._histHours),
+      days: String(Math.round(this._histHours / 24)),
+      buckets: String(buckets.length),
+    };
+    const caption = this.config.caption
+      ? this._interpolate(
+          this._isTemplate(this.config.caption) ? this._resolvedCaption ?? "" : this.config.caption,
+          g,
+          capVars
+        )
+      : this._label ?? "";
+
+    if (opts.events) {
+      // The concept's tonal session row: title, ticks, caption. No big number
+      // — this presentation is about the pattern, not the current reading.
+      return html`
+        <div class="event-row">
+          <div class="event-title">${this._name}</div>
+          ${row}
+          ${caption ? html`<div class="gauge-caption">${caption}</div>` : nothing}
+        </div>
+      `;
+    }
+
+    const v = this._num(this._stateObj.state);
+    return html`
+      <div class="rect-tile left gauge">
+        ${this._header("m3o:bar-chart")}
+        <div class="gauge-main">
+          ${v != null ? this._gaugeValueLine({ display: this._fmtNum(v), unit: this._unit }) : nothing}
+          ${row}
+          ${caption ? html`<div class="gauge-caption">${caption}</div>` : nothing}
+        </div>
+      </div>
+    `;
+  }
+
+  /** A starting hint only — the dashboard owns layout. Every variant is built
+   *  to read at 6 and at 12 columns; the two ROW presentations start wide
+   *  because squeezing a row into a third of the grid wastes it. */
   getGridOptions() {
+    if (this._variant === "status" || this._variant === "events") {
+      return { columns: 12, rows: "auto", min_columns: 6 };
+    }
+    if (this._variant === "spark") return { columns: 12, rows: "auto", min_columns: 4 };
     return { columns: 4, rows: "auto", min_columns: 3 };
   }
 

@@ -336,5 +336,501 @@ export const styles = [
       --mdc-icon-size: clamp(30px, 14cqi, 44px);
       color: color-mix(in srgb, var(--ms-accent, var(--md-sys-color-primary, #6750a4)) 45%, transparent);
     }
+
+    /* ================= the gauge family (19a) ==============================
+
+       TYPOGRAPHY. Every size below is an M3 type-scale step used as the
+       clamp's MAXIMUM, with a cqi term under it. The step is the design; the
+       clamp is what lets one tile read at 6 grid columns and at 12 without
+       two stylesheets. Steps used:
+         display-small   36sp / 400 / 44sp
+         headline-large  32sp / 400 / 40sp
+         headline-medium 28sp / 400 / 36sp
+         headline-small  24sp / 400 / 32sp
+         title-small     14sp / 500 / 20sp / +0.1px
+         label-medium    12sp / 500 / 16sp / +0.5px
+         body-small      12sp / 400 / 16sp / +0.4px
+
+       These deliberately do NOT touch .big / .sub, which the older variants
+       share and which are tuned around that display font's ink extent.
+
+       SHAPE. Radii are shape-scale tokens, not the concept's literal pixels:
+       extra-large 28dp for tiles and the status row, full for tracks, bars,
+       dots and the icon badge.
+
+       COLOUR. Gauge accent is passed in as --g-accent (primary, or the
+       battery ramp); every track is secondary-container. */
+
+    .gauge-value {
+      font-family: var(--materia-font-display, inherit);
+      font-weight: 400;
+      line-height: 1.22;
+      letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
+      /* Same headroom guard the .big rule documents: this display font's ink
+         runs taller than its computed line box. */
+      padding-top: 0.06em;
+    }
+
+    /* display-small 36sp */
+    .gauge-value.v-display {
+      font-size: clamp(24px, 19cqi, 36px);
+    }
+
+    /* headline-large 32sp */
+    .gauge-value.v-headline {
+      font-size: clamp(21px, 16cqi, 32px);
+    }
+
+    /* headline-medium 28sp */
+    .gauge-value.v-headline-sm {
+      font-size: clamp(18px, 13cqi, 28px);
+    }
+
+    /* label-medium 12sp, riding the value's baseline */
+    .gauge-value .gauge-unit {
+      font-size: clamp(10px, 5cqi, 12px);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      opacity: 0.75;
+      margin-left: 0.2em;
+    }
+
+    /* body-small 12sp */
+    .gauge-caption {
+      font-size: clamp(10px, 5cqi, 12px);
+      font-weight: 400;
+      line-height: 1.33;
+      letter-spacing: 0.4px;
+      opacity: 0.7;
+    }
+
+    .rect-tile.gauge {
+      justify-content: space-between;
+    }
+
+    .gauge-main {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: clamp(4px, 2.5cqi, 8px);
+      width: 100%;
+      min-width: 0;
+    }
+
+    /* ---- fill: the flood carries its own edge line ---------------------- */
+
+    .flood {
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: 0;
+      /* The bright 3dp line IS the flood's trailing edge, so the boundary can
+         never drift from the value by a rounding error in a second element. */
+      box-shadow: inset -3px 0 0 0 var(--g-accent);
+      background: color-mix(in srgb, var(--g-accent) 22%, transparent);
+      transition: width var(--md-sys-motion-expressive-default-spatial),
+        background-color var(--md-sys-motion-default-effects);
+    }
+
+    /* Sits above the flood so the number is never washed out by it. */
+    .gauge-body {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: flex-start;
+      height: 100%;
+      width: 100%;
+      gap: clamp(6px, 4cqi, 14px);
+    }
+
+    /* ---- bar: a 6dp track under the value ------------------------------- */
+
+    .track {
+      position: relative;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--md-sys-color-secondary-container, color-mix(in srgb, currentColor 12%, transparent));
+      overflow: hidden;
+    }
+
+    .track i {
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: 0;
+      border-radius: 999px;
+      background: var(--g-accent);
+      transition: width var(--md-sys-motion-expressive-default-spatial);
+    }
+
+    /* ---- ladder: N bars, ramping 32% -> 100% ---------------------------- */
+
+    .ladder {
+      display: flex;
+      align-items: flex-end;
+      /* Gap and width shrink as the run gets longer, so sixteen bars fit the
+         same box five bars do without overflowing it. */
+      gap: clamp(1.5px, 1.6cqi, 5px);
+      height: clamp(38px, 20cqi, 58px);
+      flex-shrink: 0;
+      max-width: 55%;
+    }
+
+    .ladder i {
+      flex: 1 1 auto;
+      min-width: 2px;
+      max-width: 11px;
+      border-radius: 999px;
+      background: var(--md-sys-color-secondary-container, color-mix(in srgb, currentColor 12%, transparent));
+      transition: background-color var(--md-sys-motion-default-effects);
+    }
+
+    .ladder i.lit {
+      background: var(--g-accent);
+    }
+
+    /* ---- ring: progress beside the value, never behind it --------------- */
+
+    .ring {
+      width: clamp(40px, 22cqi, 60px);
+      height: clamp(40px, 22cqi, 60px);
+      flex-shrink: 0;
+      align-self: center;
+      /* Start the arc at twelve o'clock — a circle's path begins at 3. */
+      transform: rotate(-90deg);
+    }
+
+    .ring circle {
+      fill: none;
+      stroke-width: 6;
+    }
+
+    .ring-track {
+      stroke: var(--md-sys-color-secondary-container, color-mix(in srgb, currentColor 12%, transparent));
+    }
+
+    .ring-arc {
+      stroke: var(--g-accent);
+      stroke-linecap: round;
+      transition: stroke-dasharray var(--md-sys-motion-expressive-default-spatial);
+    }
+
+    /* ---- status: a tonal row ------------------------------------------- */
+
+    .status-row {
+      container-type: inline-size;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 3cqi, 16px);
+      /* extra-large 28dp */
+      border-radius: 28px;
+      padding: clamp(12px, 3cqi, 18px) clamp(14px, 3.5cqi, 20px);
+      background: var(--ms-color, var(--md-sys-color-surface-container-high, var(--ha-card-background, var(--card-background-color))));
+      color: var(--ms-color-on, var(--md-sys-color-on-surface, var(--primary-text-color)));
+      max-width: var(--ms-size-row, none);
+      transition: background-color var(--md-sys-motion-default-effects),
+        color var(--md-sys-motion-default-effects);
+    }
+
+    /* Tonal while active — the concept's teal row, taken as a ROLE pair. */
+    .status-row.active {
+      background: var(--ms-color, var(--md-sys-color-primary-container, #d7e3ff));
+      color: var(--ms-color-on, var(--md-sys-color-on-primary-container, #001b3f));
+    }
+
+    .status-badge {
+      flex: none;
+      width: clamp(38px, 9cqi, 48px);
+      height: clamp(38px, 9cqi, 48px);
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: color-mix(in srgb, currentColor 12%, transparent);
+    }
+
+    .status-badge ha-icon {
+      --mdc-icon-size: clamp(20px, 5cqi, 26px);
+    }
+
+    .status-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    /* headline-small 24sp */
+    .status-state {
+      font-family: var(--materia-font-display, inherit);
+      font-size: clamp(17px, 4.4cqi, 24px);
+      font-weight: 400;
+      line-height: 1.33;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* body-small 12sp */
+    .status-sub {
+      font-size: clamp(11px, 2.6cqi, 12px);
+      font-weight: 400;
+      line-height: 1.33;
+      letter-spacing: 0.4px;
+      opacity: 0.72;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .status-dots {
+      flex: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .status-dots i {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: color-mix(in srgb, currentColor 20%, transparent);
+      transition: background-color var(--md-sys-motion-default-effects);
+    }
+
+    .status-dots i.on {
+      background: currentColor;
+    }
+
+    /* No number to show progress against: the dots travel instead, which is
+       an activity indicator rather than a false reading. */
+    .status-dots.pulse i {
+      animation: ms-dots 1.4s ease-in-out infinite;
+      animation-delay: calc(var(--i) * 0.16s);
+    }
+
+    @keyframes ms-dots {
+      0%,
+      100% {
+        opacity: 0.35;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .status-dots.pulse i {
+        animation: none;
+      }
+    }
+
+    /* ================= the history family (19b) ============================
+
+       Geometry is the concept's, verbatim; colour is tokens. The alphas (14%
+       area, 32% past bar, 18% idle stub) are GRAMMAR — a tonal wash of the
+       accent — so they survive the swap from the doc's hexes to
+       --md-sys-color-* intact.
+
+       Card heights are NOT the concept's fixed 172 / 148 / 118px. A fixed
+       height reserves room for a chart that an empty recorder never sends, and
+       an empty reservation is exactly the hole the brief said to avoid. These
+       are min-heights, so the tile is as tall as it has content for. */
+
+    /* .rect-tile.left carries justify-content: space-between, which is two
+       classes and therefore outranked a bare .spark-tile — the value and the
+       delta pill were pushed to the bottom of the tile and landed ON TOP of
+       the bled chart. Three classes to win it back: this stack reads
+       header -> value -> caption from the top, with the chart underneath. */
+    .rect-tile.left.spark-tile {
+      /* The hero is a landscape card, not one of the squares. */
+      aspect-ratio: auto;
+      justify-content: flex-start;
+      gap: clamp(4px, 2.5cqi, 10px);
+    }
+
+    /* The AREA hero fills its column, like the two other row-shaped
+       presentations and unlike the squares — a 200px cap on a landscape card
+       hinted at twelve columns just wastes the row. The square rule the rest
+       of the card follows is untouched: the bare-line variant is one of the
+       2-up tiles and stays capped. */
+    .rect-tile.left.spark-tile.spark-bleed {
+      max-width: var(--ms-size-row, none);
+    }
+
+    /* THE HEIGHTS ARE CONDITIONAL, and that is the point. The concept's 148 /
+       172px assume a chart is there; applying them unconditionally left a
+       no-history tile 172px tall with 76px of nothing in it — a reserved hole
+       for a chart that is never coming, which is precisely what an empty
+       recorder must not produce. So the room is only claimed once there is
+       something to put in it. */
+    .spark-tile.has-spark {
+      min-height: 148px;
+    }
+
+    /* The area spark bleeds to the bottom edge, so the tile clips and the
+       padding stops short there — the concept's 18px 20px 0. Also conditional:
+       with no chart there is nothing to bleed and no reason to drop the
+       tile's bottom padding. */
+    .spark-tile.spark-bleed.has-spark {
+      overflow: hidden;
+      padding-bottom: 0;
+      min-height: 172px;
+    }
+
+    .spark-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .spark {
+      display: block;
+      width: 100%;
+      overflow: visible;
+    }
+
+    /* Absolutely placed and stretched, which is what lets a 340x60 viewBox
+       meet the card's real width at any column count. */
+    .spark-area {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 76px;
+      pointer-events: none;
+    }
+
+    .spark-line {
+      height: 26px;
+    }
+
+    .spark-fill {
+      fill: color-mix(in srgb, var(--g-accent) 14%, transparent);
+      stroke: none;
+    }
+
+    .spark-stroke {
+      fill: none;
+      stroke: var(--g-accent);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      /* The viewBox is stretched non-uniformly, so a plain stroke-width would
+         be stretched with it — this keeps 2.5dp meaning 2.5dp. */
+      vector-effect: non-scaling-stroke;
+      stroke-width: 2.5;
+    }
+
+    .spark-line .spark-stroke {
+      stroke-width: 2;
+    }
+
+    /* ---- the delta pill ------------------------------------------------
+       Tertiary at 14% with tertiary text: the text and its wash are the same
+       hue, so the pair keeps its contrast in either theme without needing the
+       container/on-container roles. */
+    .delta-pill {
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 30px;
+      padding: 0 12px;
+      /* Half of 30: the concept's 15px is corner-full for this height. */
+      border-radius: 15px;
+      background: color-mix(in srgb, var(--md-sys-color-tertiary, #7d5260) 14%, transparent);
+      color: var(--md-sys-color-tertiary, #7d5260);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .delta-pill ha-icon {
+      --mdc-icon-size: 17px;
+    }
+
+    /* ---- week bars ------------------------------------------------------ */
+    .weekbars {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 34px;
+      width: 100%;
+    }
+
+    .weekbars i {
+      flex: 1;
+      min-width: 0;
+      /* Capped so a short window does not turn seven ticks' worth of language
+         into two slabs: at the concept's seven buckets these land near 40px
+         anyway, and with two buckets they stay bars rather than blocks. */
+      max-width: 48px;
+      border-radius: 3px 3px 2px 2px;
+      background: color-mix(in srgb, var(--g-accent) 32%, transparent);
+      transition: height var(--md-sys-motion-expressive-default-spatial);
+    }
+
+    .weekbars i.current {
+      background: var(--g-accent);
+    }
+
+    /* ---- event ticks ---------------------------------------------------- */
+    .ticks {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 32px;
+      width: 100%;
+    }
+
+    .ticks i {
+      flex: 1;
+      min-width: 0;
+      /* Same reason as the week bars, tighter because a tick is a tick: the
+         concept's fourteen sit near 20px wide. */
+      max-width: 20px;
+      border-radius: 2px;
+      background: var(--g-accent);
+      transition: height var(--md-sys-motion-expressive-default-spatial);
+    }
+
+    /* A day that happened and did nothing, as against a day with no data at
+       all — which is not drawn. */
+    .ticks i.stub {
+      background: color-mix(in srgb, var(--g-accent) 18%, transparent);
+    }
+
+    /* ---- the tonal session row ------------------------------------------ */
+    .event-row {
+      container-type: inline-size;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      /* extra-large 28dp */
+      border-radius: 28px;
+      padding: clamp(14px, 3.5cqi, 20px);
+      background: var(--ms-color, var(--md-sys-color-primary-container, #d7e3ff));
+      color: var(--ms-color-on, var(--md-sys-color-on-primary-container, #001b3f));
+      max-width: var(--ms-size-row, none);
+    }
+
+    /* M3 title-small 14sp */
+    .event-title {
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 20px;
+      letter-spacing: 0.1px;
+      opacity: 0.9;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   `,
 ];

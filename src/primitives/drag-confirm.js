@@ -408,7 +408,38 @@ class MateriaDragConfirm extends LitElement {
       return;
     }
 
-    if (this.gesture === "hold") return; // already engaged; only watching scroll
+    if (this.gesture === "hold") {
+      /* OUT-OF-BOUNDS CANCEL, hold only. Sliding a finger off a control and
+         releasing is the platform-standard way to say "I changed my mind", and
+         without this a hold had NO cancel at all: the pointer is captured, so
+         once the timer is running the only way to stop it was to out-race it.
+
+         The slop is 24px because Material's minimum touch target is 48dp and
+         half of that is the radius within which a touch still counts as
+         on-target — so an ordinary finger wobble, or a thumb rolling on a
+         phone, cannot kill a deliberate hold, while a genuine move away does.
+
+         Slide is deliberately exempt: moving the pointer IS how a slide works,
+         and it already has its own cancel (release short of the threshold).
+
+         Coming back inside without lifting does NOT resume. Once the gesture
+         has been abandoned, restarting it should cost a fresh press — a commit
+         that silently re-arms itself is exactly the ambiguity this control
+         exists to remove. */
+      const rect = this._rect();
+      if (rect) {
+        const SLOP = 24;
+        if (
+          ev.clientX < rect.left - SLOP ||
+          ev.clientX > rect.right + SLOP ||
+          ev.clientY < rect.top - SLOP ||
+          ev.clientY > rect.bottom + SLOP
+        ) {
+          this._release(false);
+        }
+      }
+      return; // already engaged; only watching scroll and bounds
+    }
 
     if (dx > 6 && dx >= dy) {
       this._dropEarlyMove();
