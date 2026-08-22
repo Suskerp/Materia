@@ -1080,7 +1080,8 @@ export const styles = [
     .cancel {
       flex: 1;
       border-radius: 34px 12px 12px 34px;
-      background: var(--md-sys-color-surface-container-high, rgba(0, 0, 0, 0.08));
+      background: var(--md-sys-color-secondary-container, var(--md-sys-color-surface-container-high));
+      color: var(--md-sys-color-on-secondary-container, var(--md-sys-color-on-surface));
       display: grid;
       place-items: center;
       font-size: 16px;

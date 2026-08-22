@@ -1835,22 +1835,21 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     const btnBg = isActive ? (ctx.triggered ? "var(--md-sys-color-error)" : ctx.accent) : ctx.idleBg;
     const btnFg = isActive ? (ctx.triggered ? "var(--md-sys-color-on-error)" : ctx.accentOn) : ctx.idleFg;
 
-    /* THE SWEEP IS A PREVIEW of what the button becomes on commit — arming
-       shows the accent it will wear, disarming shows the quiet tonal pair it
-       will fall back to. The one exception is the whole point of the card: if
-       a zone is not ready, arming sweeps in the repo warning role instead, so
-       the warning arrives inside the gesture rather than beside it. */
+    /* THE SWEEP previews intent without claiming the committed state. A hold
+       uses the quieter tonal container; the strong primary is reserved for
+       the mode once the panel is actually armed. A not-ready hold follows the
+       same hierarchy with the warning-container pair. */
     const armingWithHole = !isActive && ctx.notReady.length > 0;
     const sweep = armingWithHole
-      ? "var(--md-sys-cust-color-warning, var(--md-sys-color-error))"
+      ? "var(--md-sys-cust-color-warning-container, var(--md-sys-color-error-container))"
       : isActive
       ? ctx.idleBg
-      : ctx.accent;
+      : "var(--md-sys-color-primary-container)";
     const sweepInk = armingWithHole
-      ? "var(--md-sys-cust-color-on-warning, var(--md-sys-color-on-error))"
+      ? "var(--md-sys-cust-color-on-warning-container, var(--md-sys-color-on-error-container))"
       : isActive
       ? ctx.idleFg
-      : ctx.accentOn;
+      : "var(--md-sys-color-on-primary-container)";
 
     const aria = inert
       ? t("al_aria_inert", this.hass, { mode: label })
