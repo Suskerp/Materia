@@ -909,7 +909,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
           <span class="manager-sub">${t("sched_manager_sub", this.hass)}</span>
         </div>
         <button class="manager-add" @click=${this._openNewSchedule}>
-          <ha-icon icon="m3o:add"></ha-icon><span>${t("sched_add_short", this.hass)}</span>
+          <ha-icon icon="mdi:plus"></ha-icon><span>${t("sched_add_short", this.hass)}</span>
         </button>
       </div>
       <div class="schedule-list">

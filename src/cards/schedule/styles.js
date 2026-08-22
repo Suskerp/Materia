@@ -74,6 +74,11 @@ export const styles = [
       font-weight: 700;
     }
 
+    .manager-add ha-icon {
+      --mdc-icon-size: 20px;
+      flex: 0 0 20px;
+    }
+
     .schedule-list {
       display: flex;
       flex-direction: column;
