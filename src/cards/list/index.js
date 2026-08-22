@@ -34,6 +34,8 @@ class MateriaList extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
+    _resolvedTitle: { state: true },
+    _resolvedIcon: { state: true },
   };
 
   static styles = styles;
@@ -76,19 +78,41 @@ class MateriaList extends ActionMixin(LitElement) {
 
   updated(changed) {
     if (!changed.has("hass") || !this.hass) return;
-    /* Row text lives in a list rather than at a top-level config key, so it
-       goes through the keyed template variant — same machinery, same WS
-       render_template subscription, torn down when the string stops being a
+    /* EVERY text-bearing key here is templatable, and that has to be all of
+       them or none. A card that resolves some and prints raw Jinja for the rest
+       is worse than one that resolves nothing, because the inconsistency is
+       invisible until it appears on a dashboard — which is exactly how a
+       templated title shipped as literal braces in a card header. */
+    this._resolveField("title", "_resolvedTitle");
+    this._resolveField("icon", "_resolvedIcon");
+    /* Row keys live in a list rather than at a top-level config key, so they go
+       through the keyed template variant — same machinery, same WS
+       render_template subscription, torn down when a string stops being a
        template. */
     for (const r of this._rows) {
       if (r.isText) this._resolveTemplateValue(`row_text_${r.i}`, r.text);
+      this._resolveTemplateValue(`row_icon_${r.i}`, r.icon);
+      this._resolveTemplateValue(`row_name_${r.i}`, r.name);
     }
   }
 
-  _text(row) {
-    if (!this._isTemplate(row.text)) return row.text;
-    const v = this._tplResults?.[`row_text_${row.i}`];
+  /** A top-level key, resolved if it is a template. */
+  _field(configKey, propKey) {
+    const raw = this.config?.[configKey];
+    const resolved = this._isTemplate(raw) ? this[propKey] : raw;
+    return typeof resolved === "string" ? resolved.trim() : resolved;
+  }
+
+  /** A per-row key, resolved if it is a template. */
+  _rowField(row, key) {
+    const raw = row?.[key];
+    if (!this._isTemplate(raw)) return raw;
+    const v = this._tplResults?.[`row_${key}_${row.i}`];
     return typeof v === "string" ? v.trim() : v;
+  }
+
+  _text(row) {
+    return this._rowField(row, "text");
   }
 
   _rowState(cfg, stateObj) {
@@ -110,6 +134,8 @@ class MateriaList extends ActionMixin(LitElement) {
   render() {
     if (!this.hass || !this.config) return html``;
     const rows = this._rows;
+    const title = this._field("title", "_resolvedTitle");
+    const headerIcon = this._field("icon", "_resolvedIcon");
     const tonal = this.config.variant === "tonal";
     const bg = tonal
       ? (this.config.color ?? "var(--md-sys-color-primary-container)")
@@ -120,10 +146,10 @@ class MateriaList extends ActionMixin(LitElement) {
 
     return html`
       <ha-card class=${tonal ? "tonal" : ""} style="--ml-bg:${bg};--ml-fg:${fg};">
-        ${this.config.title
+        ${title
           ? html`<div class="header">
-              ${this.config.icon ? html`<ha-icon icon=${this.config.icon}></ha-icon>` : ""}
-              <span>${this.config.title}</span>
+              ${headerIcon ? html`<ha-icon icon=${headerIcon}></ha-icon>` : ""}
+              <span>${title}</span>
             </div>`
           : ""}
         <div class="rows">
@@ -135,13 +161,14 @@ class MateriaList extends ActionMixin(LitElement) {
 
   _renderEntity(r) {
     const stateObj = this.hass.states[r.entity];
-    const name = r.name || stateObj?.attributes?.friendly_name || r.entity;
+    const name = this._rowField(r, "name") || stateObj?.attributes?.friendly_name || r.entity;
+    const icon = this._rowField(r, "icon");
     return html`
       <div
         class="row ${stateObj && this._isUnavailable(stateObj) ? "unavailable" : ""}"
         @click=${() => this._handleAction(r.tap_action || { action: "more-info", entity: r.entity })}
       >
-        ${r.icon ? html`<ha-icon class="row-icon" icon=${r.icon}></ha-icon>` : ""}
+        ${icon ? html`<ha-icon class="row-icon" icon=${icon}></ha-icon>` : ""}
         <span class="name">${name}</span>
         <span class="state">${this._rowState(r, stateObj)}</span>
       </div>
@@ -155,12 +182,13 @@ class MateriaList extends ActionMixin(LitElement) {
        than a line that plainly does not. */
     const action = r.tap_action || (r.entity ? { action: "more-info", entity: r.entity } : null);
     const live = !!action && action.action !== "none";
+    const icon = this._rowField(r, "icon");
     return html`
       <div
         class="row text ${live ? "live" : ""}"
         @click=${live ? () => this._handleAction(action) : undefined}
       >
-        ${r.icon ? html`<ha-icon class="row-icon" icon=${r.icon}></ha-icon>` : ""}
+        ${icon ? html`<ha-icon class="row-icon" icon=${icon}></ha-icon>` : ""}
         <span class="line">${this._text(r)}</span>
       </div>
     `;

@@ -45,8 +45,11 @@ class MateriaListEditor extends SmartEditorBase {
         title: "Content",
         icon: "mdi:card-text-outline",
         fields: [
-          { name: "title", label: "Title", selector: { text: {} } },
-          { name: "icon", label: "Header icon", selector: { icon: {} } },
+          /* template: true on BOTH, because the card resolves both. An editor
+             that cannot enter a template the card would honour is the same bug
+             from the other side — and that half was missed on the expander. */
+          { name: "title", label: "Title", template: true, selector: { text: {} } },
+          { name: "icon", label: "Header icon", template: true, selector: { icon: {} } },
           {
             name: "entities",
             label: "Entities (rows)",
@@ -98,8 +101,8 @@ class MateriaListEditor extends SmartEditorBase {
         <strong>Text lines and mixed lists are YAML-only.</strong>
         Use <code>rows:</code> instead of <code>entities:</code> — it takes both
         kinds and wins when both are present. A row with <code>text</code> is a
-        line; a row with <code>entity</code> is a reading. <code>text</code>
-        accepts a template.
+        line; a row with <code>entity</code> is a reading. <code>text</code>, <code>icon</code> and
+        <code>name</code> all accept templates.
         <pre>
 rows:
   - icon: mdi:leaf
