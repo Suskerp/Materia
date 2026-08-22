@@ -363,6 +363,7 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
         { name: "accent", label: "Accent color (fill / bars / star)", color: true, selector: { text: {} } },
         { name: "color", label: "Tile color", color: true, template: true, selector: { text: {} } },
         { name: "color_on", label: "Text color", color: true, template: true, selector: { text: {} } },
+        { name: "show_icon", label: "Show icon beside the heading", selector: { boolean: {} } },
       ],
     };
 

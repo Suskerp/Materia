@@ -259,7 +259,10 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
   }
 
   _header(fallbackIcon) {
-    return html`<div class="header"><ha-icon icon=${this._icon(fallbackIcon)}></ha-icon><span>${this._name}</span></div>`;
+    return html`<div class="header">
+      ${this.config.show_icon === false ? nothing : html`<ha-icon icon=${this._icon(fallbackIcon)}></ha-icon>`}
+      <span>${this._name}</span>
+    </div>`;
   }
 
   /** Soil moisture is a SWEET SPOT, not a monotonic scale (unlike battery) —
