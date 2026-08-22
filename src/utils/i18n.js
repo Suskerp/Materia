@@ -281,6 +281,11 @@ const STRINGS = {
   al_zone_bypass: { en: "Bypass", nl: "Blokkeer" },
   al_zones_ready_count: { en: "{n} zones ready", nl: "{n} zones gereed" },
   al_zones_ready_one: { en: "{n} zone ready", nl: "{n} zone gereed" },
+  al_zone_sensing: { en: "Movement", nl: "Beweging" },
+  al_zones_ready_sensing: {
+    en: "{n} ready · {m} sensing movement",
+    nl: "{n} gereed · {m} met beweging",
+  },
 
   al_aria_modes: { en: "Alarm modes", nl: "Alarmmodi" },
   al_aria_hold_arm: { en: "Hold to arm in {mode}", nl: "Houd vast om in te schakelen in {mode}" },

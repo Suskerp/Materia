@@ -38,6 +38,25 @@ const ON_STATES = new Set([
   "on", "true", "open", "opening", "unlocked", "unlocking", "detected", "running", "active", "home",
 ]);
 
+/* WHICH ZONES CAN BLOCK AN ARM, from Home Assistant's own
+   BinarySensorDeviceClass enum (homeassistant/components/binary_sensor/const.py)
+   — an enumerated platform constant, not a list anybody has to maintain here.
+
+   The distinction is not cosmetic and not really about layout. A door contact
+   that reads open is a PERSISTENT obstruction: someone has to close it or skip
+   it. A PIR that reads open is you, walking to the keypad, and it will clear on
+   its own. Panels know this — interior and follower zones are ignored during
+   the exit delay, which is the whole reason an exit delay exists — so a motion
+   zone that is "Not Ready" is not a reason to warn anyone about arming, and
+   listing it under "Not ready" was wrong before it was ever noisy. */
+const TRANSIENT_CLASSES = new Set([
+  "motion", "occupancy", "presence", "vibration", "sound", "moving", "running", "light",
+]);
+const BLOCKING_CLASSES = new Set([
+  "door", "window", "opening", "garage_door", "lock", "tamper", "safety",
+  "problem", "smoke", "gas", "heat", "moisture", "co",
+]);
+
 /* Geometry, all off the M3 button ladder — see the spec header in styles.js.
    96px is the large rung (the concept's 104px is not a step on the ladder,
    the same call materia-drag-confirm already documents); 48 is the stadium
@@ -196,6 +215,7 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     clearTimeout(this._refuseTimer);
     clearTimeout(this._turnTimer);
     clearTimeout(this._shakeTimer);
+    clearTimeout(this._latchTimer);
     this._cleanupGesture();
   }
 
@@ -501,6 +521,166 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     return Number.isFinite(n) ? n : null;
   }
 
+  /* ---- the zone stability book ------------------------------------------
+     THE PROBLEM, in the user's words: "zones can quickly constantly switch
+     between ready and not ready, which makes it feel like the card resizes
+     constantly." Measured on this install, zone sensors alternate every 2-5
+     seconds for minutes at a time, and roughly a third of the 47 zones are
+     PIRs. Every flap moved a zone between the not-ready group and the ready
+     group, which changed the height of both, which resized the card under the
+     reader's thumb — possibly mid-hold on an arm gesture.
+
+     TWO MECHANISMS, because one is not enough and I tried it first.
+
+     Plain asymmetric hysteresis (not-ready instantly, ready has to be earned)
+     is the obvious surgical fix and it does stop the resizing — by leaving
+     every flapping PIR permanently listed as an obstruction and the sweep
+     permanently amber. That trades a thrash for a permanent false alarm, which
+     is the same "teach the reader to ignore the warning colour" failure the
+     unavailable zones already had to be kept out of. So:
+
+       1. CLASSIFY. A transient zone never joins the not-ready group and never
+          turns the sweep amber. It keeps its exact row and only recolours,
+          which is design 16a's behaviour applied to precisely the zones 16a is
+          right about. Its position never moves, so it cannot resize anything.
+
+       2. HYSTERESIS, for the blocking zones only. Not-ready is immediate,
+          because that is the information the reader needs now and it is what
+          turns the sweep amber. Going ready has to be HELD for the settle
+          window. That kills contact bounce on a real door without ever
+          delaying a warning.
+
+     Together the not-ready group only ever moves for a real, sustained
+     obstruction. Bookkeeping lives here rather than in the _zones getter
+     because a getter called during render must not mutate anything. */
+
+  get _settleMs() {
+    /* Must clear the 2-5s flap band measured on this install by a comfortable
+       margin, or an unclassified flapper could still thrash the list in the
+       seconds before mechanism 1 has enough evidence to demote it. It only
+       ever delays a zone LEAVING the list, which is the safe direction: the
+       card over-reports an obstruction for a few seconds rather than
+       under-reporting one. */
+    return Math.max(0, Number(this.config.zone_settle_ms ?? 8000));
+  }
+
+  /** Per-zone record: the last word seen, when it last flipped, the recent
+   *  flip timestamps, and the latched blocking verdict. */
+  _book(id) {
+    this._zoneBook ??= new Map();
+    let b = this._zoneBook.get(id);
+    if (!b) {
+      b = { word: null, flips: [], latched: false, readyAt: null };
+      this._zoneBook.set(id, b);
+    }
+    return b;
+  }
+
+  /** True when a zone has changed state often enough, recently enough, to be
+   *  behaving like a detector rather than like a door.
+   *
+   *  This is the fallback for zones carrying NO device_class at all — which is
+   *  every zone on this install, because they are `sensor` entities from the
+   *  panel integration rather than binary_sensors. Observed behaviour is the
+   *  most real signal available in that case, it needs no hand-maintained
+   *  list, and it is self-correcting: a door opened once does not flap, a PIR
+   *  does. It is also deliberately conservative — six transitions in a minute
+   *  is roughly 12-30s of PIR activity but three full open/close cycles of a
+   *  door, which is not something a door does by accident. */
+  _flapping(b, now) {
+    const win = Math.max(1000, Number(this.config.zone_flap_window_ms ?? 60000));
+    const need = Math.max(2, Number(this.config.zone_flap_count ?? 6));
+    while (b.flips.length && now - b.flips[0] > win) b.flips.shift();
+    return b.flips.length >= need;
+  }
+
+  /** Classification, most specific source first. */
+  _isTransient(zoneCfg, st, b, now) {
+    if (typeof zoneCfg?.transient === "boolean") return zoneCfg.transient;
+    const dc = st?.attributes?.device_class;
+    if (dc) {
+      if (TRANSIENT_CLASSES.has(dc)) return true;
+      if (BLOCKING_CLASSES.has(dc)) return false;
+    }
+    // Unclassifiable: default to BLOCKING (the safe reading of an unknown
+    // zone), unless it has demonstrated otherwise.
+    if (this.config.zone_flap_detect === false) return false;
+    return this._flapping(b, now);
+  }
+
+  willUpdate(changed) {
+    super.willUpdate?.(changed);
+    this._surveyZones();
+  }
+
+  /** Advance the stability book. Runs before render, so the very first paint is
+   *  already consistent with what the getter will read; idempotent, so being
+   *  called on unrelated updates costs a map lookup per zone and changes
+   *  nothing. */
+  _surveyZones() {
+    if (!this.hass || !this.config) return;
+    const now = Date.now();
+    const settle = this._settleMs;
+    let nextDue = Infinity;
+
+    for (const z of this._zoneConfigs()) {
+      const st = this.hass.states[z.entity];
+      const b = this._book(z.entity);
+      const word = this._zoneWord(st);
+
+      if (b.word !== word) {
+        if (b.word !== null) b.flips.push(now);
+        b.word = word;
+      }
+
+      const transient = this._isTransient(z, st, b, now);
+      b.transient = transient;
+
+      const unavailable = this._zoneUnavailable(st);
+      const bypassed = !unavailable && this._zoneBypassed(st);
+      // Only a BLOCKING zone can be latched; a transient one is never in the
+      // group whose height the latch exists to protect.
+      const live = !transient && !unavailable && !bypassed && this._zoneNotReady(st);
+
+      if (live) {
+        b.latched = true;
+        b.readyAt = null;
+      } else if (b.latched) {
+        if (b.readyAt == null) b.readyAt = now;
+        if (now - b.readyAt >= settle) {
+          b.latched = false;
+          b.readyAt = null;
+        } else {
+          nextDue = Math.min(nextDue, b.readyAt + settle);
+        }
+      }
+      // A zone that is no longer blocking for any other reason (it went
+      // unavailable, or was bypassed) drops the latch at once: the latch only
+      // ever smooths the ready/not-ready edge, never the others.
+      if ((unavailable || bypassed || transient) && b.latched) {
+        b.latched = false;
+        b.readyAt = null;
+      }
+    }
+
+    /* A latch has to be able to expire on a QUIET house. hass ticks arrive
+       whenever anything anywhere changes, which is usually often enough, but
+       "usually" is not a guarantee — so the next expiry is scheduled
+       explicitly. One timer for the earliest one, rescheduled each survey. */
+    clearTimeout(this._latchTimer);
+    if (nextDue !== Infinity) {
+      this._latchTimer = setTimeout(() => this.requestUpdate(), Math.max(16, nextDue - now));
+    }
+  }
+
+  /** The configured-or-discovered zone list, before any hass resolution. Split
+   *  out so the survey and the getter walk exactly the same set. */
+  _zoneConfigs() {
+    const explicit = Array.isArray(this.config.zones) ? this.config.zones : null;
+    const list = explicit && explicit.length ? explicit : this._discoverZones();
+    return list.filter((z) => z && z.entity);
+  }
+
   /** Zone auto-discovery. Forty-seven hand-written zone entries is not a
    *  reasonable ask, so `zone_filter` finds them instead — a plain entity_id
    *  prefix, or a regex when it looks like one. An explicit `zones` list still
@@ -551,21 +731,34 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
 
   /** Zones, from config or discovery, resolved against hass and sorted. */
   get _zones() {
-    const explicit = Array.isArray(this.config.zones) ? this.config.zones : null;
-    const list = explicit && explicit.length ? explicit : this._discoverZones();
-    const resolved = list
-      .filter((z) => z && z.entity)
+    const resolved = this._zoneConfigs()
       .map((z) => {
         const st = this.hass?.states[z.entity];
         const unavailable = this._zoneUnavailable(st);
         const bypassed = !unavailable && this._zoneBypassed(st);
+        /* Verdicts come from the stability book, which the survey has already
+           advanced this cycle. The book is consulted rather than recomputed so
+           the getter stays free of side effects and every reader — the groups,
+           the counts, the sweep colour — agrees by construction. Falling back
+           to the live read costs nothing and covers a getter reached before any
+           survey has run. */
+        const b = this._zoneBook?.get(z.entity);
+        const transient = b?.transient ?? false;
+        const liveNotReady = !unavailable && !bypassed && this._zoneNotReady(st);
         const out = {
           ...z,
           st,
           zone: this._zoneNumber(z.entity),
           unavailable,
           bypassed,
-          open: !unavailable && !bypassed && this._zoneNotReady(st),
+          transient,
+          /* SENSING: a transient zone currently detecting. It holds its row,
+             recolours, and is deliberately absent from `open` — so it can
+             neither move a group's height nor turn the sweep amber. */
+          sensing: transient && liveNotReady,
+          /* OPEN is the blocking, hysteresis-smoothed obstruction: the only
+             thing that may size the not-ready group or drive the warning. */
+          open: b ? (!transient && b.latched) : (!transient && liveNotReady),
           // friendly_name beats the panel's short `name` attribute on purpose:
           // "Raam Pool Badkamer" is a room, "MC pool badkamer" is a wiring
           // label. An explicit config name still wins over both.
@@ -584,9 +777,14 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
       // of them are permanently dark it is just noise, which is what the flag
       // is for. They were never in the not-ready count either way.
       .filter((z) => this.config.show_unavailable !== false || !z.unavailable);
-    // Attention first, the unknowns next, then the fine ones, and last the
-    // ones deliberately being ignored. Ties break on the panel's own zone
-    // number so zone 2 never sorts after zone 10.
+    /* Attention first, the unknowns next, then the fine ones, and last the
+       ones deliberately being ignored. Ties break on the panel's own zone
+       number so zone 2 never sorts after zone 10.
+
+       `sensing` is deliberately NOT a rank. A sensing zone sorts exactly where
+       it would if it were quiet, so it never changes position — reordering
+       rows inside the expanded list would be the same complaint in a smaller
+       box, even though the card's overall height would not move. */
     const rank = (z) => (z.bypassed ? 3 : z.open ? 0 : z.unavailable ? 1 : 2);
     return resolved.sort((a, b) => {
       const d = rank(a) - rank(b);
@@ -1273,12 +1471,19 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
    *  wherever it appears, and so the substate line always comes from HA's own
    *  formatter (which already localises "Ready" / "Not Ready" for us). */
   _zoneRow(z, cls = "") {
+    /* A sensing zone gets its own word. Showing the panel's raw "Not Ready"
+       inside a group headed "ready" would read as a contradiction, and for a
+       PIR "Not Ready" is a poor description of what is happening anyway —
+       nothing is wrong, something moved. */
+    const state = z.sensing
+      ? t("al_zone_sensing", this.hass)
+      : (this.hass.formatEntityState?.(z.st) ?? this._zoneWord(z.st));
     return html`
-      <div class="zrow ${cls}">
+      <div class="zrow ${cls} ${z.sensing ? "sensing" : ""}">
         <ha-icon .icon=${z.icon}></ha-icon>
         <div class="ztext">
           <span class="zname">${z.name}</span>
-          <span class="zstate">${this.hass.formatEntityState?.(z.st) ?? this._zoneWord(z.st)}</span>
+          <span class="zstate">${state}</span>
         </div>
         ${z.skippable
           ? html`
@@ -1323,6 +1528,7 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     const unavailable = zones.filter((z) => z.unavailable);
     const bypassed = zones.filter((z) => z.bypassed);
     const ready = zones.filter((z) => !z.open && !z.bypassed && !z.unavailable);
+    const sensing = ready.filter((z) => z.sensing).length;
 
     return html`
       <div class="zones">
@@ -1357,9 +1563,16 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
           ? this._zoneSummary({
               icon: "m3of:check-circle",
               cls: "ok",
-              label: t(ready.length === 1 ? "al_zones_ready_one" : "al_zones_ready_count", this.hass, {
-                n: ready.length,
-              }),
+              /* The count stays LIVE, because text changing length costs no
+                 height — it is regrouping that resized the card, not counting.
+                 So this can afford to be honest every second: when a transient
+                 zone is sensing, say so on the same single line rather than
+                 quietly filing it under "ready". */
+              label: sensing
+                ? t("al_zones_ready_sensing", this.hass, { n: ready.length - sensing, m: sensing })
+                : t(ready.length === 1 ? "al_zones_ready_one" : "al_zones_ready_count", this.hass, {
+                    n: ready.length,
+                  }),
               aria: t("al_aria_zones_toggle", this.hass),
               open: this._zonesExpanded,
               toggle: () => {

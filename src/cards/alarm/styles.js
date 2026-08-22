@@ -664,6 +664,22 @@ export const styles = [
       color: var(--md-sys-color-primary);
     }
 
+    /* SENSING: a transient zone, currently detecting, holding its row.
+       Tertiary, which is exactly the role M3 defines for a contrasting accent
+       used to balance primary and secondary — a real third state that is
+       neither the all-clear nor a warning. Deliberately NOT the warning role:
+       amber means "this is blocking the arm", and a PIR watching you walk to
+       the panel is not that. Only the ink changes, never the geometry, so a
+       zone flapping every two seconds cannot move anything at all. */
+    .zrow.sensing > ha-icon,
+    .zrow.sensing .zstate {
+      color: var(--md-sys-color-tertiary, var(--ma-fg));
+    }
+
+    .zrow.sensing > ha-icon {
+      opacity: 1;
+    }
+
     /* UNAVAILABLE is deliberately NOT the warning role. A zone the panel
        cannot see is an unknown, not an open door, and spending the amber here
        would leave nothing louder to say "this one is actually open" — the

@@ -87,7 +87,15 @@ class MateriaAlarmEditor extends SmartEditorBase {
       show_unavailable: true,
       hold_ms: 800,
       hint_ms: 2000,
-      pending_timeout_ms: 10000,
+      // 20000, matching _armPinExpiry. This said 10000 while the card had
+      // already moved to 20000, which is exactly the seeding bug this whole
+      // method exists to prevent: opening the editor and saving wrote the old
+      // value back and re-broke the 90-second exit delay.
+      pending_timeout_ms: 20000,
+      zone_settle_ms: 8000,
+      zone_flap_detect: true,
+      zone_flap_count: 6,
+      zone_flap_window_ms: 60000,
       ...this._config,
     };
   }
@@ -104,6 +112,7 @@ class MateriaAlarmEditor extends SmartEditorBase {
       (this._config?.modes || []).join(","),
       this._config?.zone_filter ? "f" : "",
       this._config?.bypass_action ? "b" : "",
+      this._config?.zone_flap_detect === false ? "nf" : "",
     ].join("|");
   }
 
@@ -189,6 +198,30 @@ class MateriaAlarmEditor extends SmartEditorBase {
             helper:
               "How to read the panel's zone NUMBER out of an entity_id — the bypass services take a number, not an entity. A zone this does not match offers no Bypass button rather than firing a call with no zone.",
             selector: { text: {} },
+          },
+          {
+            name: "zone_settle_ms",
+            label: "Settle before a zone counts as ready again (ms, default 8000)",
+            helper:
+              "Going NOT ready is always immediate — that is the warning, and it must never be late. This only delays a zone leaving the not-ready list, so a door being closed does not make the card jump while a contact bounces.",
+            selector: { number: { min: 0, max: 60000, step: 500, mode: "box" } },
+          },
+          {
+            name: "zone_flap_detect",
+            label: "Treat zones that flap as movement detectors",
+            helper:
+              "For zones with no device_class to go on. A zone that changes repeatedly is behaving like a PIR, not a door: it keeps its place in the list and just recolours, instead of joining the not-ready group and turning the arm gesture amber. Zones carrying a device_class are classified from that instead, and a per-zone override always wins.",
+            selector: { boolean: {} },
+          },
+          {
+            name: "zone_flap_count",
+            label: "Changes before a zone counts as flapping (default 6)",
+            selector: { number: { min: 2, max: 50, step: 1, mode: "box" } },
+          },
+          {
+            name: "zone_flap_window_ms",
+            label: "Window those changes are counted over (ms, default 60000)",
+            selector: { number: { min: 1000, max: 600000, step: 1000, mode: "box" } },
           },
           {
             name: "bypass_action",
@@ -294,6 +327,13 @@ class MateriaAlarmEditor extends SmartEditorBase {
       },
       { name: "name", label: "Name (optional — defaults to the entity name)", selector: { text: {} } },
       { name: "icon", label: "Icon (optional)", selector: { icon: {} } },
+      {
+        name: "transient",
+        label: "Movement detector",
+        helper:
+          "Overrides the automatic guess. On: this zone never blocks arming and never turns the gesture amber — it keeps its row and recolours. Off: it always blocks. Leave unset to classify from device_class, falling back to whether it flaps.",
+        selector: { boolean: {} },
+      },
     ];
   }
 
