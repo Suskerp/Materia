@@ -44,15 +44,27 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     let pos = Number(s.attributes.media_position) || 0;
     const playing = s.state === "playing";
     const updated = s.attributes.media_position_updated_at;
+
+    // Track identity, used both by the live-stream latch below and to guard
+    // the elapsed-time math above it. Some players advance media_position to
+    // 0 for the new track without bumping media_position_updated_at in the
+    // same push — that timestamp is still the PREVIOUS track's, so adding
+    // "now minus updated" on top of the fresh position re-adds the old
+    // track's elapsed time and the bar never resets. Anchor elapsed-since to
+    // whichever is newer: the attribute's timestamp, or the moment we first
+    // saw this key ourselves — so a stale timestamp can never look further
+    // back than the track change we already detected.
+    const key = `${this.config.entity}|${s.attributes.media_content_id ?? s.attributes.media_title ?? ""}`;
+    if (key !== this._latchKey) this._trackAnchorAt = Date.now();
     if (playing && updated) {
-      pos += (Date.now() - new Date(updated).getTime()) / 1000;
+      const since = Math.max(new Date(updated).getTime(), this._trackAnchorAt ?? 0);
+      pos += Math.max(0, Date.now() - since) / 1000;
     }
 
     // Live-stream latch: radio reports a short, rolling media_duration that
     // resets — letting the fill sweep to the end then snap back (a visible
     // hitch). Once a still-playing stream runs past its duration, treat it as
     // live and keep the bar full + flowing instead of sawtoothing.
-    const key = `${this.config.entity}|${s.attributes.media_content_id ?? s.attributes.media_title ?? ""}`;
     if (key !== this._latchKey) {
       this._latchKey = key;
       this._live = false;

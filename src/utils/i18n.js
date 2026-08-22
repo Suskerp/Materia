@@ -208,6 +208,12 @@ const STRINGS = {
   fc_today: { en: "Today", nl: "Vandaag" },
 
   /* ---- materia-glance-tile (soil moisture) ------------------------------ */
+  gt_state_cleaning: { en: "Cleaning", nl: "Aan het poetsen" },
+  gt_state_docked: { en: "Docked", nl: "In het dokstation" },
+  gt_state_paused: { en: "Paused", nl: "Gepauzeerd" },
+  gt_state_idle: { en: "Idle", nl: "Inactief" },
+  gt_state_returning: { en: "Returning to dock", nl: "Keert terug naar dokstation" },
+  gt_state_error: { en: "Error", nl: "Fout" },
   gt_needs_water_now: { en: "Needs water now", nl: "Nu water nodig" },
   gt_water_soon: { en: "Water soon", nl: "Binnenkort water geven" },
   gt_optimal: { en: "Optimal", nl: "Optimaal" },

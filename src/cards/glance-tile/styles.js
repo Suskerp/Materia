@@ -940,6 +940,28 @@ export const styles = [
       background: color-mix(in srgb, var(--g-accent) 18%, transparent);
     }
 
+    /* A bucket row is bottom-aligned inside a fixed-height box, so a short bar
+       leaves its air ABOVE it and none below: the flex gap is the only
+       clearance, and a hard full-width edge lands straight on the caption.
+       bar does not need this because its 6dp track fills its own box, so the
+       space reads on both sides of it.
+
+       The added value is .gauge-main's own gap again, doubling the clearance to
+       the 16dp the concept puts between a value row and a chart — its number
+       for "a chart needs room", as against the 8dp it uses for a chart's own
+       labels. Adjacent-sibling, so an uncaptioned tile gains no dead space.
+
+       WEEKBARS ONLY, and that is a measured decision rather than a guess. The
+       four captioned charts sat at: bar 4px, weekbars 4px, sparkline 10px,
+       events 10px. bar is the one that reads correctly at 4px because its
+       track fills its box; weekbars at the same 4px is the one that reads
+       cramped. The sparkline and the tonal event row were already at 10px —
+       two and a half times bar's clearance — so neither needed touching, and
+       widening them would have been fixing a number nobody was looking at. */
+    .weekbars + .gauge-caption {
+      margin-top: clamp(4px, 2.5cqi, 8px);
+    }
+
     /* ---- the tonal session row ------------------------------------------ */
     .event-row {
       container-type: inline-size;

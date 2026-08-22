@@ -18,6 +18,22 @@ const SCALE = {
 
 const ACTIVE_STATES = ["on", "open", "running", "playing", "heat", "heating", "home", "true", "active"];
 
+// hass.formatEntityState() renders through the user's PROFILE language, not
+// HA's system language Materia otherwise follows — a Dutch-system/English-
+// profile user saw "Cleaning" with no card config able to override it. The
+// vacuum domain's states are a small fixed set (HA's vacuum integration:
+// cleaning/docked/paused/idle/returning/error), so translate those words
+// ourselves and fall back to formatEntityState for anything else (e.g. a
+// status_entity with richer, non-enum text).
+const VACUUM_STATE_KEYS = {
+  cleaning: "gt_state_cleaning",
+  docked: "gt_state_docked",
+  paused: "gt_state_paused",
+  idle: "gt_state_idle",
+  returning: "gt_state_returning",
+  error: "gt_state_error",
+};
+
 /** The 19b variants: these draw the measurement's recent PAST, so they need
  *  the recorder. Everything else renders from the current state alone. */
 const SPARK_VARIANTS = new Set(["spark", "sparkline", "weekbars", "events"]);
@@ -913,12 +929,19 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     return this.hass.formatEntityState?.(stateObj) ?? stateObj.state;
   }
 
+  /** Vacuum-specific state text: our own table first, formatEntityState as
+   *  fallback. See VACUUM_STATE_KEYS above for why. */
+  _vacuumStateText(stateObj) {
+    const key = VACUUM_STATE_KEYS[String(stateObj.state).toLowerCase()];
+    return key ? t(key, this.hass) : this._fmtObj(stateObj);
+  }
+
   _vacuum() {
     const st = this._stateObj;
     const active = st.state === "cleaning";
 
     const statusSt = this.config.status_entity ? this.hass.states[this.config.status_entity] : null;
-    const stateText = statusSt ? this._fmtObj(statusSt) : this._fmtState();
+    const stateText = this._vacuumStateText(statusSt ?? st);
 
     const roomSt = this.config.room_entity ? this.hass.states[this.config.room_entity] : null;
     const roomText = active && roomSt ? this._fmtObj(roomSt) : "";
