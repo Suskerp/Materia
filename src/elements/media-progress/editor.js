@@ -18,7 +18,7 @@ class MateriaMediaProgressEditor extends SmartEditorBase {
           {
             name: "live",
             label: "Live stream",
-            helper: "While playing, keep the track full and show ∞ instead of a target duration.",
+            helper: "Keep the track full and show ∞ for a live stream, even when the player reports idle.",
             selector: { boolean: {} },
           },
         ],

@@ -26,6 +26,20 @@ export const styles = [
       overflow: hidden;
     }
 
+    /* Browser Mod already supplies the dialog surface, padding and title.
+       A second card-coloured slab inside it creates a conspicuous seam in dark
+       mode and repeats the dialog heading. Popup presentation therefore keeps
+       only the picker's controls; inline/manager cards retain their own skin. */
+    .sheet.manager-editor {
+      padding: 0 2px 8px;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    .manager-editor .eyebrow {
+      display: none;
+    }
+
     /* ---- multi-schedule manager ----------------------------------- */
 
     .manager {
@@ -192,11 +206,6 @@ export const styles = [
       font-size: 12px;
       font-weight: 700;
       color: var(--md-sys-color-on-surface-variant, currentColor);
-    }
-
-    .m3-time-picker {
-      display: block;
-      width: 100%;
     }
 
     @container (max-width: 420px) {
@@ -718,6 +727,7 @@ export const styles = [
     /* Same shell as .custom — same rounded surface a fold unfolds inside of —
        just once per edge (start, stop) instead of once for the whole picker. */
     .win-edge {
+      position: relative;
       border-radius: 28px;
       background: var(--md-sys-color-surface-container-high, rgba(0, 0, 0, 0.06));
       overflow: hidden;
@@ -757,24 +767,18 @@ export const styles = [
       transition: transform var(--md-sys-motion-expressive-default-spatial);
     }
 
-    .win-edge.open .win-head .chev {
-      transform: rotate(180deg);
-    }
-
-    /* Height is animated from a MEASURED pixel value, same reasoning and same
-       mechanism as .custom-body — see _syncFoldHeight() in index.js, which
-       now walks every .win-edge rather than assuming there is only one fold. */
-    .win-body {
-      overflow: hidden;
-      height: 0;
-      transition: height var(--md-sys-motion-expressive-default-spatial);
-    }
-
-    .win-inner {
-      padding: 2px 14px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+    .native-time-input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      opacity: 0;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
     }
 
     /* Non-normative affordance: a window whose stop <= start crosses midnight

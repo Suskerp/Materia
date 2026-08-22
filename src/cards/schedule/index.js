@@ -62,8 +62,6 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     // picker and a window at once, so sharing them is not a collision.
     _stopHour: { state: true },
     _stopMinute: { state: true },
-    _startOpen: { state: true },
-    _stopOpen: { state: true },
     _multipleSlots: { state: true },
     _resolvedPending: { state: true },
     _resolvedNextLabel: { state: true },
@@ -241,8 +239,6 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     // still opens on a sane, non-zero-length range.
     this._stopHour = 10;
     this._stopMinute = 0;
-    this._startOpen = false;
-    this._stopOpen = false;
     this._multipleSlots = false;
     this._activeScheduleEntity = null;
     this._targetEntity = null;
@@ -697,14 +693,6 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       const inner = this.shadowRoot.querySelector(".custom-inner");
       body.style.height = this._customOpen && inner ? `${inner.scrollHeight}px` : "0px";
     }
-    // Same measured-height fold, once per window edge (start, stop) — a plain
-    // querySelector would only ever find the first of the two.
-    this.shadowRoot?.querySelectorAll(".win-edge").forEach((edge) => {
-      const b = edge.querySelector(".win-body");
-      const inner = edge.querySelector(".win-inner");
-      if (!b) return;
-      b.style.height = edge.classList.contains("open") && inner ? `${inner.scrollHeight}px` : "0px";
-    });
   }
 
   /** Opening the calendar should CONTINUE from the moment already on screen,
@@ -1051,7 +1039,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
     return html`
       <ha-card>
-        <div class="sheet">
+        <div class="sheet ${this._isManagerEditor ? "manager-editor" : ""}">
           <div class="echo">
             <span class="eyebrow">${this._isManager
               ? (this._scheduleEntity ? t("sched_edit", this.hass) : t("sched_new", this.hass))
@@ -1175,7 +1163,9 @@ class MateriaSchedule extends ActionMixin(LitElement) {
               @click=${this._commit}
             >
               <ha-icon icon="m3o:alarm-on"></ha-icon>
-              <span>${this._repeating ? t("sched_save_schedule", this.hass) : t("sched_set_timer", this.hass)}</span>
+              <span>${this._isWindow || this._repeating
+                ? t("sched_save_schedule", this.hass)
+                : t("sched_set_timer", this.hass)}</span>
             </button>
           </div>
 
@@ -1343,10 +1333,10 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     `;
   }
 
-  /** Start-stop window (schedule_entity / show_stop). Two independent folds —
-   *  each opens onto the same hour-grid + minute-group shape _renderClock's
-   *  custom picker already uses, just once per edge — plus the window's own
-   *  always-visible weekday chips underneath. */
+  /** Start-stop window (schedule_entity / show_stop). The input itself covers
+   *  each styled row, so a direct tap invokes the operating system's time
+   *  picker: wheel on iOS, native dialog on Android, browser picker on desktop.
+   *  There is no expanding imitation of a picker to maintain or scroll past. */
   _renderWindow() {
     if (this._windowBlocked) {
       return html`
@@ -1366,65 +1356,53 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
     return html`
       <div class="window">
-        <div class="win-edge ${this._startOpen ? "open" : ""}">
-          <button
-            class="win-head"
-            @click=${() => { this._startOpen = !this._startOpen; this._stopOpen = false; }}
-          >
+        <div class="win-edge native-time">
+          <div class="win-head">
             <span class="lbl">${t("sched_window_start", this.hass)}</span>
             <span class="val">${this._pad(this._hour)}:${this._pad(this._minute)}</span>
             ${chev}
-          </button>
-          <div class="win-body">
-            <div class="win-inner">
-              <ha-selector
-                class="m3-time-picker"
-                .hass=${this.hass}
-                .selector=${{ time: {} }}
-                .value=${`${this._pad(this._hour)}:${this._pad(this._minute)}:00`}
-                @value-changed=${(event) => {
-                  const [hour, minute] = String(event.detail.value || "").split(":").map(Number);
-                  if (Number.isFinite(hour) && Number.isFinite(minute)) {
-                    this._hour = hour;
-                    this._minute = minute;
-                    this._dirty = true;
-                  }
-                }}
-              ></ha-selector>
-            </div>
           </div>
+          <input
+            class="native-time-input"
+            type="time"
+            step="60"
+            aria-label=${t("sched_window_start", this.hass)}
+            .value=${`${this._pad(this._hour)}:${this._pad(this._minute)}`}
+            @input=${(event) => {
+              const [hour, minute] = String(event.currentTarget.value || "").split(":").map(Number);
+              if (Number.isFinite(hour) && Number.isFinite(minute)) {
+                this._hour = hour;
+                this._minute = minute;
+                this._dirty = true;
+              }
+            }}
+          />
         </div>
 
-        <div class="win-edge ${this._stopOpen ? "open" : ""}">
-          <button
-            class="win-head"
-            @click=${() => { this._stopOpen = !this._stopOpen; this._startOpen = false; }}
-          >
+        <div class="win-edge native-time">
+          <div class="win-head">
             <span class="lbl">${t("sched_window_stop", this.hass)}</span>
             <span class="val">${this._pad(this._stopHour)}:${this._pad(this._stopMinute)}</span>
             <!-- Non-normative: crossing midnight round-trips exactly as entered,
                  this is only here so the reversed order doesn't read as a mistake. -->
             ${this._windowOvernight ? html`<span class="overnight-badge">${t("sched_window_overnight", this.hass)}</span>` : nothing}
             ${chev}
-          </button>
-          <div class="win-body">
-            <div class="win-inner">
-              <ha-selector
-                class="m3-time-picker"
-                .hass=${this.hass}
-                .selector=${{ time: {} }}
-                .value=${`${this._pad(this._stopHour)}:${this._pad(this._stopMinute)}:00`}
-                @value-changed=${(event) => {
-                  const [hour, minute] = String(event.detail.value || "").split(":").map(Number);
-                  if (Number.isFinite(hour) && Number.isFinite(minute)) {
-                    this._stopHour = hour;
-                    this._stopMinute = minute;
-                    this._dirty = true;
-                  }
-                }}
-              ></ha-selector>
-            </div>
           </div>
+          <input
+            class="native-time-input"
+            type="time"
+            step="60"
+            aria-label=${t("sched_window_stop", this.hass)}
+            .value=${`${this._pad(this._stopHour)}:${this._pad(this._stopMinute)}`}
+            @input=${(event) => {
+              const [hour, minute] = String(event.currentTarget.value || "").split(":").map(Number);
+              if (Number.isFinite(hour) && Number.isFinite(minute)) {
+                this._stopHour = hour;
+                this._stopMinute = minute;
+                this._dirty = true;
+              }
+            }}
+          />
         </div>
 
         <div class="win-days">

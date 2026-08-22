@@ -74,9 +74,11 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
 
     // Some radio integrations never publish a duration long enough for the
     // rolling-end heuristic above to observe. `live` is the explicit, generic
-    // escape hatch: while the player is playing, show an ongoing stream as a
-    // full flowing track with an infinite target instead of an empty bar.
-    const live = playing && (this.config.live === true || this._live);
+    // escape hatch: show an ongoing stream as a full flowing track with an
+    // infinite target instead of an empty bar. Explicit live mode deliberately
+    // outranks the entity state: Music Assistant can report `idle` while an
+    // external receiver continues playing its NET/radio stream.
+    const live = this.config.live === true || (playing && this._live);
 
     if (dur) pos = Math.min(pos, dur);
     return { pos: Math.max(0, pos), dur, playing, live };
@@ -220,7 +222,7 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
               </defs>
               <line class="track" x1=${playedX} y1=${MID} x2=${w} y2=${MID}></line>
               <g clip-path="url(#${this._cid})">
-                <path class="wave ${playing ? "playing" : ""}" d=${this._fullWave(w)}></path>
+                <path class="wave ${playing || live ? "playing" : ""}" d=${this._fullWave(w)}></path>
               </g>
               <rect class="thumb" x=${playedX - 2} y=${MID - 10} width="4" height="20" rx="2"></rect>
             </svg>

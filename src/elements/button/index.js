@@ -83,7 +83,46 @@ class MateriaButton extends ActionMixin(LitElement) {
       this._resolveField("label", "_resolvedLabel");
       this._resolveField("subtitle", "_resolvedSubtitle");
       this._resolveField(this.config?.disabled_when != null ? "disabled_when" : "disabled", "_resolvedDisabled");
+
+      // A toggle's resting shape changes with its live entity state. The CSS
+      // transition gets it from A to B, but a state update has no pointer press
+      // to supply the expressive settle, so play the M3 spatial overshoot here.
+      // Skip the first observed state: loading a dashboard is not an action.
+      const stateObj = this.config?.entity ? this.hass.states?.[this.config.entity] : undefined;
+      const active = this._isActive(stateObj);
+      if (this.__lastActive !== undefined && active !== this.__lastActive) {
+        this._animateStateMorph(this.__lastActive, active);
+      }
+      this.__lastActive = active;
     }
+  }
+
+  _animateStateMorph(fromActive, toActive) {
+    if (!this.config?.morph_on_active || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+    const el = this.shadowRoot?.querySelector(".btn");
+    if (!el?.animate) return;
+
+    const css = getComputedStyle(el);
+    const height = el.getBoundingClientRect().height || parseFloat(css.height) || 56;
+    const round = height / 2;
+    const square = parseFloat(css.getPropertyValue("--mb-rsq")) || 16;
+    const baseRound = this.config.shape !== "square";
+    const radiusFor = (active) => (this.config.morph_on_active && active ? !baseRound : baseRound) ? round : square;
+    const from = radiusFor(fromActive);
+    const to = radiusFor(toActive);
+    const delta = to - from;
+    const clamp = (value) => Math.max(0, Math.min(round, value));
+
+    this.__morphAnimation?.cancel();
+    this.__morphAnimation = el.animate([
+      { borderRadius: `${from}px`, transform: "scale(1)" },
+      { borderRadius: `${clamp(to + delta * 0.16)}px`, transform: "scale(0.97)", offset: 0.58 },
+      { borderRadius: `${clamp(to - delta * 0.07)}px`, transform: "scale(1.015)", offset: 0.82 },
+      { borderRadius: `${to}px`, transform: "scale(1)" },
+    ], {
+      duration: 533,
+      easing: "cubic-bezier(0.2, 0, 0, 1)",
+    });
   }
 
   _isActive(stateObj) {
@@ -201,6 +240,15 @@ class MateriaButton extends ActionMixin(LitElement) {
       this.__suppressNextClick = false;
     }, 3000);
     this._handleAction(this._resolveTapAction());
+
+    // CommitGesture intentionally parks at 100% to let hosts show a busy
+    // receipt. A button has the entity state as its receipt instead. Return the
+    // sweep to zero now, otherwise it resurfaces as a permanent tint the next
+    // time confirm mode becomes active (typically after toggling back off).
+    cancelAnimationFrame(this.__confirmResetRaf);
+    this.__confirmResetRaf = requestAnimationFrame(() => {
+      this.__gesture?.setProgress(0, true);
+    });
   }
 
   connectedCallback() {
@@ -216,6 +264,8 @@ class MateriaButton extends ActionMixin(LitElement) {
     super.disconnectedCallback?.();
     this.removeEventListener("confirm", this.__onConfirm);
     clearTimeout(this.__suppressClickTimer);
+    cancelAnimationFrame(this.__confirmResetRaf);
+    this.__morphAnimation?.cancel();
     this.__gesture?.destroy();
   }
 
