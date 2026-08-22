@@ -804,8 +804,11 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     return {
       action: "perform-action",
       perform_action: editing ? "scheduler.edit" : "scheduler.add",
-      ...(editing ? { target: { entity_id: "$entity" } } : {}),
       data: {
+        // Scheduler defines entity_id as ordinary service data (single string),
+        // not as HA target metadata. Passing it through target normalizes it to
+        // an array and Scheduler rejects that value.
+        ...(editing ? { entity_id: "$entity" } : {}),
         weekdays: "$weekdays",
         repeat_type: "repeat",
         ...(!editing ? { name: "$name" } : {}),
