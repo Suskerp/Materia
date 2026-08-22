@@ -36,6 +36,49 @@ export const styles = [
         color var(--md-sys-motion-default-effects);
     }
 
+    .level-row.with-control {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 56px;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .control {
+      width: 56px;
+      height: 56px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--md-sys-color-on-secondary-container);
+      background: var(--md-sys-color-secondary-container);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: border-radius var(--md-sys-motion-expressive-fast-spatial),
+        background-color var(--md-sys-motion-fast-effects),
+        color var(--md-sys-motion-fast-effects);
+    }
+
+    .control.on {
+      border-radius: 18px;
+      color: var(--md-sys-color-on-primary);
+      background: var(--md-sys-color-primary);
+    }
+
+    .control ha-icon {
+      --mdc-icon-size: 24px;
+    }
+
+    /* Flat is for composed mixer/control surfaces where the parent supplies
+       the card surface. It keeps the level row's typography and touch target
+       without nesting another rounded container inside it. */
+    .tile.flat {
+      background: transparent;
+      border-radius: 0;
+      padding: 4px 0;
+    }
+
     .head {
       display: flex;
       align-items: baseline;

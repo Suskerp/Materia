@@ -17,13 +17,196 @@ export const styles = [
 
     .sheet {
       border-radius: 32px 32px 14px 32px;
-      background: var(--md-sys-color-surface-container-low, var(--card-background-color));
+      background: var(--ha-card-background, var(--card-background-color));
       color: var(--md-sys-color-on-surface);
       padding: clamp(14px, 4cqi, 20px);
       display: flex;
       flex-direction: column;
       gap: clamp(12px, 3.6cqi, 18px);
       overflow: hidden;
+    }
+
+    /* ---- multi-schedule manager ----------------------------------- */
+
+    .manager {
+      gap: 14px;
+    }
+
+    .manager-head {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .manager-head > div,
+    .schedule-text {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .manager-title {
+      font-family: var(--materia-font-display, inherit);
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .manager-sub,
+    .schedule-sub {
+      font-size: 13px;
+      color: var(--md-sys-color-on-surface-variant, currentColor);
+      opacity: 0.76;
+    }
+
+    .manager-add {
+      min-width: 48px;
+      height: 48px;
+      padding: 0 18px;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      font-weight: 700;
+    }
+
+    .schedule-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .schedule-row {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 10px 6px 16px;
+      border-radius: 24px;
+      background: var(--md-sys-color-surface-container, rgba(0, 0, 0, 0.05));
+    }
+
+    .schedule-main {
+      flex: 1;
+      min-width: 0;
+      min-height: 56px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-align: left;
+      background: transparent;
+    }
+
+    .schedule-main > ha-icon:last-child {
+      --mdc-icon-size: 20px;
+      opacity: 0.62;
+    }
+
+    .schedule-name {
+      font-size: 16px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .schedule-toggle {
+      position: relative;
+      width: 52px;
+      height: 32px;
+      flex: none;
+      box-sizing: border-box;
+      border-radius: 16px;
+      border: 2px solid var(--md-sys-color-outline, rgba(0, 0, 0, 0.35));
+      background: var(--md-sys-color-surface-container-highest, rgba(0, 0, 0, 0.1));
+    }
+
+    .schedule-toggle i {
+      position: absolute;
+      top: 50%;
+      left: 6px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--md-sys-color-outline, #888);
+      transform: translateY(-50%);
+      transition: left var(--md-sys-motion-expressive-fast-spatial),
+        width var(--md-sys-motion-expressive-fast-spatial),
+        height var(--md-sys-motion-expressive-fast-spatial);
+    }
+
+    .schedule-toggle.on {
+      border-color: transparent;
+      background: var(--md-sys-color-primary);
+    }
+
+    .schedule-toggle.on i {
+      left: 24px;
+      width: 24px;
+      height: 24px;
+      background: var(--md-sys-color-on-primary);
+    }
+
+    .manager-empty {
+      min-height: 88px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-align: left;
+      border-radius: 28px;
+      background: var(--md-sys-color-surface-container, rgba(0, 0, 0, 0.05));
+    }
+
+    .manager-empty > span {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .manager-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .manager-fields label {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .manager-fields label > span {
+      padding-left: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--md-sys-color-on-surface-variant, currentColor);
+    }
+
+    .m3-time-picker {
+      display: block;
+      width: 100%;
+    }
+
+    @container (max-width: 420px) {
+      .manager-fields {
+        grid-template-columns: 1fr;
+      }
+
+      .manager-add span {
+        display: none;
+      }
+
+      .manager-add {
+        padding: 0;
+        width: 48px;
+      }
     }
 
     /* ---- collapsed strip (design 7b) ---- */
@@ -751,6 +934,24 @@ export const styles = [
       place-items: center;
       font-size: 16px;
       font-weight: 600;
+    }
+
+    .remove {
+      flex: 1;
+      border-radius: 34px 12px 12px 34px;
+      background: var(--md-sys-color-error-container);
+      color: var(--md-sys-color-on-error-container);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .remove + .cancel {
+      border-radius: 12px;
+    }
+
+    .remove.armed {
+      background: var(--md-sys-color-error);
+      color: var(--md-sys-color-on-error);
     }
 
     .confirm {

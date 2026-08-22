@@ -112,6 +112,13 @@ export const styles = [
     .shape-round  { border-radius: calc(var(--mb-h) / 2); }
     .shape-square { border-radius: var(--mb-rsq, 16px); }
 
+    /* M3 Expressive: round and square buttons converge on the same pressed
+       shape for their size. The selected resting shape is handled separately
+       in index.js, so releasing returns to the correct inverse shape. */
+    .btn:active {
+      border-radius: var(--mb-rsq, 16px);
+    }
+
     /* ---- connected (split-button): round outer edge, small inner edge ---- */
     .connected-leading {
       border-radius: calc(var(--mb-h) / 2) var(--mb-rsq, 16px) var(--mb-rsq, 16px) calc(var(--mb-h) / 2);

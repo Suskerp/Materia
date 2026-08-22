@@ -15,6 +15,12 @@ class MateriaMediaProgressEditor extends SmartEditorBase {
           { name: "entity", required: true, selector: { entity: { domain: "media_player" } } },
           { name: "show_times", selector: { boolean: {} } },
           { name: "seekable", selector: { boolean: {} } },
+          {
+            name: "live",
+            label: "Live stream",
+            helper: "While playing, keep the track full and show ∞ instead of a target duration.",
+            selector: { boolean: {} },
+          },
         ],
       },
       {

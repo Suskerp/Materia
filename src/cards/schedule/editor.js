@@ -32,6 +32,7 @@ class MateriaScheduleEditor extends SmartEditorBase {
             selector: { select: { mode: "dropdown", options: [
               { value: "inline", label: "Inline — collapsed strip that expands" },
               { value: "sheet", label: "Sheet — always open, for a modal" },
+              { value: "manager", label: "Manager — list, add and edit several schedules" },
             ] } },
           },
           { name: "empty_label", label: "Strip title when nothing is set", selector: { text: {} } },
@@ -85,6 +86,24 @@ class MateriaScheduleEditor extends SmartEditorBase {
         // already live and is what gets written back to on save.
         fields: [
           {
+            name: "manage_schedules",
+            label: "Manage multiple schedules",
+            helper: "Shows a parent-friendly list and lets people add or edit Scheduler entries without exposing entity IDs or service names.",
+            selector: { boolean: {} },
+          },
+          {
+            name: "targets",
+            label: "Devices and friendly actions",
+            helper: 'List of {entity, name, icon, actions:[{service,label,icon}]}. Schedules controlling these devices are discovered automatically.',
+            selector: { object: {} },
+          },
+          {
+            name: "schedule_entities",
+            label: "Additional schedule entities",
+            helper: "Optional explicit switch.schedule_* list, for schedules that cannot be discovered through their target device.",
+            selector: { entity: { domain: "switch", multiple: true } },
+          },
+          {
             name: "schedule_entity",
             label: "Scheduler entity",
             helper: "A switch.schedule_* entity (HACS Scheduler integration). Reads its current window/weekdays on open, writes back with scheduler.edit. Implies a start+stop window.",
@@ -111,6 +130,12 @@ class MateriaScheduleEditor extends SmartEditorBase {
         // list UI: this is a mocked POC, and the shape will change as soon as
         // there is a real backend deciding what a trigger even is.
         fields: [
+          {
+            name: "show_triggers",
+            label: 'Show the "When…" tab',
+            helper: "Disable this for a straightforward clock-only scheduler.",
+            selector: { boolean: {} },
+          },
           {
             name: "triggers",
             label: "Non-clock triggers",

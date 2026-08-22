@@ -49,6 +49,7 @@ import { motionTokens } from "../utils/motion.js";
  *   valueLabel — pre-formatted text for that indicator, e.g. "42%"
  *                (attribute: value-label); defaults to the raw value
  *   label      — accessible name, passed through to the input's aria-label
+ *   size       — M3 Expressive size: xs (16dp), s (24dp), or m (40dp)
  *
  * Events:
  *   value-changed  { value } — a COMMIT: on release, or debounced while
@@ -72,6 +73,7 @@ class MateriaSlider extends LitElement {
     showLabel: { type: Boolean, attribute: "show-label", reflect: true },
     valueLabel: { type: String, attribute: "value-label" },
     label: { type: String },
+    size: { type: String, reflect: true },
     _pressed: { state: true },
     _focused: { state: true },
   };
@@ -86,6 +88,7 @@ class MateriaSlider extends LitElement {
         /* SliderTokens: 16dp track, 4x44dp handle, 2dp when pressed/focused.
            StopIndicatorSize 4dp. MCA: 6dp thumb-track gap, 2dp inside corner. */
         --slider-track-height: 16px;
+        --slider-track-radius: 8px;
         --slider-handle-width: 4px;
         --slider-handle-height: 44px;
         --slider-handle-width-pressed: 2px;
@@ -100,6 +103,18 @@ class MateriaSlider extends LitElement {
           --md-sys-color-secondary-container,
           var(--md-sys-color-surface-variant, rgba(127, 127, 127, 0.24))
         );
+      }
+
+      /* M3 Expressive size tokens. The handle stays 4x44dp for XS/S/M;
+         only the track height and its leading shape grow. */
+      :host([size="s"]) {
+        --slider-track-height: 24px;
+        --slider-track-radius: 8px;
+      }
+
+      :host([size="m"]) {
+        --slider-track-height: 40px;
+        --slider-track-radius: 12px;
       }
 
       .slider {
@@ -145,7 +160,7 @@ class MateriaSlider extends LitElement {
 
         /* CornerFull for a 16dp track, stated outright — see the radius note
            on .active for why this may NOT be written as 999px. */
-        --_cap: calc(var(--slider-track-height) / 2);
+        --_cap: var(--slider-track-radius);
       }
 
       .active,
@@ -407,6 +422,7 @@ class MateriaSlider extends LitElement {
     this.showLabel = false;
     this.valueLabel = "";
     this.label = "";
+    this.size = "xs";
     this._pressed = false;
     this._focused = false;
     this._debounceTimer = null;

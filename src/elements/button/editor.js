@@ -124,6 +124,16 @@ class MateriaButtonEditor extends SmartEditorBase {
         fields: [
           { name: "active_state", label: "Active state", helper: "State(s) considered active (defaults by domain)", selector: { text: {} } },
           { name: "morph_on_active", label: "Morph shape when active", selector: { boolean: {} } },
+          {
+            name: "active_variant",
+            label: "Variant when active",
+            selector: {
+              select: {
+                mode: "dropdown",
+                options: ["filled", "tonal", "outlined", "elevated", "text"],
+              },
+            },
+          },
         ],
       },
       {

@@ -71,6 +71,10 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     _resolvedPending: { state: true },
     _resolvedNextLabel: { state: true },
     _resolvedNextSub: { state: true },
+    _activeScheduleEntity: { state: true },
+    _targetEntity: { state: true },
+    _targetAction: { state: true },
+    _removeArmed: { state: true },
   };
 
   static styles = styles;
@@ -89,6 +93,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     // their choice wins, so re-entering the editor cannot yank the tab out from
     // under them mid-edit.
     if (!this._modeTouched) this._mode = this._modes[0];
+    if (this._isManager && !this._targetEntity) this._selectTarget(this._managerTargets[0]?.entity);
   }
 
   /** "sheet" drops the collapsed strip and renders the picker directly, for
@@ -106,6 +111,68 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  rather than a second card: same config surface, same wiring seam. */
   get _isSummary() {
     return this.config.presentation === "summary";
+  }
+
+  /** Parent-facing Scheduler frontend. Technical entity IDs and service names
+   *  are declared once in card config; the runtime only exposes friendly
+   *  devices, actions and schedules. */
+  get _isManager() {
+    return this.config.presentation === "manager"
+      || this.config.manage_schedules === true
+      || Array.isArray(this.config.targets);
+  }
+
+  get _managerTargets() {
+    return (this.config.targets || [])
+      .map((item) => typeof item === "string" ? { entity: item } : item)
+      .filter((item) => item?.entity);
+  }
+
+  get _scheduleEntity() {
+    return this._activeScheduleEntity || this.config.schedule_entity || "";
+  }
+
+  get _managedSchedules() {
+    const explicit = new Set(this.config.schedule_entities || []);
+    const targets = new Set(this._managerTargets.map((item) => item.entity));
+    return Object.values(this.hass?.states || {})
+      .filter((stateObj) => stateObj.entity_id.startsWith("switch.schedule_"))
+      .filter((stateObj) => explicit.has(stateObj.entity_id)
+        || (stateObj.attributes.entities || []).some((entity) => targets.has(entity)))
+      .sort((a, b) => String(a.attributes.next_trigger || "9999").localeCompare(String(b.attributes.next_trigger || "9999")));
+  }
+
+  _targetConfig(entity = this._targetEntity) {
+    return this._managerTargets.find((item) => item.entity === entity) || null;
+  }
+
+  _targetName(entity = this._targetEntity) {
+    return this._targetConfig(entity)?.name
+      || this.hass?.states?.[entity]?.attributes?.friendly_name
+      || entity
+      || t("sched_choose_device", this.hass);
+  }
+
+  _targetActions(entity = this._targetEntity) {
+    const configured = this._targetConfig(entity)?.actions;
+    if (configured?.length) return configured.map((item) => typeof item === "string" ? { service: item } : item);
+    const domain = String(entity || "switch.unknown").split(".")[0];
+    return [
+      { service: `${domain}.turn_on`, label: t("state_on", this.hass), icon: "m3o:power-settings-new" },
+      { service: `${domain}.turn_off`, label: t("state_off", this.hass), icon: "m3o:power-off" },
+    ];
+  }
+
+  _actionName(service = this._targetAction, entity = this._targetEntity) {
+    const action = this._targetActions(entity).find((item) => item.service === service);
+    return action?.label || (String(service).endsWith("turn_off") ? t("state_off", this.hass) : t("state_on", this.hass));
+  }
+
+  _selectTarget(entity) {
+    if (!entity) return;
+    this._targetEntity = entity;
+    this._targetAction = this._targetActions(entity)[0]?.service || null;
+    this._dirty = true;
   }
 
   _tpl(key, resolved) {
@@ -129,7 +196,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       // the moment they touch a time or a weekday and only clears on commit or
       // dismiss — open ("sheet" presentation never closes) is not a reliable
       // "are they editing" signal, _dirty is.
-      if (this.config.schedule_entity && !this._dirty) this._seedFromEntity();
+      if (this._scheduleEntity && !this._dirty) this._seedFromEntity();
     }
     // Reflected as an attribute so the stylesheet can flatten the surface —
     // a config value alone is invisible to CSS.
@@ -162,6 +229,10 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     this._startOpen = false;
     this._stopOpen = false;
     this._multipleSlots = false;
+    this._activeScheduleEntity = null;
+    this._targetEntity = null;
+    this._targetAction = null;
+    this._removeArmed = false;
     // Plain fields, not reactive props: neither is ever read by render()
     // directly, only by the seed/commit machinery.
     this._entityActions = null; // actions read off schedule_entity, preserved on write
@@ -184,7 +255,9 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  as_timestamp('', 0) is 0 — which sails through the backend's "is this
    *  effectively now" check and STARTS THE VACUUM. */
   get _hasSelection() {
-    if (this._isWindow) return !this._windowBlocked && this._days.some(Boolean);
+    if (this._isWindow) return !this._windowBlocked
+      && this._days.some(Boolean)
+      && (!this._isManager || (!!this._targetEntity && !!this._targetAction));
     return this._mode === "event" ? this._event != null : this._pick != null;
   }
 
@@ -197,7 +270,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
      rather than reusing the generic repeat switch. */
 
   get _isWindow() {
-    return this._mode === "clock" && (this.config.show_stop === true || !!this.config.schedule_entity);
+    return this._mode === "clock" && (this._isManager || this.config.show_stop === true || !!this._scheduleEntity);
   }
 
   /** Scheduler's `timeslots` is a list; this card edits only the first entry.
@@ -246,13 +319,19 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  scheduler.edit writes — that asymmetry is Scheduler's, not ours, so it is
    *  parsed here and re-assembled at commit time rather than carried as-is. */
   _seedFromEntity() {
-    const id = this.config.schedule_entity;
+    const id = this._scheduleEntity;
     if (!id) return;
     const st = this.hass?.states[id];
     if (!st) return;
     const slots = st.attributes.timeslots || [];
     this._multipleSlots = slots.length > 1;
     this._entityActions = st.attributes.actions ?? null;
+    if (this._isManager) {
+      const entity = (st.attributes.entities || [])[0];
+      if (entity) this._targetEntity = entity;
+      const service = (st.attributes.actions || [])[0]?.service;
+      this._targetAction = service || this._targetActions(entity)[0]?.service || null;
+    }
 
     const raw = slots[0];
     const m = raw && /^(\d{1,2}):(\d{2})(?::\d{2})?\s*-\s*(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(String(raw).trim());
@@ -278,7 +357,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   /** True once anything is wired, so the card stops advertising itself as a mock
    *  the moment it can actually do something. */
   get _isWired() {
-    return !!(this.config.confirm_action || this.config.trigger_action || this.config.schedule_entity
+    return !!(this.config.confirm_action || this.config.trigger_action || this._scheduleEntity || this._isManager
       || (this.config.presets ?? []).some((p) => p.tap_action)
       || (this.config.triggers ?? []).some((t) => t.tap_action));
   }
@@ -304,6 +383,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  dropped entirely, and with only one left the tab row is not rendered at all:
    *  a segmented control with a single segment is just a label. */
   get _modes() {
+    if (this._isManager) return ["clock"];
     const wanted = [];
     if (this.config.show_time !== false) wanted.push("clock");
     if (this.config.show_triggers !== false) wanted.push("event");
@@ -700,8 +780,18 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     // Config wins when given (authoring a NEW schedule with nothing to read
     // yet); otherwise whatever was read off schedule_entity survives
     // untouched — losing it would turn the pump's schedule into a no-op.
-    const actions = this.config.actions ?? this._entityActions ?? [];
-    return { start, stop, weekdays, actions, entity: this.config.schedule_entity ?? "", label: this._windowLabel };
+    const actions = this._isManager
+      ? [{ service: this._targetAction, entity_id: this._targetEntity }]
+      : (this.config.actions ?? this._entityActions ?? []);
+    return {
+      start,
+      stop,
+      weekdays,
+      actions,
+      entity: this._scheduleEntity,
+      name: `${this._targetName()} · ${this._windowLabel}`,
+      label: this._windowLabel,
+    };
   }
 
   /** Only fires when schedule_entity is set AND config doesn't supply its own
@@ -709,14 +799,16 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  sensible to call by default and stays a mock, same as the classic
    *  picker does with nothing wired. */
   _defaultWindowAction() {
-    if (!this.config.schedule_entity) return null;
+    if (!this._scheduleEntity && !this._isManager) return null;
+    const editing = !!this._scheduleEntity;
     return {
       action: "perform-action",
-      perform_action: "scheduler.edit",
-      target: { entity_id: "$entity" },
+      perform_action: editing ? "scheduler.edit" : "scheduler.add",
+      ...(editing ? { target: { entity_id: "$entity" } } : {}),
       data: {
         weekdays: "$weekdays",
         repeat_type: "repeat",
+        ...(!editing ? { name: "$name" } : {}),
         // Write shape is {start, stop, actions} — NOT the "HH:MM:SS - HH:MM:SS"
         // string schedule_entity's own timeslots attribute reads back as. See
         // _seedFromEntity for the other half of that asymmetry.
@@ -737,6 +829,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     } else {
       this._fireHaptic("success");
     }
+    if (this._isManager) this._activeScheduleEntity = null;
     if (this._isSheet) this._dismiss();
   }
 
@@ -777,9 +870,118 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     `;
   }
 
+  _openNewSchedule() {
+    this._activeScheduleEntity = null;
+    this._selectTarget(this._managerTargets[0]?.entity);
+    this._hour = 9;
+    this._minute = 0;
+    this._stopHour = 10;
+    this._stopMinute = 0;
+    this._days = [true, true, true, true, true, true, true];
+    this._multipleSlots = false;
+    this._removeArmed = false;
+    this._dirty = true;
+    this._open = true;
+  }
+
+  _openSchedule(stateObj) {
+    this._activeScheduleEntity = stateObj.entity_id;
+    this._dirty = false;
+    this._removeArmed = false;
+    this._seedFromEntity();
+    this._open = true;
+  }
+
+  _formatNext(stateObj) {
+    const raw = stateObj.attributes.next_trigger;
+    if (!raw) return stateObj.state === "on" ? t("sched_enabled", this.hass) : t("sched_disabled", this.hass);
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return String(raw);
+    return new Intl.DateTimeFormat(this._lang, { weekday: "short", hour: "2-digit", minute: "2-digit" }).format(date);
+  }
+
+  _renderManager() {
+    const schedules = this._managedSchedules;
+    return html`<ha-card><div class="sheet manager">
+      <div class="manager-head">
+        <div>
+          <span class="manager-title">${this.config.name ?? t("sched_name_default", this.hass)}</span>
+          <span class="manager-sub">${t("sched_manager_sub", this.hass)}</span>
+        </div>
+        <button class="manager-add" @click=${this._openNewSchedule}>
+          <ha-icon icon="m3o:add"></ha-icon><span>${t("sched_add_short", this.hass)}</span>
+        </button>
+      </div>
+      <div class="schedule-list">
+        ${schedules.length ? schedules.map((stateObj) => {
+          const target = (stateObj.attributes.entities || [])[0];
+          const service = (stateObj.attributes.actions || [])[0]?.service;
+          const time = (stateObj.attributes.timeslots || [])[0] || "";
+          return html`<div class="schedule-row">
+            <button class="schedule-main" @click=${() => this._openSchedule(stateObj)}>
+              <ha-icon icon=${this._targetConfig(target)?.icon ?? "m3o:schedule"}></ha-icon>
+              <span class="schedule-text">
+                <span class="schedule-name">${this._targetName(target)} · ${this._actionName(service, target)}</span>
+                <span class="schedule-sub">${time} · ${this._formatNext(stateObj)}</span>
+              </span>
+              <ha-icon icon="m3o:edit"></ha-icon>
+            </button>
+            <button
+              class="schedule-toggle ${stateObj.state === "on" ? "on" : ""}"
+              role="switch"
+              aria-checked=${stateObj.state === "on" ? "true" : "false"}
+              aria-label=${stateObj.state === "on" ? t("sched_disable", this.hass) : t("sched_enable", this.hass)}
+              @click=${() => this.hass.callService("switch", stateObj.state === "on" ? "turn_off" : "turn_on", {}, { entity_id: stateObj.entity_id })}
+            ><i></i></button>
+          </div>`;
+        }) : html`<button class="manager-empty" @click=${this._openNewSchedule}>
+          <ha-icon icon="m3o:add-alarm"></ha-icon>
+          <span><b>${t("sched_empty_head", this.hass)}</b>${t("sched_empty_sub", this.hass)}</span>
+        </button>`}
+      </div>
+    </div></ha-card>`;
+  }
+
+  _renderManagerFields() {
+    const targetOptions = this._managerTargets.map((item) => ({ value: item.entity, label: this._targetName(item.entity) }));
+    const actionOptions = this._targetActions().map((item) => ({ value: item.service, label: item.label || this._actionName(item.service) }));
+    return html`<div class="manager-fields">
+      <label><span>${t("sched_device", this.hass)}</span>
+        <ha-selector
+          .hass=${this.hass}
+          .selector=${{ select: { mode: "dropdown", options: targetOptions } }}
+          .value=${this._targetEntity || ""}
+          @value-changed=${(event) => this._selectTarget(event.detail.value)}
+        ></ha-selector>
+      </label>
+      <label><span>${t("sched_action", this.hass)}</span>
+        <ha-selector
+          .hass=${this.hass}
+          .selector=${{ select: { mode: "dropdown", options: actionOptions } }}
+          .value=${this._targetAction || ""}
+          @value-changed=${(event) => { this._targetAction = event.detail.value; this._dirty = true; }}
+        ></ha-selector>
+      </label>
+    </div>`;
+  }
+
+  _removeSchedule() {
+    if (!this._scheduleEntity) return;
+    if (!this._removeArmed) {
+      this._removeArmed = true;
+      this._fireHaptic("warning");
+      return;
+    }
+    this.hass.callService("scheduler", "remove", { entity_id: this._scheduleEntity });
+    this._activeScheduleEntity = null;
+    this._removeArmed = false;
+    this._open = false;
+  }
+
   render() {
     if (!this.config) return html``;
 
+    if (this._isManager && !this._open) return this._renderManager();
     if (this._isSummary) return this._renderSummary();
 
     if (!this._open && !this._isSheet) {
@@ -794,7 +996,9 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       <ha-card>
         <div class="sheet">
           <div class="echo">
-            <span class="eyebrow">${this.config.name ?? t("sched_name_default", this.hass)}</span>
+            <span class="eyebrow">${this._isManager
+              ? (this._scheduleEntity ? t("sched_edit", this.hass) : t("sched_new", this.hass))
+              : (this.config.name ?? t("sched_name_default", this.hass))}</span>
             ${(() => {
               // With nothing picked yet, the headline shows what is ALREADY
               // scheduled rather than an empty prompt — the armed strip below no
@@ -815,6 +1019,8 @@ class MateriaSchedule extends ActionMixin(LitElement) {
               `;
             })()}
           </div>
+
+          ${this._isManager ? this._renderManagerFields() : nothing}
 
           ${this._modes.length > 1
             ? html`<materia-button-group
@@ -898,6 +1104,11 @@ class MateriaSchedule extends ActionMixin(LitElement) {
               `}
 
           <div class="actions">
+            ${this._isManager && this._scheduleEntity
+              ? html`<button class="remove ${this._removeArmed ? "armed" : ""}" @click=${this._removeSchedule}>
+                  ${this._removeArmed ? t("sched_delete_confirm", this.hass) : t("sched_delete", this.hass)}
+                </button>`
+              : nothing}
             <button class="cancel" @click=${this._dismiss}>
               ${this.config.close_label ?? t("sched_close", this.hass)}
             </button>
@@ -1109,19 +1320,20 @@ class MateriaSchedule extends ActionMixin(LitElement) {
           </button>
           <div class="win-body">
             <div class="win-inner">
-              <materia-button-group
-                class="mins"
+              <ha-selector
+                class="m3-time-picker"
                 .hass=${this.hass}
-                .value=${String(this._minute)}
-                .config=${this._minuteConfig}
-                @option-selected=${(e) => { this._minute = Number(e.detail.value); this._dirty = true; }}
-              ></materia-button-group>
-              <div class="hours">
-                ${Array.from({ length: 24 }, (_, h) => html`<button
-                  class="hour ${this._hour === h ? "on" : ""}"
-                  @click=${() => { this._hour = h; this._dirty = true; }}
-                >${this._pad(h)}</button>`)}
-              </div>
+                .selector=${{ time: {} }}
+                .value=${`${this._pad(this._hour)}:${this._pad(this._minute)}:00`}
+                @value-changed=${(event) => {
+                  const [hour, minute] = String(event.detail.value || "").split(":").map(Number);
+                  if (Number.isFinite(hour) && Number.isFinite(minute)) {
+                    this._hour = hour;
+                    this._minute = minute;
+                    this._dirty = true;
+                  }
+                }}
+              ></ha-selector>
             </div>
           </div>
         </div>
@@ -1140,19 +1352,20 @@ class MateriaSchedule extends ActionMixin(LitElement) {
           </button>
           <div class="win-body">
             <div class="win-inner">
-              <materia-button-group
-                class="mins"
+              <ha-selector
+                class="m3-time-picker"
                 .hass=${this.hass}
-                .value=${String(this._stopMinute)}
-                .config=${this._minuteConfig}
-                @option-selected=${(e) => { this._stopMinute = Number(e.detail.value); this._dirty = true; }}
-              ></materia-button-group>
-              <div class="hours">
-                ${Array.from({ length: 24 }, (_, h) => html`<button
-                  class="hour ${this._stopHour === h ? "on" : ""}"
-                  @click=${() => { this._stopHour = h; this._dirty = true; }}
-                >${this._pad(h)}</button>`)}
-              </div>
+                .selector=${{ time: {} }}
+                .value=${`${this._pad(this._stopHour)}:${this._pad(this._stopMinute)}:00`}
+                @value-changed=${(event) => {
+                  const [hour, minute] = String(event.detail.value || "").split(":").map(Number);
+                  if (Number.isFinite(hour) && Number.isFinite(minute)) {
+                    this._stopHour = hour;
+                    this._stopMinute = minute;
+                    this._dirty = true;
+                  }
+                }}
+              ></ha-selector>
             </div>
           </div>
         </div>

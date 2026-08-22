@@ -206,7 +206,7 @@ class MateriaButton extends ActionMixin(LitElement) {
     const unavailable = this.config.entity ? this._isUnavailable(stateObj) : false;
     const disabled = this._disabled;
 
-    const variant = VARIANT_ALIAS[this.config.variant] || this.config.variant || "filled";
+    const baseVariant = VARIANT_ALIAS[this.config.variant] || this.config.variant || "filled";
     // Color role — independent of variant, per the M3 expressive spec. Unset
     // means each variant's own spec default (see styles.js), NOT primary.
     const role = ["primary", "secondary", "tertiary", "error"].includes(this.config.role)
@@ -228,9 +228,19 @@ class MateriaButton extends ActionMixin(LitElement) {
     }
     const baseShape = this.config.shape === "square" ? "square" : "round";
     const active = this._isActive(stateObj);
-    // M3 spec: a selected/active toggle button morphs toward square; inactive
-    // keeps its base shape. (Don't flip square→round — that's backwards.)
-    const shape = this.config.morph_on_active && active ? "square" : baseShape;
+    // Toggle buttons may use a different emphasis when checked. Keep color
+    // and shape independent: a safety override can become filled/error while
+    // remaining round, whereas an expressive preset can still morph shape.
+    const configuredActiveVariant = this.config.active_variant;
+    const variant = active && configuredActiveVariant
+      ? (VARIANT_ALIAS[configuredActiveVariant] || configuredActiveVariant)
+      : baseVariant;
+    // M3 Expressive toggle rule: the selected resting shape is the inverse of
+    // the configured unselected shape. Round becomes square; square becomes
+    // round. Pressed geometry is shared by both (styles.js).
+    const shape = this.config.morph_on_active && active
+      ? (baseShape === "round" ? "square" : "round")
+      : baseShape;
 
     const icon = this._isTemplate(this.config.icon)
       ? (this._resolvedIcon || "")
@@ -252,7 +262,7 @@ class MateriaButton extends ActionMixin(LitElement) {
 
     return html`
       <button
-        class="btn variant-${variant} ${role ? `role-${role}` : ""} ${sizeClass} shape-${shape} ${this.config.connected ? `connected-${this.config.connected}` : ""} ${iconOnly ? "icon-only" : ""} ${stacked ? "stacked" : ""} ${disabled ? "disabled" : ""} ${unavailable ? "unavailable" : ""} ${confirm ? "confirming" : ""} ${g?.armed ? "armed" : ""} ${g && g.settling && !g.armed ? "settling" : ""}"
+        class="btn variant-${variant} ${role ? `role-${role}` : ""} ${sizeClass} shape-${shape} ${active ? "active" : "inactive"} ${this.config.connected ? `connected-${this.config.connected}` : ""} ${iconOnly ? "icon-only" : ""} ${stacked ? "stacked" : ""} ${disabled ? "disabled" : ""} ${unavailable ? "unavailable" : ""} ${confirm ? "confirming" : ""} ${g?.armed ? "armed" : ""} ${g && g.settling && !g.armed ? "settling" : ""}"
         style=${sizeStyle}${confirm ? `--mb-p:${g.p};` : ""}
         @click=${this._handleTap}
         @pointerdown=${confirm ? this._onConfirmDown : undefined}

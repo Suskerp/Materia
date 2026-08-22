@@ -72,8 +72,14 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     if (!playing) this._live = false;
     else if (dur > 0 && pos >= dur - 0.25) this._live = true;
 
+    // Some radio integrations never publish a duration long enough for the
+    // rolling-end heuristic above to observe. `live` is the explicit, generic
+    // escape hatch: while the player is playing, show an ongoing stream as a
+    // full flowing track with an infinite target instead of an empty bar.
+    const live = playing && (this.config.live === true || this._live);
+
     if (dur) pos = Math.min(pos, dur);
-    return { pos: Math.max(0, pos), dur, playing, live: this._live };
+    return { pos: Math.max(0, pos), dur, playing, live };
   }
 
   _fmt(sec) {
@@ -114,11 +120,11 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     this._trackEl = root?.querySelector(".track");
     this._posEl = root?.querySelector(".time");
 
-    const playing = this.hass?.states[this.config.entity]?.state === "playing";
+    const { playing, live } = this._position();
     // The rAF loop exists only to advance the played position smoothly. When
     // the position is frozen (live stream latched at its rolling end), there's
     // nothing to advance. Stop it; CSS keeps the wave moving on its own.
-    if (playing && !this._live) this._startLoop();
+    if (playing && !live) this._startLoop();
     else this._stopLoop();
     if (this.hass) this._resolveField("color", "_resolvedColor");
   }
@@ -223,7 +229,7 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
             ? html`
                 <div class="times">
                   <span class="time">${this._fmt(pos)}</span>
-                  <span class="time">${this._fmt(dur)}</span>
+                  <span class="time">${live ? "∞" : this._fmt(dur)}</span>
                 </div>
               `
             : nothing}

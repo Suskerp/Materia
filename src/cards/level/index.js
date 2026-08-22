@@ -137,6 +137,12 @@ class MateriaLevel extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement)
    */
   get _scale() {
     const a = this._stateObj?.attributes || {};
+    const maxEntityRaw = this.config.max_entity
+      ? Number(this.hass?.states?.[this.config.max_entity]?.state)
+      : NaN;
+    const maxFromEntity = Number.isFinite(maxEntityRaw)
+      ? maxEntityRaw * num(this.config.max_entity_factor, 1)
+      : undefined;
     const known = KNOWN_ATTRS[this._attribute];
     const base = known || {
       min: num(a.min, 0),
@@ -150,7 +156,7 @@ class MateriaLevel extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement)
 
     return {
       min: num(this.config.min, base.min),
-      max: num(this.config.max, base.max),
+      max: num(this.config.max ?? maxFromEntity, base.max),
       step: num(this.config.step, step),
       factor: base.factor,
       unit: this.config.unit ?? base.unit,
@@ -262,6 +268,15 @@ class MateriaLevel extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement)
     return typeof resolved === "string" ? resolved.trim() : resolved;
   }
 
+  _controlTap() {
+    if (this.config.control_action) {
+      this._handleAction(this.config.control_action);
+      return;
+    }
+    const entityId = this.config.control_entity;
+    if (entityId) this._callService("homeassistant", "toggle", { entity_id: entityId });
+  }
+
   render() {
     if (!this.hass || !this.config) return html``;
     const st = this._stateObj;
@@ -292,34 +307,45 @@ class MateriaLevel extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement)
 
     const shown = this._display(value, scale);
     const unit = scale.unit;
+    const control = this.config.control_entity ? this.hass.states[this.config.control_entity] : null;
+    const controlOn = control && !["off", "unavailable", "unknown"].includes(control.state);
+    const controlIcon = this.config.control_icon || "m3o:power-settings-new";
 
     return html`
       <ha-card class=${dead ? "unavailable" : ""} style="--ml-accent:${accent};">
-        <div class="tile" style="${bg ? `background:${bg};` : ""}${fg ? `color:${fg};` : ""}">
-          <div class="head">
-            ${icon ? html`<ha-icon .icon=${icon}></ha-icon>` : nothing}
-            <span class="label">${label}</span>
-            <span class="value"
-              >${shown}${unit && !dead ? html`<span class="unit">${unit}</span>` : nothing}</span
-            >
-          </div>
+        <div class="level-row ${control ? "with-control" : ""}">
+          <div class="tile ${this.config.variant === "flat" ? "flat" : ""}" style="${bg ? `background:${bg};` : ""}${fg ? `color:${fg};` : ""}">
+            <div class="head">
+              ${icon ? html`<ha-icon .icon=${icon}></ha-icon>` : nothing}
+              <span class="label">${label}</span>
+              <span class="value"
+                >${shown}${unit && !dead ? html`<span class="unit">${unit}</span>` : nothing}</span
+              >
+            </div>
 
-          <!-- No show-label: the M3 value indicator would float a second copy
-               of the readout that already sits in the head row, and reserving
-               its 44dp of air above the track for that is a poor trade. -->
-          <materia-slider
-            .min=${scale.min}
-            .max=${scale.max}
-            .step=${scale.step}
-            .value=${value ?? scale.min}
-            .color=${accent}
-            .trackColor=${trackColor}
-            .label=${label}
-            .stops=${!this.config.hide_stops}
-            ?disabled=${dead}
-            @value-dragging=${this._onDragging}
-            @value-changed=${this._onCommit}
-          ></materia-slider>
+            <!-- No show-label: the M3 value indicator would float a second copy
+                 of the readout that already sits in the head row. -->
+            <materia-slider
+              .min=${scale.min}
+              .max=${scale.max}
+              .step=${scale.step}
+              .value=${value ?? scale.min}
+              .color=${accent}
+              .trackColor=${trackColor}
+              .label=${label}
+              .size=${this.config.slider_size || "xs"}
+              .stops=${!this.config.hide_stops}
+              ?disabled=${dead}
+              @value-dragging=${this._onDragging}
+              @value-changed=${this._onCommit}
+            ></materia-slider>
+          </div>
+          ${control ? html`<button
+            class="control ${controlOn ? "on" : ""}"
+            aria-label=${this.config.control_label || control.attributes?.friendly_name || label}
+            aria-pressed=${controlOn ? "true" : "false"}
+            @click=${this._controlTap}
+          ><ha-icon .icon=${controlIcon}></ha-icon></button>` : nothing}
         </div>
       </ha-card>
     `;

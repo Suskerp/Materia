@@ -687,6 +687,9 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     const cb = st?.attributes?.can_bypass;
     const refused = cb === false || String(cb).toLowerCase() === "false";
     if (!refused) return false;
+    if (this.config?.bypass_from_can_bypass_when_not_ready === true) {
+      return !this._zoneUnavailable(st);
+    }
     return !this._zoneUnavailable(st) && !this._zoneNotReady(st);
   }
 
