@@ -1236,6 +1236,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
         label: this.config[`metric_${i}_label`],
         value: this.config[`metric_${i}_value`],
         unit: this.config[`metric_${i}_unit`],
+        tap_action: this.config[`metric_${i}_tap_action`],
       }))
       .filter((m) => m.entity || m.label || m.value);
   }
@@ -1269,7 +1270,24 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
           ? html`<div class="detail-metrics">
               ${metrics.map((metric, i) => {
                 const m = this._detailMetric(metric, i);
-                return html`<div class="detail-metric"><span>${m.label}</span><strong>${m.value}</strong></div>`;
+                const action = metric.tap_action || (metric.entity
+                  ? { action: "more-info", entity: metric.entity }
+                  : null);
+                return html`<div
+                  class="detail-metric ${action ? "interactive" : ""}"
+                  role=${action ? "button" : nothing}
+                  tabindex=${action ? "0" : nothing}
+                  @click=${action ? (ev) => {
+                    ev.stopPropagation();
+                    this._handleAction(action);
+                  } : nothing}
+                  @keydown=${action ? (ev) => {
+                    if (ev.key !== "Enter" && ev.key !== " ") return;
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    this._handleAction(action);
+                  } : nothing}
+                ><span>${m.label}</span><strong>${m.value}</strong></div>`;
               })}
             </div>`
           : nothing}

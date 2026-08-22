@@ -225,12 +225,15 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
         { name: "metric_1_entity", label: "Supporting metric 1", selector: { entity: {} } },
         { name: "metric_1_label", label: "Metric 1 label", template: true, selector: { text: {} } },
         { name: "metric_1_value", label: "Metric 1 display override", helper: "Optional Jinja or text. Placeholders: {value} {unit} {state} {history_changed} {history_date} {history_time}. History timestamps ignore same-value restores after unavailable.", template: true, selector: { text: {} } },
+        { name: "metric_1_tap_action", label: "Metric 1 tap action", selector: { ui_action: { default_action: "more-info" } } },
         { name: "metric_2_entity", label: "Supporting metric 2", selector: { entity: {} } },
         { name: "metric_2_label", label: "Metric 2 label", template: true, selector: { text: {} } },
         { name: "metric_2_value", label: "Metric 2 display override", template: true, selector: { text: {} } },
+        { name: "metric_2_tap_action", label: "Metric 2 tap action", selector: { ui_action: { default_action: "more-info" } } },
         { name: "metric_3_entity", label: "Supporting metric 3", selector: { entity: {} } },
         { name: "metric_3_label", label: "Metric 3 label", template: true, selector: { text: {} } },
         { name: "metric_3_value", label: "Metric 3 display override", template: true, selector: { text: {} } },
+        { name: "metric_3_tap_action", label: "Metric 3 tap action", selector: { ui_action: { default_action: "more-info" } } },
         { name: "history_refresh", label: "Refresh history every N minutes", selector: { number: { min: 1, max: 180, mode: "box" } } },
       );
     }

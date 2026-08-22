@@ -1046,6 +1046,28 @@ export const styles = [
       gap: 6px;
     }
 
+    .detail-metric.interactive {
+      cursor: pointer;
+      transition:
+        background var(--md-sys-motion-expressive-fast-spatial),
+        border-radius var(--md-sys-motion-expressive-fast-spatial),
+        transform var(--md-sys-motion-expressive-fast-spatial);
+    }
+
+    .detail-metric.interactive:hover {
+      background: color-mix(in srgb, currentColor 10%, transparent);
+    }
+
+    .detail-metric.interactive:active {
+      border-radius: 10px;
+      transform: scale(0.98);
+    }
+
+    .detail-metric.interactive:focus-visible {
+      outline: 3px solid var(--md-sys-color-secondary, currentColor);
+      outline-offset: 2px;
+    }
+
     .detail-metric span {
       font-size: 11px;
       line-height: 16px;

@@ -417,7 +417,7 @@ battery_entity: sensor.roborock_qrevo_battery
 | `battery_entity` | string | | `plain` / `vacuum` — a paired battery sensor, rendered as a vertical bar |
 | `status_entity` | string | | `vacuum` only — richer status sensor shown as the centered state (falls back to the entity's own state) |
 | `room_entity` | string | | `vacuum` only — current-room sensor, shown at the bottom while cleaning |
-| `metrics` | array | | `detail` — up to three `{ entity, label, value, unit }` supporting facts; the editor also exposes three friendly metric slots |
+| `metrics` | array | | `detail` — up to three `{ entity, label, value, unit, tap_action }` supporting facts; metrics with an entity open that entity's more-info dialog by default |
 | `days` / `aggregate` | number / string | 7 / `delta` | `detail` — recorder-backed bars and their daily aggregation |
 | `headline` / `caption` / `footer` | string (templatable) | | `progress_summary` authored copy; supports `{value}`, `{min}`, `{max}`, `{unit}`, `{percent}` |
 | `footer_icon` | string | `m3o:trending-up` | `progress_summary` footer icon |
