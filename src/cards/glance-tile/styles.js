@@ -1008,6 +1008,10 @@ export const styles = [
       gap: 12px;
     }
 
+    .detail-primary .header {
+      justify-content: flex-start;
+    }
+
     .detail-bars {
       display: flex;
       align-items: flex-end;
