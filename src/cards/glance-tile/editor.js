@@ -247,6 +247,20 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
               },
             },
           },
+          {
+            name: "summary_period",
+            label: "Separate caption period",
+            helper:
+              "Keeps the visible bars compact while exposing a wider change to the caption. Current month adds {summary_delta}, {summary_delta_signed}, and {summary_delta_pct}.",
+            selector: {
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "current_month", label: "Current calendar month" },
+                ],
+              },
+            },
+          },
         );
       } else {
         extras.fields.push(
@@ -271,7 +285,7 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
         {
           name: "caption",
           label: "Caption",
-          helper: "Your words. Placeholders: {value} {unit} {hours} {days} {buckets}. Jinja templates work too.",
+          helper: "Your words. Placeholders: {value} {unit} {hours} {days} {buckets} {summary_delta} {summary_delta_signed} {summary_delta_pct}. Jinja templates work too.",
           template: true,
           selector: { text: {} },
         },

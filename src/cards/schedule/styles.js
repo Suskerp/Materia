@@ -779,10 +779,38 @@ export const styles = [
       outline: none;
       cursor: pointer;
       color-scheme: light dark;
+      accent-color: var(--md-sys-color-primary);
+    }
+
+    .native-time-input::selection,
+    .native-datetime-input::selection {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
     }
 
     .native-time-input::-webkit-calendar-picker-indicator {
       display: none;
+    }
+
+    .native-datetime-input {
+      min-width: 0;
+      max-width: min(48cqi, 18em);
+      border: 0;
+      padding: 8px 0;
+      background: transparent;
+      outline: none;
+      color: var(--md-sys-color-primary);
+      accent-color: var(--md-sys-color-primary);
+      color-scheme: light dark;
+      cursor: pointer;
+      font: 700 16px/20px var(--materia-font-display, inherit);
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .native-datetime-input::-webkit-calendar-picker-indicator {
+      opacity: 0.72;
+      cursor: pointer;
     }
 
     /* Non-normative affordance: a window whose stop <= start crosses midnight

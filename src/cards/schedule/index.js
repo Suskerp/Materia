@@ -3,7 +3,6 @@ import { keyed } from "lit/directives/keyed.js";
 import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
-import "../../primitives/calendar.js";
 import "../../elements/button-group/index.js";
 import "./editor.js";
 
@@ -49,7 +48,6 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     _mode: { state: true },
     _pick: { state: true },
     _event: { state: true },
-    _customOpen: { state: true },
     _viewY: { state: true },
     _viewM: { state: true },
     _date: { state: true },
@@ -244,7 +242,6 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     // Reflected as an attribute so the stylesheet can flatten the surface —
     // a config value alone is invisible to CSS.
     this.toggleAttribute("sheet", this._isSheet);
-    this._syncFoldHeight();
   }
 
   constructor() {
@@ -255,7 +252,6 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     this._mode = "clock";
     this._pick = null; // resolved lazily to the first preset
     this._event = null;
-    this._customOpen = false;
     this._viewY = now.getFullYear();
     this._viewM = now.getMonth();
     this._date = now.getDate();
@@ -456,6 +452,29 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     return `${this._pad(d.getHours())}:${this._pad(d.getMinutes())}`;
   }
 
+  _localDateTimeValue(date) {
+    return `${date.getFullYear()}-${this._pad(date.getMonth() + 1)}-${this._pad(date.getDate())}T${this._hhmm(date)}`;
+  }
+
+  get _nativeDateTimeValue() {
+    if (this._pick === "custom") {
+      return this._localDateTimeValue(new Date(this._viewY, this._viewM, this._date, this._hour, this._minute));
+    }
+    return this._localDateTimeValue(this._quick.find((x) => x.key === this._pickKey)?.when ?? new Date(Date.now() + 3600000));
+  }
+
+  _setNativeDateTime(event) {
+    const raw = String(event.currentTarget.value || "");
+    const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(raw);
+    if (!match) return;
+    this._viewY = Number(match[1]);
+    this._viewM = Number(match[2]) - 1;
+    this._date = Number(match[3]);
+    this._hour = Number(match[4]);
+    this._minute = Number(match[5]);
+    this._pick = "custom";
+  }
+
   /** Short weekday + time, for a moment that is not today. */
   _dayTime(d) {
     const wd = new Intl.DateTimeFormat(this._lang, { weekday: "short" }).format(d);
@@ -626,15 +645,6 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     };
   }
 
-  get _minuteConfig() {
-    const mins = this.config.minutes ?? [0, 15, 30, 45];
-    return {
-      size: "s", // 40px
-      preset: "primary",
-      options: mins.map((m) => ({ label: this._pad(m), value: String(m) })),
-    };
-  }
-
   get _weekdayConfig() {
     return {
       size: "s",
@@ -721,37 +731,6 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, this._fill(v, ctx)]));
     }
     return value;
-  }
-
-  /** The fold animates from a MEASURED height: CSS cannot interpolate to auto,
-   *  and a hardcoded max-height would either clip a 6-row month or leave a gap
-   *  under a 5-row one. */
-  _syncFoldHeight() {
-    const body = this.shadowRoot?.querySelector(".custom-body");
-    if (body) {
-      const inner = this.shadowRoot.querySelector(".custom-inner");
-      body.style.height = this._customOpen && inner ? `${inner.scrollHeight}px` : "0px";
-    }
-  }
-
-  /** Opening the calendar should CONTINUE from the moment already on screen,
-   *  not jump to an arbitrary 09:00. Anything else throws away the choice the
-   *  user just made one row above. */
-  _seedCustom() {
-    const when = this._quick.find((x) => x.key === this._pickKey)?.when
-      ?? new Date(Date.now() + 3600000);
-    this._viewY = when.getFullYear();
-    this._viewM = when.getMonth();
-    this._date = when.getDate();
-
-    // Snap UP to the next offered minute, never down: rounding backwards can
-    // land the default in the past, which is the one thing the preset roll rules
-    // exist to prevent.
-    const mins = [...(this.config.minutes ?? [0, 15, 30, 45])].sort((a, b) => a - b);
-    const m = when.getMinutes();
-    const next = mins.find((x) => x >= m);
-    this._minute = next ?? mins[0];
-    this._hour = next == null ? (when.getHours() + 1) % 24 : when.getHours();
   }
 
   /** Close: collapse when inline, dismiss the host modal when in sheet mode.
@@ -1027,13 +1006,13 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   }
 
   _renderManagerFields() {
-    const targetOptions = this._managerTargets.map((item) => ({ value: item.entity, label: this._targetName(item.entity) }));
+    const targetEntities = this._managerTargets.map((item) => item.entity);
     const actionOptions = this._commonTargetActions().map((item) => ({ value: item.service, label: item.label || this._actionName(item.service) }));
     return html`<div class="manager-fields">
       <label><span>${t("sched_devices", this.hass)}</span>
         <ha-selector
           .hass=${this.hass}
-          .selector=${{ select: { mode: "dropdown", multiple: true, options: targetOptions } }}
+          .selector=${{ entity: { multiple: true, include_entities: targetEntities } }}
           .value=${this._selectedTargets}
           @value-changed=${(event) => this._selectTargets(event.detail.value)}
         ></ha-selector>
@@ -1288,7 +1267,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
   _renderClock() {
     return html`
-      <div class="chips-wrap ${this._customOpen ? "folded" : ""}" ?inert=${this._customOpen}>
+      <div class="chips-wrap">
       <div class="chips">
         ${this._quick.map(
           (q, i) => html`<button
@@ -1296,7 +1275,6 @@ class MateriaSchedule extends ActionMixin(LitElement) {
             style="flex-grow:${q.grow}"
             @click=${() => {
               this._pick = q.key;
-              this._customOpen = false;
             }}
           >
             <span class="n">${q.name}</span><span class="t">${q.at}</span>
@@ -1305,69 +1283,20 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       </div>
       </div>
 
-      <div class="custom ${this._customOpen ? "open" : ""}">
-        <button
-          class="custom-head"
-          @click=${() => {
-            this._customOpen = !this._customOpen;
-            if (this._customOpen) {
-              this._seedCustom();
-              this._pick = "custom";
-            }
-          }}
-        >
+      <div class="custom native-datetime">
+        <div class="custom-head" @click=${this._showNativeTimePicker}>
           <ha-icon icon="m3o:event"></ha-icon>
           <span class="lbl">${t("sched_pick_date_time", this.hass)}</span>
-          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </button>
-        <div class="custom-body">
-          <div class="custom-inner">
-            <materia-calendar
-              .year=${this._viewY}
-              .month=${this._viewM}
-              .selected=${this._date}
-              no-past
-              .locale=${this._lang ?? ""}
-              @month-changed=${(e) => {
-                this._viewY = e.detail.year;
-                this._viewM = e.detail.month;
-              }}
-              @date-selected=${(e) => {
-                this._date = e.detail.day;
-                this._pick = "custom";
-              }}
-            ></materia-calendar>
-
-            <div class="sep"></div>
-
-            <div class="timerow">
-              <span class="clock">${this._pad(this._hour)}:${this._pad(this._minute)}</span>
-              <span class="spacer"></span>
-              <materia-button-group
-                class="mins"
-                .hass=${this.hass}
-                .value=${String(this._minute)}
-                .config=${this._minuteConfig}
-                @option-selected=${(e) => {
-                  this._minute = Number(e.detail.value);
-                  this._pick = "custom";
-                }}
-              ></materia-button-group>
-            </div>
-
-            <div class="hours">
-              ${Array.from({ length: 24 }, (_, h) => html`<button
-                class="hour ${this._hour === h ? "on" : ""}"
-                @click=${() => {
-                  this._hour = h;
-                  this._pick = "custom";
-                }}
-              >${this._pad(h)}</button>`)}
-            </div>
-          </div>
+          <input
+            class="native-datetime-input"
+            type="datetime-local"
+            required
+            step="60"
+            aria-label=${t("sched_pick_date_time", this.hass)}
+            min=${this._localDateTimeValue(new Date())}
+            .value=${this._nativeDateTimeValue}
+            @input=${this._setNativeDateTime}
+          />
         </div>
       </div>
     `;
@@ -1378,7 +1307,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  picker: wheel on iOS, native dialog on Android, browser picker on desktop.
    *  There is no expanding imitation of a picker to maintain or scroll past. */
   _showNativeTimePicker(event) {
-    const input = event.currentTarget.querySelector("input[type='time']");
+    const input = event.currentTarget.querySelector("input[type='time'], input[type='datetime-local']");
     if (!input || event.composedPath().includes(input)) return;
     input.focus();
     try {
@@ -1402,10 +1331,6 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       `;
     }
 
-    const chev = html`<svg class="chev" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>`;
-
     return html`
       <div class="window">
         <div class="win-edge native-time">
@@ -1414,6 +1339,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
             <input
               class="native-time-input"
               type="time"
+              required
               step="60"
               aria-label=${t("sched_window_start", this.hass)}
               .value=${`${this._pad(this._hour)}:${this._pad(this._minute)}`}
@@ -1426,7 +1352,6 @@ class MateriaSchedule extends ActionMixin(LitElement) {
                 }
               }}
             />
-            ${chev}
           </div>
         </div>
 
@@ -1439,6 +1364,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
             <input
               class="native-time-input"
               type="time"
+              required
               step="60"
               aria-label=${t("sched_window_stop", this.hass)}
               .value=${`${this._pad(this._stopHour)}:${this._pad(this._stopMinute)}`}
@@ -1451,7 +1377,6 @@ class MateriaSchedule extends ActionMixin(LitElement) {
                 }
               }}
             />
-            ${chev}
           </div>
         </div>
 

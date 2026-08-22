@@ -702,6 +702,25 @@ export const styles = [
       min-width: 0;
     }
 
+    /* The history delta belongs to the heading, as in the 19b hero: title on
+       the left, comparison window on the right. Keeping it out of the numeral
+       row also means a short value and a long localized delta never fight for
+       the same baseline. */
+    .spark-head {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .spark-head .header {
+      min-width: 0;
+    }
+
     .spark {
       display: block;
       width: 100%;

@@ -133,6 +133,23 @@ export const styles = [
         color var(--md-sys-motion-fast-effects);
     }
 
+    /* A newly selected toggle gets the same compact expressive settle as the
+       standalone buttons: compress, overshoot, rest. Shape and colour still
+       carry the state; the bounce only acknowledges the user's choice. */
+    .group.multi button.active {
+      animation: ms-group-select var(--md-sys-motion-expressive-default-spatial);
+    }
+
+    @keyframes ms-group-select {
+      0% { transform: scale(0.94); }
+      62% { transform: scale(1.035); }
+      100% { transform: scale(1); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .group.multi button.active { animation: none; }
+    }
+
     /* M3 Expressive connected group: the SELECTED button grows while its
        neighbors compress — the shape+size morph, not just a color swap. */
     .group:not(.multi) button.active {

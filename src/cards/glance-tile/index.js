@@ -982,7 +982,15 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
   get _histHours() {
     if (this._variant === "weekbars" || this._variant === "events") {
       const days = this._num(this.config.days) ?? SPARK_DEFAULT_DAYS;
-      return Math.max(1, Math.min(90, Math.round(days))) * 24;
+      let wanted = Math.max(1, Math.min(90, Math.round(days)));
+      // A compact row may show only the last seven days while its caption
+      // answers a wider question such as "distance this month". Fetch through
+      // the start of the current month, plus one preceding day so a cumulative
+      // counter has a truthful boundary value to subtract from.
+      if (this.config.summary_period === "current_month") {
+        wanted = Math.max(wanted, new Date().getDate() + 1);
+      }
+      return wanted * 24;
     }
     return Math.max(1, Math.min(2160, Math.round(this._num(this.config.hours) ?? SPARK_DEFAULT_HOURS)));
   }
@@ -1157,8 +1165,11 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
         <!-- The bled chart goes FIRST so the text paints over it in DOM order,
              rather than needing a z-index to undo a later sibling. -->
         ${opts.area ? chart : nothing}
-        ${this._header("m3o:show-chart")}
-        ${this._valueRow({ display, unit: this._unit }, opts.area ? this._deltaPill(series) : nothing)}
+        <div class="spark-head">
+          ${this._header("m3o:show-chart")}
+          ${opts.area ? this._deltaPill(series) : nothing}
+        </div>
+        ${this._valueRow({ display, unit: this._unit })}
         ${!opts.area ? chart : nothing}
         ${caption ? html`<div class="gauge-caption">${caption}</div>` : nothing}
       </div>
@@ -1209,9 +1220,22 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
 
     const capVars = {
       hours: String(this._histHours),
-      days: String(Math.round(this._histHours / 24)),
+      // `days` describes the bars, not the potentially wider summary fetch.
+      days: String(Math.round(days)),
       buckets: String(buckets.length),
     };
+    if (this.config.summary_period === "current_month") {
+      const start = new Date();
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+      const before = [...series].reverse().find((p) => p.v != null && p.t < start.getTime());
+      const during = series.filter((p) => p.v != null && p.t >= start.getTime());
+      const summary = delta(before ? [before, ...during] : during);
+      capVars.summary_delta = summary ? this._fmtNum(Math.abs(summary.abs)) : "";
+      capVars.summary_delta_signed = summary ? this._fmtSigned(summary.abs) : "";
+      capVars.summary_delta_pct = summary?.pct == null ? "" : `${this._fmtSigned(summary.pct)}%`;
+      capVars.summary_period = "current_month";
+    }
     const caption = this.config.caption
       ? this._interpolate(
           this._isTemplate(this.config.caption) ? this._resolvedCaption ?? "" : this.config.caption,
