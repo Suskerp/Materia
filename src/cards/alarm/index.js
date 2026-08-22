@@ -3,6 +3,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin } from "../../utils/conditions.js";
 import { t } from "../../utils/i18n.js";
 import { OptimismBus } from "../../utils/optimism-bus.js";
+import { MOTION } from "../../utils/motion.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -42,6 +43,12 @@ const ON_STATES = new Set([
    the same call materia-drag-confirm already documents); 48 is the stadium
    end, 16 the connected inner seam from button-group SIZES.l, 28 the
    .size-l square-shape corner the active button morphs to. */
+/** How long the pose turn takes, read from the motion table rather than
+ *  retyped, so this guard can never drift from the CSS that owns the
+ *  transition. The receipt below refuses to fire while the pose is still
+ *  travelling. */
+const POSE_MS = MOTION["expressive-default-spatial"].ms;
+
 const OUTER_R = 48;
 const INNER_R = 16;
 const ACTIVE_R = 28;
@@ -111,6 +118,11 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     /** Whether the unavailable-zone list is expanded. Always starts closed:
      *  it is a footnote about the install, not something to read every time. */
     _unavailOpen: { state: true },
+    /** One-shot ARRIVAL turn: the panel has finished doing the thing we were
+     *  already claiming it had done. See _punctuate. */
+    _turn: { state: true },
+    /** One-shot REFUSAL shake: an optimistic pin expired unanswered. */
+    _shake: { state: true },
   };
 
   static styles = styles;
@@ -160,6 +172,11 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     this._refused = null;
     this._zonesOpen = undefined;
     this._unavailOpen = false;
+    this._turn = false;
+    this._shake = false;
+    /* +1 turns the way arming turns, -1 retraces it. Not reactive: it is only
+       ever read in the same render the class flip triggers. */
+    this._turnDir = 1;
   }
 
   connectedCallback() {
@@ -177,6 +194,8 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     clearTimeout(this._pinTimer);
     clearTimeout(this._hintTimer);
     clearTimeout(this._refuseTimer);
+    clearTimeout(this._turnTimer);
+    clearTimeout(this._shakeTimer);
     this._cleanupGesture();
   }
 
@@ -230,6 +249,17 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     return ARMED_STATES.has(s) || TRANSITIONAL.has(s) || s === "triggered";
   }
 
+  /** The shape's POSE: turned or not. Named separately from _armedish because
+   *  the arrival receipt has to ask whether the pose is changing in this very
+   *  frame, and comparing booleans is the whole test. */
+  get _pose() {
+    return this._armedish;
+  }
+
+  get _reduceMotion() {
+    return !!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  }
+
   get _features() {
     return Number(this._stateObj?.attributes?.supported_features ?? 0);
   }
@@ -269,21 +299,124 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     const s = this._state;
     const direct = modes.find((m) => m.state === s);
     if (direct) return direct;
-    if (s === "triggered" || s === "pending") {
+    // arming is in this list DELIBERATELY, and it was a real gap: forcing the
+    // state directly (the test rig's input_select, or a page load part-way
+    // through an exit delay) left no button carrying the disarm gesture at
+    // all, so an arming nobody could abort. Our OWN arm never had the problem
+    // — the optimistic pin names the target, so that button is already active
+    // — which is exactly why it went unnoticed. The cost is that during an
+    // externally started arming one button shows a mode identity taken from
+    // the last armed state, which may be stale; being unable to abort is
+    // plainly the worse of the two, and the hero still says "Arming" rather
+    // than naming a mode.
+    if (s === "triggered" || s === "pending" || s === "arming") {
       return modes.find((m) => m.state === this._lastArmed) || modes[0] || null;
     }
     return null;
   }
 
   updated(changed) {
+    /* THE POSE CLOCK. Tracked on EVERY update and not only on hass ticks,
+       because a commit turns the shape by setting the pin with no entity
+       change at all — and read from a remembered field rather than by
+       comparing before and after inside this method, which cannot work:
+       updated() runs after the property is applied, so this._pose here is
+       already the new value. materia-lock keeps _lastPose for exactly this
+       reason. */
+    const prevPose = this._lastPose;
+    this._lastPose = this._pose;
+    if (prevPose !== this._lastPose) this._poseAt = performance.now();
+
     if (!changed.has("hass")) return;
     const raw = this._rawState;
     if (ARMED_STATES.has(raw)) this._lastArmed = raw;
-    if (!this._pending) return;
-    // Reality has agreed with the pin, or has settled somewhere else entirely.
-    // Transitional reads never release it — they are the reason it exists.
-    if (raw === this._pending) this._clearPin();
-    else if (!TRANSITIONAL.has(raw) && raw !== this._pinFrom) this._clearPin();
+
+    if (this._pending) {
+      // Reality has agreed with the pin, or has settled somewhere else
+      // entirely. Transitional reads never release it — they are the reason
+      // it exists.
+      if (raw === this._pending) this._clearPin();
+      else if (!TRANSITIONAL.has(raw) && raw !== this._pinFrom) this._clearPin();
+    }
+
+    this._punctuate(raw);
+  }
+
+  /* ---- the one-shot marks ----------------------------------------------
+     THE COMMIT IS NOT THE THING TO PUNCTUATE. The sweep completing across the
+     button is already an unmistakable "yes, that registered", and in the same
+     frame the shape morphs its corner, turns its pose and floods its colour.
+     A spin on top of all that is a second confirmation of one event.
+
+     What had NO mark at all was the panel ANSWERING. An arm sits busy for a
+     thirty-second exit delay and then the breathe simply... stops, which is
+     the least legible way to say "it is done". So the receipt goes there: one
+     turn of the shape when a settled state arrives that the card was already
+     optimistically claiming. That is materia-lock's own reasoning for rolling
+     its spin out to an aligned pose — "a settle that visibly finds its pose
+     reads as the mechanism seating, not as lag" — as a discrete mark, since
+     this hero has no continuous spin to decelerate.
+
+     And the genuine FAULT here is not `triggered` (which already floods the
+     card and pulses, and stacking a third thing on it would be noise). It is
+     a pin that expires unanswered: the card quietly stops claiming the state
+     it promised, which is precisely the "silently reverting optimistic state
+     looks like the card is broken" failure _callService already worries about.
+     That gets the lock's jam shake, because it is the same event — the
+     mechanism tried and did not move. */
+
+  /** Decide whether an entity update deserves a one-shot mark. */
+  _punctuate(raw) {
+    const settled = raw !== "" && !TRANSITIONAL.has(raw) && raw !== "unavailable" && raw !== "unknown";
+    const prev = this._lastSettled;
+    if (settled) this._lastSettled = raw;
+    if (!settled || prev === undefined || prev === raw) return; // mount, or no arrival
+
+    /* THE SEAM, and the guard is TIME rather than "did the pose change in this
+       same update". Two rotations of one shape landing together read as a
+       single sudden speed-up instead of as two events — the problem
+       materia-lock documents at length in _compensatePoseTurn — and a
+       frame-equality test only catches the case where they land in literally
+       the same tick. It misses the one that actually bites: a panel that
+       answers a disarm in 150ms, where the pose turn is still mid-flight when
+       the receipt would start. So the receipt waits out the pose transition,
+       measured against the very token that drives it.
+
+       What survives the guard is exactly the case worth marking: the panel
+       finishing something the card has been claiming for a while — the end of
+       a thirty-second exit delay, or a siren that has finally stopped. */
+    if (performance.now() - (this._poseAt ?? -Infinity) < POSE_MS) return;
+
+    this._playTurn(raw === "disarmed" ? -1 : 1);
+  }
+
+  /** One full turn of the SHAPE — never the glyph, which counter-rotates.
+   *  Re-toggling a class inside one frame is a no-op in the DOM, so a
+   *  re-trigger drops it for a frame first; that restart trick is lifted
+   *  straight from materia-lock's _spinOpenShape. */
+  _playTurn(dir) {
+    if (this._reduceMotion) return;
+    clearTimeout(this._turnTimer);
+    this._turnDir = dir;
+    this._turn = false;
+    requestAnimationFrame(() => {
+      this._turn = true;
+      this._turnTimer = setTimeout(() => {
+        this._turn = false;
+      }, 650);
+    });
+  }
+
+  _playShake() {
+    if (this._reduceMotion) return;
+    clearTimeout(this._shakeTimer);
+    this._shake = false;
+    requestAnimationFrame(() => {
+      this._shake = true;
+      this._shakeTimer = setTimeout(() => {
+        this._shake = false;
+      }, 500);
+    });
   }
 
   _clearPin() {
@@ -707,9 +840,14 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     this._pending = target;
     clearTimeout(this._pinTimer);
     // Stop claiming success if the panel never answers. Without this the card
-    // would lie indefinitely about an offline alarm.
+    // would lie indefinitely about an offline alarm — and the revert is
+    // ANNOUNCED rather than silent, because a state that quietly slides back
+    // is indistinguishable from a card that is broken.
     this._pinTimer = setTimeout(() => {
+      if (!this._pending) return;
       this._pending = null;
+      this._fireHaptic("warning");
+      this._playShake();
     }, Number(this.config.pending_timeout_ms ?? 10000));
 
     // Tell sibling cards on this entity BEFORE the round-trip, so a hero above
@@ -841,6 +979,15 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     if (this._busy && this._disarming) return t("al_hint_disarming", this.hass);
     if (this._isInert(mode)) return t("al_hint_disarm_first", this.hass);
     if (this._activeMode?.key === mode.key) {
+      /* ENTRY DELAY IS NOT "BUSY", and treating it as such was a real bug the
+         test rig surfaced: forcing pending made the active button read
+         "Arming..." — narrating the panel — at the one moment the line on the
+         button you must actually press needs to say what to DO. pending is a
+         countdown running against you, not a command of yours in flight.
+         arming keeps its informational word, because that IS a state you asked
+         for and the hero and footnote already say the same thing; the
+         aria-label says "hold to disarm" in both cases regardless. */
+      if (this._rawState === "pending") return t("al_hint_hold_to_disarm", this.hass);
       if (!this._busy) return t("al_hint_hold_to_disarm", this.hass);
       return t(this._disarming ? "al_hint_disarming" : "al_hint_arming", this.hass);
     }
@@ -974,8 +1121,8 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
             : html`
                 <div class="hero">
                   <div
-                    class="shape ${armedish ? "armed" : ""} ${this._busy ? "busy" : ""}"
-                    style="--ma-hero-bg:${heroBg};--ma-hero-fg:${heroFg};${heroTappable ? "" : "cursor:default;"}"
+                    class="shape ${armedish ? "armed" : ""} ${this._busy ? "busy" : ""} ${this._turn ? "turn" : ""} ${this._shake ? "shake" : ""}"
+                    style="--ma-hero-bg:${heroBg};--ma-hero-fg:${heroFg};--ma-turn-dir:${this._turnDir};${heroTappable ? "" : "cursor:default;"}"
                     role=${heroTappable ? "button" : "img"}
                     tabindex=${heroTappable ? 0 : -1}
                     aria-label=${this._title()}

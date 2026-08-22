@@ -136,27 +136,82 @@ export const styles = [
       border-radius: 50%;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
+      /* THE TURN IS THE OTHER HALF OF THE MORPH, and it was missing.
+         materia-lock's finding, in its own words: a circle rotating is
+         invisible, a cornered shape rotating is unmistakable, so the corner
+         change and the rotation reveal each other. This hero morphed its
+         corner and never turned, which left the morph under-read at exactly
+         the moment it matters most. 45deg is not a magic number: it is HALF
+         this silhouette's rotational-symmetry period (a rounded square is
+         4-fold, so the period is 90), which is the largest turn that still
+         reads as movement before the shape maps back onto itself. Identical
+         derivation and identical value to lock's SHAPE_STYLES.squircle.rot.
+
+         Arming turns one way and disarming retraces the same arc backwards,
+         so the shape ends every commit resting where the next one starts —
+         the same mirroring lock gives its gesture.
+
+         On the expressive spring, deliberately. The sweep on the mode buttons
+         does NOT use it, because that fill travels to a hard stop inside a
+         clipping box where a 15% overshoot has nowhere to go; this shape is
+         free-standing with room to bounce, which is what the spring is for. */
+      transform: rotate(0deg);
       transition: border-radius var(--md-sys-motion-expressive-default-spatial),
+        transform var(--md-sys-motion-expressive-default-spatial),
         background-color var(--md-sys-motion-default-effects),
         color var(--md-sys-motion-default-effects);
     }
 
     .shape.armed {
       border-radius: 30%;
+      transform: rotate(var(--ma-rot, 45deg));
     }
 
     .shape ha-icon {
       /* The .size-l 32px icon scaled to this shape: 72px on a 168px shape is
          the same glyph-to-box ratio materia-lock uses (96 on 236). */
       --mdc-icon-size: clamp(48px, 16cqi, 72px);
+      /* THE GLYPH NEVER TURNS. This is a CSS box, not a vector silhouette with
+         the icon as a sibling, so the icon lives inside the box that rotates
+         and needs an equal and opposite turn to stay upright — exactly the
+         distinction lock draws between its vector and squircle shapes. */
+      transform: rotate(0deg);
+      transition: transform var(--md-sys-motion-expressive-default-spatial);
     }
+
+    .shape.armed ha-icon {
+      transform: rotate(calc(-1 * var(--ma-rot, 45deg)));
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .shape,
+      .shape ha-icon {
+        transition: background-color var(--md-sys-motion-default-effects),
+          color var(--md-sys-motion-default-effects);
+      }
+    }
+
+    /* THREE ANIMATIONS, ONE PROPERTY. The animation shorthand is a single
+       property, so two rules setting it on .shape would silently cancel one
+       another. Rather than lean on specificity, the precedence is written out:
+       the fault mark outranks the receipt, which outranks the steady breathe.
+       In time they barely overlap anyway — the receipt fires as busy ENDS —
+       but the arbitration is explicit so it cannot rot.
+
+       Each one also drives a DIFFERENT geometric channel, which is what lets
+       them compose instead of fight: the pose owns transform, the receipt owns
+       the standalone rotate property, the shake owns translate, and the
+       breathe owns scale. That is why the shake below does not reuse lock's
+       ml-jam-shake keyframes verbatim — those animate transform with a rotate
+       and a translateX together, which on this shape would clobber the pose
+       turn mid-shake. Same gesture, different channel. */
 
     /* BUSY, not disabled. arming and pending are the machine working, and the
        progress guidance says an indeterminate wait must show live activity, so
        the shape breathes at full strength rather than dimming. Same 1.035
        amplitude and 2s beat materia-lock and materia-vacuum-hero already use
        for "the machine is doing something". */
-    .shape.busy {
+    .shape.busy:not(.turn):not(.shake) {
       animation: ma-breathe 2s ease-in-out infinite alternate;
     }
 
@@ -166,8 +221,73 @@ export const styles = [
       }
     }
 
+    /* THE ARRIVAL RECEIPT. One turn of the SHAPE, never the glyph, when the
+       panel finishes what the card was already optimistically claiming. Same
+       duration and easing curve as lock's own tap receipt (ml-open-spin), and
+       the same standalone-rotate trick so it composes with the pose rather
+       than replacing it. Signed, so finishing a disarm unwinds and finishing
+       an arm winds on. */
+    .shape.turn:not(.shake) {
+      animation: ma-turn 0.65s cubic-bezier(0.3, 0.1, 0.2, 1);
+    }
+
+    .shape.turn:not(.shake) ha-icon {
+      animation: ma-turn-counter 0.65s cubic-bezier(0.3, 0.1, 0.2, 1);
+    }
+
+    @keyframes ma-turn {
+      from {
+        rotate: 0deg;
+      }
+      to {
+        rotate: calc(var(--ma-turn-dir, 1) * 360deg);
+      }
+    }
+
+    @keyframes ma-turn-counter {
+      from {
+        rotate: 0deg;
+      }
+      to {
+        rotate: calc(var(--ma-turn-dir, 1) * -360deg);
+      }
+    }
+
+    /* THE REFUSAL. A pin expired unanswered: the card asked, promised, and has
+       just had to take the promise back. Lock's reading of its jam shake
+       applies unchanged — "the mechanism tried and failed" — and it runs once,
+       because a fault that lingers on screen for minutes does not need to keep
+       shaking at you. Deliberately NOT used for the triggered state, which already
+       floods the card and pulses a siren wash; a third mark there would be
+       noise on the one state that is already impossible to miss. */
+    .shape.shake {
+      animation: ma-shape-shake 0.5s ease-in-out 1;
+    }
+
+    @keyframes ma-shape-shake {
+      0%,
+      100% {
+        translate: 0;
+      }
+      20% {
+        translate: -6px;
+      }
+      40% {
+        translate: 5px;
+      }
+      60% {
+        translate: -3px;
+      }
+      80% {
+        translate: 2px;
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
-      .shape.busy {
+      .shape.busy:not(.turn):not(.shake),
+      .shape.turn:not(.shake),
+      .shape.turn:not(.shake) ha-icon,
+      .shape.shake {
         animation: none;
       }
     }
