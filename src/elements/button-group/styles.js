@@ -97,6 +97,13 @@ export const styles = [
       opacity: 0.12;
     }
 
+    /* M3 toggle buttons share one pressed shape regardless of whether their
+       resting shape is round or square. The release then visibly morphs to the
+       newly selected resting shape through the spatial spring above. */
+    .group.multi button:active {
+      border-radius: var(--pressed-radius) !important;
+    }
+
     /* Unselected toggle pair per FilledButtonTokens: SurfaceContainer /
        OnSurfaceVariant. This half of the pair had drifted to HA theme vars
        while the selected half was already correct. */

@@ -210,67 +210,54 @@ export const styles = [
       color: var(--md-sys-color-on-surface-variant, currentColor);
     }
 
-    .target-selection {
+    .target-field {
       min-height: 56px;
+      width: 100%;
       box-sizing: border-box;
       display: flex;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 8px;
+      gap: 12px;
+      padding: 0 16px;
       border-radius: 20px;
       background: var(--md-sys-color-surface-container-high, rgba(0, 0, 0, 0.08));
       border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 28%, transparent);
-    }
-
-    .target-chip,
-    .target-add {
-      min-width: 0;
-      height: 40px;
-      padding: 0 12px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border-radius: 20px;
+      color: var(--md-sys-color-on-surface);
       font-size: 14px;
-      font-weight: 600;
+      text-align: left;
+      transition: border-radius var(--md-sys-motion-expressive-fast-spatial),
+        background-color var(--md-sys-motion-fast-effects);
     }
 
-    .target-chip {
-      flex: 1 1 150px;
-      background: var(--md-sys-color-secondary-container);
-      color: var(--md-sys-color-on-secondary-container);
+    .target-field.open {
+      border-radius: 20px 20px 8px 8px;
     }
 
-    .target-chip span {
+    .target-field span {
+      flex: 1;
+      min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    .target-chip ha-icon,
-    .target-add ha-icon,
+    .target-field ha-icon,
     .target-options ha-icon {
       --mdc-icon-size: 20px;
       flex: 0 0 auto;
     }
 
-    .target-chip .remove {
-      opacity: 0.7;
+    .target-field .expand {
+      transition: transform var(--md-sys-motion-expressive-fast-spatial);
     }
 
-    .target-add {
-      flex: 0 0 auto;
-      background: transparent;
-      color: var(--md-sys-color-primary);
-    }
+    .target-field.open .expand { transform: rotate(180deg); }
 
     .target-options {
       padding: 6px;
       display: flex;
       flex-direction: column;
       gap: 4px;
-      border-radius: 20px;
+      border-radius: 8px 8px 20px 20px;
       background: var(--md-sys-color-surface-container-highest, rgba(0, 0, 0, 0.12));
       box-shadow: var(--md-sys-elevation-level2, 0 2px 6px rgba(0, 0, 0, 0.18));
     }
@@ -297,6 +284,14 @@ export const styles = [
     .target-options button.selected {
       background: var(--md-sys-color-secondary-container);
       color: var(--md-sys-color-on-secondary-container);
+    }
+
+    .target-check {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 24px;
     }
 
     .manager-fields ha-selector {

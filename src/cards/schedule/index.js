@@ -1008,38 +1008,38 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
   _renderManagerFields() {
     const actionOptions = this._commonTargetActions().map((item) => ({ value: item.service, label: item.label || this._actionName(item.service) }));
+    const selectedTargets = this._selectedTargets;
+    const targetSummary = selectedTargets.length
+      ? this._targetSelectionName(selectedTargets)
+      : t("sched_choose_device", this.hass);
     return html`<div class="manager-fields">
       <div class="manager-field"><span>${t("sched_devices", this.hass)}</span>
-        <div class="target-selection">
-          ${this._selectedTargets.map((entity) => html`
-            <button
-              class="target-chip"
-              aria-label=${`${t("sched_remove_device", this.hass)} ${this._targetName(entity)}`}
-              @click=${() => this._selectTargets(this._selectedTargets.filter((item) => item !== entity))}
-            >
-              <ha-icon icon=${this._targetConfig(entity)?.icon || "m3o:toggle-on"}></ha-icon>
-              <span>${this._targetName(entity)}</span>
-              <ha-icon class="remove" icon="m3o:close"></ha-icon>
-            </button>
-          `)}
-          <button class="target-add" @click=${() => { this._targetPickerOpen = !this._targetPickerOpen; }}>
-            <ha-icon icon=${this._targetPickerOpen ? "m3o:expand-less" : "m3o:add"}></ha-icon>
-            <span>${t("sched_add_device", this.hass)}</span>
-          </button>
-        </div>
-        ${this._targetPickerOpen ? html`<div class="target-options">
+        <button
+          class="target-field ${this._targetPickerOpen ? "open" : ""}"
+          aria-haspopup="listbox"
+          aria-expanded=${this._targetPickerOpen ? "true" : "false"}
+          @click=${() => { this._targetPickerOpen = !this._targetPickerOpen; }}
+        >
+          <ha-icon icon=${selectedTargets.length === 1
+            ? (this._targetConfig(selectedTargets[0])?.icon || "m3o:toggle-on")
+            : "m3o:devices"}></ha-icon>
+          <span>${targetSummary}</span>
+          <ha-icon class="expand" icon="m3o:expand-more"></ha-icon>
+        </button>
+        ${this._targetPickerOpen ? html`<div class="target-options" role="listbox" aria-multiselectable="true">
           ${this._managerTargets.map((item) => {
-            const selected = this._selectedTargets.includes(item.entity);
+            const selected = selectedTargets.includes(item.entity);
             return html`<button
               class=${selected ? "selected" : ""}
-              aria-pressed=${selected ? "true" : "false"}
+              role="option"
+              aria-selected=${selected ? "true" : "false"}
               @click=${() => this._selectTargets(selected
-                ? this._selectedTargets.filter((entity) => entity !== item.entity)
-                : [...this._selectedTargets, item.entity])}
+                ? selectedTargets.filter((entity) => entity !== item.entity)
+                : [...selectedTargets, item.entity])}
             >
               <ha-icon icon=${item.icon || "m3o:toggle-on"}></ha-icon>
               <span>${this._targetName(item.entity)}</span>
-              ${selected ? html`<ha-icon icon="m3o:check"></ha-icon>` : nothing}
+              <i class="target-check">${selected ? html`<ha-icon icon="m3o:check"></ha-icon>` : nothing}</i>
             </button>`;
           })}
         </div>` : nothing}

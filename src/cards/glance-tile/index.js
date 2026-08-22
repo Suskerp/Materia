@@ -3,7 +3,7 @@ import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { roundedPolygonPath } from "../../utils/shapes.js";
 import { isActiveState } from "../../utils/active-state.js";
-import { fetchNumericHistory, resample, segments, bucketDays, delta, withLiveSample } from "../../utils/history.js";
+import { fetchNumericHistory, resample, segments, bucketDays, delta, withLiveSample, lastDistinctChange } from "../../utils/history.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -1199,6 +1199,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
       value: numeric == null ? st?.state ?? "" : this._fmtNum(numeric),
       unit,
       state: st ? (this.hass.formatEntityState?.(st) ?? st.state) : "",
+      ...this._detailHistoryVars,
     };
     const rawLabel = metric?.label ?? st?.attributes?.friendly_name ?? "";
     const rawValue = metric?.value;
@@ -1211,6 +1212,20 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
       value = vars.state;
     }
     return { label, value };
+  }
+
+  get _detailHistoryVars() {
+    const changed = lastDistinctChange(this._histSeries);
+    if (changed == null) return { history_changed: "", history_date: "", history_time: "" };
+    const date = new Date(changed);
+    const locale = this.hass?.locale?.language || globalThis.navigator?.language || "en";
+    return {
+      history_changed: new Intl.DateTimeFormat(locale, {
+        day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+      }).format(date),
+      history_date: new Intl.DateTimeFormat(locale, { day: "2-digit", month: "2-digit" }).format(date),
+      history_time: new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit" }).format(date),
+    };
   }
 
   _configuredMetrics() {

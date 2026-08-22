@@ -224,7 +224,7 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
         },
         { name: "metric_1_entity", label: "Supporting metric 1", selector: { entity: {} } },
         { name: "metric_1_label", label: "Metric 1 label", template: true, selector: { text: {} } },
-        { name: "metric_1_value", label: "Metric 1 display override", helper: "Optional Jinja or text. Placeholders: {value} {unit} {state}.", template: true, selector: { text: {} } },
+        { name: "metric_1_value", label: "Metric 1 display override", helper: "Optional Jinja or text. Placeholders: {value} {unit} {state} {history_changed} {history_date} {history_time}. History timestamps ignore same-value restores after unavailable.", template: true, selector: { text: {} } },
         { name: "metric_2_entity", label: "Supporting metric 2", selector: { entity: {} } },
         { name: "metric_2_label", label: "Metric 2 label", template: true, selector: { text: {} } },
         { name: "metric_2_value", label: "Metric 2 display override", template: true, selector: { text: {} } },

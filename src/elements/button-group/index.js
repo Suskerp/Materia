@@ -221,28 +221,13 @@ export class MateriaButtonGroup extends DisabledMixin(ActionMixin(LitElement)) {
             // Must be visibly SQUARER than the inactive inner corners, or the
             // morph is invisible at large sizes.
             const squareActive = this.config.active_shape === "square";
-            const activeR = squareActive
-              ? Math.min(innerCorner, Math.max(6, Math.round(height * 0.18)))
-              : outerR;
+            const activeR = squareActive ? innerCorner : outerR;
             let radius;
             if (multiSelect) {
-              if (isActive) {
-                radius = `${activeR}px`;
-              } else {
-                const cols = columns || options.length;
-                const row = Math.floor(i / cols);
-                const col = i % cols;
-                const totalRows = Math.ceil(options.length / cols);
-                const isTopRow = row === 0;
-                const isBottomRow = row === totalRows - 1;
-                const isFirstCol = col === 0;
-                const isLastCol = col === cols - 1 || i === options.length - 1;
-                const tl = (isTopRow && isFirstCol) ? outerR : innerCorner;
-                const tr = (isTopRow && isLastCol) ? outerR : innerCorner;
-                const br = (isBottomRow && isLastCol) ? outerR : innerCorner;
-                const bl = (isBottomRow && isFirstCol) ? outerR : innerCorner;
-                radius = `${tl}px ${tr}px ${br}px ${bl}px`;
-              }
+              // A multi-select is a set of independent toggle buttons, not a
+              // segmented control with shared seams. M3 toggle buttons invert
+              // their resting shape on selection: round -> square here.
+              radius = `${isActive ? activeR : outerR}px`;
             } else {
               const ir = isActive ? `${activeR}px` : `${innerCorner}px`;
               const or = isActive && squareActive ? `${activeR}px` : `${outerR}px`;
@@ -262,7 +247,7 @@ export class MateriaButtonGroup extends DisabledMixin(ActionMixin(LitElement)) {
             return html`
               <button
                 class="${isActive ? "active" : "inactive"} ${variant}"
-                style="border-radius: ${radius};${isActive ? ` background: ${bg}; color: ${fg};` : ""}"
+                style="--rest-radius: ${radius}; --pressed-radius: ${innerCorner}px; border-radius: var(--rest-radius);${isActive ? ` background: ${bg}; color: ${fg};` : ""}"
                 @click=${() => this._handleOptionTap(opt)}
               >
                 ${opt.icon ? html`<ha-icon .icon=${opt.icon}></ha-icon>` : ""}

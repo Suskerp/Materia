@@ -232,6 +232,35 @@ export function withLiveSample(series, stateObj, now = Date.now()) {
 }
 
 /**
+ * When the current numeric value genuinely began.
+ *
+ * Integrations commonly restore the same value after an `unavailable` run.
+ * HA quite correctly records that restoration as a state change, but it is not
+ * a new measurement/event. Walk through gaps and equal-value restorations to
+ * the first occurrence after the previous different numeric value.
+ */
+export function lastDistinctChange(series) {
+  if (!series?.length) return null;
+  let current = null;
+  for (let i = series.length - 1; i >= 0; i--) {
+    if (series[i]?.v != null) {
+      current = series[i].v;
+      break;
+    }
+  }
+  if (current == null) return null;
+
+  let started = null;
+  for (let i = series.length - 1; i >= 0; i--) {
+    const point = series[i];
+    if (!point || point.v == null) continue;
+    if (point.v !== current) break;
+    started = point.t;
+  }
+  return started;
+}
+
+/**
  * The change across the whole series, for a delta readout: the first and last
  * values that are actually known, and their difference. Null when fewer than
  * two known values exist — a delta needs two points and guessing one is how
