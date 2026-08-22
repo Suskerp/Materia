@@ -214,7 +214,13 @@ export function withLiveSample(series, stateObj, now = Date.now()) {
   const v = Number(raw);
   if (!Number.isFinite(v)) return base;
 
-  const t = readTime({ lu: stateObj.last_changed ?? stateObj.last_updated }) ?? now;
+  // No usable timestamp means we cannot place this honestly, so we do not
+  // place it at all. Stamping it `now` would be worse than useless: resample
+  // reads bucket MIDPOINTS, so a sample at now falls past the last one and
+  // silently changes nothing while looking like it did something. Every real
+  // hass state object carries last_changed.
+  const t = readTime({ lu: stateObj.last_changed ?? stateObj.last_updated });
+  if (t == null) return base;
   const at = Math.min(t, now);
   const last = base[base.length - 1];
   // Already covered: the recorder's own last row is this value, at or after
