@@ -74,6 +74,14 @@ const STRINGS = {
   cp_section_default: { en: "Section {n}", nl: "Sectie {n}" },
 
   /* ---- materia-schedule ----------------------------------------------- */
+  sched_window_start: { en: "Start", nl: "Begin" },
+  sched_window_stop: { en: "Stop", nl: "Einde" },
+  sched_window_overnight: { en: "Overnight", nl: "Nacht" },
+  sched_window_daily: { en: "Daily", nl: "Dagelijks" },
+  sched_window_pick_days: { en: "Pick at least one day", nl: "Kies minstens één dag" },
+  sched_window_days: { en: "Repeat on", nl: "Herhaal op" },
+  sched_multi_slots_head: { en: "Multiple blocks", nl: "Meerdere blokken" },
+  sched_multi_slots_sub: { en: "Edit in Scheduler", nl: "Bewerk in Scheduler" },
   sched_at_a_time: { en: "At a time", nl: "Op een tijdstip" },
   sched_when_ellipsis: { en: "When…", nl: "Wanneer…" },
   sched_not_scheduled: { en: "Not scheduled", nl: "Niet ingepland" },

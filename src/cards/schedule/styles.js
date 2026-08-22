@@ -519,6 +519,138 @@ export const styles = [
       color: var(--md-sys-color-on-primary);
     }
 
+    /* ---- window (start-stop), for a recurring on/off range ---- */
+
+    .window {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Same shell as .custom — same rounded surface a fold unfolds inside of —
+       just once per edge (start, stop) instead of once for the whole picker. */
+    .win-edge {
+      border-radius: 28px;
+      background: var(--md-sys-color-surface-container-high, rgba(0, 0, 0, 0.06));
+      overflow: hidden;
+    }
+
+    .win-head {
+      width: 100%;
+      box-sizing: border-box;
+      height: 66px;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: none;
+      text-align: left;
+    }
+
+    .win-head .lbl {
+      flex: 1;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .win-head .val {
+      font-family: var(--materia-font-display, inherit);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      color: var(--md-sys-color-primary);
+    }
+
+    .win-head .chev {
+      width: 24px;
+      height: 24px;
+      flex: none;
+      transition: transform var(--md-sys-motion-expressive-default-spatial);
+    }
+
+    .win-edge.open .win-head .chev {
+      transform: rotate(180deg);
+    }
+
+    /* Height is animated from a MEASURED pixel value, same reasoning and same
+       mechanism as .custom-body — see _syncFoldHeight() in index.js, which
+       now walks every .win-edge rather than assuming there is only one fold. */
+    .win-body {
+      overflow: hidden;
+      height: 0;
+      transition: height var(--md-sys-motion-expressive-default-spatial);
+    }
+
+    .win-inner {
+      padding: 2px 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Non-normative affordance: a window whose stop <= start crosses midnight
+       and round-trips exactly as entered — this badge only exists so that
+       doesn't read as a mistake. Container pair, not an accent at partial
+       alpha, per the rest of the library's filled-surface rule. */
+    .overnight-badge {
+      flex: none;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 10px;
+      background: var(--md-sys-color-tertiary-container);
+      color: var(--md-sys-color-on-tertiary-container);
+    }
+
+    .win-days {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 4px 6px 0;
+    }
+
+    .win-days-label {
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0.66;
+    }
+
+    /* A second timeslot on schedule_entity is refused rather than silently
+       dropped on save — see _windowBlocked in index.js. Error container, the
+       one place in this card an outcome is actually a stop, not a choice. */
+    .window-blocked {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 18px;
+      border-radius: 24px;
+      background: var(--md-sys-color-error-container);
+      color: var(--md-sys-color-on-error-container);
+    }
+
+    .window-blocked ha-icon {
+      --mdc-icon-size: 24px;
+      flex: none;
+    }
+
+    .window-blocked .text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .window-blocked .n {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .window-blocked .s {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
     /* ---- repeat ---- */
 
     .repeat {

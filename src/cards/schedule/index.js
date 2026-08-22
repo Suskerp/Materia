@@ -32,10 +32,16 @@ import "./editor.js";
  * it is the one place that always shows the RESOLVED moment rather than the
  * shortcut's name.
  *
- * STATE IS MOCKED — entirely client-side, no entity, no service call. Nothing
- * here schedules anything, because nothing is wired to a device yet. Confirm arms
- * the strip, Clear removes it. Swapping the mock for a real backend means
- * implementing _commit and nothing else.
+ * STATE IS MOCKED — entirely client-side, no entity, no service call — UNLESS
+ * a preset/trigger/config action is wired, or `schedule_entity` is set (see
+ * below). With nothing wired, Confirm just arms the strip and Clear removes
+ * it; swapping the mock for a real backend means implementing _commit (or,
+ * for window mode, _commitWindow) and nothing else.
+ *
+ * WINDOW MODE (`schedule_entity` / `show_stop`) is the one place this card
+ * does read a real entity: a recurring start-stop range bound to a Scheduler
+ * `switch.schedule_*`, read on open and written back with scheduler.edit.
+ * Search this file for _isWindow.
  */
 class MateriaSchedule extends ActionMixin(LitElement) {
   static properties = {
@@ -54,6 +60,14 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     _minute: { state: true },
     _repeating: { state: true },
     _days: { state: true },
+    // Window mode (schedule_entity / show_stop): the start time reuses
+    // _hour/_minute above — a card is never both a classic single-moment
+    // picker and a window at once, so sharing them is not a collision.
+    _stopHour: { state: true },
+    _stopMinute: { state: true },
+    _startOpen: { state: true },
+    _stopOpen: { state: true },
+    _multipleSlots: { state: true },
     _resolvedPending: { state: true },
     _resolvedNextLabel: { state: true },
     _resolvedNextSub: { state: true },
@@ -111,6 +125,11 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       (this.config.schedules || []).forEach((sc, i) => {
         if (sc.label != null) this._resolveTemplateValue(`schedLabel${i}`, sc.label);
       });
+      // Mirror the live entity while the user isn't mid-edit. _dirty flips true
+      // the moment they touch a time or a weekday and only clears on commit or
+      // dismiss — open ("sheet" presentation never closes) is not a reliable
+      // "are they editing" signal, _dirty is.
+      if (this.config.schedule_entity && !this._dirty) this._seedFromEntity();
     }
     // Reflected as an attribute so the stylesheet can flatten the surface —
     // a config value alone is invisible to CSS.
@@ -135,6 +154,19 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     this._repeating = false;
     // Mon-Fri, matching the design's default. Index 0 is Monday.
     this._days = [true, true, true, true, true, false, false];
+    // Window mode. Stop defaults an hour after the start default (9 -> 10) so
+    // an unseeded window (no schedule_entity, or one with no timeslot yet)
+    // still opens on a sane, non-zero-length range.
+    this._stopHour = 10;
+    this._stopMinute = 0;
+    this._startOpen = false;
+    this._stopOpen = false;
+    this._multipleSlots = false;
+    // Plain fields, not reactive props: neither is ever read by render()
+    // directly, only by the seed/commit machinery.
+    this._entityActions = null; // actions read off schedule_entity, preserved on write
+    this._dirty = false; // true once the user edits the window; blocks re-seeding
+                          // from the live entity out from under an in-progress edit
   }
 
   /** Selected shortcut, or null. DELIBERATELY NOT defaulted to the first preset:
@@ -152,13 +184,101 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  as_timestamp('', 0) is 0 — which sails through the backend's "is this
    *  effectively now" check and STARTS THE VACUUM. */
   get _hasSelection() {
+    if (this._isWindow) return !this._windowBlocked && this._days.some(Boolean);
     return this._mode === "event" ? this._event != null : this._pick != null;
+  }
+
+  /* ---- window mode: a recurring start-stop range instead of one moment ----
+
+     Bound to a Scheduler `switch.schedule_*` (schedule_entity) or opted into
+     bare (show_stop) for a custom confirm_action. Only replaces the CLOCK
+     tab's content — the trigger tab is untouched, and unlike a one-off
+     moment a window is always recurring, so it carries its own weekday chips
+     rather than reusing the generic repeat switch. */
+
+  get _isWindow() {
+    return this._mode === "clock" && (this.config.show_stop === true || !!this.config.schedule_entity);
+  }
+
+  /** Scheduler's `timeslots` is a list; this card edits only the first entry.
+   *  Silently dropping the others when writing back would turn "add a second
+   *  block in Scheduler" into "lose it the next time this card saves" — so a
+   *  second timeslot visibly blocks editing here instead. */
+  get _windowBlocked() {
+    return this._isWindow && this._multipleSlots;
+  }
+
+  /** Stop <= start reads as crossing midnight (22:00 -> 06:00), exactly how
+   *  Scheduler's own UI treats a reversed timeslot. Materia does not adjust
+   *  or carry a date for this — both times round-trip as plain HH:MM, the
+   *  backend already knows what a reversed pair means. This is only used to
+   *  show the "overnight" hint so the reversed order doesn't read as a typo. */
+  get _windowOvernight() {
+    return this._stopHour * 60 + this._stopMinute <= this._hour * 60 + this._minute;
+  }
+
+  get _windowLabel() {
+    return `${this._pad(this._hour)}:${this._pad(this._minute)} → ${this._pad(this._stopHour)}:${this._pad(this._stopMinute)}`;
+  }
+
+  /** "Daily" / "Mon, Wed, Fri" / a prompt when nothing is picked yet — the
+   *  window's own weekday chips have no adjacent switch to lean on for
+   *  context, so the sub-line has to say more than the generic repeat one did. */
+  get _windowDaysSummary() {
+    if (this._days.every(Boolean)) return t("sched_window_daily", this.hass);
+    if (!this._days.some(Boolean)) return t("sched_window_pick_days", this.hass);
+    const fmt = new Intl.DateTimeFormat(this._lang, { weekday: "short" });
+    // 2024-01-01 was a Monday, matching _dayNames' own reference date.
+    return this._days
+      .map((on, i) => (on ? fmt.format(new Date(2024, 0, 1 + i)) : null))
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  get _windowSub() {
+    return this._windowOvernight
+      ? `${this._windowDaysSummary} · ${t("sched_window_overnight", this.hass)}`
+      : this._windowDaysSummary;
+  }
+
+  /** Mirrors schedule_entity's live attributes into the picker. Read shape is
+   *  a flat "15:00:00 - 20:30:00" string, NOT the {start,stop,actions} object
+   *  scheduler.edit writes — that asymmetry is Scheduler's, not ours, so it is
+   *  parsed here and re-assembled at commit time rather than carried as-is. */
+  _seedFromEntity() {
+    const id = this.config.schedule_entity;
+    if (!id) return;
+    const st = this.hass?.states[id];
+    if (!st) return;
+    const slots = st.attributes.timeslots || [];
+    this._multipleSlots = slots.length > 1;
+    this._entityActions = st.attributes.actions ?? null;
+
+    const raw = slots[0];
+    const m = raw && /^(\d{1,2}):(\d{2})(?::\d{2})?\s*-\s*(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(String(raw).trim());
+    if (m) {
+      this._hour = Number(m[1]);
+      this._minute = Number(m[2]);
+      this._stopHour = Number(m[3]);
+      this._stopMinute = Number(m[4]);
+    }
+
+    const wd = (st.attributes.weekdays || []).map((w) => String(w).toLowerCase());
+    if (wd.includes("daily")) {
+      this._days = [true, true, true, true, true, true, true];
+    } else if (wd.length) {
+      const order = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+      this._days = order.map((d) => wd.includes(d));
+    }
+    // An empty/missing weekdays attribute leaves _days untouched — nothing to
+    // seed from is not the same as "every day", and guessing either way is
+    // worse than keeping whatever was already on screen.
   }
 
   /** True once anything is wired, so the card stops advertising itself as a mock
    *  the moment it can actually do something. */
   get _isWired() {
-    return !!(this.config.confirm_action || this.config.trigger_action
+    return !!(this.config.confirm_action || this.config.trigger_action || this.config.schedule_entity
       || (this.config.presets ?? []).some((p) => p.tap_action)
       || (this.config.triggers ?? []).some((t) => t.tap_action));
   }
@@ -328,6 +448,11 @@ class MateriaSchedule extends ActionMixin(LitElement) {
         ? { head: e.name, sub: `${e.sub} · trigger` }
         : { head: t("sched_pick_trigger", this.hass), sub: t("sched_runs_whenever", this.hass) };
     }
+    if (this._isWindow) {
+      return this._windowBlocked
+        ? { head: t("sched_multi_slots_head", this.hass), sub: t("sched_multi_slots_sub", this.hass) }
+        : { head: this._windowLabel, sub: this._windowSub };
+    }
     if (this._pick === "custom") {
       const date = new Intl.DateTimeFormat(this._lang, { day: "numeric", month: "long" })
         .format(new Date(this._viewY, this._viewM, this._date));
@@ -473,9 +598,18 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  under a 5-row one. */
   _syncFoldHeight() {
     const body = this.shadowRoot?.querySelector(".custom-body");
-    if (!body) return;
-    const inner = this.shadowRoot.querySelector(".custom-inner");
-    body.style.height = this._customOpen && inner ? `${inner.scrollHeight}px` : "0px";
+    if (body) {
+      const inner = this.shadowRoot.querySelector(".custom-inner");
+      body.style.height = this._customOpen && inner ? `${inner.scrollHeight}px` : "0px";
+    }
+    // Same measured-height fold, once per window edge (start, stop) — a plain
+    // querySelector would only ever find the first of the two.
+    this.shadowRoot?.querySelectorAll(".win-edge").forEach((edge) => {
+      const b = edge.querySelector(".win-body");
+      const inner = edge.querySelector(".win-inner");
+      if (!b) return;
+      b.style.height = edge.classList.contains("open") && inner ? `${inner.scrollHeight}px` : "0px";
+    });
   }
 
   /** Opening the calendar should CONTINUE from the moment already on screen,
@@ -506,6 +640,9 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  is broken and defaulting to nothing would ship exactly that. */
   _dismiss() {
     this._open = false;
+    // Discard an in-progress window edit: the next open should show what is
+    // actually live on schedule_entity again, not the abandoned draft.
+    this._dirty = false;
     if (!this._isSheet) return;
     // fire-dom-event rather than perform-action: browser_mod picks the ll-custom
     // event up in the CALLING browser's own context, so the popup closes on the
@@ -522,6 +659,8 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
   _commit() {
     if (!this._hasSelection) return;
+    if (this._isWindow) return this._commitWindow();
+
     this._armed = { ...this._describe, repeating: this._repeating, mode: this._mode };
     this._open = false;
 
@@ -544,6 +683,60 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     }
     // Committing from inside a modal should close it — otherwise the sheet sits
     // there after the job is done and reads as though nothing happened.
+    if (this._isSheet) this._dismiss();
+  }
+
+  /** Placeholders for window mode's own action, on top of the ones _fill()
+   *  already supports for a single moment ($datetime etc. do not apply here —
+   *  there is no one moment, only a recurring range). */
+  _windowActionContext() {
+    const start = `${this._pad(this._hour)}:${this._pad(this._minute)}`;
+    const stop = `${this._pad(this._stopHour)}:${this._pad(this._stopMinute)}`;
+    const DOW = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+    // "daily" mirrors the shape read off the entity's own weekdays attribute
+    // (see _seedFromEntity) rather than spelling out all seven — a straight
+    // read-then-save-unchanged round-trips to the exact value Scheduler had.
+    const weekdays = this._days.every(Boolean) ? ["daily"] : DOW.filter((_, i) => this._days[i]);
+    // Config wins when given (authoring a NEW schedule with nothing to read
+    // yet); otherwise whatever was read off schedule_entity survives
+    // untouched — losing it would turn the pump's schedule into a no-op.
+    const actions = this.config.actions ?? this._entityActions ?? [];
+    return { start, stop, weekdays, actions, entity: this.config.schedule_entity ?? "", label: this._windowLabel };
+  }
+
+  /** Only fires when schedule_entity is set AND config doesn't supply its own
+   *  confirm_action — a bare show_stop window with no entity has nothing
+   *  sensible to call by default and stays a mock, same as the classic
+   *  picker does with nothing wired. */
+  _defaultWindowAction() {
+    if (!this.config.schedule_entity) return null;
+    return {
+      action: "perform-action",
+      perform_action: "scheduler.edit",
+      target: { entity_id: "$entity" },
+      data: {
+        weekdays: "$weekdays",
+        repeat_type: "repeat",
+        // Write shape is {start, stop, actions} — NOT the "HH:MM:SS - HH:MM:SS"
+        // string schedule_entity's own timeslots attribute reads back as. See
+        // _seedFromEntity for the other half of that asymmetry.
+        timeslots: [{ start: "$start", stop: "$stop", actions: "$actions" }],
+      },
+    };
+  }
+
+  _commitWindow() {
+    if (this._windowBlocked) return;
+    this._armed = { head: this._windowLabel, sub: this._windowDaysSummary, repeating: true, mode: "window" };
+    this._open = false;
+    this._dirty = false;
+
+    const action = this.config.confirm_action ?? this._defaultWindowAction();
+    if (action) {
+      this._handleAction(this._fill(action, this._windowActionContext()));
+    } else {
+      this._fireHaptic("success");
+    }
     if (this._isSheet) this._dismiss();
   }
 
@@ -656,46 +849,53 @@ class MateriaSchedule extends ActionMixin(LitElement) {
               </div>`
             : nothing}
 
-          ${isClock ? this._renderClock() : this._renderTriggers()}
+          ${isClock ? (this._isWindow ? this._renderWindow() : this._renderClock()) : this._renderTriggers()}
 
-          <div class="repeat">
-            <div
-              class="sw ${this._repeating ? "on" : ""}"
-              role="switch"
-              tabindex="0"
-              aria-checked=${this._repeating ? "true" : "false"}
-              @click=${() => { this._repeating = !this._repeating; }}
-            ><i></i></div>
-            <div class="text">
-              <!-- A switch labels WHAT IT TURNS ON; its position shows the state.
-                   The label used to flip with the state, so an off switch read
-                   "Just once" — which parses as "just-once is disabled", the exact
-                   opposite of the truth. The label is now constant and only the
-                   sub-line describes the consequence. -->
-              <span class="n">${this.config.repeat_label ?? t("sched_repeat_weekly", this.hass)}</span>
-              <!-- The off line says what HAPPENS, not what does not: "back to
-                   normal" named a state that does not exist, so it explained
-                   nothing. The on line points at the weekday chips that appear
-                   directly below rather than describing them in the abstract,
-                   which would just restate what is already on screen. -->
-              <span class="s">${this._repeating
-                ? (this.config.repeat_sub_on ?? t("sched_repeat_sub_on", this.hass))
-                : (this.config.repeat_sub_off ?? t("sched_repeat_sub_off", this.hass))}</span>
-            </div>
-          </div>
+          <!-- A window is always recurring — it carries its own weekday chips
+               inside _renderWindow() — so the generic once/weekly switch below
+               is for the classic single-moment picker and the trigger tab only. -->
+          ${this._isWindow
+            ? nothing
+            : html`
+                <div class="repeat">
+                  <div
+                    class="sw ${this._repeating ? "on" : ""}"
+                    role="switch"
+                    tabindex="0"
+                    aria-checked=${this._repeating ? "true" : "false"}
+                    @click=${() => { this._repeating = !this._repeating; }}
+                  ><i></i></div>
+                  <div class="text">
+                    <!-- A switch labels WHAT IT TURNS ON; its position shows the state.
+                         The label used to flip with the state, so an off switch read
+                         "Just once" — which parses as "just-once is disabled", the exact
+                         opposite of the truth. The label is now constant and only the
+                         sub-line describes the consequence. -->
+                    <span class="n">${this.config.repeat_label ?? t("sched_repeat_weekly", this.hass)}</span>
+                    <!-- The off line says what HAPPENS, not what does not: "back to
+                         normal" named a state that does not exist, so it explained
+                         nothing. The on line points at the weekday chips that appear
+                         directly below rather than describing them in the abstract,
+                         which would just restate what is already on screen. -->
+                    <span class="s">${this._repeating
+                      ? (this.config.repeat_sub_on ?? t("sched_repeat_sub_on", this.hass))
+                      : (this.config.repeat_sub_off ?? t("sched_repeat_sub_off", this.hass))}</span>
+                  </div>
+                </div>
 
-          ${this._repeating
-            ? html`<materia-button-group
-                class="days rise"
-                .hass=${this.hass}
-                .value=${this._days.map((on, i) => (on ? String(i) : null)).filter(Boolean).join(",")}
-                .config=${this._weekdayConfig}
-                @option-selected=${(e) => {
-                  const on = new Set(String(e.detail.value).split(",").filter((x) => x !== ""));
-                  this._days = this._days.map((_, i) => on.has(String(i)));
-                }}
-              ></materia-button-group>`
-            : nothing}
+                ${this._repeating
+                  ? html`<materia-button-group
+                      class="days rise"
+                      .hass=${this.hass}
+                      .value=${this._days.map((on, i) => (on ? String(i) : null)).filter(Boolean).join(",")}
+                      .config=${this._weekdayConfig}
+                      @option-selected=${(e) => {
+                        const on = new Set(String(e.detail.value).split(",").filter((x) => x !== ""));
+                        this._days = this._days.map((_, i) => on.has(String(i)));
+                      }}
+                    ></materia-button-group>`
+                  : nothing}
+              `}
 
           <div class="actions">
             <button class="cancel" @click=${this._dismiss}>
@@ -870,6 +1070,106 @@ class MateriaSchedule extends ActionMixin(LitElement) {
               >${this._pad(h)}</button>`)}
             </div>
           </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /** Start-stop window (schedule_entity / show_stop). Two independent folds —
+   *  each opens onto the same hour-grid + minute-group shape _renderClock's
+   *  custom picker already uses, just once per edge — plus the window's own
+   *  always-visible weekday chips underneath. */
+  _renderWindow() {
+    if (this._windowBlocked) {
+      return html`
+        <div class="window-blocked">
+          <ha-icon icon="m3o:calendar-view-day"></ha-icon>
+          <div class="text">
+            <span class="n">${t("sched_multi_slots_head", this.hass)}</span>
+            <span class="s">${t("sched_multi_slots_sub", this.hass)}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    const chev = html`<svg class="chev" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>`;
+
+    return html`
+      <div class="window">
+        <div class="win-edge ${this._startOpen ? "open" : ""}">
+          <button
+            class="win-head"
+            @click=${() => { this._startOpen = !this._startOpen; this._stopOpen = false; }}
+          >
+            <span class="lbl">${t("sched_window_start", this.hass)}</span>
+            <span class="val">${this._pad(this._hour)}:${this._pad(this._minute)}</span>
+            ${chev}
+          </button>
+          <div class="win-body">
+            <div class="win-inner">
+              <materia-button-group
+                class="mins"
+                .hass=${this.hass}
+                .value=${String(this._minute)}
+                .config=${this._minuteConfig}
+                @option-selected=${(e) => { this._minute = Number(e.detail.value); this._dirty = true; }}
+              ></materia-button-group>
+              <div class="hours">
+                ${Array.from({ length: 24 }, (_, h) => html`<button
+                  class="hour ${this._hour === h ? "on" : ""}"
+                  @click=${() => { this._hour = h; this._dirty = true; }}
+                >${this._pad(h)}</button>`)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="win-edge ${this._stopOpen ? "open" : ""}">
+          <button
+            class="win-head"
+            @click=${() => { this._stopOpen = !this._stopOpen; this._startOpen = false; }}
+          >
+            <span class="lbl">${t("sched_window_stop", this.hass)}</span>
+            <span class="val">${this._pad(this._stopHour)}:${this._pad(this._stopMinute)}</span>
+            <!-- Non-normative: crossing midnight round-trips exactly as entered,
+                 this is only here so the reversed order doesn't read as a mistake. -->
+            ${this._windowOvernight ? html`<span class="overnight-badge">${t("sched_window_overnight", this.hass)}</span>` : nothing}
+            ${chev}
+          </button>
+          <div class="win-body">
+            <div class="win-inner">
+              <materia-button-group
+                class="mins"
+                .hass=${this.hass}
+                .value=${String(this._stopMinute)}
+                .config=${this._minuteConfig}
+                @option-selected=${(e) => { this._stopMinute = Number(e.detail.value); this._dirty = true; }}
+              ></materia-button-group>
+              <div class="hours">
+                ${Array.from({ length: 24 }, (_, h) => html`<button
+                  class="hour ${this._stopHour === h ? "on" : ""}"
+                  @click=${() => { this._stopHour = h; this._dirty = true; }}
+                >${this._pad(h)}</button>`)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="win-days">
+          <span class="win-days-label">${t("sched_window_days", this.hass)}</span>
+          <materia-button-group
+            class="days"
+            .hass=${this.hass}
+            .value=${this._days.map((on, i) => (on ? String(i) : null)).filter(Boolean).join(",")}
+            .config=${this._weekdayConfig}
+            @option-selected=${(e) => {
+              const on = new Set(String(e.detail.value).split(",").filter((x) => x !== ""));
+              this._days = this._days.map((_, i) => on.has(String(i)));
+              this._dirty = true;
+            }}
+          ></materia-button-group>
         </div>
       </div>
     `;

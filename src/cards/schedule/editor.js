@@ -78,6 +78,33 @@ class MateriaScheduleEditor extends SmartEditorBase {
         ],
       },
       {
+        title: "Window (start-stop)",
+        icon: "mdi:clock-start",
+        // Turns the clock tab into a recurring start+stop range instead of a
+        // single moment. schedule_entity both seeds the picker from what is
+        // already live and is what gets written back to on save.
+        fields: [
+          {
+            name: "schedule_entity",
+            label: "Scheduler entity",
+            helper: "A switch.schedule_* entity (HACS Scheduler integration). Reads its current window/weekdays on open, writes back with scheduler.edit. Implies a start+stop window.",
+            selector: { entity: { domain: "switch" } },
+          },
+          {
+            name: "show_stop",
+            label: "Start+stop window without a scheduler entity",
+            helper: "For driving a custom confirm_action with $start/$stop/$weekdays/$actions instead of binding to Scheduler.",
+            selector: { boolean: {} },
+          },
+          {
+            name: "actions",
+            label: "Timeslot actions",
+            helper: 'What the window turns on/off, e.g. [{service: "switch.turn_on", target: {entity_id: "switch.pool_pump"}}]. Only needed when schedule_entity has no existing timeslot to read the actions from, or to override it.',
+            selector: { object: {} },
+          },
+        ],
+      },
+      {
         title: "Triggers",
         icon: "mdi:sensors",
         // The "When..." tab's list. Left as raw objects rather than a managed
