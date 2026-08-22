@@ -217,6 +217,12 @@ const STRINGS = {
   wm_grass: { en: "Grass", nl: "Gras" },
   wm_tree: { en: "Tree", nl: "Boom" },
   wm_weed: { en: "Weed", nl: "Onkruid" },
+  wm_birch: { en: "Birch", nl: "Berk" },
+  wm_alder: { en: "Alder", nl: "Els" },
+  wm_hazel: { en: "Hazel", nl: "Hazelaar" },
+  wm_oak: { en: "Oak", nl: "Eik" },
+  wm_ash: { en: "Ash", nl: "Es" },
+  wm_mugwort: { en: "Mugwort", nl: "Bijvoet" },
   wm_pollen: { en: "Pollen", nl: "Pollen" },
   wm_pollen_hint: { en: "Add pollen sensors", nl: "Voeg pollensensoren toe" },
 
@@ -299,7 +305,7 @@ const STRINGS = {
   al_sub_disarming: { en: "Disarming...", nl: "Wordt uitgeschakeld..." },
   al_sub_unavailable: { en: "Panel unavailable", nl: "Paneel niet beschikbaar" },
 
-  al_hint_hold_to_arm: { en: "Hold to arm", nl: "Houd vast om in te schakelen" },
+  al_hint_hold_to_arm: { en: "Hold to arm", nl: "Houd vast" },
   al_hint_hold_to_disarm: { en: "Hold to disarm", nl: "Houd vast om uit te schakelen" },
   al_hint_holding: { en: "Keep holding...", nl: "Blijf vasthouden..." },
   al_hint_disarm_first: { en: "Disarm first", nl: "Schakel eerst uit" },
@@ -326,6 +332,10 @@ const STRINGS = {
   al_zones_ready_count: { en: "{n} zones ready", nl: "{n} zones gereed" },
   al_zones_ready_one: { en: "{n} zone ready", nl: "{n} zone gereed" },
   al_zone_sensing: { en: "Movement", nl: "Beweging" },
+  al_zone_ready: { en: "Ready", nl: "Gereed" },
+  al_zone_not_ready: { en: "Not ready", nl: "Niet gereed" },
+  al_zone_bypassing: { en: "Bypassing…", nl: "Wordt geblokkeerd…" },
+  al_zone_restoring: { en: "Restoring…", nl: "Wordt gedeblokkeerd…" },
   al_zones_ready_sensing: {
     en: "{n} ready · {m} sensing movement",
     nl: "{n} gereed · {m} met beweging",

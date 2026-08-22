@@ -7,8 +7,11 @@ import { styles } from "./styles.js";
 import "./editor.js";
 
 /** Compass point from bearing degrees (16-wind). */
-function compass(deg) {
-  const pts = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+function compass(deg, hass) {
+  const nl = hass?.locale?.language?.toLowerCase().startsWith("nl");
+  const pts = nl
+    ? ["N", "NNO", "NO", "ONO", "O", "OZO", "ZO", "ZZO", "Z", "ZZW", "ZW", "WZW", "W", "WNW", "NW", "NNW"]
+    : ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
   return pts[Math.round((((deg % 360) + 360) % 360) / 22.5) % 16];
 }
 
@@ -24,23 +27,21 @@ const SCALE = {
 };
 
 const UV_LEVELS = [
-  { max: 2, label: "Low", color: SCALE.green },
-  { max: 5, label: "Moderate", color: SCALE.yellow },
-  { max: 7, label: "High", color: SCALE.orange },
-  { max: 10, label: "Very high", color: SCALE.red },
-  { max: Infinity, label: "Extreme", color: SCALE.purple },
+  { max: 2, label: "level_low", color: SCALE.green },
+  { max: 5, label: "level_moderate", color: SCALE.yellow },
+  { max: 7, label: "level_high", color: SCALE.orange },
+  { max: 10, label: "level_very_high", color: SCALE.red },
+  { max: Infinity, label: "level_extreme", color: SCALE.purple },
 ];
 
 const AQI_BANDS = [
-  { max: 50, label: "Good air quality", color: SCALE.green },
-  { max: 100, label: "Moderate air quality", color: SCALE.yellow },
-  { max: 150, label: "Unhealthy for sensitive groups", color: SCALE.orange },
-  { max: 200, label: "Unhealthy air quality", color: SCALE.red },
-  { max: 300, label: "Very unhealthy air quality", color: SCALE.purple },
-  { max: Infinity, label: "Hazardous air quality", color: SCALE.maroon },
+  { max: 50, label: "aqi_good", color: SCALE.green },
+  { max: 100, label: "aqi_moderate", color: SCALE.yellow },
+  { max: 150, label: "aqi_unhealthy_sensitive", color: SCALE.orange },
+  { max: 200, label: "aqi_unhealthy", color: SCALE.red },
+  { max: 300, label: "aqi_very_unhealthy", color: SCALE.purple },
+  { max: Infinity, label: "aqi_hazardous", color: SCALE.maroon },
 ];
-
-const POLLEN_LEVELS = ["None", "Low", "Moderate", "High", "Very high"];
 
 /**
  * Expressive weather metric tiles (Pixel weather style): one card, one
@@ -242,20 +243,20 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     let bearing = this.config.bearing_entity
       ? this._numRaw(this.hass.states[this.config.bearing_entity]?.state)
       : this._numRaw(this._weatherAttr("wind_bearing"));
-    const from = bearing != null ? `${this.config.from_label ?? t("wm_wind_from", this.hass)} ${compass(bearing)}` : "";
-    // The canonical MaterialShapes ARROW (notched base — you can SEE where it
-    // points), rotated to where the wind blows toward (bearing is the
-    // direction it comes FROM), like the Pixel tile. No strength modulation:
-    // the number carries the magnitude.
-    const flowDeg = bearing != null ? (bearing + 180) % 360 : 0; // default: point up
-    const rotate = (flowDeg * Math.PI) / 180; // arrowPath points up at 0
+    const from = bearing != null ? `${this.config.from_label ?? t("wm_wind_from", this.hass)} ${compass(bearing, this.hass)}` : "";
+    // The shape is a compass-direction cue: it points at the direction named
+    // by the label below it. Home Assistant's wind_bearing is the direction
+    // the wind comes FROM, so a north bearing must point north — rotating it
+    // 180° made the visual contradict the displayed "From N" label.
+    const sourceDeg = bearing != null ? bearing : 0;
+    const rotate = (sourceDeg * Math.PI) / 180; // arrowPath points up at 0
     return html`
       <div class="rect-tile clip wind">
         <svg class="blob-bg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
           <path d=${arrowPath(50, 50, 36, rotate)} class="blob-fill" />
         </svg>
         <div class="overlay">
-          ${this._header("mdi:weather-windy", this.config.name ?? "Wind")}
+          ${this._header("mdi:weather-windy", this.config.name ?? t("wm_wind", this.hass))}
           <div class="big">${Math.round(v)}<span class="unit"> ${u}</span></div>
           ${from ? html`<div class="sub">${from}</div>` : ""}
         </div>
@@ -287,9 +288,9 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
           ${dots}
         </svg>
         <div class="overlay">
-          ${this._header("mdi:white-balance-sunny", this.config.name ?? "UV index")}
+          ${this._header("mdi:white-balance-sunny", this.config.name ?? t("wm_uv_index", this.hass))}
           <div class="big">${Math.round(uv)}</div>
-          <div class="sub">${level.label}</div>
+          <div class="sub">${t(level.label, this.hass)}</div>
         </div>
       </div>
     `;
@@ -301,7 +302,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     if (vis == null) {
       return this.config.sensor
         ? nothing
-        : this._hint("mdi:eye-outline", this.config.name ?? "Visibility", "Weather entity has no visibility — add a sensor");
+        : this._hint("mdi:eye-outline", this.config.name ?? t("wm_visibility", this.hass), t("wm_visibility_hint", this.hass));
     }
     const unit = this.config.unit ?? this._weatherAttr("visibility_unit") ?? "km";
     // Two layers — a plain circle backdrop with a smaller cookie inset in it.
@@ -314,7 +315,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
           <path d=${materialCookiePath(50, 52, 32, 12)} class="shape-fill visibility-fill" />
         </svg>
         <div class="overlay">
-          ${this._header("mdi:eye-outline", this.config.name ?? "Visibility")}
+          ${this._header("mdi:eye-outline", this.config.name ?? t("wm_visibility", this.hass))}
           <div class="big">${vis}<span class="unit"> ${unit}</span></div>
         </div>
       </div>
@@ -343,7 +344,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
           ${frac > 0.01 ? svg`<path d=${arcPath(50, 52, 37.5, start, end)} class="gauge-fill thin" />` : ""}
         </svg>
         <div class="overlay">
-          ${this._header("mdi:gauge", this.config.name ?? "Pressure")}
+          ${this._header("mdi:gauge", this.config.name ?? t("wm_pressure", this.hass))}
           <div class="big small-big">${value}</div>
           <div class="sub">${unit}</div>
         </div>
@@ -357,21 +358,21 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     if (aqi == null) {
       return this.config.sensor
         ? nothing
-        : this._hint("mdi:waves", this.config.name ?? "Air quality", "Point this tile at an AQI sensor");
+        : this._hint("mdi:waves", this.config.name ?? t("wm_air_quality", this.hass), t("wm_aqi_hint", this.hass));
     }
     const band = AQI_BANDS.find((b) => aqi <= b.max);
     // Clamp so the marker never hangs off the bar's rounded ends.
     const frac = Math.min(0.96, Math.max(0.04, aqi / 300));
     return html`
       <div class="rect-tile left">
-        ${this._header("mdi:waves", this.config.name ?? "Air quality")}
+        ${this._header("mdi:waves", this.config.name ?? t("wm_air_quality", this.hass))}
         <div class="big">${Math.round(aqi)}</div>
         <div class="aqi-bar">
           ${AQI_BANDS.slice(0, 5).map((b) => html`<span style="background:${b.color}"></span>`)}
           <span style="background:${AQI_BANDS[5].color}"></span>
           <i class="aqi-dot" style="left:${(frac * 100).toFixed(1)}%; border-color:${band.color}"></i>
         </div>
-        <div class="sub">${band.label}</div>
+        <div class="sub">${t(band.label, this.hass)}</div>
       </div>
     `;
   }
@@ -392,7 +393,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     const subtitle = amount > 0 ? (this.config.total_label ?? t("wm_total_rain", this.hass)) : none;
     return html`
       <div class="rect-tile precip">
-        ${this._header("m3o:rainy", this.config.name ?? "Precipitation")}
+        ${this._header("m3o:rainy", this.config.name ?? t("wm_precipitation", this.hass))}
         <div class="big">${amount}<span class="unit"> ${unit}</span></div>
         <div class="precip-bottom">
           <div class="sub">${subtitle}</div>
@@ -410,7 +411,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     if (hum == null) {
       return this.config.sensor
         ? nothing
-        : this._hint("mdi:water-percent", this.config.name ?? "Humidity", "Weather entity has no humidity — add a sensor");
+        : this._hint("mdi:water-percent", this.config.name ?? t("wm_humidity", this.hass), t("wm_humidity_hint", this.hass));
     }
     const dew = this.config.dew_entity
       ? this._numRaw(this.hass.states[this.config.dew_entity]?.state)
@@ -423,7 +424,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
         <svg class="wave" viewBox="0 0 200 100" preserveAspectRatio="none">
           <path d=${wave} class="wave-fill" />
         </svg>
-        ${this._header("mdi:water-percent", this.config.name ?? "Humidity")}
+        ${this._header("mdi:water-percent", this.config.name ?? t("wm_humidity", this.hass))}
         <div class="big">${Math.round(hum)}<span class="unit">%</span></div>
         ${dew != null
           ? html`<div class="dew"><span class="dew-chip">${Math.round(dew)}°</span> ${this.config.dew_label ?? t("wm_dew_point", this.hass)}</div>`
@@ -483,7 +484,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     const phase = phaseFrac ?? 0.5;
     return html`
       <div class="rect-tile sun">
-        ${this._header("mdi:weather-sunset", this.config.name ?? "Sunrise & sunset")}
+        ${this._header("mdi:weather-sunset", this.config.name ?? t("wm_sunrise_sunset", this.hass))}
         <svg class="sun-arc cycle" viewBox="0 0 100 40">
           <path d=${dayPath} class="arc-fill" />
           ${nightBefore ? svg`<path d=${nightBefore} class="arc-night" />` : ""}
@@ -510,23 +511,34 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
      integration (green/yellow/orange/red/purple/active/none), colored by
      level. `entities:` takes strings or {entity, label, icon}. */
   _pollen() {
+    const speciesLabel = (entity, fallback) => {
+      const s = `${entity} ${fallback}`.toLowerCase();
+      const keys = [
+        ["grass", "wm_grass"], ["birch", "wm_birch"],
+        ["alder", "wm_alder"], ["hazel", "wm_hazel"],
+        ["oak", "wm_oak"], ["ash", "wm_ash"],
+        ["mugwort", "wm_mugwort"],
+      ];
+      const hit = keys.find(([needle]) => s.includes(needle));
+      return hit ? t(hit[1], this.hass) : fallback;
+    };
     const ENUM = {
-      none: { v: 0, label: "None", color: "var(--md-sys-color-outline, #9E9E9E)" },
-      active: { v: 1, label: "Active", color: SCALE.green },
-      green: { v: 1, label: "Low", color: SCALE.green },
-      yellow: { v: 2, label: "Moderate", color: SCALE.yellow },
-      orange: { v: 3, label: "High", color: SCALE.orange },
-      red: { v: 4, label: "Very high", color: SCALE.red },
-      purple: { v: 5, label: "Extreme", color: SCALE.purple },
+      none: { v: 0, label: "level_none", color: "var(--md-sys-color-outline, #9E9E9E)" },
+      active: { v: 1, label: "level_active", color: SCALE.green },
+      green: { v: 1, label: "level_low", color: SCALE.green },
+      yellow: { v: 2, label: "level_moderate", color: SCALE.yellow },
+      orange: { v: 3, label: "level_high", color: SCALE.orange },
+      red: { v: 4, label: "level_very_high", color: SCALE.red },
+      purple: { v: 5, label: "level_extreme", color: SCALE.purple },
     };
     const max = this.config.max ?? 4;
     let list = this.config.entities;
     if (!list?.length) {
       // Back-compat: the original grass/tree/weed slots.
       list = [
-        this.config.grass_entity && { entity: this.config.grass_entity, label: this.config.grass_label ?? "Grass", icon: "mdi:grass" },
-        this.config.tree_entity && { entity: this.config.tree_entity, label: this.config.tree_label ?? "Tree", icon: "mdi:tree-outline" },
-        this.config.weed_entity && { entity: this.config.weed_entity, label: this.config.weed_label ?? "Weed", icon: "mdi:sprout-outline" },
+        this.config.grass_entity && { entity: this.config.grass_entity, label: this.config.grass_label ?? t("wm_grass", this.hass), icon: "mdi:grass" },
+        this.config.tree_entity && { entity: this.config.tree_entity, label: this.config.tree_label ?? t("wm_tree", this.hass), icon: "mdi:tree-outline" },
+        this.config.weed_entity && { entity: this.config.weed_entity, label: this.config.weed_label ?? t("wm_weed", this.hass), icon: "mdi:sprout-outline" },
       ].filter(Boolean);
     }
     const kinds = (list || [])
@@ -539,13 +551,15 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
         if (raw in ENUM) {
           const e = ENUM[raw];
           frac = e.v / 5;
-          levelLabel = e.label;
+          levelLabel = t(e.label, this.hass);
           color = e.color;
         } else {
           const n = this._numRaw(raw);
           if (n == null) return null;
           frac = Math.min(1, Math.max(0, n / max));
-          levelLabel = `${n}/${max} ${POLLEN_LEVELS[Math.min(POLLEN_LEVELS.length - 1, Math.round(frac * (POLLEN_LEVELS.length - 1)))]}`;
+          const levels = ["level_none", "level_low", "level_moderate", "level_high", "level_very_high"];
+          const levelKey = levels[Math.min(levels.length - 1, Math.round(frac * (levels.length - 1)))];
+          levelLabel = `${n}/${max} ${t(levelKey, this.hass)}`;
           color = null;
         }
         let label = cfg.label;
@@ -553,7 +567,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
           // "Oostende Grass pollen" → "Grass"
           const fn = st.attributes.friendly_name || cfg.entity;
           const words = fn.replace(/pollen/i, "").trim().split(/\s+/);
-          label = words[words.length - 1] || fn;
+          label = speciesLabel(cfg.entity, words[words.length - 1] || fn);
         }
         const icon = cfg.icon || st.attributes.icon || "m3of:allergy";
         return { label, icon, frac, levelLabel, color };
@@ -567,14 +581,14 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
       const configured = (this.config.entities?.length) || this.config.grass_entity || this.config.tree_entity || this.config.weed_entity;
       return configured
         ? nothing
-        : this._hint("m3of:allergy", this.config.name ?? "Pollen", "Add pollen sensors");
+        : this._hint("m3of:allergy", this.config.name ?? t("wm_pollen", this.hass), t("wm_pollen_hint", this.hass));
     }
     // Small variant (Pixel small tile): colored level dot + species + level,
     // as a compact left-aligned list.
     if (this.config.variant === "small") {
       return html`
         <div class="rect-tile pollen-small">
-          ${this._header("m3of:allergy", this.config.name ?? "Pollen")}
+          ${this._header("m3of:allergy", this.config.name ?? t("wm_pollen", this.hass))}
           <div class="pollen-rows">
             ${kinds.map((k) => html`
               <div class="pollen-row">
@@ -591,7 +605,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     }
     return html`
       <div class="rect-tile pollen">
-        ${this._header("m3of:allergy", this.config.name ?? "Pollen")}
+        ${this._header("m3of:allergy", this.config.name ?? t("wm_pollen", this.hass))}
         <div class="gauges">
           ${kinds.map((k) => {
             const start = -135;

@@ -5,17 +5,11 @@ import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
-const CONDITION_LABELS = {
-  "clear-night": "Clear night",
-  partlycloudy: "Partly cloudy",
-  partly_cloudy: "Partly cloudy",
-  "lightning-rainy": "Thunderstorm",
-  "snowy-rainy": "Sleet",
-  exceptional: "Exceptional",
-};
-
-function compass(deg) {
-  const pts = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+function compass(deg, hass) {
+  const nl = hass?.locale?.language?.toLowerCase().startsWith("nl");
+  const pts = nl
+    ? ["N", "NNO", "NO", "ONO", "O", "OZO", "ZO", "ZZO", "Z", "ZZW", "ZW", "WZW", "W", "WNW", "NW", "NNW"]
+    : ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
   return pts[Math.round((((deg % 360) + 360) % 360) / 22.5) % 16];
 }
 
@@ -126,7 +120,8 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
     switch (entry.type) {
       case "condition": {
         const c = stateObj?.state ?? "";
-        text = CONDITION_LABELS[c] || this._capitalize(String(c).replace(/-|_/g, " "));
+        text = this.hass.localize?.(`component.weather.entity_component._.state.${c}`)
+          || this._capitalize(String(c).replace(/-|_/g, " "));
         if (/lightning/.test(c)) sev = 3;
         else if (/pouring|snowy|hail/.test(c)) sev = 2;
         else if (/rainy|fog|windy/.test(c)) sev = 1;
@@ -143,7 +138,7 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
         const s = this._num(a.wind_speed);
         if (s == null) return null;
         const b = this._num(a.wind_bearing);
-        text = `${s} ${a.wind_speed_unit ?? "km/h"}${b != null ? ` ${compass(b)}` : ""}`;
+        text = `${s} ${a.wind_speed_unit ?? "km/h"}${b != null ? ` ${compass(b, this.hass)}` : ""}`;
         sev = s >= 88 ? 4 : s >= 62 ? 3 : s >= 39 ? 2 : s >= 20 ? 1 : 0;
         break;
       }
@@ -180,7 +175,12 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
       case "pollen": {
         // Worst species across the configured pollen sensors (KMI enum levels).
         const LEVELS = { none: 0, active: 1, green: 1, yellow: 2, orange: 3, red: 4, purple: 5 };
-        const LABELS = ["None", "Low", "Low", "Moderate", "High", "Very high", "Extreme"];
+        const LABELS = [
+          t("level_none", this.hass), t("level_low", this.hass),
+          t("level_low", this.hass), t("level_moderate", this.hass),
+          t("level_high", this.hass), t("level_very_high", this.hass),
+          t("level_extreme", this.hass),
+        ];
         const list = entry.entities || this.config.pollen_entities || [];
         let worst = null;
         for (const eid of list) {
@@ -189,8 +189,15 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
           const v = LEVELS[String(st.state).toLowerCase()] ?? this._num(st.state) ?? 0;
           if (!worst || v > worst.v) {
             const fn = st.attributes.friendly_name || eid;
-            const words = fn.replace(/pollen/i, "").trim().split(/\s+/);
-            worst = { v, label: words[words.length - 1] || fn };
+            const source = `${eid} ${fn}`.toLowerCase();
+            const species = [
+              ["grass", "wm_grass"], ["birch", "wm_birch"],
+              ["alder", "wm_alder"], ["hazel", "wm_hazel"],
+              ["oak", "wm_oak"], ["ash", "wm_ash"],
+              ["mugwort", "wm_mugwort"],
+            ].find(([needle]) => source.includes(needle));
+            const words = fn.replace(/pollen|level/gi, "").trim().split(/\s+/);
+            worst = { v, label: species ? t(species[1], this.hass) : (words[words.length - 1] || fn) };
           }
         }
         if (!worst) return null;
@@ -198,7 +205,7 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
         // species name floating in the line.
         const prefix = entry.label ?? this.config.pollen_label ?? t("wm_pollen", this.hass);
         text = worst.v === 0
-          ? (this.config.no_pollen_label ?? `${prefix} none`)
+          ? (this.config.no_pollen_label ?? `${prefix} ${t("wg_pollen_none", this.hass)}`)
           : `${prefix} ${worst.label} ${LABELS[worst.v + 1] ?? worst.v}`;
         sev = worst.v;
         break;

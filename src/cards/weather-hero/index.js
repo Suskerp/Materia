@@ -5,15 +5,6 @@ import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
-const CONDITION_LABELS = {
-  "clear-night": "Clear night",
-  partlycloudy: "Partly cloudy",
-  partly_cloudy: "Partly cloudy",
-  "lightning-rainy": "Thunderstorm",
-  "snowy-rainy": "Sleet",
-  exceptional: "Exceptional",
-};
-
 /**
  * Current-conditions hero: condition text, a huge temperature with a unit
  * superscript, an optional "Feels like" line and a "Night: x° • Day: y°"
@@ -105,9 +96,9 @@ class MateriaWeatherHero extends ActionMixin(LitElement) {
     const stateObj = this.hass.states[this.config.entity];
     const unavailable = this._isUnavailable(stateObj);
     const condition = stateObj?.state ?? "";
-    const conditionLabel =
-      CONDITION_LABELS[condition] ||
-      this._capitalize(String(condition).replace(/-|_/g, " "));
+    const conditionLabel = this.hass.localize?.(
+      `component.weather.entity_component._.state.${condition}`
+    ) || this._capitalize(String(condition).replace(/-|_/g, " "));
 
     // Current temperature — real external sensor override, else the entity.
     let temp = stateObj?.attributes?.temperature;

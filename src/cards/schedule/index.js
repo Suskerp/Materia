@@ -1039,7 +1039,9 @@ class MateriaSchedule extends ActionMixin(LitElement) {
             >
               <ha-icon icon=${item.icon || "m3o:toggle-on"}></ha-icon>
               <span>${this._targetName(item.entity)}</span>
-              <i class="target-check">${selected ? html`<ha-icon icon="m3o:check"></ha-icon>` : nothing}</i>
+              <i class="target-check ${selected ? "selected" : ""}" aria-hidden="true">
+                <ha-icon icon=${selected ? "mdi:checkbox-marked" : "mdi:checkbox-blank-outline"}></ha-icon>
+              </i>
             </button>`;
           })}
         </div>` : nothing}

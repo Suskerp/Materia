@@ -254,6 +254,8 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     clearTimeout(this._turnTimer);
     clearTimeout(this._shakeTimer);
     clearTimeout(this._latchTimer);
+    for (const pending of this.__zonePending?.values() || []) clearTimeout(pending.timer);
+    this.__zonePending?.clear();
     this._stopSweep();
     this._cleanupGesture();
   }
@@ -702,6 +704,16 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     return ON_STATES.has(w);
   }
 
+  /** Some alarm integrations expose English human-readable states instead of
+   *  translated HA enum states. Translate the readiness vocabulary here so
+   *  every zone row is consistent, regardless of integration support. */
+  _zoneStateLabel(st) {
+    const word = this._zoneWord(st).trim().toLowerCase();
+    if (word === "ready") return t("al_zone_ready", this.hass);
+    if (word === "not ready" || word === "notready") return t("al_zone_not_ready", this.hass);
+    return this.hass.formatEntityState?.(st) ?? this._zoneWord(st);
+  }
+
   get _zonePattern() {
     // The UltraSync entity_id shape, which is also the pattern the user wrote.
     return this.config.zone_pattern ?? "zone(\\d+)state$";
@@ -1043,6 +1055,15 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     return this.__selfBypassed;
   }
 
+  /** Short-lived command pins for zone actions. Alarm integrations can take a
+   *  noticeable round-trip before their zone entities update; the pin makes
+   *  the requested result visible immediately and reality then confirms or
+   *  replaces it. */
+  get _zonePending() {
+    this.__zonePending ??= new Map();
+    return this.__zonePending;
+  }
+
   /** True when the card can offer to put this zone back. */
   _canUndo(z) {
     if (!this._canUnskip(z)) return false;
@@ -1067,7 +1088,14 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
         const transient = b?.transient ?? false;
         const safety = b?.safety ?? false;
         const unavailable = this._zoneUnavailable(st);
-        const bypassed = !unavailable && this._inferBypassed(st, safety);
+        const actualBypassed = !unavailable && this._inferBypassed(st, safety);
+        const pending = this._zonePending.get(z.entity);
+        if (pending && pending.bypassed === actualBypassed) {
+          clearTimeout(pending.timer);
+          this._zonePending.delete(z.entity);
+        }
+        const activePending = this._zonePending.get(z.entity);
+        const bypassed = activePending ? activePending.bypassed : actualBypassed;
         const liveNotReady = !unavailable && !bypassed && this._zoneNotReady(st);
         const out = {
           ...z,
@@ -1075,6 +1103,8 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
           zone: this._zoneNumber(z.entity),
           unavailable,
           bypassed,
+          bypassPending: activePending?.bypassed === true,
+          restorePending: activePending?.bypassed === false,
           transient,
           /* A 24-hour zone (smoke, heat, gas, water). Blocking, and no
              heuristic can demote it — see SAFETY_CLASSES. */
@@ -1089,7 +1119,7 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
           sensing: transient && liveNotReady,
           /* OPEN is the blocking, hysteresis-smoothed obstruction: the only
              thing that may size the not-ready group or drive the warning. */
-          open: b ? (!transient && b.latched) : (!transient && liveNotReady),
+          open: bypassed ? false : (b ? (!transient && b.latched) : (!transient && liveNotReady)),
           // friendly_name beats the panel's short `name` attribute on purpose:
           // "Raam Pool Badkamer" is a room, "MC pool badkamer" is a wiring
           // label. An explicit config name still wins over both.
@@ -1164,8 +1194,19 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     const action = which === "bypass" ? this.config.bypass_action : this.config.unbypass_action;
     if (!action || z.zone == null) return;
     if (which === "bypass" && !z.skippable) return;
-    if (which === "bypass") this._selfBypassed.add(z.entity);
+    const bypassed = which === "bypass";
+    if (bypassed) this._selfBypassed.add(z.entity);
     else this._selfBypassed.delete(z.entity);
+    const old = this._zonePending.get(z.entity);
+    if (old) clearTimeout(old.timer);
+    const pin = { bypassed, timer: null };
+    pin.timer = setTimeout(() => {
+      if (this._zonePending.get(z.entity) !== pin) return;
+      this._zonePending.delete(z.entity);
+      this._fireHaptic("warning");
+      this.requestUpdate();
+    }, Number(this.config.zone_pending_timeout_ms ?? 10000));
+    this._zonePending.set(z.entity, pin);
     this._handleAction(this._withZone(action, z.zone));
     // The undo affordance appears on the row immediately, without waiting to
     // learn whether the panel reflects a bypass in the zone's own state.
@@ -1858,17 +1899,21 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     return !!this._safetyOpen;
   }
 
-  /** One zone row. Shared by every group so a zone looks like itself
-   *  wherever it appears, and so the substate line always comes from HA's own
-   *  formatter (which already localises "Ready" / "Not Ready" for us). */
+  /** One zone row. Shared by every group so a zone looks like itself wherever
+   *  it appears. Integration-specific English zone states are normalised by
+   *  _zoneStateLabel; native states still use HA's own formatter. */
   _zoneRow(z, cls = "") {
     /* A sensing zone gets its own word. Showing the panel's raw "Not Ready"
        inside a group headed "ready" would read as a contradiction, and for a
        PIR "Not Ready" is a poor description of what is happening anyway —
        nothing is wrong, something moved. */
-    const state = z.sensing
-      ? t("al_zone_sensing", this.hass)
-      : (this.hass.formatEntityState?.(z.st) ?? this._zoneWord(z.st));
+    const state = z.bypassPending
+      ? t("al_zone_bypassing", this.hass)
+      : z.restorePending
+        ? t("al_zone_restoring", this.hass)
+        : z.sensing
+          ? t("al_zone_sensing", this.hass)
+          : this._zoneStateLabel(z.st);
     return html`
       <div class="zrow ${cls} ${z.sensing ? "sensing" : ""}">
         <ha-icon .icon=${z.icon}></ha-icon>

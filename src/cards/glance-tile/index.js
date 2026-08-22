@@ -1273,9 +1273,11 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
           ? html`<div class="detail-metrics">
               ${metrics.map((metric, i) => {
                 const m = this._detailMetric(metric, i);
-                const action = metric.tap_action || (metric.entity
-                  ? { action: "more-info", entity: metric.entity }
-                  : null);
+                const action = metric.tap_action?.action === "none"
+                  ? null
+                  : metric.tap_action || (metric.entity
+                    ? { action: "more-info", entity: metric.entity }
+                    : null);
                 return html`<div
                   class="detail-metric ${action ? "interactive" : ""}"
                   role=${action ? "button" : nothing}

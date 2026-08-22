@@ -271,6 +271,11 @@ export const styles = [
       border-radius: 14px;
       text-align: left;
       color: var(--md-sys-color-on-surface);
+      background: transparent;
+      transition:
+        border-radius var(--md-sys-motion-expressive-fast-spatial),
+        background-color var(--md-sys-motion-fast-effects),
+        color var(--md-sys-motion-fast-effects);
     }
 
     .target-options button span {
@@ -282,8 +287,9 @@ export const styles = [
     }
 
     .target-options button.selected {
-      background: var(--md-sys-color-secondary-container);
-      color: var(--md-sys-color-on-secondary-container);
+      border-radius: 8px;
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
     }
 
     .target-check {
@@ -292,6 +298,12 @@ export const styles = [
       display: grid;
       place-items: center;
       flex: 0 0 24px;
+      color: var(--md-sys-color-on-surface-variant);
+      transition: color var(--md-sys-motion-fast-effects);
+    }
+
+    .target-check.selected {
+      color: var(--md-sys-color-primary);
     }
 
     .manager-fields ha-selector {

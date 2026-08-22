@@ -2,6 +2,7 @@ import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import { unavailableStyles } from "../../styles/card-styles.js";
+import { MOTION } from "../../utils/motion.js";
 import { styles, PRESETS, SIZES } from "./styles.js";
 import "../button/index.js";
 import "../split-button/index.js";
@@ -247,8 +248,8 @@ export class MateriaButtonGroup extends DisabledMixin(ActionMixin(LitElement)) {
             return html`
               <button
                 class="${isActive ? "active" : "inactive"} ${variant}"
-                style="--rest-radius: ${radius}; --pressed-radius: ${innerCorner}px; border-radius: var(--rest-radius);${isActive ? ` background: ${bg}; color: ${fg};` : ""}"
-                @click=${() => this._handleOptionTap(opt)}
+                style="--pressed-radius: ${innerCorner}px; border-radius: ${radius};${isActive ? ` background: ${bg}; color: ${fg};` : ""}"
+                @click=${(event) => this._handleOptionTap(opt, event)}
               >
                 ${opt.icon ? html`<ha-icon .icon=${opt.icon}></ha-icon>` : ""}
                 ${opt.label ? html`<span>${opt.label}</span>` : ""}
@@ -260,7 +261,21 @@ export class MateriaButtonGroup extends DisabledMixin(ActionMixin(LitElement)) {
     `;
   }
 
-  _handleOptionTap(opt) {
+  _playSelectionMotion(el) {
+    if (!el?.animate || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+    const spring = MOTION["expressive-fast-spatial"];
+    this.__selectionMotion?.cancel();
+    // A pointer's :active frame is too brief to survive a touch release on
+    // mobile. Releasing from the M3 pressed scale into the spatial spring
+    // makes the same feedback visible for mouse, touch and keyboard.
+    this.__selectionMotion = el.animate(
+      [{ transform: "scale(0.96)" }, { transform: "scale(1)" }],
+      { duration: spring.ms, easing: spring.easing, fill: "none" }
+    );
+  }
+
+  _handleOptionTap(opt, event) {
+    this._playSelectionMotion(event?.currentTarget);
     // Uncontrolled: own the selection and announce it. Returns early, because
     // there is no entity to be optimistic about and no service to call.
     if (!this.config.entity && !opt.entity && !opt.tap_action) {
@@ -330,6 +345,7 @@ export class MateriaButtonGroup extends DisabledMixin(ActionMixin(LitElement)) {
   disconnectedCallback() {
     super.disconnectedCallback();
     clearTimeout(this._optimisticTimer);
+    this.__selectionMotion?.cancel();
     for (const t of Object.values(this._optEntityTimers || {})) clearTimeout(t);
   }
 
