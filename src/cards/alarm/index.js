@@ -843,12 +843,7 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     // would lie indefinitely about an offline alarm — and the revert is
     // ANNOUNCED rather than silent, because a state that quietly slides back
     // is indistinguishable from a card that is broken.
-    this._pinTimer = setTimeout(() => {
-      if (!this._pending) return;
-      this._pending = null;
-      this._fireHaptic("warning");
-      this._playShake();
-    }, Number(this.config.pending_timeout_ms ?? 10000));
+    this._armPinExpiry();
 
     // Tell sibling cards on this entity BEFORE the round-trip, so a hero above
     // this card moves in the same frame the fill commits.
@@ -860,7 +855,37 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     this._callService("alarm_control_panel", service, data);
   }
 
+  /** The pin expiry guards ONE failure: nothing came back at all. It must not
+   *  fire while the panel is visibly on its way, because arming and pending
+   *  mean the panel answered and is counting down — measured on this very
+   *  install, an UltraSync exit delay runs 90 SECONDS (Exit Delay 1 -> Armed
+   *  Away at 90.0s, -> Armed Stay at 90.9s). The old flat 10s expiry therefore
+   *  dropped the pin, announced a revert and shook the card while the alarm was
+   *  doing exactly what it had been asked to do. So a transitional read
+   *  RESCHEDULES instead of expiring, and only silence ever gives up. */
+  _armPinExpiry() {
+    clearTimeout(this._pinTimer);
+    this._pinTimer = setTimeout(() => {
+      if (!this._pending) return;
+      if (TRANSITIONAL.has(this._rawState)) {
+        this._armPinExpiry();
+        return;
+      }
+      this._pending = null;
+      this._fireHaptic("warning");
+      this._playShake();
+    }, Number(this.config.pending_timeout_ms ?? 20000));
+  }
+
   _cleanupGesture() {
+    /* Clear the swept fill ON THE ELEMENT, while we still hold the
+       reference. The comment on _applyP claimed Lit would rewrite the
+       whole style attribute on its next render — it only does that when
+       the interpolated string CHANGES. `held` is false both before the
+       press and after the release, so the string is identical, Lit skips
+       the DOM write, and the imperatively-set --ma-p survives at its last
+       frame: the fill sticks part-way across for good. */
+    this._holdEl?.style.removeProperty("--ma-p");
     this._holdKey = null;
     this._holdMode = null;
     this._holdEl = null;

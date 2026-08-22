@@ -20,10 +20,13 @@ export const styles = [
     .tile {
       background: var(--ha-card-background, var(--card-background-color));
       border-radius: 24px;
-      /* Asymmetric on purpose: the 44dp handle already overhangs the 16dp
-         track by 14dp, so the slider brings its own bottom air and an equal
-         pad below it reads as a hole. */
-      padding: 14px 16px 4px;
+      /* Symmetric, and the same 14/16 materia-bar-select uses — NOT trimmed
+         to let the 44dp handle's own overhang double as bottom padding. That
+         trim is what put the handle 2.5px from this tile's 24px corner arc:
+         still inside it, but close enough to read as escaping the card. At
+         14dp the same corner clears by 11dp. The handle is 2.75x the track's
+         height, so it, not the track, is what the padding has to clear. */
+      padding: 14px 16px;
       display: flex;
       flex-direction: column;
       gap: 0;
