@@ -1001,6 +1001,12 @@ export const styles = [
       gap: 6px;
     }
 
+    /* The copy column is a reading block, not a standalone centered tile.
+       Keep its heading on the same left edge as the headline and caption. */
+    .progress-summary-copy .header {
+      justify-content: flex-start;
+    }
+
     .progress-headline {
       font-family: var(--materia-font-display, inherit);
       font-size: clamp(26px, 8cqi, 42px);

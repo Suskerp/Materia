@@ -834,7 +834,14 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
   /* ---- binary: square tile; the sunny star is a corner glyph that takes
      color and slowly turns while the entity is active ----------------------- */
   _binary() {
-    const active = ACTIVE_STATES.includes(this._stateObj.state);
+    // Binary entities are not limited to HA's canonical on/off vocabulary:
+    // vehicle and appliance integrations commonly publish a human state such
+    // as `Charging`. Keep the generic defaults, while allowing a card to name
+    // the states that represent its active condition.
+    const configuredActive = Array.isArray(this.config.active_states) && this.config.active_states.length
+      ? this.config.active_states
+      : ACTIVE_STATES;
+    const active = configuredActive.some((state) => String(state).toLowerCase() === String(this._stateObj.state).toLowerCase());
     const sunny = roundedPolygonPath(50, 50, 46, { vertices: 8, innerRadius: 0.8, rounding: 0.15, rotate: -Math.PI / 2 });
     return html`
       <div class="rect-tile left binary ${active ? "active" : ""}">
