@@ -68,6 +68,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     _targetEntity: { state: true },
     _targetEntities: { state: true },
     _targetAction: { state: true },
+    _targetEndAction: { state: true },
     _removeArmed: { state: true },
     _targetPickerOpen: { state: true },
   };
@@ -176,6 +177,42 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     ];
   }
 
+  _actionKey(action) {
+    if (!action) return "";
+    if (typeof action === "string") return action;
+    if (action.key != null) return String(action.key);
+    const data = action.service_data && Object.keys(action.service_data).length
+      ? JSON.stringify(action.service_data)
+      : "";
+    return data ? `${action.service}::${data}` : action.service;
+  }
+
+  _actionForSelection(selection, entity = this._targetEntity) {
+    return this._targetActions(entity).find((item) => this._actionKey(item) === selection)
+      || this._targetActions(entity).find((item) => item.service === selection)
+      || null;
+  }
+
+  _inverseAction(selection, actions = this._commonTargetActions()) {
+    const selected = actions.find((item) => this._actionKey(item) === selection);
+    const service = selected?.service || String(selection || "").split("::", 1)[0];
+    const inverse = service.endsWith(".turn_on")
+      ? service.replace(/\.turn_on$/, ".turn_off")
+      : service.endsWith(".turn_off")
+        ? service.replace(/\.turn_off$/, ".turn_on")
+        : null;
+    return inverse
+      ? this._actionKey(actions.find((item) => item.service === inverse))
+      : "";
+  }
+
+  _defaultEndAction(startAction, actions = this._commonTargetActions()) {
+    return this._inverseAction(startAction, actions)
+      || this._actionKey(actions.find((item) => this._actionKey(item) !== startAction))
+      || startAction
+      || null;
+  }
+
   get _selectedTargets() {
     return this._targetEntities?.length
       ? this._targetEntities
@@ -186,7 +223,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     if (!entities.length) return [];
     const first = this._targetActions(entities[0]);
     return first.filter((action) => entities.every((entity) =>
-      this._targetActions(entity).some((candidate) => candidate.service === action.service)
+      this._targetActions(entity).some((candidate) => this._actionKey(candidate) === this._actionKey(action))
     ));
   }
 
@@ -196,8 +233,9 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   }
 
   _actionName(service = this._targetAction, entity = this._targetEntity) {
-    const action = this._targetActions(entity).find((item) => item.service === service);
-    return action?.label || (String(service).endsWith("turn_off") ? t("state_off", this.hass) : t("state_on", this.hass));
+    const action = this._actionForSelection(service, entity);
+    const rawService = action?.service || String(service || "").split("::", 1)[0];
+    return action?.label || (rawService.endsWith("turn_off") ? t("state_off", this.hass) : t("state_on", this.hass));
   }
 
   _selectTarget(entity) {
@@ -211,8 +249,11 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     this._targetEntities = entities;
     this._targetEntity = entities[0] || null;
     const actions = this._commonTargetActions(entities);
-    if (!actions.some((action) => action.service === this._targetAction)) {
-      this._targetAction = actions[0]?.service || null;
+    if (!actions.some((action) => this._actionKey(action) === this._targetAction)) {
+      this._targetAction = this._actionKey(actions[0]) || null;
+    }
+    if (!actions.some((action) => this._actionKey(action) === this._targetEndAction)) {
+      this._targetEndAction = this._defaultEndAction(this._targetAction, actions);
     }
     this._dirty = true;
   }
@@ -271,10 +312,12 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     this._targetEntity = null;
     this._targetEntities = [];
     this._targetAction = null;
+    this._targetEndAction = null;
     this._removeArmed = false;
     // Plain fields, not reactive props: neither is ever read by render()
     // directly, only by the seed/commit machinery.
     this._entityActions = null; // actions read off schedule_entity, preserved on write
+    this._entityTags = [];
     this._dirty = false; // true once the user edits the window; blocks re-seeding
                           // from the live entity out from under an in-progress edit
   }
@@ -295,8 +338,9 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  effectively now" check and STARTS THE VACUUM. */
   get _hasSelection() {
     if (this._isWindow) return !this._windowBlocked
+      && !this._windowSameTime
       && this._days.some(Boolean)
-      && (!this._isManager || (this._selectedTargets.length > 0 && !!this._targetAction));
+      && (!this._isManager || (this._selectedTargets.length > 0 && !!this._targetAction && !!this._targetEndAction));
     return this._mode === "event" ? this._event != null : this._pick != null;
   }
 
@@ -327,6 +371,10 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  show the "overnight" hint so the reversed order doesn't read as a typo. */
   get _windowOvernight() {
     return this._stopHour * 60 + this._stopMinute <= this._hour * 60 + this._minute;
+  }
+
+  get _windowSameTime() {
+    return this._stopHour === this._hour && this._stopMinute === this._minute;
   }
 
   get _windowLabel() {
@@ -363,31 +411,50 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     const st = this.hass?.states[id];
     if (!st) return;
     const slots = st.attributes.timeslots || [];
-    this._multipleSlots = slots.length > 1;
+    const marker = (st.attributes.tags || []).find((tag) => String(tag).startsWith("materia_window_"));
+    const markerMatch = marker && /^materia_window_(\d{2})(\d{2})_(\d{2})(\d{2})$/.exec(String(marker));
+    this._multipleSlots = slots.length > 1 && !markerMatch;
     this._entityActions = st.attributes.actions ?? null;
     if (this._isManager) {
       const allowed = new Set(this._managerTargets.map((item) => item.entity));
       const entities = [...new Set(st.attributes.entities || [])].filter((entity) => allowed.has(entity));
       this._targetEntities = entities;
       this._targetEntity = entities[0] || null;
-      const services = (st.attributes.actions || []).map((action) => action?.service).filter(Boolean);
-      const sharedService = services.length && services.every((service) => service === services[0])
-        ? services[0]
-        : null;
       const common = this._commonTargetActions(entities);
-      this._targetAction = common.some((action) => action.service === sharedService)
-        ? sharedService
-        : common[0]?.service || null;
+      // Scheduler exposes one representative action per timeslot in the state
+      // attributes, even when that timeslot targets several entities.
+      const slotActions = st.attributes.actions || [];
+      const slotStarts = slots.map((raw) => String(raw).trim().split(/\s+-\s+/)[0]?.slice(0, 5));
+      const startText = markerMatch ? `${markerMatch[1]}:${markerMatch[2]}` : null;
+      const stopText = markerMatch ? `${markerMatch[3]}:${markerMatch[4]}` : null;
+      const startIndex = startText ? slotStarts.indexOf(startText) : 0;
+      const endIndex = stopText ? slotStarts.indexOf(stopText) : -1;
+      const startSelection = this._actionKey(slotActions[Math.max(0, startIndex)]);
+      const endSelection = this._actionKey(slotActions[endIndex]);
+      this._targetAction = common.some((action) => this._actionKey(action) === startSelection)
+        ? startSelection
+        : this._actionKey(common[0]) || null;
+      this._targetEndAction = common.some((action) => this._actionKey(action) === endSelection)
+        ? endSelection
+        : this._defaultEndAction(this._targetAction, common);
     }
 
-    const raw = slots[0];
-    const m = raw && /^(\d{1,2}):(\d{2})(?::\d{2})?\s*-\s*(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(String(raw).trim());
-    if (m) {
-      this._hour = Number(m[1]);
-      this._minute = Number(m[2]);
-      this._stopHour = Number(m[3]);
-      this._stopMinute = Number(m[4]);
+    if (markerMatch) {
+      this._hour = Number(markerMatch[1]);
+      this._minute = Number(markerMatch[2]);
+      this._stopHour = Number(markerMatch[3]);
+      this._stopMinute = Number(markerMatch[4]);
+    } else {
+      const raw = slots[0];
+      const m = raw && /^(\d{1,2}):(\d{2})(?::\d{2})?\s*-\s*(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(String(raw).trim());
+      if (m) {
+        this._hour = Number(m[1]);
+        this._minute = Number(m[2]);
+        this._stopHour = Number(m[3]);
+        this._stopMinute = Number(m[4]);
+      }
     }
+    this._entityTags = st.attributes.tags ?? [];
 
     const wd = (st.attributes.weekdays || []).map((w) => String(w).toLowerCase());
     if (wd.includes("daily")) {
@@ -803,17 +870,67 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     // yet); otherwise whatever was read off schedule_entity survives
     // untouched — losing it would turn the pump's schedule into a no-op.
     const actions = this._isManager
-      ? this._selectedTargets.map((entity) => ({ service: this._targetAction, entity_id: entity }))
+      ? this._scheduledActions(this._targetAction)
       : (this.config.actions ?? this._entityActions ?? []);
+    const endActions = this._isManager
+      ? this._scheduledActions(this._targetEndAction)
+      : (this.config.end_actions ?? this._inverseScheduledActions(actions));
+    const tags = [
+      ...(this._entityTags || []).filter((tag) => !String(tag).startsWith("materia_window_")),
+      `materia_window_${start.replace(":", "")}_${stop.replace(":", "")}`,
+    ];
     return {
       start,
       stop,
       weekdays,
       actions,
+      start_actions: actions,
+      end_actions: endActions,
+      timeslots: this._scheduleTimeslots(start, stop, actions, endActions),
+      tags,
       entity: this._scheduleEntity,
       name: `${this._targetSelectionName()} · ${this._windowLabel}`,
       label: this._windowLabel,
     };
+  }
+
+  _scheduledActions(selection) {
+    return this._selectedTargets.map((entity) => {
+      const configured = this._actionForSelection(selection, entity) || { service: selection };
+      return {
+        service: configured.service,
+        entity_id: entity,
+        ...(configured.service_data ? { service_data: configured.service_data } : {}),
+      };
+    });
+  }
+
+  _inverseScheduledActions(actions) {
+    return actions.map((action) => ({
+      ...action,
+      service: String(action.service || "").endsWith(".turn_on")
+        ? String(action.service).replace(/\.turn_on$/, ".turn_off")
+        : String(action.service || "").endsWith(".turn_off")
+          ? String(action.service).replace(/\.turn_off$/, ".turn_on")
+          : action.service,
+      ...(action.service_data ? { service_data: action.service_data } : {}),
+    }));
+  }
+
+  _scheduleTimeslots(start, stop, startActions, endActions) {
+    const startMinutes = this._hour * 60 + this._minute;
+    const stopMinutes = this._stopHour * 60 + this._stopMinute;
+    const slots = [];
+    if (startMinutes < stopMinutes) {
+      if (startMinutes > 0) slots.push({ start: "00:00", stop: start, actions: endActions });
+      slots.push({ start, stop, actions: startActions });
+      if (stopMinutes > 0) slots.push({ start: stop, stop: "00:00", actions: endActions });
+    } else {
+      if (stopMinutes > 0) slots.push({ start: "00:00", stop, actions: startActions });
+      slots.push({ start: stop, stop: start, actions: endActions });
+      if (startMinutes > 0) slots.push({ start, stop: "00:00", actions: startActions });
+    }
+    return slots;
   }
 
   /** Only fires when schedule_entity is set AND config doesn't supply its own
@@ -837,7 +954,8 @@ class MateriaSchedule extends ActionMixin(LitElement) {
         // Write shape is {start, stop, actions} — NOT the "HH:MM:SS - HH:MM:SS"
         // string schedule_entity's own timeslots attribute reads back as. See
         // _seedFromEntity for the other half of that asymmetry.
-        timeslots: [{ start: "$start", stop: "$stop", actions: "$actions" }],
+        timeslots: "$timeslots",
+        tags: "$tags",
       },
     };
   }
@@ -979,8 +1097,17 @@ class MateriaSchedule extends ActionMixin(LitElement) {
         ${schedules.length ? schedules.map((stateObj) => {
           const targets = stateObj.attributes.entities || [];
           const target = targets[0];
-          const service = (stateObj.attributes.actions || [])[0]?.service;
-          const time = (stateObj.attributes.timeslots || [])[0] || "";
+          const marker = (stateObj.attributes.tags || []).find((tag) => String(tag).startsWith("materia_window_"));
+          const markerMatch = marker && /^materia_window_(\d{2})(\d{2})_(\d{2})(\d{2})$/.exec(String(marker));
+          const markerStart = markerMatch ? `${markerMatch[1]}:${markerMatch[2]}` : null;
+          const timeslots = stateObj.attributes.timeslots || [];
+          const slotIndex = markerStart
+            ? Math.max(0, timeslots.findIndex((slot) => String(slot).trim().startsWith(markerStart)))
+            : 0;
+          const service = (stateObj.attributes.actions || [])[slotIndex]?.service;
+          const time = markerMatch
+            ? `${markerStart} - ${markerMatch[3]}:${markerMatch[4]}`
+            : timeslots[0] || "";
           return html`<div class="schedule-row">
             <button class="schedule-main" @click=${() => this._openSchedule(stateObj)}>
               <ha-icon icon=${targets.length > 1 ? "m3o:devices" : (this._targetConfig(target)?.icon ?? "m3o:schedule")}></ha-icon>
@@ -1007,7 +1134,6 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   }
 
   _renderManagerFields() {
-    const actionOptions = this._commonTargetActions().map((item) => ({ value: item.service, label: item.label || this._actionName(item.service) }));
     const selectedTargets = this._selectedTargets;
     const targetSummary = selectedTargets.length
       ? this._targetSelectionName(selectedTargets)
@@ -1046,14 +1172,6 @@ class MateriaSchedule extends ActionMixin(LitElement) {
           })}
         </div>` : nothing}
       </div>
-      <label><span>${t("sched_action", this.hass)}</span>
-        <ha-selector
-          .hass=${this.hass}
-          .selector=${{ select: { mode: "dropdown", options: actionOptions } }}
-          .value=${this._targetAction || ""}
-          @value-changed=${(event) => { this._targetAction = event.detail.value; this._dirty = true; }}
-        ></ha-selector>
-      </label>
     </div>`;
   }
 
@@ -1360,11 +1478,33 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       `;
     }
 
+    const actionOptions = this._isManager
+      ? this._commonTargetActions().map((item) => ({
+          value: this._actionKey(item),
+          label: item.label || this._actionName(this._actionKey(item)),
+        }))
+      : [];
+    const actionSelector = (value, label, change) => this._isManager ? html`
+      <div class="win-action" @click=${(event) => event.stopPropagation()}>
+        <span class="sr-only">${label}</span>
+        <ha-selector
+          .hass=${this.hass}
+          .selector=${{ select: { mode: "dropdown", options: actionOptions } }}
+          .value=${value || ""}
+          @value-changed=${change}
+        ></ha-selector>
+      </div>
+    ` : nothing;
+
     return html`
       <div class="window">
         <div class="win-edge native-time">
           <div class="win-head" @click=${this._showNativeTimePicker}>
             <span class="lbl">${t("sched_window_start", this.hass)}</span>
+            ${actionSelector(this._targetAction, t("sched_start_action", this.hass), (event) => {
+              this._targetAction = event.detail.value;
+              this._dirty = true;
+            })}
             <input
               class="native-time-input"
               type="time"
@@ -1387,6 +1527,10 @@ class MateriaSchedule extends ActionMixin(LitElement) {
         <div class="win-edge native-time">
           <div class="win-head" @click=${this._showNativeTimePicker}>
             <span class="lbl">${t("sched_window_stop", this.hass)}</span>
+            ${actionSelector(this._targetEndAction, t("sched_end_action", this.hass), (event) => {
+              this._targetEndAction = event.detail.value;
+              this._dirty = true;
+            })}
             <!-- Non-normative: crossing midnight round-trips exactly as entered,
                  this is only here so the reversed order doesn't read as a mistake. -->
             ${this._windowOvernight ? html`<span class="overnight-badge">${t("sched_window_overnight", this.hass)}</span>` : nothing}

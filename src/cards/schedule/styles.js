@@ -190,7 +190,7 @@ export const styles = [
 
     .manager-fields {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 10px;
     }
 
@@ -854,9 +854,35 @@ export const styles = [
     }
 
     .win-head .lbl {
-      flex: 1;
+      flex: 0 0 auto;
       font-size: 16px;
       font-weight: 600;
+    }
+
+    .win-action {
+      flex: 1 1 150px;
+      min-width: 110px;
+      max-width: 220px;
+    }
+
+    .win-action ha-selector {
+      display: block;
+      padding: 0 8px;
+      border-radius: 18px;
+      overflow: hidden;
+      background: var(--md-sys-color-surface-container-high, rgba(0, 0, 0, 0.08));
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
     .win-head .val,

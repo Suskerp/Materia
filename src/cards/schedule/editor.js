@@ -126,8 +126,14 @@ class MateriaScheduleEditor extends SmartEditorBase {
           },
           {
             name: "actions",
-            label: "Timeslot actions",
-            helper: 'What the window turns on/off, e.g. [{service: "switch.turn_on", target: {entity_id: "switch.pool_pump"}}]. Only needed when schedule_entity has no existing timeslot to read the actions from, or to override it.',
+            label: "Start actions",
+            helper: 'Actions performed when the window starts, e.g. [{service: "switch.turn_on", entity_id: "switch.pool_pump"}]. Only needed outside manager mode.',
+            selector: { object: {} },
+          },
+          {
+            name: "end_actions",
+            label: "End actions",
+            helper: 'Actions performed when the window ends. If omitted, turn_on/turn_off is inverted where possible.',
             selector: { object: {} },
           },
         ],
