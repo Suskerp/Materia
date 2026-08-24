@@ -40,6 +40,7 @@ export const styles = [
       overflow: hidden;
       -webkit-tap-highlight-color: transparent;
       transition: border-radius var(--md-sys-motion-expressive-fast-spatial),
+        transform var(--md-sys-motion-expressive-fast-spatial),
         background-color var(--md-sys-motion-fast-effects),
         color var(--md-sys-motion-fast-effects),
         box-shadow var(--md-sys-motion-fast-effects);
@@ -118,6 +119,7 @@ export const styles = [
     .btn:active,
     .btn.confirming.armed {
       border-radius: var(--mb-rsq, 16px);
+      transform: scale(0.96);
     }
 
     /* ---- connected (split-button): round outer edge, small inner edge ---- */
