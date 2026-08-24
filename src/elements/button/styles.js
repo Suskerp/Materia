@@ -115,7 +115,8 @@ export const styles = [
     /* M3 Expressive: round and square buttons converge on the same pressed
        shape for their size. The selected resting shape is handled separately
        in index.js, so releasing returns to the correct inverse shape. */
-    .btn:active {
+    .btn:active,
+    .btn.confirming.armed {
       border-radius: var(--mb-rsq, 16px);
     }
 
