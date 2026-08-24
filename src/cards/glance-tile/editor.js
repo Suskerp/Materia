@@ -90,6 +90,7 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
         { name: "name", label: "Title", selector: { text: {} } },
         { name: "icon", label: "Icon (overrides entity icon)", selector: { icon: {} } },
         { name: "label", label: "Subtitle", selector: { text: {} } },
+        { name: "active_state", label: "Active state (binary)", helper: "Optional state value or template for active styling, e.g. Charging.", template: true, selector: { text: {} } },
       ],
     };
 

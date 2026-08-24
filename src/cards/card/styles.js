@@ -7,14 +7,31 @@ export const styles = css`
      change. The surface-tint background-color is the same "nothing decoded
      yet" placeholder materia-media uses for its art tile. */
   .thumb {
-    width: 42px;
-    height: 42px;
+    position: absolute;
+    inset: 0;
     border-radius: 50%;
-    background-color: var(--md-sys-color-surface-container-highest, var(--md-sys-color-surface-variant, rgba(127, 127, 127, 0.2)));
+    background-color: transparent;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    z-index: 1;
+  }
+
+  .thumb-wrap {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+    background-color: var(--md-sys-color-surface-container-highest, var(--md-sys-color-surface-variant, rgba(127, 127, 127, 0.2)));
+  }
+
+  .thumb-wrap .thumb-fallback {
+    position: relative;
+    z-index: 0;
   }
 
   .container.slider-active {

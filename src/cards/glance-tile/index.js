@@ -110,6 +110,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     _resolvedMaxLabel: { state: true },
     _resolvedHeadline: { state: true },
     _resolvedFooter: { state: true },
+    _resolvedActiveState: { state: true },
     /** The fetched series. Reactive: arriving history must repaint. */
     _hist: { state: true },
   };
@@ -142,6 +143,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
       this._resolveField("max_label", "_resolvedMaxLabel");
       this._resolveField("headline", "_resolvedHeadline");
       this._resolveField("footer", "_resolvedFooter");
+      this._resolveField("active_state", "_resolvedActiveState");
       // Marker labels live inside a list, so they take the per-item template
       // path (same machinery materia-bars and materia-schedule use).
       (Array.isArray(this.config.markers) ? this.config.markers : []).forEach((m, i) =>
@@ -839,8 +841,15 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     // as `Charging`. Keep the generic defaults, while allowing a card to name
     // the states that represent its active condition.
     const configuredActive = Array.isArray(this.config.active_states) && this.config.active_states.length
-      ? this.config.active_states
-      : ACTIVE_STATES;
+      ? [...this.config.active_states]
+      : [];
+    if (this.config.active_state != null) {
+      const activeState = this._isTemplate(this.config.active_state)
+        ? this._resolvedActiveState
+        : this.config.active_state;
+      if (activeState != null && String(activeState).trim()) configuredActive.push(activeState);
+    }
+    if (!configuredActive.length) configuredActive.push(...ACTIVE_STATES);
     const active = configuredActive.some((state) => String(state).toLowerCase() === String(this._stateObj.state).toLowerCase());
     const sunny = roundedPolygonPath(50, 50, 46, { vertices: 8, innerRadius: 0.8, rounding: 0.15, rotate: -Math.PI / 2 });
     return html`

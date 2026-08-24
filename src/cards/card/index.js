@@ -843,7 +843,12 @@ export class MateriaCard extends ActionMixin(LitElement) {
 
           <div class="icon-container">
             ${layers
-              ? html`<div class="thumb" style="background-image: ${layers};"></div>`
+              ? html`<div class="thumb-wrap">
+                  ${icon
+                    ? html`<ha-icon class="thumb-fallback" .icon=${icon} style="color: ${textColor};"></ha-icon>`
+                    : html`<ha-state-icon class="thumb-fallback" .hass=${this.hass} .stateObj=${stateObj} style="color: ${textColor};"></ha-state-icon>`}
+                  <div class="thumb" style="background-image: ${layers};"></div>
+                </div>`
               : icon
                 ? html`<ha-icon .icon=${icon} style="color: ${textColor};"></ha-icon>`
                 : html`<ha-state-icon
