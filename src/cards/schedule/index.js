@@ -196,7 +196,11 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   _inverseAction(selection, actions = this._commonTargetActions()) {
     const selected = actions.find((item) => this._actionKey(item) === selection);
     const service = selected?.service || String(selection || "").split("::", 1)[0];
-    const inverse = service.endsWith(".turn_on")
+    const inverse = service === "turn_on"
+      ? "turn_off"
+      : service === "turn_off"
+        ? "turn_on"
+        : service.endsWith(".turn_on")
       ? service.replace(/\.turn_on$/, ".turn_off")
       : service.endsWith(".turn_off")
         ? service.replace(/\.turn_off$/, ".turn_on")
@@ -897,8 +901,12 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   _scheduledActions(selection) {
     return this._selectedTargets.map((entity) => {
       const configured = this._actionForSelection(selection, entity) || { service: selection };
+      const domain = String(entity).split(".")[0];
+      const service = String(configured.service || "").includes(".")
+        ? configured.service
+        : `${domain}.${configured.service}`;
       return {
-        service: configured.service,
+        service,
         entity_id: entity,
         ...(configured.service_data ? { service_data: configured.service_data } : {}),
       };
