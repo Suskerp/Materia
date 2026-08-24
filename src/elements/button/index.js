@@ -2,6 +2,7 @@ import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { CommitGesture } from "../../utils/commit-gesture.js";
 import { conditionsMet } from "../../utils/conditions.js";
+import { MOTION } from "../../utils/motion.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -202,14 +203,71 @@ class MateriaButton extends ActionMixin(LitElement) {
   }
 
   get _gesture() {
-    this.__gesture ??= new CommitGesture({
-      host: this,
-      surface: () => this.shadowRoot?.querySelector(".btn"),
-      onChange: () => this.requestUpdate(),
-    });
+    if (!this.__gesture) {
+      this.__lastGestureArmed = false;
+      this.__gesture = new CommitGesture({
+        host: this,
+        surface: () => this.shadowRoot?.querySelector(".btn"),
+        onChange: () => this._onGestureChange(),
+      });
+    }
     // The fill spans the whole button — there is no handle to leave room for.
     this.__gesture.travel = "full";
     return this.__gesture;
+  }
+
+  _onGestureChange() {
+    const armed = !!this.__gesture?.armed;
+    if (armed !== this.__lastGestureArmed) {
+      this.__lastGestureArmed = armed;
+      this._playGestureSpring(armed);
+    }
+    this.requestUpdate();
+  }
+
+  _playGestureSpring(pressed) {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+    const el = this.shadowRoot?.querySelector(".btn");
+    if (!el?.animate) return;
+
+    /* CSS transitions using the M3 linear() token are the lightweight path,
+       but older Android WebViews can reject linear() wholesale and snap to the
+       pressed shape. Sample that same token into ordinary linear WAAPI
+       keyframes so the expressive overshoot survives on every HA client. */
+    const spring = MOTION["expressive-fast-spatial"];
+    const sampleText = spring.easing.match(/^linear\((.*)\)$/)?.[1];
+    const samples = sampleText?.split(",").map((value) => Number(value.trim())).filter(Number.isFinite);
+    if (!samples?.length) return;
+
+    const css = getComputedStyle(el);
+    const height = el.getBoundingClientRect().height || parseFloat(css.height) || 56;
+    const squareRadius = parseFloat(css.getPropertyValue("--mb-rsq")) || 16;
+    const baseRound = this.config?.shape !== "square";
+    const stateObj = this.config?.entity ? this.hass?.states?.[this.config.entity] : undefined;
+    const active = this._isActive(stateObj);
+    const restingRound = this.config?.morph_on_active && active ? !baseRound : baseRound;
+    const restingRadius = restingRound ? height / 2 : squareRadius;
+
+    const fromRadius = parseFloat(css.borderTopLeftRadius) || (pressed ? restingRadius : squareRadius);
+    const transform = css.transform;
+    const fromScale = transform && transform !== "none"
+      ? Number(transform.match(/^matrix\(([^,]+)/)?.[1]) || 1
+      : 1;
+    const toRadius = pressed ? squareRadius : restingRadius;
+    const toScale = pressed ? 0.96 : 1;
+
+    this.__gestureSpring?.cancel();
+    const last = samples.length - 1;
+    const frames = samples.map((position, index) => ({
+      offset: index / last,
+      borderRadius: `${fromRadius + (toRadius - fromRadius) * position}px`,
+      transform: `scale(${fromScale + (toScale - fromScale) * position})`,
+    }));
+    this.__gestureSpring = el.animate(frames, {
+      duration: spring.ms,
+      easing: "linear",
+      fill: "none",
+    });
   }
 
   _syncGesture() {
@@ -266,6 +324,7 @@ class MateriaButton extends ActionMixin(LitElement) {
     clearTimeout(this.__suppressClickTimer);
     cancelAnimationFrame(this.__confirmResetRaf);
     this.__morphAnimation?.cancel();
+    this.__gestureSpring?.cancel();
     this.__gesture?.destroy();
   }
 
