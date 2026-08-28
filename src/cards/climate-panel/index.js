@@ -28,7 +28,7 @@ const MODE_COLORS = {
   auto: ["var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-primary-container))"],
   heat_cool: ["var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-primary-container))"],
   off: ["var(--md-sys-color-secondary)", "var(--md-sys-color-on-secondary)"],
-  humidity: ["var(--md-sys-cust-color-on-water-eco, var(--md-sys-color-primary))", "var(--md-sys-cust-color-water-eco-container, var(--md-sys-color-primary-container))"],
+  humidity: ["var(--md-sys-cust-color-climate-cool-accent, #205f82)", "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)"],
   drying: ["var(--md-sys-cust-color-climate-cool-accent, #327ea7)", "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)"],
 };
 
@@ -153,12 +153,7 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
       icon: HUMIDIFIER_MODE_ICONS[mode] || "mdi:water-percent",
       value: mode,
       active: isOn && mode === currentMode,
-      tap_action: {
-        action: "perform-action",
-        perform_action: "humidifier.set_mode",
-        data: { mode },
-        target: { entity_id: this.config.entity },
-      },
+      on_select: () => this._selectHumidifierMode(mode),
     }))];
     return html`
       <materia-button-group
@@ -175,6 +170,37 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
         }}
       ></materia-button-group>
     `;
+  }
+
+  async _selectHumidifierMode(mode) {
+    if (this._entity?.state === "off") {
+      const powered = await this._callService("humidifier", "turn_on", {
+        entity_id: this.config.entity,
+      });
+      if (!powered.ok) return;
+      // Several integrations acknowledge turn_on before their entity changes
+      // to `on`. Sending set_mode during that gap is accepted by HA but
+      // ignored by the device, which made mode chips appear to do nothing.
+      await this._waitForHumidifierPower();
+    }
+    await this._callService("humidifier", "set_mode", {
+      entity_id: this.config.entity,
+      mode,
+    });
+  }
+
+  _waitForHumidifierPower(timeout = 4000) {
+    const started = performance.now();
+    return new Promise((resolve) => {
+      const check = () => {
+        if (this._entity?.state !== "off" || performance.now() - started >= timeout) {
+          resolve();
+          return;
+        }
+        setTimeout(check, 100);
+      };
+      check();
+    });
   }
 
   /* ---- wallet accordion: EVERY section is chrome around nested cards -------

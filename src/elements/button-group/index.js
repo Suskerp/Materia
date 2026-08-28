@@ -341,7 +341,11 @@ export class MateriaButtonGroup extends DisabledMixin(ActionMixin(LitElement)) {
       this._optimisticTimer = setTimeout(() => { this._optimisticValue = null; }, 10000);
     }
 
-    if (opt.tap_action) {
+    if (typeof opt.on_select === "function") {
+      Promise.resolve(opt.on_select(opt.value, opt)).catch((error) => {
+        console.error("materia-button-group: option selection failed", error);
+      });
+    } else if (opt.tap_action) {
       // Per-option entity rides along so `action: toggle` (and more-info)
       // target THIS button's entity, not the group's.
       this._handleAction(opt.entity ? { entity: opt.entity, ...opt.tap_action } : opt.tap_action);

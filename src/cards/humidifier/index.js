@@ -110,9 +110,9 @@ class MateriaHumidifier extends ActionMixin(LitElement) {
     }
     if (this._isOn) {
       return {
-        background: "var(--md-sys-cust-color-water-eco-container)",
-        foreground: "var(--md-sys-cust-color-on-water-eco)",
-        control: "var(--md-sys-cust-color-water-eco)",
+        background: "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)",
+        foreground: "var(--md-sys-cust-color-on-climate-cool, #205f82)",
+        control: "var(--md-sys-cust-color-climate-cool-accent, #205f82)",
       };
     }
     return {

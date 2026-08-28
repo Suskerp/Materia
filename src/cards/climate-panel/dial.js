@@ -28,7 +28,7 @@ const MODE_META = {
   // secondary fill (the mauve) — clearly chosen, no climate hue implied.
   // Steppers keep the lighter secondary-container so they read as controls.
   off: { icon: "m3o:power-settings-new", color: "var(--md-sys-color-secondary)", on: "var(--md-sys-color-on-secondary)", container: "var(--md-sys-color-secondary-container)", onContainer: "var(--md-sys-color-on-secondary-container)" },
-  humidity: { icon: "mdi:water-percent", color: "var(--md-sys-cust-color-on-water-eco, var(--md-sys-color-primary))", on: "var(--md-sys-cust-color-water-eco-container, var(--md-sys-color-primary-container))", container: "var(--md-sys-cust-color-water-eco-container, var(--md-sys-color-primary-container))", onContainer: "var(--md-sys-cust-color-on-water-eco, var(--md-sys-color-on-primary-container))" },
+  humidity: { icon: "mdi:water-percent", color: "var(--md-sys-cust-color-climate-cool-accent, #205f82)", on: "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)", container: "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)", onContainer: "var(--md-sys-cust-color-climate-cool-accent, #205f82)" },
 };
 
 /**
@@ -94,10 +94,10 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
       const drying = this._entity?.attributes?.device_class === "dehumidifier";
       if (this.config.wave === "always") return drying ? "drying" : "humidifying";
       if (["drying", "humidifying"].includes(deviceAction)) return deviceAction;
-      if (deviceAction === "idle") return "holding";
       if (this._current == null || this._target == null) return "holding";
-      if (drying && this._current > this._target) return "drying";
-      if (!drying && this._current < this._target) return "humidifying";
+      const tolerance = Math.max(this._step / 2, 0.5);
+      if (drying && this._current > this._target + tolerance) return "drying";
+      if (!drying && this._current < this._target - tolerance) return "humidifying";
       return "holding";
     }
     if (this.config.wave === "always") return mode === "cool" ? "cooling" : "heating";
