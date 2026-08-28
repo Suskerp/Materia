@@ -2,6 +2,7 @@ import { LitElement, html, svg } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { materialCookiePath } from "../../utils/shapes.js";
 import { t } from "../../utils/i18n.js";
+import { humidifierAction, humidifierRange, humidifierTarget } from "../humidifier/model.js";
 import { styles } from "./dial-styles.js";
 
 const DIAL_START = -135; // degrees, 0 = 12 o'clock
@@ -27,6 +28,7 @@ const MODE_META = {
   // secondary fill (the mauve) — clearly chosen, no climate hue implied.
   // Steppers keep the lighter secondary-container so they read as controls.
   off: { icon: "m3o:power-settings-new", color: "var(--md-sys-color-secondary)", on: "var(--md-sys-color-on-secondary)", container: "var(--md-sys-color-secondary-container)", onContainer: "var(--md-sys-color-on-secondary-container)" },
+  humidity: { icon: "mdi:water-percent", color: "var(--md-sys-cust-color-on-water-eco, var(--md-sys-color-primary))", on: "var(--md-sys-cust-color-water-eco-container, var(--md-sys-color-primary-container))", container: "var(--md-sys-cust-color-water-eco-container, var(--md-sys-color-primary-container))", onContainer: "var(--md-sys-cust-color-on-water-eco, var(--md-sys-color-on-primary-container))" },
 };
 
 /**
@@ -70,8 +72,14 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
     return this.hass?.states[this.config.entity];
   }
 
+  get _isHumidifier() {
+    return this.config.entity.startsWith("humidifier.");
+  }
+
   get _action() {
-    return this._entity?.attributes?.hvac_action ?? "";
+    return this._isHumidifier
+      ? humidifierAction(this._entity)
+      : this._entity?.attributes?.hvac_action ?? "";
   }
 
   /** What the wave should express. hvac_action when the integration reports
@@ -81,6 +89,17 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
   get _waveAction() {
     const mode = this._mode;
     if (mode === "off" || this.config.wave === "never") return "";
+    if (this._isHumidifier) {
+      const deviceAction = this._action;
+      const drying = this._entity?.attributes?.device_class === "dehumidifier";
+      if (this.config.wave === "always") return drying ? "drying" : "humidifying";
+      if (["drying", "humidifying"].includes(deviceAction)) return deviceAction;
+      if (deviceAction === "idle") return "holding";
+      if (this._current == null || this._target == null) return "holding";
+      if (drying && this._current > this._target) return "drying";
+      if (!drying && this._current < this._target) return "humidifying";
+      return "holding";
+    }
     if (this.config.wave === "always") return mode === "cool" ? "cooling" : "heating";
     const isAuto = mode === "auto" || mode === "heat_cool";
     // Auto at equilibrium "holds": a gentle low-amplitude breathing wave —
@@ -106,10 +125,18 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
 
   get _target() {
     if (this._optimisticTemp != null) return this._optimisticTemp;
+    if (this._isHumidifier) return humidifierTarget(this._entity?.attributes) ?? null;
     return this._numRaw(this._entity?.attributes?.temperature);
   }
 
   get _current() {
+    if (this._isHumidifier) {
+      if (this.config.humidity_entity) {
+        const humidity = this.hass?.states[this.config.humidity_entity];
+        if (humidity) return this._numRaw(humidity.state);
+      }
+      return this._numRaw(this._entity?.attributes?.current_humidity);
+    }
     if (this.config.temperature_entity) {
       const t = this.hass?.states[this.config.temperature_entity];
       if (t) return this._numRaw(t.state);
@@ -123,8 +150,26 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
     return Number.isFinite(n) ? n : null;
   }
 
+  _humidifierLabel(stateObj) {
+    const action = humidifierAction(stateObj);
+    if (["off", "drying", "humidifying"].includes(action)) {
+      return t(`humidifier_action_${action}`, this.hass);
+    }
+    const mode = stateObj?.attributes?.mode;
+    if (mode) {
+      const key = `humidifier_mode_${String(mode).toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
+      const translated = t(key, this.hass);
+      if (translated !== key) return translated;
+      return String(mode)
+        .replace(/[_-]+/g, " ")
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    }
+    return t("humidifier_action_idle", this.hass);
+  }
+
   /** Temperature step — config override → entity target_temp_step → 0.5. */
   get _step() {
+    if (this._isHumidifier) return humidifierRange(this._entity?.attributes, this.config.step).step;
     return this.config.step
       ?? this._numRaw(this._entity?.attributes?.target_temp_step)
       ?? 0.5;
@@ -132,6 +177,13 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
 
   /** Dial scale — config override → entity min/max → sane defaults. */
   get _scale() {
+    if (this._isHumidifier) {
+      const range = humidifierRange(this._entity?.attributes, this.config.step);
+      return {
+        min: this.config.min_humidity ?? range.min,
+        max: this.config.max_humidity ?? range.max,
+      };
+    }
     return {
       min: this.config.min_temp ?? this._numRaw(this._entity?.attributes?.min_temp) ?? 7,
       max: this.config.max_temp ?? this._numRaw(this._entity?.attributes?.max_temp) ?? 35,
@@ -147,7 +199,7 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
     const tick = () => {
       const action = this._waveAction;
-      const traveling = action === "heating" || action === "cooling";
+      const traveling = ["heating", "cooling", "humidifying", "drying"].includes(action);
       const holding = action === "holding";
       // Holding (auto at equilibrium) breathes at ~1/3 amplitude and drifts
       // slowly; active heat/cool waves travel at full amplitude.
@@ -157,7 +209,7 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
       this._amp = settled ? targetAmp : nextAmp;
       if (this._amp > 0.005 || targetAmp > 0) {
         // Barely above the auto-holding breathe — calm, not busy.
-        this._phase += action === "cooling" ? 0.012 : traveling ? -0.012 : -0.008;
+        this._phase += ["cooling", "drying"].includes(action) ? 0.012 : traveling ? -0.012 : -0.008;
         // Mutate the wave path directly — _phase/_amp are deliberately NOT
         // reactive; re-rendering the whole card (and its button-group child)
         // at 60fps was pure waste. Geometry is stashed by render().
@@ -187,7 +239,9 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
     if (changedProps.has("hass")) {
       // Reconcile optimistic target.
       if (this._optimisticTemp != null) {
-        const actual = this._numRaw(this._entity?.attributes?.temperature);
+        const actual = this._isHumidifier
+          ? humidifierTarget(this._entity?.attributes)
+          : this._numRaw(this._entity?.attributes?.temperature);
         if (actual != null && Math.abs(actual - this._optimisticTemp) < 1e-6) {
           this._optimisticTemp = null;
           clearTimeout(this._optimisticTimer);
@@ -282,10 +336,14 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
     this._optimisticTimer = setTimeout(() => { this._optimisticTemp = null; }, 10000);
     clearTimeout(this._sendTimer);
     this._sendTimer = setTimeout(() => {
-      this._callService("climate", "set_temperature", {
-        entity_id: this.config.entity,
-        temperature: clamped,
-      });
+      this._callService(
+        this._isHumidifier ? "humidifier" : "climate",
+        this._isHumidifier ? "set_humidity" : "set_temperature",
+        {
+          entity_id: this.config.entity,
+          [this._isHumidifier ? "humidity" : "temperature"]: clamped,
+        }
+      );
     }, 350);
   }
 
@@ -331,7 +389,7 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
     const current = this._current;
     const mode = this._mode;
     const action = this._waveAction;
-    const meta = MODE_META[mode] || MODE_META.off;
+    const meta = this._isHumidifier && mode !== "off" ? MODE_META.humidity : MODE_META[mode] || MODE_META.off;
     const active = mode !== "off" && target != null;
 
     const R = 42;
@@ -362,13 +420,16 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
     // Wave/accent color follows the *action* when running, else the mode.
     const accentMeta =
       action === "heating" ? MODE_META.heat
-      : action === "cooling" ? MODE_META.cool
+      : action === "cooling" || action === "drying" ? MODE_META.cool
+      : action === "humidifying" ? MODE_META.humidity
       : meta;
     const accent = accentMeta.color;
     const accentOn = accentMeta.on;
 
-    const modeLabel = this.hass.formatEntityState?.(stateObj) ?? mode;
-    const unit = this.hass.config?.unit_system?.temperature ?? "°C";
+    const modeLabel = this._isHumidifier
+      ? this._humidifierLabel(stateObj)
+      : this.hass.formatEntityState?.(stateObj) ?? mode;
+    const unit = this._isHumidifier ? "%" : this.hass.config?.unit_system?.temperature ?? "°C";
 
     const modes = (this.config.hvac_modes ?? stateObj.attributes.hvac_modes ?? [])
       .filter((m) => MODE_META[m]);
@@ -441,7 +502,7 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
               ${target != null ? Math.round(target * 10) / 10 : current != null ? Math.round(current * 10) / 10 : "—"}<span class="deg">${unit}</span>
             </div>
             ${current != null && this.config.show_current !== false
-              ? html`<div class="current-label">${this.config.current_label ?? t("cp_currently", this.hass)} ${Math.round(current * 10) / 10}°</div>`
+              ? html`<div class="current-label">${this.config.current_label ?? t("cp_currently", this.hass)} ${Math.round(current * 10) / 10}${unit}</div>`
               : ""}
           </div>
         </div>
@@ -490,4 +551,3 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
 customElements.define("materia-climate-dial", MateriaClimateDial);
 
 window.customCards = window.customCards || [];
-

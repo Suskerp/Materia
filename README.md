@@ -369,7 +369,7 @@ buttons:
 
 #### `materia-climate-panel`
 
-The full climate surface: the thermostat dial as hero, the mode group as a connected segment, and below them wallet-style sections you compose yourself — each one either an accordion section around **any nested cards** or a compact **menu** row. Exactly one section is open; bars show live `info` (templates supported) and optional action chips.
+The full climate surface for both `climate` and `humidifier` entities: a temperature or humidity dial as hero, the applicable mode group as a connected segment, and below them wallet-style sections you compose yourself — each one either an accordion section around **any nested cards** or a compact **menu** row. Exactly one section is open; bars show live `info` (templates supported) and optional action chips. Humidifiers and dehumidifiers automatically use `%`, their reported target range and step, and the native `humidifier` services.
 
 ```yaml
 type: custom:materia-climate-panel
@@ -392,11 +392,14 @@ sections:
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `entity` | string | **required** | Climate entity |
+| `entity` | string | **required** | Climate, humidifier, or dehumidifier entity |
 | `sections` | list | `[]` | `{title, icon, style: section\|menu, cards / entity+options, info, info_entity, actions}` |
 | `reserve_height` | boolean | `false` | Keep the height of the tallest section |
 | `temperature_entity` | string | | Current-temp sensor (marker on the dial) |
-| `step` / `min_temp` / `max_temp` | number | entity | Dial scale & step |
+| `humidity_entity` | string | | Current-humidity sensor (marker on a humidity dial) |
+| `step` | number | entity | Target step reported by the entity |
+| `min_temp` / `max_temp` | number | entity | Temperature dial scale |
+| `min_humidity` / `max_humidity` | number | entity | Humidity dial scale |
 | `steppers` | `side` \| `below` | `side` | Stepper placement |
 | `wave` | `auto` \| `always` \| `never` | `auto` | Dial wave animation |
 

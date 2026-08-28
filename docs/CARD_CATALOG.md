@@ -14,7 +14,7 @@ only when its extra interaction is the reason you chose it.
 | On/off row | `materia-switch` | The universal card already fits the page; do not replace it only for visual variety. |
 | Media summary | `materia-media` | Seeking is required; add `materia-media-progress` alongside it. |
 | Weather overview | `materia-weather-glance` | The page needs a hero, forecast strip, or one detailed metric. |
-| Humidity control | `materia-humidifier` | A plain entity row is enough and target humidity or device modes are not needed. |
+| Humidity control | `materia-humidifier` | A compact humidity control is enough; use `materia-climate-panel` when the full dial-and-sections layout is wanted. |
 | Safe consequential action | `materia-confirm` | Native HA confirmation is sufficient for the risk involved. |
 
 ## Specialized families
@@ -29,7 +29,7 @@ only when its extra interaction is the reason you chose it.
 - **Scheduling:** `presentation: manager` is the parent-facing Scheduler UI.
   `inline` is a compact one-off picker. `sheet` and backend wiring fields are
   advanced integration seams, not normal dashboard choices.
-- **Humidity:** `materia-humidifier` supports both humidifiers and
+- **Humidity:** `materia-humidifier` and `materia-climate-panel` support both humidifiers and
   dehumidifiers. Prefer the entity's reported limits, step size, current
   humidity, and modes; configure an external sensor only when the integration
   does not expose `current_humidity`.

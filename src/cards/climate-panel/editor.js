@@ -304,7 +304,7 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
         title: "Content",
         icon: "mdi:card-text-outline",
         fields: [
-          { name: "entity", required: true, selector: { entity: { domain: "climate" } } },
+          { name: "entity", required: true, selector: { entity: { domain: ["climate", "humidifier"] } } },
           { name: "reserve_height", label: "Keep the height of the tallest section (no reflow when cycling)", selector: { boolean: {} } },
         ],
       },
@@ -312,10 +312,13 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
         title: "Dial",
         icon: "mdi:thermostat",
         fields: [
-          { name: "temperature_entity", label: "Current-temp sensor (marker on the dial)", selector: { entity: { domain: "sensor", device_class: "temperature" } } },
-          { name: "step", label: "Step", helper: "Default: the entity's target_temp_step, else 0.5.", selector: { number: { min: 0.1, max: 2, step: 0.1, mode: "box" } } },
+          { name: "temperature_entity", label: "Current temperature sensor (optional)", selector: { entity: { domain: "sensor", device_class: "temperature" } } },
+          { name: "humidity_entity", label: "Current humidity sensor (optional)", selector: { entity: { domain: "sensor", device_class: "humidity" } } },
+          { name: "step", label: "Target step", helper: "Default: the step reported by the selected entity.", selector: { number: { min: 0.1, max: 20, step: 0.1, mode: "box" } } },
           { name: "min_temp", label: "Dial min (default: entity)", selector: { number: { min: -30, max: 40, step: 0.5, mode: "box" } } },
           { name: "max_temp", label: "Dial max (default: entity)", selector: { number: { min: 0, max: 60, step: 0.5, mode: "box" } } },
+          { name: "min_humidity", label: "Humidity dial min (default: entity)", selector: { number: { min: 0, max: 100, step: 1, mode: "box", unit_of_measurement: "%" } } },
+          { name: "max_humidity", label: "Humidity dial max (default: entity)", selector: { number: { min: 0, max: 100, step: 1, mode: "box", unit_of_measurement: "%" } } },
           { name: "steppers", label: "Stepper placement", selector: { select: { mode: "dropdown", options: [
             { value: "side", label: "Vertical, beside the dial" },
             { value: "below", label: "Below the dial" },

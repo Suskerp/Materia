@@ -2,6 +2,7 @@ import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { loadCardHelpers } from "../../styles/shared.js";
 import { t } from "../../utils/i18n.js";
+import { humidifierAction, humidifierModes } from "../humidifier/model.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 import "./dial.js";
@@ -27,6 +28,21 @@ const MODE_COLORS = {
   auto: ["var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-primary-container))"],
   heat_cool: ["var(--md-sys-cust-color-climate-auto-accent, var(--md-sys-color-primary))", "var(--md-sys-cust-color-climate-auto-container, var(--md-sys-color-primary-container))"],
   off: ["var(--md-sys-color-secondary)", "var(--md-sys-color-on-secondary)"],
+  humidity: ["var(--md-sys-cust-color-on-water-eco, var(--md-sys-color-primary))", "var(--md-sys-cust-color-water-eco-container, var(--md-sys-color-primary-container))"],
+  drying: ["var(--md-sys-cust-color-climate-cool-accent, #327ea7)", "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)"],
+};
+
+const HUMIDIFIER_MODE_ICONS = {
+  auto: "mdi:autorenew",
+  laundry: "mdi:tumble-dryer",
+  sleep: "mdi:weather-night",
+  normal: "mdi:water-percent",
+  boost: "mdi:weather-windy",
+  eco: "mdi:leaf",
+  away: "mdi:home-export-outline",
+  home: "mdi:home",
+  comfort: "mdi:sofa-outline",
+  baby: "mdi:baby-face-outline",
 };
 
 class MateriaClimatePanel extends ActionMixin(LitElement) {
@@ -43,7 +59,9 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
   }
 
   static getStubConfig(hass) {
-    const entity = Object.keys(hass?.states || {}).find((e) => e.startsWith("climate.")) || "";
+    const entity = Object.keys(hass?.states || {}).find((e) => e.startsWith("climate."))
+      || Object.keys(hass?.states || {}).find((e) => e.startsWith("humidifier."))
+      || "";
     return { entity };
   }
 
@@ -73,9 +91,20 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
     return this.hass?.states[this.config.entity];
   }
 
+  get _isHumidifier() {
+    return this.config.entity.startsWith("humidifier.");
+  }
+
+  get _accentKey() {
+    if (!this._isHumidifier) return this._entity?.state ?? "off";
+    if (this._entity?.state === "off") return "off";
+    return humidifierAction(this._entity) === "drying" ? "drying" : "humidity";
+  }
+
   /* ---- fragments ------------------------------------------------------------ */
 
   _modeGroup() {
+    if (this._isHumidifier) return this._humidifierModeGroup();
     const modes = (this._entity?.attributes?.hvac_modes || []).filter((m) => ["heat", "auto", "off", "cool", "heat_cool"].includes(m));
     if (!modes.length) return nothing;
     const [act, on] = MODE_COLORS[this._entity?.state] ?? MODE_COLORS.off;
@@ -100,6 +129,49 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
               target: { entity_id: this.config.entity },
             },
           })),
+        }}
+      ></materia-button-group>
+    `;
+  }
+
+  _humidifierModeGroup() {
+    const modes = humidifierModes(this._entity?.attributes);
+    const isOn = this._entity?.state !== "off";
+    const currentMode = this._entity?.attributes?.mode;
+    const [act, on] = MODE_COLORS[this._accentKey] ?? MODE_COLORS.humidity;
+    const powerAction = {
+      action: "perform-action",
+      perform_action: `humidifier.${isOn ? "turn_off" : "turn_on"}`,
+      target: { entity_id: this.config.entity },
+    };
+    const options = [{
+      icon: "m3o:power-settings-new",
+      value: "__power__",
+      active: !isOn,
+      tap_action: powerAction,
+    }, ...modes.map((mode) => ({
+      icon: HUMIDIFIER_MODE_ICONS[mode] || "mdi:water-percent",
+      value: mode,
+      active: isOn && mode === currentMode,
+      tap_action: {
+        action: "perform-action",
+        perform_action: "humidifier.set_mode",
+        data: { mode },
+        target: { entity_id: this.config.entity },
+      },
+    }))];
+    return html`
+      <materia-button-group
+        .hass=${this.hass}
+        .config=${{
+          entity: this.config.entity,
+          size: "m",
+          variant: "tonal",
+          active_shape: "square",
+          color_active: act,
+          color_on_active: on,
+          aria_label: t("humidifier_modes", this.hass),
+          options,
         }}
       ></materia-button-group>
     `;
@@ -236,9 +308,8 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
     // Mode sync via inherited CSS vars: every nested materia-switch picks up
     // the active mode's pair (strong accent track, light container thumb) —
     // no per-row templates needed. Mode off → unset → the spec primary pair.
-    const mode = this._entity.state;
+    const mode = this._accentKey;
     const sync = mode !== "off" && MODE_COLORS[mode];
-    const [modeAccent, modeContainer] = MODE_COLORS[mode] ?? MODE_COLORS.off;
     // The accordion sections LIVE IN the connected stack (2px seams, group
     // silhouette): closed bars are compact segments, the open one grows tall.
     return html`
@@ -254,6 +325,9 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
             ...(this.config.min_temp != null ? { min_temp: this.config.min_temp } : {}),
             ...(this.config.max_temp != null ? { max_temp: this.config.max_temp } : {}),
             ...(this.config.temperature_entity ? { temperature_entity: this.config.temperature_entity } : {}),
+            ...(this.config.humidity_entity ? { humidity_entity: this.config.humidity_entity } : {}),
+            ...(this.config.min_humidity != null ? { min_humidity: this.config.min_humidity } : {}),
+            ...(this.config.max_humidity != null ? { max_humidity: this.config.max_humidity } : {}),
           }}
         ></materia-climate-dial>
         <div class="stack ${this.config.reserve_height ? "reserve" : ""}">
