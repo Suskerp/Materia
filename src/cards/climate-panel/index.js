@@ -313,7 +313,7 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
     // The accordion sections LIVE IN the connected stack (2px seams, group
     // silhouette): closed bars are compact segments, the open one grows tall.
     return html`
-      <ha-card class="panel" style=${sync ? `--ms-track:${modeAccent};--ms-thumb:${modeContainer};` : ""}>
+      <ha-card class="panel" style=${sync ? `--ms-track:${sync[0]};--ms-thumb:${sync[1]};` : ""}>
         <materia-climate-dial
           .hass=${this.hass}
           .config=${{
