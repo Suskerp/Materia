@@ -28,7 +28,7 @@ class MateriaClimateEditor extends SmartEditorBase {
         title: "Behavior",
         icon: "mdi:tune",
         fields: [
-          { name: "step", selector: { number: { min: 0.5, max: 5, step: 0.5, mode: "box" } } },
+          { name: "step", default: 0.5, selector: { number: { min: 0.5, max: 5, step: 0.5, mode: "box" } } },
         ],
       },
     ];

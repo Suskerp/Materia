@@ -19,11 +19,11 @@ export const PRESETS = {
    token mean two different heights depending on the group configuration.
    innerCorner is the connected seam radius and is left as-is. */
 export const SIZES = {
-  xs: { height: 32,  innerCorner: 4 },
-  s:  { height: 40,  innerCorner: 8 },
-  m:  { height: 56,  innerCorner: 8 },
-  l:  { height: 96,  innerCorner: 16 },
-  xl: { height: 136, innerCorner: 20 },
+  xs: { height: 32,  innerCorner: 4,  pressedCorner: 8 },
+  s:  { height: 40,  innerCorner: 8,  pressedCorner: 8 },
+  m:  { height: 56,  innerCorner: 8,  pressedCorner: 12 },
+  l:  { height: 96,  innerCorner: 16, pressedCorner: 16 },
+  xl: { height: 136, innerCorner: 20, pressedCorner: 16 },
 };
 
 export const styles = [
@@ -58,28 +58,40 @@ export const styles = [
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      padding: 0 16px;
-      transition:
-        border-radius var(--md-sys-motion-expressive-fast-spatial),
-        flex-grow var(--md-sys-motion-expressive-fast-spatial),
-        background-color var(--md-sys-motion-fast-effects),
-        color var(--md-sys-motion-fast-effects);
+      padding: 0;
+      background: transparent;
+      color: inherit;
       font-family: inherit;
       white-space: nowrap;
       position: relative;
-      overflow: hidden;
       -webkit-tap-highlight-color: transparent;
     }
 
+    .button-surface {
+      width: 100%;
+      height: var(--visual-height);
+      padding: 0 16px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+      transition:
+        border-radius var(--md-sys-motion-expressive-fast-spatial),
+        background-color var(--md-sys-motion-fast-effects),
+        color var(--md-sys-motion-fast-effects);
+    }
+
     /* Safety net if the row is genuinely too cramped: ellipsis beats a cut. */
-    button > span {
+    .button-surface > span {
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    button::before {
+    .button-surface::before {
       content: "";
       position: absolute;
       inset: 0;
@@ -89,30 +101,36 @@ export const styles = [
       transition: opacity var(--md-sys-motion-fast-effects);
     }
 
-    button:hover::before {
+    button:hover .button-surface::before {
       opacity: 0.08;
     }
 
-    button:active::before {
+    button:active .button-surface::before {
       opacity: 0.12;
+    }
+
+    button:focus-visible {
+      outline: 3px solid var(--md-sys-color-primary, currentColor);
+      outline-offset: -3px;
+      z-index: 1;
     }
 
     /* M3 toggle buttons share one pressed shape regardless of whether their
        resting shape is round or square. The release then visibly morphs to the
        newly selected resting shape through the spatial spring above. */
-    .group.multi button:active {
+    .group.multi button:active .button-surface {
       border-radius: var(--pressed-radius) !important;
     }
 
     /* Unselected toggle pair per FilledButtonTokens: SurfaceContainer /
        OnSurfaceVariant. This half of the pair had drifted to HA theme vars
        while the selected half was already correct. */
-    button.inactive.filled {
+    .button-surface.inactive.filled {
       background: var(--md-sys-color-surface-container, var(--ha-card-background, var(--card-background-color)));
       color: var(--md-sys-color-on-surface-variant, var(--primary-text-color));
     }
 
-    button.inactive.tonal {
+    .button-surface.inactive.tonal {
       background: var(--md-sys-color-secondary-container, var(--ha-card-background));
       color: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
     }
@@ -134,19 +152,24 @@ export const styles = [
     .group.multi button {
       flex: 1 0 calc(100% / var(--btn-columns, 4) - 4px);
       height: var(--btn-height);
-      transition:
-        border-radius var(--md-sys-motion-expressive-fast-spatial),
-        background-color var(--md-sys-motion-fast-effects),
-        color var(--md-sys-motion-fast-effects);
     }
 
     /* Connected groups do not size-morph. Material's connected-group style
        explicitly clears buttonSizeChange; selection is expressed by shape
        and colour, both using the fast spatial/effects motion tokens above. */
 
-    button ha-icon {
+    .button-surface ha-icon {
       --mdc-icon-size: 18px;
       flex-shrink: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      button,
+      .button-surface,
+      .button-surface::before,
+      .group.multi button {
+        transition: none;
+      }
     }
   `,
 ];

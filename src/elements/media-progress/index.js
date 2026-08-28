@@ -36,6 +36,14 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     this._cid ??= `mp-clip-${++_uid}`;
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    // firstUpdated creates the observer on first mount. On HA view edits the
+    // same element may be detached and reattached; firstUpdated will not run a
+    // second time, so explicitly resume observing the existing bar here.
+    this._observeBar();
+  }
+
   /* ---- live position ---- */
   _position() {
     const s = this.hass?.states[this.config.entity];
@@ -104,14 +112,20 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
   }
 
   firstUpdated() {
+    this._observeBar();
+  }
+
+  _observeBar() {
     const bar = this.shadowRoot?.querySelector(".bar");
-    if (bar) {
-      this._w = bar.clientWidth;
+    if (!bar) return;
+    this._w = bar.clientWidth;
+    if (!this._ro) {
       this._ro = new ResizeObserver((entries) => {
         this._w = entries[0].contentRect.width;
       });
-      this._ro.observe(bar);
     }
+    this._ro.disconnect();
+    this._ro.observe(bar);
   }
 
   updated() {

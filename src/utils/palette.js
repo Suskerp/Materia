@@ -54,8 +54,8 @@ export const COLOR_GROUPS = [
     options: [
       cust("climate-cool", "Cool", "#D3E8FF"),
       cust("climate-cool-container", "Cool container", "#EAF3FF"),
-      cust("on-climate-cool", "On cool", "#327EA7"),
-      cust("climate-cool-accent", "Cool accent", "#327EA7"),
+      cust("on-climate-cool", "On cool", "#205F82"),
+      cust("climate-cool-accent", "Cool accent", "#205F82"),
     ],
   },
   {
@@ -88,7 +88,7 @@ export const COLOR_GROUPS = [
     options: [
       cust("warning", "Warning", "#D9A000"),
       cust("warning-container", "Warning container", "#FEEFCA"),
-      cust("on-warning", "On warning", "#FFFFFF"),
+      cust("on-warning", "On warning", "#4A3A00"),
       cust("on-warning-container", "On warning container", "#745D00"),
     ],
   },

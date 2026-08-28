@@ -2,7 +2,7 @@ import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
 
 class MateriaLevelEditor extends SmartEditorBase {
   _formData() {
-    return { ...this._config };
+    return { variant: "filled", slider_size: "xs", ...this._config };
   }
 
   get _sections() {
@@ -36,6 +36,7 @@ class MateriaLevelEditor extends SmartEditorBase {
         title: "Range",
         icon: "mdi:ruler",
         secondary: "Left empty, these come from the entity",
+        expanded: false,
         fields: [
           {
             name: "min",
@@ -75,6 +76,7 @@ class MateriaLevelEditor extends SmartEditorBase {
       {
         title: "Appearance",
         icon: "mdi:palette-outline",
+        expanded: false,
         fields: [
           {
             name: "variant",
@@ -118,6 +120,7 @@ class MateriaLevelEditor extends SmartEditorBase {
       {
         title: "Advanced",
         icon: "mdi:tune",
+        expanded: false,
         fields: [
           { name: "service", label: "Override service (domain.service)", selector: { text: {} } },
           { name: "service_key", label: "Override service data key", selector: { text: {} } },

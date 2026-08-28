@@ -197,7 +197,7 @@ export class MateriaButtonGroup extends DisabledMixin(ActionMixin(LitElement)) {
     const unavailable = stateObj ? this._isUnavailable(stateObj) : false;
 
     const sizeKey = this.config.size || "m";
-    const { height, innerCorner } = SIZES[sizeKey] || SIZES.m;
+    const { height, innerCorner, pressedCorner } = SIZES[sizeKey] || SIZES.m;
     const outerR = height / 2;
     const activeValue = this._activeValue;
     const colors = this._getActiveColors();
@@ -211,7 +211,9 @@ export class MateriaButtonGroup extends DisabledMixin(ActionMixin(LitElement)) {
     return html`
       <ha-card>
         <div class="group ${unavailable ? 'unavailable' : ''} ${multiSelect ? 'multi' : ''}"
-          style="${!multiSelect ? `height: ${height}px;` : `--btn-height: ${height}px;`} ${columns ? `--btn-columns: ${columns};` : ''}">
+          role="group"
+          aria-label=${this.config.aria_label || this.config.name || "Options"}
+          style="--visual-height:${height}px;${!multiSelect ? `height: max(48px, ${height}px);` : `--btn-height:max(48px, ${height}px);`} ${columns ? `--btn-columns: ${columns};` : ''}">
           ${options.map((opt, i) => {
             const isActive = this._isOptionActive(opt, i);
             const isFirst = i === 0;
@@ -247,12 +249,20 @@ export class MateriaButtonGroup extends DisabledMixin(ActionMixin(LitElement)) {
             const fg = isActive ? colors.onActive : undefined;
             return html`
               <button
-                class="${isActive ? "active" : "inactive"} ${variant}"
-                style="--pressed-radius: ${innerCorner}px; border-radius: ${radius};${isActive ? ` background: ${bg}; color: ${fg};` : ""}"
+                type="button"
+                style="--pressed-radius: ${pressedCorner}px;"
+                aria-pressed=${isActive ? "true" : "false"}
+                aria-label=${opt.aria_label || opt.label || String(opt.value ?? `Option ${i + 1}`)}
+                ?disabled=${unavailable || opt.disabled === true}
                 @click=${(event) => this._handleOptionTap(opt, event)}
               >
-                ${opt.icon ? html`<ha-icon .icon=${opt.icon}></ha-icon>` : ""}
-                ${opt.label ? html`<span>${opt.label}</span>` : ""}
+                <span
+                  class="button-surface ${isActive ? "active" : "inactive"} ${variant}"
+                  style="border-radius: ${radius};${isActive ? ` background: ${bg}; color: ${fg};` : ""}"
+                >
+                  ${opt.icon ? html`<ha-icon .icon=${opt.icon}></ha-icon>` : ""}
+                  ${opt.label ? html`<span>${opt.label}</span>` : ""}
+                </span>
               </button>
             `;
           })}
@@ -275,7 +285,7 @@ export class MateriaButtonGroup extends DisabledMixin(ActionMixin(LitElement)) {
   }
 
   _handleOptionTap(opt, event) {
-    this._playSelectionMotion(event?.currentTarget);
+    this._playSelectionMotion(event?.currentTarget?.querySelector?.(".button-surface"));
     // Uncontrolled: own the selection and announce it. Returns early, because
     // there is no entity to be optimistic about and no service to call.
     if (!this.config.entity && !opt.entity && !opt.tap_action) {

@@ -1,8 +1,10 @@
 import { css } from "lit";
 import { hostStyles } from "../../styles/card-styles.js";
+import { motionTokens } from "../../utils/motion.js";
 
 export const styles = [
   hostStyles,
+  motionTokens,
   css`
     :host {
       display: flex;
@@ -16,8 +18,34 @@ export const styles = [
          instead of ellipsizing. Every flex ancestor of .label needs this. */
       min-width: 0;
     }
+    :host([wide]) .touch-target,
     :host([wide]) .btn {
       width: 100%;
+    }
+
+    /* M3 keeps XS/S visual containers at 32/40dp while the semantic pointer
+       target remains at least 48dp. The outer native button owns interaction;
+       .btn is the independently-sized visual surface. */
+    .touch-target {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: max(48px, var(--mb-h, 56px));
+      min-width: max(48px, var(--mb-h, 56px));
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .touch-target:focus-visible {
+      outline: 3px solid var(--md-sys-color-primary, currentColor);
+      outline-offset: 2px;
+      border-radius: calc(var(--mb-h, 56px) / 2);
     }
 
     .btn {
@@ -100,14 +128,14 @@ export const styles = [
     }
 
     /* ---- sizes (M3 expressive) ---- */
-    .size-xs { --mb-h: 32px;  --mb-icon: 20px; --mb-font: 14px; --mb-px: 16px; --mb-rsq: 12px; --mb-gap: 8px; }
-    .size-s  { --mb-h: 40px;  --mb-icon: 20px; --mb-font: 14px; --mb-px: 16px; --mb-rsq: 12px; --mb-gap: 8px; }
-    .size-m  { --mb-h: 56px;  --mb-icon: 24px; --mb-font: 16px; --mb-px: 24px; --mb-rsq: 16px; --mb-gap: 8px; }
-    .size-l  { --mb-h: 96px;  --mb-icon: 32px; --mb-font: 24px; --mb-px: 48px; --mb-rsq: 28px; --mb-gap: 12px; }
-    .size-xl { --mb-h: 136px; --mb-icon: 40px; --mb-font: 32px; --mb-px: 64px; --mb-rsq: 28px; --mb-gap: 16px; }
+    .size-xs { --mb-h: 32px;  --mb-icon: 20px; --mb-font: 14px; --mb-px: 16px; --mb-rsq: 12px; --mb-rpress: 8px;  --mb-gap: 8px; }
+    .size-s  { --mb-h: 40px;  --mb-icon: 20px; --mb-font: 14px; --mb-px: 16px; --mb-rsq: 12px; --mb-rpress: 8px;  --mb-gap: 8px; }
+    .size-m  { --mb-h: 56px;  --mb-icon: 24px; --mb-font: 16px; --mb-px: 24px; --mb-rsq: 16px; --mb-rpress: 12px; --mb-gap: 8px; }
+    .size-l  { --mb-h: 96px;  --mb-icon: 32px; --mb-font: 24px; --mb-px: 48px; --mb-rsq: 28px; --mb-rpress: 16px; --mb-gap: 12px; }
+    .size-xl { --mb-h: 136px; --mb-icon: 40px; --mb-font: 32px; --mb-px: 64px; --mb-rsq: 28px; --mb-rpress: 16px; --mb-gap: 16px; }
     /* legacy sizes (materia-icon-button compatibility) */
-    .size-default { --mb-h: 48px; --mb-icon: 24px; --mb-font: 14px; --mb-px: 16px; --mb-rsq: 14px; --mb-gap: 8px; }
-    .size-large   { --mb-h: 56px; --mb-icon: 24px; --mb-font: 16px; --mb-px: 20px; --mb-rsq: 16px; --mb-gap: 8px; }
+    .size-default { --mb-h: 48px; --mb-icon: 24px; --mb-font: 14px; --mb-px: 16px; --mb-rsq: 14px; --mb-rpress: 10px; --mb-gap: 8px; }
+    .size-large   { --mb-h: 56px; --mb-icon: 24px; --mb-font: 16px; --mb-px: 20px; --mb-rsq: 16px; --mb-rpress: 12px; --mb-gap: 8px; }
 
     /* ---- shapes ---- */
     .shape-round  { border-radius: calc(var(--mb-h) / 2); }
@@ -116,9 +144,9 @@ export const styles = [
     /* M3 Expressive: round and square buttons converge on the same pressed
        shape for their size. The selected resting shape is handled separately
        in index.js, so releasing returns to the correct inverse shape. */
-    .btn:active,
+    .touch-target:active .btn,
     .btn.confirming.armed {
-      border-radius: var(--mb-rsq, 16px);
+      border-radius: var(--mb-rpress, 12px);
       transform: scale(0.96);
     }
 
@@ -212,7 +240,7 @@ export const styles = [
       transition: opacity var(--md-sys-motion-fast-effects);
     }
     .btn:hover::before { opacity: 0.08; }
-    .btn:active::before { opacity: 0.1; }
+    .touch-target:active .btn::before { opacity: 0.1; }
 
     /* ---- the confirm gesture ----
        The button's OWN surface is the track: a fill sweeps from the leading
@@ -256,11 +284,14 @@ export const styles = [
 
     /* A confirm button is never fired by a tap, so it must not advertise one:
        the press state layer would promise something the control does not do. */
-    .btn.confirming:active::before {
+    .touch-target:active .btn.confirming::before {
       opacity: 0.08;
     }
 
     @media (prefers-reduced-motion: reduce) {
+      .btn,
+      .btn::before,
+      .touch-target,
       .btn.settling .commit-fill {
         transition: none;
       }
@@ -268,8 +299,24 @@ export const styles = [
 
     .btn.disabled,
     .btn.unavailable {
-      opacity: 0.38;
       pointer-events: none;
+      color: color-mix(in srgb, var(--md-sys-color-on-surface, currentColor) 38%, transparent);
+      box-shadow: none;
+    }
+
+    .btn.disabled:is(.variant-filled, .variant-tonal, .variant-elevated),
+    .btn.unavailable:is(.variant-filled, .variant-tonal, .variant-elevated) {
+      background: color-mix(in srgb, var(--md-sys-color-on-surface, currentColor) 12%, transparent);
+    }
+
+    .btn.disabled.variant-outlined,
+    .btn.unavailable.variant-outlined {
+      border-color: color-mix(in srgb, var(--md-sys-color-on-surface, currentColor) 12%, transparent);
+    }
+
+    .btn.disabled::before,
+    .btn.unavailable::before {
+      opacity: 0;
     }
   `,
 ];

@@ -4,7 +4,7 @@ export const styles = css`
   .collapsible {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows 0.3s ease;
+    transition: grid-template-rows var(--md-sys-motion-standard-default-spatial);
     overflow: hidden;
   }
 
@@ -25,5 +25,11 @@ export const styles = css`
 
   .grid-item {
     min-width: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .collapsible {
+      transition: none;
+    }
   }
 `;

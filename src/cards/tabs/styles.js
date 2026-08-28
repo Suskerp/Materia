@@ -98,6 +98,12 @@ export const styles = [
       opacity: 0.12;
     }
 
+    .tab:focus-visible {
+      outline: 3px solid var(--md-sys-color-primary, currentColor);
+      outline-offset: -3px;
+      z-index: 1;
+    }
+
     /* Embedded pages: content left, rail right, one seam. */
     .wrap {
       display: grid;

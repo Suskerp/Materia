@@ -1,11 +1,16 @@
 {
   "name": "materia",
-  "version": "0.68.8",
+  "version": "0.71.0",
   "description": "Material You / Expressive card collection for Home Assistant",
   "main": "dist/materia.js",
   "scripts": {
     "build": "rollup -c",
-    "watch": "rollup -c --watch"
+    "watch": "rollup -c --watch",
+    "test": "node --test",
+    "check:source": "node scripts/check-source.mjs",
+    "check:version": "node scripts/check-version.mjs",
+    "check:bundle": "node scripts/check-bundle.mjs",
+    "check": "npm run check:source && npm run check:version && npm test && npm run build && npm run check:bundle"
   },
   "keywords": [
     "home-assistant",
@@ -16,9 +21,9 @@
   "type": "module",
   "license": "MIT",
   "devDependencies": {
-    "rollup": "^4.9.0",
     "@rollup/plugin-node-resolve": "^15.2.0",
     "@rollup/plugin-terser": "^0.4.0",
+    "rollup": "^4.9.0",
     "rollup-plugin-serve": "^2.0.0"
   },
   "dependencies": {

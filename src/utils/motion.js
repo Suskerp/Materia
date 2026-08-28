@@ -62,6 +62,27 @@ export const motionTokens = css`
       --md-sys-motion-fast-effects: 1ms linear;
       --md-sys-motion-default-effects: 1ms linear;
       --md-sys-motion-slow-effects: 1ms linear;
+      /* Components that need duration/easing as separate WAAPI/CSS inputs
+         must reduce too. Keeping only the shorthand overrides here left
+         those consumers animating at full spring duration. */
+      --md-sys-motion-expressive-fast-spatial-duration: 1ms;
+      --md-sys-motion-expressive-fast-spatial-easing: linear;
+      --md-sys-motion-expressive-default-spatial-duration: 1ms;
+      --md-sys-motion-expressive-default-spatial-easing: linear;
+      --md-sys-motion-expressive-slow-spatial-duration: 1ms;
+      --md-sys-motion-expressive-slow-spatial-easing: linear;
+      --md-sys-motion-standard-fast-spatial-duration: 1ms;
+      --md-sys-motion-standard-fast-spatial-easing: linear;
+      --md-sys-motion-standard-default-spatial-duration: 1ms;
+      --md-sys-motion-standard-default-spatial-easing: linear;
+      --md-sys-motion-standard-slow-spatial-duration: 1ms;
+      --md-sys-motion-standard-slow-spatial-easing: linear;
+      --md-sys-motion-fast-effects-duration: 1ms;
+      --md-sys-motion-fast-effects-easing: linear;
+      --md-sys-motion-default-effects-duration: 1ms;
+      --md-sys-motion-default-effects-easing: linear;
+      --md-sys-motion-slow-effects-duration: 1ms;
+      --md-sys-motion-slow-effects-easing: linear;
     }
   }
 `;

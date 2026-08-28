@@ -242,6 +242,7 @@ class MateriaButton extends ActionMixin(LitElement) {
     const css = getComputedStyle(el);
     const height = el.getBoundingClientRect().height || parseFloat(css.height) || 56;
     const squareRadius = parseFloat(css.getPropertyValue("--mb-rsq")) || 16;
+    const pressedRadius = parseFloat(css.getPropertyValue("--mb-rpress")) || 12;
     const baseRound = this.config?.shape !== "square";
     const stateObj = this.config?.entity ? this.hass?.states?.[this.config.entity] : undefined;
     const active = this._isActive(stateObj);
@@ -253,7 +254,7 @@ class MateriaButton extends ActionMixin(LitElement) {
     const fromScale = transform && transform !== "none"
       ? Number(transform.match(/^matrix\(([^,]+)/)?.[1]) || 1
       : 1;
-    const toRadius = pressed ? squareRadius : restingRadius;
+    const toRadius = pressed ? pressedRadius : restingRadius;
     const toScale = pressed ? 0.96 : 1;
 
     this.__gestureSpring?.cancel();
@@ -351,7 +352,8 @@ class MateriaButton extends ActionMixin(LitElement) {
       const h = Number(sizeVal);
       sizeStyle =
         `--mb-h:${h}px;--mb-icon:${Math.round(h * 0.43)}px;--mb-font:16px;` +
-        `--mb-px:${Math.round(h * 0.42)}px;--mb-rsq:${Math.round(h * 0.28)}px;--mb-gap:8px;`;
+        `--mb-px:${Math.round(h * 0.42)}px;--mb-rsq:${Math.round(h * 0.28)}px;` +
+        `--mb-rpress:${Math.max(8, Math.round(h * 0.2))}px;--mb-gap:8px;`;
     } else {
       sizeClass = `size-${sizeVal}`;
     }
@@ -388,23 +390,32 @@ class MateriaButton extends ActionMixin(LitElement) {
     const iconOnly = !label && !subtitle;
     const confirm = this._confirmMode;
     const g = confirm ? this._syncGesture() : null;
+    const accessibleName = this.config.aria_label || label || subtitle ||
+      stateObj?.attributes?.friendly_name || this.config.name || icon || "Action";
 
     return html`
       <button
-        class="btn variant-${variant} ${role ? `role-${role}` : ""} ${sizeClass} shape-${shape} ${active ? "active" : "inactive"} ${this.config.connected ? `connected-${this.config.connected}` : ""} ${iconOnly ? "icon-only" : ""} ${stacked ? "stacked" : ""} ${disabled ? "disabled" : ""} ${unavailable ? "unavailable" : ""} ${confirm ? "confirming" : ""} ${g?.armed ? "armed" : ""} ${g && g.settling && !g.armed ? "settling" : ""}"
+        type="button"
+        class="touch-target ${sizeClass}"
         style=${sizeStyle}${confirm ? `--mb-p:${g.p};` : ""}
+        ?disabled=${disabled || unavailable}
+        aria-disabled=${disabled || unavailable ? "true" : "false"}
+        aria-label=${iconOnly ? accessibleName : nothing}
+        aria-pressed=${this.config.entity ? (active ? "true" : "false") : nothing}
         @click=${this._handleTap}
         @pointerdown=${confirm ? this._onConfirmDown : undefined}
         @keydown=${confirm ? this._onConfirmKey : undefined}
       >
-        ${confirm ? html`<span class="commit-fill" aria-hidden="true"></span>` : nothing}
-        ${icon ? html`<ha-icon .icon=${icon}></ha-icon>` : nothing}
-        ${label || subtitle
-          ? html`<span class="text">
-              ${label ? html`<span class="label">${label}</span>` : nothing}
-              ${subtitle ? html`<span class="sub">${subtitle}</span>` : nothing}
-            </span>`
-          : nothing}
+        <span class="btn variant-${variant} ${role ? `role-${role}` : ""} shape-${shape} ${active ? "active" : "inactive"} ${this.config.connected ? `connected-${this.config.connected}` : ""} ${iconOnly ? "icon-only" : ""} ${stacked ? "stacked" : ""} ${disabled ? "disabled" : ""} ${unavailable ? "unavailable" : ""} ${confirm ? "confirming" : ""} ${g?.armed ? "armed" : ""} ${g && g.settling && !g.armed ? "settling" : ""}">
+          ${confirm ? html`<span class="commit-fill" aria-hidden="true"></span>` : nothing}
+          ${icon ? html`<ha-icon .icon=${icon}></ha-icon>` : nothing}
+          ${label || subtitle
+            ? html`<span class="text">
+                ${label ? html`<span class="label">${label}</span>` : nothing}
+                ${subtitle ? html`<span class="sub">${subtitle}</span>` : nothing}
+              </span>`
+            : nothing}
+        </span>
       </button>
     `;
   }

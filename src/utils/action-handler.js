@@ -75,7 +75,7 @@ export const ActionMixin = (superClass) =>
         if (!exempt) {
           const text = c.text || t("confirm_action", this.hass);
           // eslint-disable-next-line no-alert
-          if (!window.confirm(text)) return;
+          if (!window.confirm(text)) return Promise.resolve({ ok: false, cancelled: true });
         }
       }
       if (STATE_CHANGING_ACTIONS.has(actionConfig.action)) this._fireHaptic("light");
@@ -93,26 +93,20 @@ export const ActionMixin = (superClass) =>
           const state = String(this.hass?.states[eid]?.state ?? "");
           switch (domain) {
             case "lock":
-              this._callService("lock", state === "locked" ? "unlock" : "lock", { entity_id: eid });
-              break;
+              return this._callService("lock", state === "locked" ? "unlock" : "lock", { entity_id: eid });
             case "cover":
-              this._callService("cover", ["closed", "closing"].includes(state) ? "open_cover" : "close_cover", { entity_id: eid });
-              break;
+              return this._callService("cover", ["closed", "closing"].includes(state) ? "open_cover" : "close_cover", { entity_id: eid });
             case "valve":
-              this._callService("valve", ["closed", "closing"].includes(state) ? "open_valve" : "close_valve", { entity_id: eid });
-              break;
+              return this._callService("valve", ["closed", "closing"].includes(state) ? "open_valve" : "close_valve", { entity_id: eid });
             case "scene":
-              this._callService("scene", "turn_on", { entity_id: eid });
-              break;
+              return this._callService("scene", "turn_on", { entity_id: eid });
             case "button":
             case "input_button":
-              this._callService(domain, "press", { entity_id: eid });
-              break;
+              return this._callService(domain, "press", { entity_id: eid });
             case "vacuum":
-              this._callService("vacuum", ["docked", "idle", "paused"].includes(state) ? "start" : "return_to_base", { entity_id: eid });
-              break;
+              return this._callService("vacuum", ["docked", "idle", "paused"].includes(state) ? "start" : "return_to_base", { entity_id: eid });
             default:
-              this._callService("homeassistant", "toggle", { entity_id: eid });
+              return this._callService("homeassistant", "toggle", { entity_id: eid });
           }
           break;
         }
@@ -122,14 +116,14 @@ export const ActionMixin = (superClass) =>
           const svc = actionConfig.perform_action || actionConfig.service || "";
           const [domain, service] = svc.split(".", 2);
           if (domain && service) {
-            this._callService(
+            return this._callService(
               domain,
               service,
               { ...actionConfig.service_data, ...actionConfig.data },
               actionConfig.target
             );
           }
-          break;
+          return Promise.resolve({ ok: false, error: new Error("Invalid service action") });
         }
 
         case "url": {
@@ -191,6 +185,7 @@ export const ActionMixin = (superClass) =>
     _callService(domain, service, data, target) {
       return this.hass
         .callService(domain, service, data, target)
+        .then((value) => ({ ok: true, value }))
         .catch((err) => {
           // A failure MUST feel different from a success. Without this a lock
           // that refused the call is indistinguishable by touch from one that
@@ -201,6 +196,12 @@ export const ActionMixin = (superClass) =>
           const ev = new Event("hass-notification", { bubbles: true, composed: true });
           ev.detail = { message: err?.message || `Failed: ${domain}.${service}` };
           this.dispatchEvent(ev);
+          // Resolve to an explicit result rather than swallowing the failure as
+          // indistinguishable `undefined`. Existing fire-and-forget controls can
+          // continue to ignore the promise, while transactional flows (schedule
+          // editors, optimistic inputs) can await it and keep their UI open or
+          // roll back without creating an unhandled rejection.
+          return { ok: false, error: err };
         });
     }
 

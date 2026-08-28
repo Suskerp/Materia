@@ -1,14 +1,17 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaScheduleEditor extends SmartEditorBase {
-  /* Nothing here defaults to TRUE, so there is no switch to seed — but the text
-     defaults are still mirrored so the fields show what the card will actually
-     render rather than sitting empty. */
+  /* Mirror runtime defaults without persisting them merely by opening the
+     editor. SmartEditor gives otherwise-unspecified booleans a visible `false`;
+     true defaults must be declared here because they are semantic choices. */
   _formData() {
     // presentation is a closed select; the three strings are runtime
     // (i18n-translated) defaults that must not be frozen into config.
     return {
       presentation: "inline",
+      editor_presentation: "inline",
+      schedule_types: ["window"],
+      show_triggers: true,
       ...this._config,
     };
   }
@@ -18,6 +21,7 @@ class MateriaScheduleEditor extends SmartEditorBase {
       {
         title: "Setup",
         icon: "mdi:tune",
+        expanded: true,
         fields: [
           {
             name: "name",
@@ -42,6 +46,7 @@ class MateriaScheduleEditor extends SmartEditorBase {
       {
         title: "Wiring",
         icon: "mdi:transit-connection-variant",
+        expanded: false,
         // $placeholders are substituted by the card before the service is
         // called — see the note in index.js on why this is not Jinja.
         fields: [
@@ -68,6 +73,7 @@ class MateriaScheduleEditor extends SmartEditorBase {
       {
         title: "Shortcuts",
         icon: "mdi:clock-fast",
+        expanded: false,
         fields: [
           {
             name: "presets",
@@ -79,12 +85,35 @@ class MateriaScheduleEditor extends SmartEditorBase {
         ],
       },
       {
-        title: "Window (start-stop)",
+        title: "Managed schedules",
         icon: "mdi:clock-start",
+        expanded: false,
         // Turns the clock tab into a recurring start+stop range instead of a
         // single moment. schedule_entity both seeds the picker from what is
         // already live and is what gets written back to on save.
         fields: [
+          {
+            name: "schedule_types",
+            label: "Schedules people may create",
+            helper: "Choose recurring windows, one-time actions, or configured multi-step plans. Existing cards default to recurring windows only.",
+            selector: { select: { multiple: true, options: [
+              { value: "window", label: "Recurring start and end" },
+              { value: "once", label: "One-time action" },
+              { value: "plan", label: "Multi-step plan" },
+            ] } },
+          },
+          {
+            name: "manager_tag",
+            label: "Schedule group",
+            helper: "A friendly internal tag used to keep this page's schedules together, for example materia_house_plans.",
+            selector: { text: {} },
+          },
+          {
+            name: "plans",
+            label: "Multi-step plans",
+            helper: 'Advanced: list of {key, name, icon, phases:[{name, offset_minutes, actions:[{service, entity_id, service_data}]}]}. Each phase becomes a restart-safe one-time Scheduler entry.',
+            selector: { object: {} },
+          },
           {
             name: "manage_schedules",
             label: "Manage multiple schedules",
@@ -141,6 +170,7 @@ class MateriaScheduleEditor extends SmartEditorBase {
       {
         title: "Triggers",
         icon: "mdi:sensors",
+        expanded: false,
         // The "When..." tab's list. Left as raw objects rather than a managed
         // list UI: this is a mocked POC, and the shape will change as soon as
         // there is a real backend deciding what a trigger even is.

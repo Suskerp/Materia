@@ -1,6 +1,8 @@
 import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
+import { t } from "../../utils/i18n.js";
+import { hasLegacyAlarmCode, sanitizeAlarmConfig } from "./config-policy.js";
 
 /** Every arm mode the card knows how to offer, for the mode-order picker.
  *  The CARD derives what a panel actually supports from supported_features;
@@ -65,12 +67,50 @@ class MateriaAlarmEditor extends SmartEditorBase {
         display: block;
         width: 100%;
       }
+      .security-note {
+        display: flex;
+        gap: 12px;
+        margin: 0 0 12px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: var(--warning-color, var(--md-sys-color-tertiary-container));
+        color: var(--md-sys-color-on-tertiary-container, var(--primary-text-color));
+        line-height: 1.4;
+      }
+      .security-note ha-icon { flex: 0 0 auto; margin-top: 2px; }
+      .security-note strong { display: block; margin-bottom: 2px; }
     `,
   ];
 
   setConfig(config) {
-    super.setConfig(config);
+    // `code` was accepted by older releases and stored as readable Lovelace
+    // YAML. Never pass that secret into the editor model: the next deliberate
+    // edit removes it, while opening an old dashboard alone remains non-mutating.
+    this._legacyCodeConfigured = hasLegacyAlarmCode(config);
+    super.setConfig(sanitizeAlarmConfig(config));
     this._expanded ??= null;
+  }
+
+  render() {
+    const panel = this.hass?.states?.[this._config?.entity];
+    const codeRequired = !!panel?.attributes?.code_arm_required;
+    return html`
+      ${this._legacyCodeConfigured || codeRequired ? html`
+        <div class="security-note" role="note">
+          <ha-icon icon="mdi:shield-lock-outline"></ha-icon>
+          <div>
+            <strong>${t("al_code_security_title", this.hass)}</strong>
+            ${t(this._legacyCodeConfigured ? "al_code_legacy_notice" : "al_code_native_notice", this.hass)}
+          </div>
+        </div>
+      ` : ""}
+      ${super.render()}
+    `;
+  }
+
+  _commit(config) {
+    this._legacyCodeConfigured = false;
+    super._commit(sanitizeAlarmConfig(config));
   }
 
   /* EVERY boolean and number is seeded with the card's own default.
@@ -126,9 +166,6 @@ class MateriaAlarmEditor extends SmartEditorBase {
   }
 
   get _sections() {
-    const st = this.hass?.states[this._config?.entity];
-    const codeWanted = !!st?.attributes?.code_arm_required || !!st?.attributes?.code_format;
-
     return [
       {
         title: "Setup",
@@ -147,15 +184,6 @@ class MateriaAlarmEditor extends SmartEditorBase {
               "Leave empty to offer exactly what the panel reports it supports. Set this only to narrow the row or to change its order.",
             selector: { select: { multiple: true, mode: "list", options: MODE_OPTIONS } },
           },
-          ...(codeWanted
-            ? [{
-                name: "code",
-                label: "Code",
-                helper:
-                  "This panel asks for a code. Without one the hold is refused rather than firing a call the panel will reject. Note it is stored in plain text in the dashboard config.",
-                selector: { text: { type: "password" } },
-              }]
-            : []),
         ],
       },
       {

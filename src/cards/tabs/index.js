@@ -13,6 +13,7 @@ import "./editor.js";
 const HEIGHT = 48;
 const OUTER_R = HEIGHT / 2;
 const INNER_R = 8;
+let tabInstance = 0;
 
 /**
  * Tab rail (materia-tabs): a connected button group turned into a view
@@ -52,6 +53,11 @@ class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
   };
 
   static styles = styles;
+
+  constructor() {
+    super();
+    this.__tabUid = `materia-tabs-${++tabInstance}`;
+  }
 
   static getConfigElement() {
     return document.createElement("materia-tabs-editor");
@@ -153,6 +159,23 @@ class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
     }
   }
 
+  _tabKeydown(event, index, items, vertical) {
+    let next = null;
+    if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = items.length - 1;
+    else if ((vertical && event.key === "ArrowDown") || (!vertical && event.key === "ArrowRight")) {
+      next = (index + 1) % items.length;
+    } else if ((vertical && event.key === "ArrowUp") || (!vertical && event.key === "ArrowLeft")) {
+      next = (index - 1 + items.length) % items.length;
+    }
+    if (next == null) return;
+    event.preventDefault();
+    this._tap(items[next]);
+    this.updateComplete.then(() => {
+      this.shadowRoot?.querySelectorAll('[role="tab"]')?.[next]?.focus();
+    });
+  }
+
   /** Corner radius for one segment — button-group's own connected-group
    *  formula: rail-end (outer) corners are always the full stadium cap;
    *  seam (inner) corners are the small facing radius, EXCEPT on the
@@ -179,7 +202,13 @@ class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
     const current = this._current;
     const vertical = this.config.vertical !== false;
     const rail = html`
-      <div class="rail" role="tablist" aria-orientation=${vertical ? "vertical" : "horizontal"} style="height:${vertical ? "auto" : `${HEIGHT}px`};">
+      <div
+        class="rail"
+        role="tablist"
+        aria-label=${this.config.aria_label || this.config.title || "Sections"}
+        aria-orientation=${vertical ? "vertical" : "horizontal"}
+        style="height:${vertical ? "auto" : `${HEIGHT}px`};"
+      >
         ${items.map((item, i) => {
           const value = String(item.value ?? item.label);
           const on = current === value;
@@ -187,10 +216,14 @@ class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
           return html`
             <button
               class="tab ${on ? "on" : ""}"
+              id="${this.__tabUid}-tab-${i}"
               role="tab"
               aria-selected=${on ? "true" : "false"}
+              aria-controls=${this._panes?.[i] ? `${this.__tabUid}-panel-${i}` : nothing}
+              tabindex=${on ? "0" : "-1"}
               style="border-radius:${radius};${vertical ? `min-height:${HEIGHT}px;` : `height:${HEIGHT}px;`}"
               @click=${() => this._tap(item)}
+              @keydown=${(event) => this._tabKeydown(event, i, items, vertical)}
             >
               ${item.icon ? html`<ha-icon class="glyph" .icon=${item.icon}></ha-icon>` : nothing}
               <span class="label">${item.label ?? value}</span>
@@ -212,7 +245,14 @@ class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
             ${items.map((item, i) => {
               const value = String(item.value ?? item.label);
               return this._panes[i]
-                ? html`<div class="pane ${current === value ? "on" : ""}" role="tabpanel">
+                ? html`<div
+                    class="pane ${current === value ? "on" : ""}"
+                    id="${this.__tabUid}-panel-${i}"
+                    role="tabpanel"
+                    aria-labelledby="${this.__tabUid}-tab-${i}"
+                    aria-hidden=${current === value ? "false" : "true"}
+                    tabindex=${current === value ? "0" : "-1"}
+                  >
                     ${this._panes[i].map((el) => html`<div class="pane-card">${el}</div>`)}
                   </div>`
                 : nothing;

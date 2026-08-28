@@ -57,6 +57,7 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     _forecast: { state: true },
     _resolvedColor: { state: true },
     _resolvedColorOn: { state: true },
+    _forecastError: { state: true },
   };
 
   static styles = styles;
@@ -72,7 +73,9 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
 
   setConfig(config) {
     if (!config.metric) throw new Error("metric is required");
+    if (this.config?.entity && this.config.entity !== config.entity) this._unsubForecast();
     this.config = { ...config };
+    this._forecastRetryCount = 0;
     this._fcEntity = undefined;
   }
 
@@ -109,16 +112,35 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     if (!this.hass || !entity || this._fcEntity === entity) return;
     this._unsubForecast();
     this._fcEntity = entity;
-    this._forecast = [];
+    this._forecast = null;
+    this._forecastError = false;
     const p = this.hass.connection.subscribeMessage(
       (ev) => { this._forecast = ev?.forecast || []; },
       { type: "weather/subscribe_forecast", forecast_type: "daily", entity_id: entity }
     );
     this._fcUnsub = p;
-    p.catch(() => {});
+    p.catch(() => {
+      this._forecastError = true;
+      this.requestUpdate();
+      this._forecastFailed(p);
+    });
+  }
+
+  _forecastFailed(promise) {
+    if (this._fcUnsub !== promise) return;
+    this._fcUnsub = null;
+    this._fcEntity = this.config?.entity;
+    if (!this.isConnected || (this._forecastRetryCount || 0) >= 2) return;
+    this._forecastRetryCount = (this._forecastRetryCount || 0) + 1;
+    clearTimeout(this._forecastRetryTimer);
+    this._forecastRetryTimer = setTimeout(() => {
+      this._fcEntity = undefined;
+      this._subscribeForecast();
+    }, this._forecastRetryCount * 1500);
   }
 
   _unsubForecast() {
+    clearTimeout(this._forecastRetryTimer);
     if (this._fcUnsub) {
       this._fcUnsub.then((u) => u && u()).catch(() => {});
       this._fcUnsub = null;
@@ -166,6 +188,11 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
   render() {
     if (!this.hass || !this.config) return html``;
     const m = this.config.metric;
+    const source = this.config.sensor || this.config.entity;
+    const sourceState = source ? this.hass.states[source] : null;
+    if (source && (!sourceState || this._isUnavailable(sourceState))) {
+      return html`<div class="data-state" role="status"><ha-icon icon="mdi:weather-cloudy-alert"></ha-icon><span>${t("data_unavailable", this.hass)}</span></div>`;
+    }
     const renderer = {
       wind: () => this._wind(),
       uv: () => this._uv(),
@@ -179,7 +206,10 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
     }[m];
     if (!renderer) return html``;
     const body = renderer();
-    if (body === nothing) return html``; // no data → tile no-shows
+    if (body === nothing) {
+      const loadingForecast = m === "precipitation" && !this.config.sensor && this._forecast === null && !this._forecastError;
+      return html`<div class="data-state" role="status" aria-live="polite"><ha-icon icon=${loadingForecast ? "mdi:weather-partly-cloudy" : "mdi:database-alert-outline"}></ha-icon><span>${t(loadingForecast ? "data_loading" : "data_not_available", this.hass)}</span></div>`;
+    }
     const bg = this._isTemplate(this.config.color) ? this._resolvedColor : this.config.color;
     const fg = this._isTemplate(this.config.color_on) ? this._resolvedColorOn : this.config.color_on;
     // Global size 1–10 caps the tile width (10 = fill the cell), matching the

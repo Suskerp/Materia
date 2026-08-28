@@ -23,7 +23,7 @@ class MateriaForecastHourlyEditor extends SmartEditorBase {
           { name: "show_header", label: "Show header", selector: { boolean: {} } },
           { name: "hours", label: "Hours shown", selector: { number: { min: 6, max: 48, step: 1, mode: "slider" } } },
           { name: "show_precipitation", label: "Show precipitation chance", selector: { boolean: {} } },
-          { name: "min_precipitation", label: "Hide below (%)", selector: { number: { min: 0, max: 100, step: 5, mode: "box" } } },
+          { name: "min_precipitation", default: 10, label: "Hide below (%)", selector: { number: { min: 0, max: 100, step: 5, mode: "box" } } },
         ],
       },
     ];

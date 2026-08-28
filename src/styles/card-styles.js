@@ -27,6 +27,27 @@ export const unavailableStyles = css`
   }
 `;
 
+/** Stable, human-readable loading/empty/error placeholder for data cards. */
+export const dataStateStyles = css`
+  .data-state {
+    min-height: 88px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px;
+    border-radius: 24px;
+    background: var(--ha-card-background, var(--card-background-color));
+    color: var(--secondary-text-color, var(--md-sys-color-on-surface-variant));
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  .data-state ha-icon { --mdc-icon-size: 20px; flex: 0 0 auto; }
+`;
+
 export const hostStyles = css`
   :host {
     display: block;

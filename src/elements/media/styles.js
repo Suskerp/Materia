@@ -1,6 +1,7 @@
 import { css } from "lit";
+import { motionTokens } from "../../utils/motion.js";
 
-export const styles = css`
+export const styles = [motionTokens, css`
   :host {
     display: block;
   }
@@ -65,7 +66,7 @@ export const styles = css`
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
-    transition: font-weight 0.4s ease;
+    transition: font-weight var(--md-sys-motion-default-effects);
   }
 
   /* C-morph: a typographic BEAT as a new track starts, then settle. */
@@ -97,4 +98,4 @@ export const styles = css`
     opacity: 0.5;
     pointer-events: none;
   }
-`;
+`];

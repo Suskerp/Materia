@@ -11,6 +11,7 @@ import {
 import { styles as cardStyles } from "../card/styles.js";
 import { styles as roomStyles } from "./styles.js";
 import { t } from "../../utils/i18n.js";
+import { motionTokens } from "../../utils/motion.js";
 import "./editor.js";
 
 class MateriaRoom extends MateriaCard {
@@ -26,6 +27,7 @@ class MateriaRoom extends MateriaCard {
     rowCardStyles,
     fillBarStyles,
     unavailableStyles,
+    motionTokens,
     cardStyles,
     roomStyles,
   ];

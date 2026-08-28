@@ -1263,10 +1263,14 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
   }
 
   /** Why this press cannot become a commit, or null if it can. */
+  _requiresArmCode(mode) {
+    const isDisarm = this._activeMode?.key === mode.key;
+    return !isDisarm && !!this._stateObj?.attributes?.code_arm_required;
+  }
+
   _refusalFor(mode) {
     if (this._isInert(mode)) return t("al_hint_disarm_first", this.hass);
-    const isDisarm = this._activeMode?.key === mode.key;
-    if (!isDisarm && this._stateObj?.attributes?.code_arm_required && !this.config.code) {
+    if (this._requiresArmCode(mode)) {
       return t("al_hint_code_required", this.hass);
     }
     return null;
@@ -1282,6 +1286,12 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     const refusal = this._refusalFor(mode);
     if (refusal) {
       this._showHint(mode.key, refusal);
+      // A code refusal must not strand the user at a dead control. HA's native
+      // alarm dialog owns protected code entry, so hand off immediately without
+      // ever reading or retaining the secret in this card.
+      if (this._requiresArmCode(mode)) {
+        this._handleAction({ action: "more-info", entity: this.config.entity });
+      }
       return;
     }
 
@@ -1429,8 +1439,10 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
     // this card moves in the same frame the fill commits.
     OptimismBus.publish(this.config.entity, target, this._pinFrom);
 
+    // Alarm codes must never come from Lovelace config: dashboard YAML is not a
+    // secret store. Panels that require a code are refused above and can be
+    // operated through Home Assistant's native more-info flow instead.
     const data = { entity_id: this.config.entity };
-    if (this.config.code) data.code = String(this.config.code);
     this._fireHaptic("success");
     this._callService("alarm_control_panel", service, data);
   }

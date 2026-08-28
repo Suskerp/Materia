@@ -149,12 +149,10 @@ export const AGGREGATE_NAMES = Object.keys(AGGREGATES);
 /**
  * Daily buckets, oldest first, ending with the day `now` falls in.
  *
- * A day with NO samples is omitted entirely rather than reported as zero:
- * "nothing was recorded" and "nothing happened" are different facts, and only
- * the second one deserves a bar. That distinction is what lets a caller draw
- * the concept's stub for an idle day while an out-of-retention day simply is
- * not there — and it is why a three-day recorder answering a seven-day
- * request yields three buckets instead of four blanks and three bars.
+ * A day with neither samples nor a known state at its boundary is omitted:
+ * "nothing was known" and "the known counter did not move" are different
+ * facts. A carried boundary value makes the latter a truthful zero bucket;
+ * an out-of-retention day still remains absent.
  *
  * Buckets are cut on LOCAL midnights, because "yesterday" is a local idea.
  */
@@ -163,27 +161,41 @@ export function bucketDays(series, { days = 7, aggregate = "delta", now = Date.n
   const nDays = Math.max(1, Math.min(90, Math.round(days)));
   if (!series?.length) return [];
 
-  // Local midnight of the day `now` is in, then step back.
-  const midnight = new Date(now);
-  midnight.setHours(0, 0, 0, 0);
-  const dayMs = 24 * 3600 * 1000;
-  const firstStart = midnight.getTime() - (nDays - 1) * dayMs;
+  // Build LOCAL calendar boundaries with setDate. Subtracting fixed 24-hour
+  // chunks from a local midnight shifts a bucket by an hour at DST changes —
+  // exactly where a Brussels "day" is 23 or 25 elapsed hours.
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+  const starts = Array.from({ length: nDays + 1 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (nDays - 1) + index);
+    return date.getTime();
+  });
 
-  const bins = new Map();
-  for (const p of series) {
-    if (p.v == null || p.t < firstStart) continue;
-    const day = Math.floor((p.t - firstStart) / dayMs);
-    if (day < 0 || day >= nDays) continue;
-    if (!bins.has(day)) bins.set(day, []);
-    bins.get(day).push(p.v);
-  }
-
+  const ordered = [...series].sort((a, b) => a.t - b.t);
   const out = [];
   for (let d = 0; d < nDays; d++) {
-    const vs = bins.get(d);
-    if (!vs || !vs.length) continue; // no data is not zero
+    const start = starts[d];
+    const end = starts[d + 1];
+    const inDay = ordered.filter((p) => p.t >= start && p.t < end);
+    let vs = inDay.filter((p) => p.v != null).map((p) => p.v);
+
+    if (aggregate === "delta") {
+      // Recorder history is a step function. A cumulative counter's daily
+      // movement starts at the value already in effect at midnight, not at the
+      // first state change after breakfast. Seed the bin with that boundary
+      // value; it also lets an unchanged counter truthfully render a zero day.
+      const before = [...ordered].reverse().find((p) => p.t < start);
+      const atStart = [...inDay].reverse().find((p) => p.t === start);
+      const boundary = atStart ?? before;
+      if (boundary?.v != null && (!inDay.length || inDay[0] !== boundary)) {
+        vs = [boundary.v, ...vs];
+      }
+    }
+
+    if (!vs.length) continue; // no known state is not zero
     const v = fn(vs);
-    out.push({ t: firstStart + d * dayMs, v: Number.isFinite(v) ? v : 0, samples: vs.length });
+    out.push({ t: start, v: Number.isFinite(v) ? v : 0, samples: vs.length });
   }
   return out;
 }

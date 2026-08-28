@@ -19,6 +19,7 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
     _hourly: { state: true },
     _selected: { state: true },
     _expanded: { state: true },
+    _forecastError: { state: true },
   };
 
   static styles = styles;
@@ -34,7 +35,9 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
 
   setConfig(config) {
     if (!config.entity) throw new Error("entity is required");
+    if (this.config?.entity && this.config.entity !== config.entity) this._unsubForecast();
     this.config = { ...config };
+    this._forecastRetryCount = 0;
     this._fcEntity = undefined; // (re)subscribe forecast for the (new) entity
     this._selected = 0;
     this._expanded = false;
@@ -62,6 +65,7 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
     this._unsubForecast();
     this._fcEntity = entity;
     this._forecast = null;
+    this._forecastError = false;
     this._hourly = [];
     this._hourlyByDay = new Map();
     const daily = this.hass.connection.subscribeMessage(
@@ -70,7 +74,11 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
       },
       { type: "weather/subscribe_forecast", forecast_type: "daily", entity_id: entity }
     );
-    daily.catch(() => {}); // entity may not support forecasts — fall back gracefully
+    daily.catch(() => {
+      this._forecastError = true;
+      this.requestUpdate();
+      this._forecastFailed(daily);
+    });
     this._fcUnsubs = [daily];
     if (this.config.show_hourly !== false) {
       // Hourly detail for the tapped day. Integrations with a short hourly
@@ -98,7 +106,26 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
     }
   }
 
+  _forecastFailed(promise) {
+    if (!(this._fcUnsubs || []).includes(promise)) return;
+    // Tear down a partially-created pair (daily succeeded/hourly failed or the
+    // reverse) before retrying; otherwise a retry can leave duplicate pushes.
+    for (const pending of this._fcUnsubs || []) {
+      if (pending !== promise) pending.then((unsub) => unsub?.()).catch(() => {});
+    }
+    this._fcUnsubs = null;
+    this._fcEntity = this.config?.entity;
+    if (!this.isConnected || (this._forecastRetryCount || 0) >= 2) return;
+    this._forecastRetryCount = (this._forecastRetryCount || 0) + 1;
+    clearTimeout(this._forecastRetryTimer);
+    this._forecastRetryTimer = setTimeout(() => {
+      this._fcEntity = undefined;
+      this._subscribeForecast();
+    }, this._forecastRetryCount * 1500);
+  }
+
   _unsubForecast() {
+    clearTimeout(this._forecastRetryTimer);
     for (const p of this._fcUnsubs || []) {
       p.then((u) => u && u()).catch(() => {});
     }
@@ -195,11 +222,15 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
 
     const stateObj = this.hass.states[this.config.entity];
     const unavailable = this._isUnavailable(stateObj);
+    if (!stateObj || unavailable) return html`<div class="data-state" role="status"><ha-icon icon="mdi:weather-cloudy-alert"></ha-icon><span>${t("data_unavailable", this.hass)}</span></div>`;
     // ?.length — the subscribed array starts empty, and an empty array is
     // truthy, which used to permanently mask the legacy attribute fallback.
     const days = (this._forecast?.length ? this._forecast : stateObj?.attributes?.forecast || [])
       .slice(0, this.config.days ?? 10);
-    if (!days.length) return html``;
+    if (!days.length) {
+      const loading = this._forecast === null && !this._forecastError;
+      return html`<div class="data-state" role="status" aria-live="polite"><ha-icon icon=${loading ? "mdi:weather-partly-cloudy" : "mdi:weather-cloudy-alert"}></ha-icon><span>${t(loading ? "data_loading" : "forecast_not_supported", this.hass)}</span></div>`;
+    }
 
     const showPrecip = this.config.show_precipitation !== false;
     const minPrecip = this.config.min_precipitation ?? 10; // hide noise below 10%

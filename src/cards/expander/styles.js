@@ -22,9 +22,50 @@ export const styles = [
     .head {
       display: flex;
       align-items: center;
+      min-height: 48px;
+    }
+
+    .disclosure {
+      display: flex;
+      align-items: center;
       gap: 12px;
+      align-self: stretch;
+      flex: 1;
+      min-width: 0;
       padding: 12px 14px;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: start;
       cursor: pointer;
+      border-radius: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .disclosure:disabled {
+      cursor: default;
+    }
+
+    .disclosure:focus-visible,
+    .switch-target:focus-visible {
+      outline: 3px solid var(--md-sys-color-primary, currentColor);
+      outline-offset: -3px;
+    }
+
+    .switch-target {
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      margin-inline-end: 4px;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      display: grid;
+      place-items: center;
+      flex: none;
+      cursor: pointer;
+      border-radius: 50%;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -88,6 +129,26 @@ export const styles = [
     .m3-switch:active i {
       width: 22px;
       height: 22px;
+    }
+
+    .switch-target:active .m3-switch i {
+      width: 22px;
+      height: 22px;
+    }
+    .switch-target:active .m3-switch:not(.on) i {
+      left: 2px;
+    }
+    .switch-target:active .m3-switch.on i {
+      left: 16px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .chev,
+      .m3-switch,
+      .m3-switch i,
+      ha-card.row.exp {
+        transition: none;
+      }
     }
     .m3-switch:not(.on):active i {
       left: 2px;

@@ -1,6 +1,7 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { hostStyles, haCardReset, unavailableStyles } from "../../styles/card-styles.js";
+import { motionTokens } from "../../utils/motion.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -14,7 +15,7 @@ class MateriaClimate extends ActionMixin(LitElement) {
     };
   }
 
-  static styles = [hostStyles, unavailableStyles, styles];
+  static styles = [hostStyles, unavailableStyles, motionTokens, styles];
 
   static getConfigElement() {
     return document.createElement("materia-climate-editor");

@@ -1,11 +1,12 @@
 import { css } from "lit";
-import { hostStyles, haCardReset, unavailableStyles } from "../../styles/card-styles.js";
+import { hostStyles, haCardReset, unavailableStyles, dataStateStyles } from "../../styles/card-styles.js";
 import { motionTokens } from "../../utils/motion.js";
 
 export const styles = [
   hostStyles,
   haCardReset,
   unavailableStyles,
+  dataStateStyles,
   motionTokens,
   css`
     ha-card {

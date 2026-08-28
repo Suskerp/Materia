@@ -41,7 +41,9 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
 
   setConfig(config) {
     if (!config.entity) throw new Error("entity is required");
+    if (this.config?.entity && this.config.entity !== config.entity) this._unsubForecast();
     this.config = { metrics: ["minmax"], ...config };
+    this._forecastRetryCount = 0;
     this._fcEntity = undefined;
   }
 
@@ -79,10 +81,24 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
       { type: "weather/subscribe_forecast", forecast_type: "daily", entity_id: entity }
     );
     this._fcUnsub = p;
-    p.catch(() => {});
+    p.catch(() => this._forecastFailed(p));
+  }
+
+  _forecastFailed(promise) {
+    if (this._fcUnsub !== promise) return;
+    this._fcUnsub = null;
+    this._fcEntity = this.config?.entity;
+    if (!this.isConnected || (this._forecastRetryCount || 0) >= 2) return;
+    this._forecastRetryCount = (this._forecastRetryCount || 0) + 1;
+    clearTimeout(this._forecastRetryTimer);
+    this._forecastRetryTimer = setTimeout(() => {
+      this._fcEntity = undefined;
+      this._subscribeForecast();
+    }, this._forecastRetryCount * 1500);
   }
 
   _unsubForecast() {
+    clearTimeout(this._forecastRetryTimer);
     if (this._fcUnsub) {
       this._fcUnsub.then((u) => u && u()).catch(() => {});
       this._fcUnsub = null;

@@ -71,7 +71,7 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
                   : v === "detail"
                     ? { days: 7, aggregate: "delta", history_refresh: 5 }
                     : {};
-    return { variant: "percent", ...perVariant, ...this._config };
+    return { variant: "percent", show_icon: true, ...perVariant, ...this._config };
   }
 
   _sectionsSignature() {

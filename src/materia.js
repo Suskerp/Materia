@@ -17,6 +17,7 @@ import "./primitives/calendar.js";
 import "./cards/card/index.js";
 import "./cards/room/index.js";
 import "./cards/climate/index.js";
+import "./cards/humidifier/index.js";
 import "./cards/weather/index.js";
 import "./cards/weather-tile/index.js";
 import "./cards/weather-hero/index.js";
@@ -63,7 +64,7 @@ import "./elements/clock/index.js";
 injectFonts();
 
 // Version info
-const VERSION = "0.70.1";
+const VERSION = "__MATERIA_VERSION__";
 console.info(
   `%c MATERIA %c v${VERSION} `,
   "color: white; background: #6750A4; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;",

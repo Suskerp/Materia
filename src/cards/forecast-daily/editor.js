@@ -23,7 +23,7 @@ class MateriaForecastDailyEditor extends SmartEditorBase {
           { name: "days", label: "Days shown", selector: { number: { min: 3, max: 15, step: 1, mode: "slider" } } },
           { name: "show_hourly", label: "Tap a day to expand its hourly detail", selector: { boolean: {} } },
           { name: "show_precipitation", label: "Show precipitation chance", selector: { boolean: {} } },
-          { name: "min_precipitation", label: "Hide below (%)", selector: { number: { min: 0, max: 100, step: 5, mode: "box" } } },
+          { name: "min_precipitation", default: 10, label: "Hide below (%)", selector: { number: { min: 0, max: 100, step: 5, mode: "box" } } },
           { name: "today_label", label: "Label for today", selector: { text: {} } },
         ],
       },

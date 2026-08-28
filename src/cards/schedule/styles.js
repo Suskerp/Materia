@@ -315,6 +315,148 @@ export const styles = [
       border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 28%, transparent);
     }
 
+    .schedule-kinds {
+      margin-top: -4px;
+    }
+
+    /* ---- one-shot schedules and multi-phase plans ------------------ */
+    .single-schedule {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .single-time {
+      position: relative;
+      min-height: 72px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      border-radius: 28px;
+      border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 32%, transparent);
+      background: var(--md-sys-color-surface-container-high, rgba(0, 0, 0, 0.08));
+      cursor: pointer;
+      transition: border-color var(--md-sys-motion-fast-effects),
+        background-color var(--md-sys-motion-fast-effects);
+    }
+
+    .single-time:focus-within {
+      border-color: var(--md-sys-color-primary);
+      outline: 2px solid color-mix(in srgb, var(--md-sys-color-primary) 32%, transparent);
+      outline-offset: 2px;
+    }
+
+    .single-time-copy {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      pointer-events: none;
+    }
+
+    .single-time-copy > span,
+    .single-action > span {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--md-sys-color-on-surface-variant);
+    }
+
+    .single-time-copy > b {
+      font-size: 18px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .single-datetime-input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      opacity: 0.001;
+      cursor: pointer;
+    }
+
+    .single-action {
+      display: grid;
+      grid-template-columns: minmax(84px, auto) 1fr;
+      align-items: center;
+      gap: 12px;
+      min-height: 64px;
+      padding: 4px 8px 4px 18px;
+      border-radius: 24px;
+      background: var(--md-sys-color-surface-container, rgba(0, 0, 0, 0.05));
+    }
+
+    .single-action ha-selector {
+      min-width: 0;
+    }
+
+    .plan-phases {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 6px;
+      border-radius: 24px;
+      background: var(--md-sys-color-surface-container, rgba(0, 0, 0, 0.05));
+    }
+
+    .plan-phase {
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 12px;
+      border-radius: 18px;
+    }
+
+    .plan-phase-index {
+      width: 32px;
+      height: 32px;
+      flex: 0 0 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+      font-weight: 700;
+    }
+
+    .plan-phase > span:last-child {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .plan-phase b {
+      font-size: 14px;
+    }
+
+    .plan-phase small {
+      font-size: 12px;
+      color: var(--md-sys-color-on-surface-variant);
+    }
+
+    .commit-error {
+      padding: 12px 16px;
+      border-radius: 20px;
+      background: var(--md-sys-color-error-container);
+      color: var(--md-sys-color-on-error-container);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .setup-note {
+      padding: 10px 14px;
+      border-radius: 18px;
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
     @container (max-width: 420px) {
       .manager-fields {
         grid-template-columns: 1fr;

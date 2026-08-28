@@ -9,13 +9,17 @@ Materia is an opinionated collection of native [Lit](https://lit.dev/) custom ca
 The collection is split into two categories:
 
 - **Cards** -- Dashboard content cards: a universal entity card, rooms, climate, weather, now-playing media + a wavy media seek bar, and an icon row.
-- **Elements** -- Smaller UI primitives: M3 buttons, button groups, vertical button stacks, badges, pills, checkboxes, and dropdown menus.
+- **Elements** -- Smaller UI primitives: M3 buttons, button groups, badges, pills, checkboxes, and dropdown menus.
+
+Not sure which of the specialized variants to use? Start with the
+[card selection guide](docs/CARD_CATALOG.md). It identifies the recommended
+default for each job and documents the compatibility/deprecation policy.
 
 Key capabilities:
 
 - **Universal entity card** -- one `materia-card` auto-detects the domain (light, cover, switch, lock, vacuum, climate, scene, …) and adapts its controls, colors, and active state.
 - **Visual editor** -- every card ships a sectioned GUI editor with an icon picker, a Material You color picker, and a per-field `</>` toggle that flips any field between a friendly control and a Jinja template.
-- **Jinja2 templates** -- `name`, `subtitle`, `icon`, `color`, and `color_on` accept templates (rendered via Home Assistant's template REST API), so any field can be dynamic.
+- **Jinja2 templates** -- `name`, `subtitle`, `icon`, `color`, and `color_on` accept templates through Home Assistant's authenticated WebSocket template subscription, so fields update without polling the REST API on every state change.
 - **Domain-aware active states** -- each domain maps to its own "active" state and accent colors (vacuum = cleaning, lock = locked, cover = open, climate = heat, …).
 - **Smart sliders** -- dimmable lights and covers render a drag slider; non-dimmable entities render a tap toggle.
 
@@ -100,6 +104,16 @@ To use your own colors, edit `src/custom_colors.json` and rebuild, edit the serv
 The semantic color names used across Materia cards are: `light`, `device`, `climate-heat`, `climate-cool`, `climate-auto`, `water-eco`, `water-performance`, `warning`, and their `on-*` / `*-container` variants. These are surfaced (with swatches) in the color picker of every card editor, alongside the standard `--md-sys-color-*` system roles.
 
 ## Card Reference
+
+### Alarm code migration
+
+Materia does not accept alarm codes in Lovelace configuration. Dashboard YAML
+is readable configuration, not a secret store. Older configurations may contain
+a `code:` key on `materia-alarm`; Materia now ignores that key and removes
+it on the next intentional visual-editor change. If a dashboard containing a
+code was shared or exported, change the alarm code. Panels that require a code
+must be armed through Home Assistant's native alarm details, where the code is
+entered at the time of use.
 
 ### Cards
 
@@ -189,6 +203,30 @@ outdoor_temp_entity: sensor.outdoor_temperature
 | `outdoor_temp_entity` | string | | Outdoor-temperature sensor shown in the status line |
 | `step` | number | `0.5` | Temperature adjustment step |
 | `tap_action` | object | `{ action: "more-info" }` | Tap action |
+
+---
+
+#### `materia-humidifier`
+
+A humidifier/dehumidifier card with power, target-humidity controls, live humidity and optional device modes. Limits and step size come from the entity, so the card respects the capabilities of each device.
+
+```yaml
+type: custom:materia-humidifier
+entity: humidifier.bedroom
+name: Bedroom
+show_modes: true
+# Optional when the device does not report current_humidity:
+humidity_entity: sensor.bedroom_humidity
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `entity` | string | **required** | Humidifier entity ID |
+| `name` | string | entity friendly name | Display name. *Templatable* |
+| `humidity_entity` | string | | External sensor used for current humidity |
+| `step` | number | entity step or `1` | Override the humidity adjustment step |
+| `show_modes` | boolean | `true` | Show mode controls when the device offers multiple modes |
+| `tap_action` | object | `{ action: "more-info" }` | Card-background tap action |
 
 ---
 
@@ -792,7 +830,7 @@ entity: media_player.living_room
 
 ### Typography
 
-Figtree is the functional voice everywhere; **Outfit** (variable) is the display voice on hero moments only — clock, weather hero temperature, thermostat target, tile numerals (tabular figures), panel section titles, media track titles. The weight axis animates: the thermostat numeral thickens while adjusting, section titles ride the open spring, the clock's digital readout breathes across the minute, and the media title beats on track changes. Fraunces italic appears in exactly one place: the clock's date. Swap the display face via `--materia-font-display`.
+Materia uses Home Assistant's configured font by default, so dashboards remain complete on an isolated LAN and do not make third-party font requests. Figtree, Outfit and Fraunces remain optional visual voices: set `window.MATERIA_LOAD_REMOTE_FONTS = true` before loading the Materia resource to opt in, or provide those families locally through your theme. Swap the display face via `--materia-font-display`.
 
 ### Visual editor
 

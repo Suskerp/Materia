@@ -107,6 +107,7 @@ class MateriaCarouselEditor extends SmartEditorBase {
             ? [{
                 name: "sort_history_days",
                 label: "History window, in days (default 30)",
+                default: 30,
                 selector: { number: { min: 1, max: 365, mode: "box" } },
               }]
             : []),

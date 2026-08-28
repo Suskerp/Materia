@@ -3,6 +3,17 @@ import terser from "@rollup/plugin-terser";
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from "fs";
 import { gzipSync } from "zlib";
 
+const packageVersion = JSON.parse(readFileSync("package.json", "utf8")).version;
+
+/** package.json is the release version source of truth. */
+const injectVersion = {
+  name: "inject-version",
+  transform(code, id) {
+    if (!id.endsWith("/src/materia.js")) return null;
+    return { code: code.replaceAll("__MATERIA_VERSION__", packageVersion), map: null };
+  },
+};
+
 /**
  * Copy the canonical custom_colors.json (source of truth: src/) into the
  * build output on every build, so it's always present at
@@ -42,5 +53,5 @@ export default {
     file: "dist/materia.js",
     format: "es",
   },
-  plugins: [resolve(), terser(), copyCustomColors, deployToHA],
+  plugins: [injectVersion, resolve(), terser(), copyCustomColors, deployToHA],
 };

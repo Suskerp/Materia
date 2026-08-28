@@ -4,6 +4,10 @@ import { css } from "lit";
  * Inject Figtree font into the document head (once).
  */
 export function injectFonts() {
+  // Home Assistant's own typography is the reliable, privacy-preserving
+  // default. Remote display fonts are an explicit visual opt-in because a
+  // dashboard must remain complete on an isolated LAN and under a strict CSP.
+  if (window.MATERIA_LOAD_REMOTE_FONTS !== true) return;
   if (document.querySelector("#materia-fonts")) return;
   const style = document.createElement("style");
   style.id = "materia-fonts";

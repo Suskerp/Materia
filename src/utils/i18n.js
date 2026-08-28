@@ -26,7 +26,7 @@
  * a translation.
  */
 
-const STRINGS = {
+export const STRINGS = {
   /* ---- shared across many cards ------------------------------------ */
   unavailable: { en: "Unavailable", nl: "Niet beschikbaar" },
   cancel: { en: "Cancel", nl: "Annuleren" },
@@ -45,6 +45,29 @@ const STRINGS = {
   state_locking: { en: "Locking", nl: "Gaat op slot" },
   state_unlocking: { en: "Unlocking", nl: "Gaat open" },
   state_jammed: { en: "Jammed", nl: "Vastgelopen" },
+
+  /* ---- materia-humidifier ------------------------------------------ */
+  humidifier_name: { en: "Humidifier", nl: "Luchtbevochtiger" },
+  humidifier_current_value: { en: "Current {value}%", nl: "Nu {value}%" },
+  humidifier_turn_on: { en: "Turn humidifier on", nl: "Luchtbevochtiger aanzetten" },
+  humidifier_turn_off: { en: "Turn humidifier off", nl: "Luchtbevochtiger uitzetten" },
+  humidifier_increase: { en: "Increase target humidity", nl: "Doelvochtigheid verhogen" },
+  humidifier_decrease: { en: "Decrease target humidity", nl: "Doelvochtigheid verlagen" },
+  humidifier_modes: { en: "Humidifier modes", nl: "Luchtbevochtigingsmodi" },
+  humidifier_action_humidifying: { en: "Humidifying", nl: "Bevochtigt" },
+  humidifier_action_drying: { en: "Dehumidifying", nl: "Ontvochtigt" },
+  humidifier_action_idle: { en: "Idle", nl: "Stand-by" },
+  humidifier_action_off: { en: "Off", nl: "Uit" },
+  humidifier_mode_auto: { en: "Auto", nl: "Automatisch" },
+  humidifier_mode_away: { en: "Away", nl: "Afwezig" },
+  humidifier_mode_baby: { en: "Baby", nl: "Baby" },
+  humidifier_mode_boost: { en: "Boost", nl: "Boost" },
+  humidifier_mode_comfort: { en: "Comfort", nl: "Comfort" },
+  humidifier_mode_eco: { en: "Eco", nl: "Eco" },
+  humidifier_mode_home: { en: "Home", nl: "Thuis" },
+  humidifier_mode_laundry: { en: "Laundry", nl: "Was drogen" },
+  humidifier_mode_normal: { en: "Normal", nl: "Normaal" },
+  humidifier_mode_sleep: { en: "Sleep", nl: "Slapen" },
 
   /* ---- materia-badge ------------------------------------------------- */
   badge_hold_hint: { en: "hold, don't tap", nl: "even vasthouden" },
@@ -133,6 +156,22 @@ const STRINGS = {
   sched_action: { en: "Action", nl: "Actie" },
   sched_start_action: { en: "At start", nl: "Bij start" },
   sched_end_action: { en: "At end", nl: "Bij einde" },
+  sched_kind_window: { en: "Recurring", nl: "Herhalend" },
+  sched_kind_once: { en: "One time", nl: "Eenmalig" },
+  sched_kind_plan: { en: "Plan", nl: "Plan" },
+  sched_plan: { en: "Plan", nl: "Plan" },
+  sched_choose_plan: { en: "Choose a plan", nl: "Kies een plan" },
+  sched_arrival: { en: "Arrival", nl: "Aankomst" },
+  sched_run_at: { en: "Run at", nl: "Uitvoeren om" },
+  sched_phase: { en: "Step", nl: "Stap" },
+  sched_phases: { en: "steps", nl: "stappen" },
+  sched_saving: { en: "Saving…", nl: "Opslaan…" },
+  sched_save_failed: { en: "Could not save the schedule", nl: "De planning kon niet worden opgeslagen" },
+  sched_delete_failed: { en: "Could not delete the schedule", nl: "De planning kon niet worden verwijderd" },
+  sched_phase_in_past: { en: "Choose a later arrival so every step is still in the future", nl: "Kies een latere aankomst zodat elke stap nog in de toekomst ligt" },
+  sched_run: { en: "Run", nl: "Uitvoeren" },
+  sched_activate: { en: "Activate", nl: "Activeren" },
+  sched_configure_actions: { en: "Configure the allowed actions for this device", nl: "Configureer de toegelaten acties voor dit toestel" },
   sched_new: { en: "New schedule", nl: "Nieuwe planning" },
   sched_edit: { en: "Change schedule", nl: "Planning aanpassen" },
   sched_enabled: { en: "Enabled", nl: "Actief" },
@@ -240,6 +279,10 @@ const STRINGS = {
   /* ---- forecasts -------------------------------------------------------- */
   fc_hourly_forecast: { en: "Hourly forecast", nl: "Uurverwachting" },
   fc_today: { en: "Today", nl: "Vandaag" },
+  data_loading: { en: "Loading…", nl: "Laden…" },
+  data_unavailable: { en: "Entity unavailable", nl: "Entiteit niet beschikbaar" },
+  data_not_available: { en: "No data available", nl: "Geen gegevens beschikbaar" },
+  forecast_not_supported: { en: "Forecast unavailable for this weather service", nl: "Geen verwachting beschikbaar voor deze weerdienst" },
 
   /* ---- materia-glance-tile (soil moisture) ------------------------------ */
   gt_state_cleaning: { en: "Cleaning", nl: "Aan het poetsen" },
@@ -311,7 +354,10 @@ const STRINGS = {
   al_hint_hold_to_disarm: { en: "Hold to disarm", nl: "Houd vast om uit te schakelen" },
   al_hint_holding: { en: "Keep holding...", nl: "Blijf vasthouden..." },
   al_hint_disarm_first: { en: "Disarm first", nl: "Schakel eerst uit" },
-  al_hint_code_required: { en: "Code required", nl: "Code vereist" },
+  al_hint_code_required: { en: "Enter the code in alarm details", nl: "Voer de code in bij de alarmdetails" },
+  al_code_security_title: { en: "Alarm codes stay in Home Assistant", nl: "Alarmcodes blijven in Home Assistant" },
+  al_code_native_notice: { en: "This panel requires a code. Use the alarm details to arm it; Materia never stores the code in dashboard YAML.", nl: "Dit paneel vereist een code. Schakel het in via de alarmdetails; Materia bewaart de code nooit in dashboard-YAML." },
+  al_code_legacy_notice: { en: "An older card stored a code in dashboard YAML. Materia no longer reads it, and your next editor change removes it. Change the alarm code if this dashboard was shared.", nl: "Een oudere kaart bewaarde een code in dashboard-YAML. Materia leest die niet meer en verwijdert die bij je volgende wijziging. Wijzig de alarmcode als dit dashboard gedeeld werd." },
   al_hint_arming: { en: "Arming...", nl: "Inschakelen..." },
   al_hint_disarming: { en: "Disarming...", nl: "Uitschakelen..." },
 

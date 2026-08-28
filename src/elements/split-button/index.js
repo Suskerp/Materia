@@ -1,4 +1,4 @@
-import { LitElement, html } from "lit";
+import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import "../button/index.js";
@@ -51,7 +51,13 @@ class MateriaSplitButton extends DisabledMixin(ActionMixin(LitElement)) {
       if (this.config?.flex != null) this.style.flex = String(this.config.flex);
     }
     if (changed.has("_open") && this._open) {
-      requestAnimationFrame(() => this._clampMenu());
+      requestAnimationFrame(() => {
+        this._clampMenu();
+        if (this.__focusMenuOnOpen) {
+          this.__focusMenuOnOpen = false;
+          this.shadowRoot?.querySelector(".menu-item")?.focus();
+        }
+      });
     }
   }
 
@@ -84,6 +90,37 @@ class MateriaSplitButton extends DisabledMixin(ActionMixin(LitElement)) {
   _toggle(e) {
     e.stopPropagation();
     this._open = !this._open;
+  }
+
+  _triggerKeydown(e) {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      this.__focusMenuOnOpen = true;
+      this._open = true;
+    } else if (e.key === "Escape" && this._open) {
+      e.preventDefault();
+      this._open = false;
+    }
+  }
+
+  _menuKeydown(e) {
+    const items = [...(this.shadowRoot?.querySelectorAll(".menu-item") || [])];
+    const current = items.indexOf(e.target);
+    if (e.key === "Escape") {
+      e.preventDefault();
+      this._open = false;
+      this.shadowRoot?.querySelector(".trailing")?.focus();
+      return;
+    }
+    let next;
+    if (e.key === "ArrowDown") next = (current + 1) % items.length;
+    else if (e.key === "ArrowUp") next = (current - 1 + items.length) % items.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = items.length - 1;
+    if (next != null && items.length) {
+      e.preventDefault();
+      items[next].focus();
+    }
   }
 
   _selectOption(opt, e) {
@@ -143,25 +180,43 @@ class MateriaSplitButton extends DisabledMixin(ActionMixin(LitElement)) {
         <div class="split ${variant}">
           <materia-button class="leading" .hass=${this.hass} .config=${leadingConfig}></materia-button>
           <button
+            type="button"
             class="trailing ${this._open ? "open" : ""}"
             @click=${this._toggle}
+            @keydown=${this._triggerKeydown}
             aria-haspopup="menu"
             aria-expanded=${this._open ? "true" : "false"}
-            aria-label="more actions"
+            aria-label=${this.config.menu_aria_label || `${this.config.label || "Action"} options`}
+            ?disabled=${this._disabledByCondition}
           >
-            <ha-icon class="chev" icon="m3of:arrow-drop-down"></ha-icon>
+            <span class="trailing-surface">
+              <ha-icon class="chev" icon="m3of:arrow-drop-down"></ha-icon>
+            </span>
           </button>
         </div>
 
-        <div class="menu dir-${this.config.menu_position || "bottom-right"} ${this._open ? "open" : ""}" role="menu">
+        <div
+          class="menu dir-${this.config.menu_position || "bottom-right"} ${this._open ? "open" : ""}"
+          role="menu"
+          aria-hidden=${this._open ? "false" : "true"}
+          @keydown=${this._menuKeydown}
+        >
           ${options.map((opt) => {
             const sel = this._isSelected(opt);
             return html`
-              <div class="menu-item ${sel ? "selected" : ""}" role="menuitem" aria-checked=${sel ? "true" : "false"} @click=${(e) => this._selectOption(opt, e)}>
+              <button
+                type="button"
+                class="menu-item ${sel ? "selected" : ""}"
+                role=${opt.value != null ? "menuitemradio" : "menuitem"}
+                aria-checked=${opt.value != null ? (sel ? "true" : "false") : nothing}
+                tabindex="-1"
+                ?disabled=${opt.disabled === true}
+                @click=${(e) => this._selectOption(opt, e)}
+              >
                 ${opt.icon ? html`<ha-icon .icon=${opt.icon}></ha-icon>` : ""}
                 <span class="item-text">${opt.label || ""}</span>
                 ${sel ? html`<ha-icon class="item-check" icon="m3of:check"></ha-icon>` : ""}
-              </div>
+              </button>
             `;
           })}
         </div>

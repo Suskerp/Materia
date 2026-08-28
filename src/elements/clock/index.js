@@ -6,7 +6,6 @@ class MateriaClock extends LitElement {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
-    _t: { state: true },
   };
 
   static styles = styles;
@@ -25,11 +24,17 @@ class MateriaClock extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    this._onVisibilityChange = () => {
+      this._stop();
+      if (!document.hidden) this._start();
+    };
+    document.addEventListener("visibilitychange", this._onVisibilityChange);
     this._start();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    document.removeEventListener("visibilitychange", this._onVisibilityChange);
     this._stop();
   }
 
@@ -41,6 +46,7 @@ class MateriaClock extends LitElement {
       this._stop();
       this._start();
     }
+    this._paintHands();
   }
 
   // Scalloped "squiggle" face — a 12-lobe wavy circle (Material You expressive)
@@ -58,15 +64,40 @@ class MateriaClock extends LitElement {
   }
 
   _start() {
-    if (this._raf || this._tick) return;
-    if (this.config?.smooth) {
+    if (document.hidden || this._raf || this._tick) return;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (this.config?.smooth && !reducedMotion) {
       const loop = () => {
+        this._paintHands();
         this._raf = requestAnimationFrame(loop);
-        this._t = performance.now();
       };
       this._raf = requestAnimationFrame(loop);
+      // Labels, the optional digital face and date only need a one-second
+      // cadence. The hands themselves are updated directly in the RAF above,
+      // avoiding a full Lit render on every animation frame.
+      this._tick = setInterval(() => this.requestUpdate(), 1000);
     } else {
-      this._tick = setInterval(() => (this._t = Date.now()), 1000);
+      this._tick = setInterval(() => this.requestUpdate(), 1000);
+    }
+  }
+
+  _paintHands() {
+    const root = this.renderRoot;
+    if (!root) return;
+    const now = new Date();
+    const smooth = !!this.config?.smooth
+      && !window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    const second = now.getSeconds() + (smooth ? now.getMilliseconds() / 1000 : 0);
+    const minute = now.getMinutes() + second / 60;
+    const hour = (now.getHours() % 12) + minute / 60;
+    root.querySelector(".hand.hour")?.setAttribute("transform", `rotate(${(hour * 30).toFixed(2)} 50 50)`);
+    root.querySelector(".hand.minute")?.setAttribute("transform", `rotate(${(minute * 6).toFixed(2)} 50 50)`);
+    root.querySelector(".hand.second")?.setAttribute("transform", `rotate(${(second * 6).toFixed(2)} 50 50)`);
+    const dot = root.querySelector(".second-dot");
+    if (dot) {
+      const angle = (second * 6 * Math.PI) / 180;
+      dot.setAttribute("cx", (50 + 44 * Math.sin(angle)).toFixed(2));
+      dot.setAttribute("cy", (50 - 44 * Math.cos(angle)).toFixed(2));
     }
   }
 

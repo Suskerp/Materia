@@ -1,8 +1,10 @@
 import { css } from "lit";
 import { hostStyles } from "../../styles/card-styles.js";
+import { motionTokens } from "../../utils/motion.js";
 
 export const styles = [
   hostStyles,
+  motionTokens,
   css`
     /* Match materia-button's host layout (flex, not inline-block) so the split
        button aligns vertically with regular buttons in a row. */
@@ -36,7 +38,7 @@ export const styles = [
       align-items: stretch;
       min-width: 0;
       gap: 2px; /* M3: the inner space is always 2dp */
-      height: var(--sb-h, 40px);
+      min-height: max(48px, var(--sb-h, 40px));
     }
 
     /* The leading materia-button colors and sizes itself from its own config. */
@@ -51,69 +53,83 @@ export const styles = [
     .trailing {
       border: none;
       cursor: pointer;
-      width: var(--sb-h, 40px); /* square → a circle when open (radius = h/2) */
-      height: var(--sb-h, 40px);
+      width: max(48px, var(--sb-h, 40px));
+      height: max(48px, var(--sb-h, 40px));
       display: inline-flex;
       align-items: center;
       justify-content: center;
       padding: 0;
       position: relative;
-      overflow: hidden;
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
-      transition: border-radius 0.25s ease, background-color 0.2s ease;
+      background: transparent;
+      color: inherit;
+    }
+
+    .trailing-surface {
+      width: var(--sb-h, 40px);
+      height: var(--sb-h, 40px);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      box-sizing: border-box;
+      transition:
+        border-radius var(--md-sys-motion-expressive-fast-spatial),
+        background-color var(--md-sys-motion-fast-effects);
       /* Inner corner small, outer corner fully round (mirrors connected-trailing) */
       border-radius: var(--sb-inner, 8px) calc(var(--sb-h) / 2) calc(var(--sb-h) / 2) var(--sb-inner, 8px);
     }
     /* Selected: trailing inner corners morph fully round (M3 selected = 50%) */
-    .trailing.open {
+    .trailing.open .trailing-surface {
       border-radius: calc(var(--sb-h) / 2);
     }
 
     /* M3 state layer */
-    .trailing::before {
+    .trailing-surface::before {
       content: "";
       position: absolute;
       inset: 0;
       background: currentColor;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.2s;
+      transition: opacity var(--md-sys-motion-fast-effects);
     }
-    .trailing:hover::before { opacity: 0.08; }
-    .trailing:active::before { opacity: 0.12; }
+    .trailing:hover .trailing-surface::before { opacity: 0.08; }
+    .trailing:active .trailing-surface::before { opacity: 0.12; }
     .trailing:focus-visible { outline: 2px solid var(--md-sys-color-primary, #6750a4); outline-offset: 2px; }
 
-    .trailing ha-icon {
+    .trailing-surface ha-icon {
       --mdc-icon-size: var(--sb-ticon, 20px);
       display: flex;
     }
 
     /* The menu icon rotates 180° inwards when open (standard motion scheme) */
     .chev {
-      transition: transform 0.25s ease;
+      transition: transform var(--md-sys-motion-standard-fast-spatial);
     }
     .trailing.open .chev {
       transform: rotate(180deg);
     }
 
     /* ---- Trailing color per variant (matches the leading button) ---- */
-    .filled .trailing {
+    .filled .trailing-surface {
       background: var(--sb-bg, var(--md-sys-color-primary));
       color: var(--sb-fg, var(--md-sys-color-on-primary));
     }
-    .tonal .trailing,
-    .filled-tonal .trailing {
+    .tonal .trailing-surface,
+    .filled-tonal .trailing-surface {
       background: var(--sb-bg, var(--md-sys-color-secondary-container, var(--ha-card-background)));
       color: var(--sb-fg, var(--md-sys-color-on-secondary-container, var(--primary-text-color)));
     }
-    .elevated .trailing {
+    .elevated .trailing-surface {
       background: var(--sb-bg, var(--md-sys-color-surface-container-low, var(--card-background-color)));
       color: var(--sb-fg, var(--md-sys-color-primary, var(--primary-text-color)));
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.15);
     }
-    .outlined .trailing,
-    .text .trailing {
+    .outlined .trailing-surface,
+    .text .trailing-surface {
       background: var(--sb-bg, transparent);
       /* Expressive OutlinedButton/TextButtonTokens: neutral on-surface-variant
          label with an outline-variant border — not primary/outline. */
@@ -144,7 +160,9 @@ export const styles = [
       box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.16s ease, transform 0.16s ease;
+      transition:
+        opacity var(--md-sys-motion-fast-effects),
+        transform var(--md-sys-motion-standard-fast-spatial);
     }
     .menu.open {
       opacity: 1;
@@ -202,6 +220,12 @@ export const styles = [
       position: relative;
       overflow: hidden;
       white-space: nowrap;
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font-family: inherit;
+      text-align: start;
     }
     .menu-item ha-icon {
       --mdc-icon-size: 22px;
@@ -213,11 +237,15 @@ export const styles = [
       inset: 0;
       background: currentColor;
       opacity: 0;
-      transition: opacity 0.2s;
+      transition: opacity var(--md-sys-motion-fast-effects);
       pointer-events: none;
     }
     .menu-item:hover::before { opacity: 0.08; }
     .menu-item:active::before { opacity: 0.12; }
+    .menu-item:focus-visible {
+      outline: 3px solid var(--md-sys-color-primary, currentColor);
+      outline-offset: -3px;
+    }
 
     /* Selected preset: M3 uses a container fill for the selected menu item,
        plus a trailing check. The text block pushes the check to the edge. */
@@ -232,6 +260,17 @@ export const styles = [
     .menu-item .item-check {
       --mdc-icon-size: 20px;
       opacity: 0.9;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .trailing,
+      .trailing-surface,
+      .trailing-surface::before,
+      .chev,
+      .menu,
+      .menu-item::before {
+        transition: none;
+      }
     }
   `,
 ];

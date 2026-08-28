@@ -92,7 +92,7 @@ export const styles = css`
     justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background-color 0.2s ease;
+    transition: background-color var(--md-sys-motion-fast-effects);
     -webkit-tap-highlight-color: transparent;
     padding: 0;
     outline: none;
@@ -100,6 +100,17 @@ export const styles = css`
 
   .btn:active {
     opacity: 0.8;
+  }
+
+  .btn:focus-visible {
+    outline: 3px solid var(--md-sys-color-primary, currentColor);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn {
+      transition: none;
+    }
   }
 
   .btn ha-icon {

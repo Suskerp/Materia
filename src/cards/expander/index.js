@@ -184,25 +184,34 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
         class="row exp ${tone} ${open ? "open" : ""} ${bg ? "colored" : ""} ${this.config.flat ? "flat" : ""} ${unavailable ? "unavailable" : ""}"
         style="${bg ? `background:${bg};` : ""}${fg ? `color:${fg};` : ""}"
       >
-        <div
-          class="head"
-          role=${hasBody ? "button" : nothing}
-          aria-expanded=${hasBody ? (open ? "true" : "false") : nothing}
-          aria-label=${hasBody ? t(open ? "expander_collapse" : "expander_expand", this.hass) : nothing}
-          @click=${this._toggleOpen}
-        >
-          <ha-icon class="r-icon" .icon=${icon}></ha-icon>
-          <div class="r-text">
-            <span class="r-name">${name}</span>
-            ${secondary ? html`<span class="r-sub">${secondary}</span>` : ""}
-          </div>
-          ${hasBody ? html`<ha-icon class="chev" .icon=${"m3o:expand-more"}></ha-icon>` : nothing}
+        <div class="head">
+          <button
+            type="button"
+            class="disclosure"
+            aria-expanded=${hasBody ? (open ? "true" : "false") : nothing}
+            aria-label=${hasBody ? `${name}: ${t(open ? "expander_collapse" : "expander_expand", this.hass)}` : name}
+            ?disabled=${!hasBody}
+            @click=${this._toggleOpen}
+          >
+            <ha-icon class="r-icon" .icon=${icon}></ha-icon>
+            <span class="r-text">
+              <span class="r-name">${name}</span>
+              ${secondary ? html`<span class="r-sub">${secondary}</span>` : ""}
+            </span>
+            ${hasBody ? html`<ha-icon class="chev" .icon=${"m3o:expand-more"}></ha-icon>` : nothing}
+          </button>
           ${showSwitch
-            ? html`<div
-                class="m3-switch ${on ? "on" : ""}"
-                style="${track ? `--ms-track:${track};` : ""}${thumb ? `--ms-thumb:${thumb};` : ""}"
+            ? html`<button
+                type="button"
+                class="switch-target"
+                role="switch"
+                aria-checked=${on ? "true" : "false"}
+                aria-label=${name}
                 @click=${this._toggleEntity}
-              ><i></i></div>`
+              ><span
+                  class="m3-switch ${on ? "on" : ""}"
+                  style="${track ? `--ms-track:${track};` : ""}${thumb ? `--ms-thumb:${thumb};` : ""}"
+                ><i></i></span></button>`
             : nothing}
         </div>
         ${open && this._cards

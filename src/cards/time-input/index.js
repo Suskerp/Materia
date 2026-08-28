@@ -1,10 +1,11 @@
 import { LitElement, html } from "lit";
 import { hostStyles, haCardReset } from "../../styles/card-styles.js";
 import { motionTokens } from "../../utils/motion.js";
+import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
-class MateriaTimeInput extends LitElement {
+class MateriaTimeInput extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -29,7 +30,10 @@ class MateriaTimeInput extends LitElement {
 
   updated(changed) {
     if (!changed.has("hass") || !this._pending) return;
-    if (this._liveValue === this._pending) this._pending = null;
+    if (this._liveValue === this._pending) {
+      this._pending = null;
+      clearTimeout(this._pendingTimer);
+    }
   }
 
   get _stateObj() {
@@ -53,16 +57,30 @@ class MateriaTimeInput extends LitElement {
     try { input.showPicker?.(); } catch (_) { /* focus is the fallback */ }
   }
 
-  _setTime(event) {
+  async _setTime(event) {
     const value = event.currentTarget.value;
     if (!/^\d{2}:\d{2}$/.test(value)) return;
     this._pending = value;
-    this.hass.callService(
+    clearTimeout(this._pendingTimer);
+    // A successful service call can still be followed by a refused/normalized
+    // entity state. Never pin the user's draft forever while waiting for an
+    // exact value that may not arrive.
+    this._pendingTimer = setTimeout(() => { this._pending = null; }, 10000);
+    const result = await this._callService(
       "input_datetime",
       "set_datetime",
       { time: `${value}:00` },
       { entity_id: this.config.entity }
     );
+    if (!result.ok) {
+      clearTimeout(this._pendingTimer);
+      this._pending = null;
+    }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    clearTimeout(this._pendingTimer);
   }
 
   render() {

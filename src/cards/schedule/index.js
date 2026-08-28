@@ -3,6 +3,7 @@ import { keyed } from "lit/directives/keyed.js";
 import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
+import { addPresetOffset, oneShotPayload, parseOneShotMarker, parsePlanArrivalMarker, planPayloads, slug } from "./scheduler-model.js";
 import "../../elements/button-group/index.js";
 import "./editor.js";
 
@@ -71,6 +72,10 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     _targetEndAction: { state: true },
     _removeArmed: { state: true },
     _targetPickerOpen: { state: true },
+    _scheduleKind: { state: true },
+    _planKey: { state: true },
+    _commitBusy: { state: true },
+    _commitError: { state: true },
   };
 
   static styles = styles;
@@ -89,6 +94,12 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     // their choice wins, so re-entering the editor cannot yank the tab out from
     // under them mid-edit.
     if (!this._modeTouched) this._mode = this._modes[0];
+    const configuredKind = String(config.schedule_kind || "").toLowerCase();
+    if (this._managerScheduleKinds.includes(configuredKind)) {
+      this._scheduleKind = configuredKind;
+    } else if (!this._scheduleKind || !this._managerScheduleKinds.includes(this._scheduleKind)) {
+      this._scheduleKind = this._managerScheduleKinds[0];
+    }
     if (this._isManagerEditor) {
       this._open = true;
       this._activeScheduleEntity = config.schedule_entity || null;
@@ -100,6 +111,17 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       } else if (!this._targetEntities.length) {
         this._selectTarget(this._managerTargets[0]?.entity);
         this._days = [true, true, true, true, true, true, true];
+        if (this._scheduleKind !== "window") {
+          const nextHour = new Date(Date.now() + 60 * 60 * 1000);
+          nextHour.setMinutes(0, 0, 0);
+          this._viewY = nextHour.getFullYear();
+          this._viewM = nextHour.getMonth();
+          this._date = nextHour.getDate();
+          this._hour = nextHour.getHours();
+          this._minute = 0;
+          this._pick = "custom";
+          this._planKey = this._plans.length ? String(this._plans[0].key ?? 0) : null;
+        }
       }
     } else if (this._isManager && !this._targetEntities.length) {
       this._selectTarget(this._managerTargets[0]?.entity);
@@ -136,6 +158,27 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       || Array.isArray(this.config.targets);
   }
 
+  /** Manager modes are opt-in so existing recurring cards keep their exact
+   *  behaviour. `once` is a single Scheduler entry; `plan` expands one chosen
+   *  arrival moment into several restart-safe entries with configured offsets. */
+  get _managerScheduleKinds() {
+    const requested = this.config.schedule_types || this.config.schedule_modes;
+    const supported = new Set(["window", "once", "plan"]);
+    const kinds = (Array.isArray(requested) ? requested : [requested || "window"])
+      .map((kind) => String(kind).toLowerCase())
+      .filter((kind) => supported.has(kind))
+      .filter((kind) => kind !== "plan" || this._plans.length);
+    return [...new Set(kinds.length ? kinds : ["window"])];
+  }
+
+  get _plans() {
+    return (this.config.plans || []).filter((plan) => plan && Array.isArray(plan.phases) && plan.phases.length);
+  }
+
+  get _selectedPlan() {
+    return this._plans.find((plan, index) => String(plan.key ?? index) === String(this._planKey)) || null;
+  }
+
   get _managerTargets() {
     return (this.config.targets || [])
       .map((item) => typeof item === "string" ? { entity: item } : item)
@@ -149,11 +192,24 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   get _managedSchedules() {
     const explicit = new Set(this.config.schedule_entities || []);
     const targets = new Set(this._managerTargets.map((item) => item.entity));
+    const managerTag = this.config.manager_tag;
     return Object.values(this.hass?.states || {})
       .filter((stateObj) => stateObj.entity_id.startsWith("switch.schedule_"))
       .filter((stateObj) => explicit.has(stateObj.entity_id)
-        || (stateObj.attributes.entities || []).some((entity) => targets.has(entity)))
+        || (stateObj.attributes.entities || []).some((entity) => targets.has(entity))
+        || (managerTag && (stateObj.attributes.tags || []).includes(managerTag)))
       .sort((a, b) => String(a.attributes.next_trigger || "9999").localeCompare(String(b.attributes.next_trigger || "9999")));
+  }
+
+  get _managedScheduleRows() {
+    const groups = new Map();
+    for (const stateObj of this._managedSchedules) {
+      const groupTag = (stateObj.attributes.tags || []).find((tag) => String(tag).startsWith("materia_plan_"));
+      const key = groupTag || stateObj.entity_id;
+      if (!groups.has(key)) groups.set(key, { key, groupTag, entries: [] });
+      groups.get(key).entries.push(stateObj);
+    }
+    return [...groups.values()];
   }
 
   _targetConfig(entity = this._targetEntity) {
@@ -171,10 +227,30 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     const configured = this._targetConfig(entity)?.actions;
     if (configured?.length) return configured.map((item) => typeof item === "string" ? { service: item } : item);
     const domain = String(entity || "switch.unknown").split(".")[0];
-    return [
-      { service: `${domain}.turn_on`, label: t("state_on", this.hass), icon: "m3o:power-settings-new" },
-      { service: `${domain}.turn_off`, label: t("state_off", this.hass), icon: "m3o:power-off" },
+    if (["switch", "light", "fan", "input_boolean", "automation"].includes(domain)) {
+      return [
+        { service: `${domain}.turn_on`, label: t("state_on", this.hass), icon: "m3o:power-settings-new" },
+        { service: `${domain}.turn_off`, label: t("state_off", this.hass), icon: "m3o:power-off" },
+      ];
+    }
+    if (domain === "cover") return [
+      { service: "cover.open_cover", label: t("state_open", this.hass), icon: "m3o:open-in-full" },
+      { service: "cover.close_cover", label: t("state_closed", this.hass), icon: "m3o:close-fullscreen" },
     ];
+    if (domain === "lock") return [
+      { service: "lock.unlock", label: t("state_unlocked", this.hass), icon: "m3o:lock-open" },
+      { service: "lock.lock", label: t("state_locked", this.hass), icon: "m3o:lock" },
+    ];
+    if (this._scheduleKind !== "window" && domain === "script") return [
+      { service: "script.turn_on", label: t("sched_run", this.hass), icon: "m3o:play-arrow" },
+    ];
+    if (this._scheduleKind !== "window" && domain === "button") return [
+      { service: "button.press", label: t("sched_run", this.hass), icon: "m3o:play-arrow" },
+    ];
+    if (this._scheduleKind !== "window" && domain === "scene") return [
+      { service: "scene.turn_on", label: t("sched_activate", this.hass), icon: "m3o:play-arrow" },
+    ];
+    return [];
   }
 
   _actionKey(action) {
@@ -318,6 +394,10 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     this._targetAction = null;
     this._targetEndAction = null;
     this._removeArmed = false;
+    this._scheduleKind = "window";
+    this._planKey = null;
+    this._commitBusy = false;
+    this._commitError = null;
     // Plain fields, not reactive props: neither is ever read by render()
     // directly, only by the seed/commit machinery.
     this._entityActions = null; // actions read off schedule_entity, preserved on write
@@ -341,6 +421,13 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  as_timestamp('', 0) is 0 — which sails through the backend's "is this
    *  effectively now" check and STARTS THE VACUUM. */
   get _hasSelection() {
+    if (this._isSingle) return !this._commitBusy
+      && this._resolvedWhen instanceof Date
+      && this._resolvedWhen.getTime() > Date.now()
+      && (this._scheduleKind === "plan"
+        ? !!this._selectedPlan && this._selectedPlan.phases.every((phase) =>
+            this._resolvedWhen.getTime() + Number(phase.offset_minutes ?? phase.offset ?? 0) * 60_000 > Date.now())
+        : (this._selectedTargets.length > 0 && !!this._targetAction));
     if (this._isWindow) return !this._windowBlocked
       && !this._windowSameTime
       && this._days.some(Boolean)
@@ -357,7 +444,13 @@ class MateriaSchedule extends ActionMixin(LitElement) {
      rather than reusing the generic repeat switch. */
 
   get _isWindow() {
-    return this._mode === "clock" && (this._isManager || this.config.show_stop === true || !!this._scheduleEntity);
+    return this._mode === "clock" && ((this._isManager && this._scheduleKind === "window")
+      || this.config.show_stop === true
+      || (!this._isManager && !!this._scheduleEntity));
+  }
+
+  get _isSingle() {
+    return this._isManager && this._mode === "clock" && ["once", "plan"].includes(this._scheduleKind);
   }
 
   /** Scheduler's `timeslots` is a list; this card edits only the first entry.
@@ -415,8 +508,19 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     const st = this.hass?.states[id];
     if (!st) return;
     const slots = st.attributes.timeslots || [];
-    const marker = (st.attributes.tags || []).find((tag) => String(tag).startsWith("materia_window_"));
+    const entityTags = st.attributes.tags || [];
+    const marker = entityTags.find((tag) => String(tag).startsWith("materia_window_"));
     const markerMatch = marker && /^materia_window_(\d{2})(\d{2})_(\d{2})(\d{2})$/.exec(String(marker));
+    const onceDate = parseOneShotMarker(entityTags);
+    const planTag = entityTags.find((tag) => String(tag).startsWith("materia_plan_"));
+    const matchingPlan = planTag && this._plans.find((plan) => String(planTag).startsWith(`materia_plan_${slug(plan.key || plan.name || plan.label)}_`));
+    const planArrival = matchingPlan ? parsePlanArrivalMarker(entityTags) : null;
+    if (onceDate) {
+      this._scheduleKind = matchingPlan ? "plan" : "once";
+      if (matchingPlan) this._planKey = String(matchingPlan.key ?? this._plans.indexOf(matchingPlan));
+    } else {
+      this._scheduleKind = "window";
+    }
     this._multipleSlots = slots.length > 1 && !markerMatch;
     this._entityActions = st.attributes.actions ?? null;
     if (this._isManager) {
@@ -443,7 +547,15 @@ class MateriaSchedule extends ActionMixin(LitElement) {
         : this._defaultEndAction(this._targetAction, common);
     }
 
-    if (markerMatch) {
+    if (onceDate) {
+      const selectedDate = planArrival || onceDate;
+      this._viewY = selectedDate.getFullYear();
+      this._viewM = selectedDate.getMonth();
+      this._date = selectedDate.getDate();
+      this._hour = selectedDate.getHours();
+      this._minute = selectedDate.getMinutes();
+      this._pick = "custom";
+    } else if (markerMatch) {
       this._hour = Number(markerMatch[1]);
       this._minute = Number(markerMatch[2]);
       this._stopHour = Number(markerMatch[3]);
@@ -458,7 +570,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
         this._stopMinute = Number(m[4]);
       }
     }
-    this._entityTags = st.attributes.tags ?? [];
+    this._entityTags = entityTags;
 
     const wd = (st.attributes.weekdays || []).map((w) => String(w).toLowerCase());
     if (wd.includes("daily")) {
@@ -585,8 +697,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     if (p.offset) {
       const m = /^(\d+(?:\.\d+)?)\s*(m|h|d)$/i.exec(String(p.offset).trim());
       if (!m) return null;
-      const mult = { m: 60000, h: 3600000, d: 86400000 }[m[2].toLowerCase()];
-      return new Date(now.getTime() + parseFloat(m[1]) * mult);
+      return addPresetOffset(now, parseFloat(m[1]), m[2].toLowerCase());
     }
     const hm = /^(\d{1,2}):(\d{2})$/.exec(String(p.at ?? "").trim());
     if (!hm) return null;
@@ -669,6 +780,16 @@ class MateriaSchedule extends ActionMixin(LitElement) {
         ? { head: e.name, sub: `${e.sub} · trigger` }
         : { head: t("sched_pick_trigger", this.hass), sub: t("sched_runs_whenever", this.hass) };
     }
+    if (this._isSingle) {
+      const when = this._resolvedWhen;
+      if (!when) return { head: t("sched_when_question", this.hass), sub: t("sched_pick_moment", this.hass) };
+      const date = new Intl.DateTimeFormat(this._lang, { weekday: "short", day: "numeric", month: "short" }).format(when);
+      const plan = this._scheduleKind === "plan" ? this._selectedPlan : null;
+      return {
+        head: `${this._pad(when.getHours())}:${this._pad(when.getMinutes())}`,
+        sub: plan?.name || plan?.label || date,
+      };
+    }
     if (this._isWindow) {
       return this._windowBlocked
         ? { head: t("sched_multi_slots_head", this.hass), sub: t("sched_multi_slots_sub", this.hass) }
@@ -725,6 +846,42 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       active_shape: "square", // the M3E selected-toggle morph
       options: this._dayNames.map((n, i) => ({ label: n, value: String(i) })),
     };
+  }
+
+  get _scheduleKindConfig() {
+    const labels = {
+      window: t("sched_kind_window", this.hass),
+      once: t("sched_kind_once", this.hass),
+      plan: t("sched_kind_plan", this.hass),
+    };
+    return {
+      size: "s",
+      preset: "secondary",
+      options: this._managerScheduleKinds.map((kind) => ({ label: labels[kind], value: kind })),
+    };
+  }
+
+  _setScheduleKind(kind) {
+    if (!this._managerScheduleKinds.includes(kind) || kind === this._scheduleKind) return;
+    this._scheduleKind = kind;
+    this._multipleSlots = false;
+    this._commitError = null;
+    this._targetPickerOpen = false;
+    if (kind !== "plan") this._selectTargets(this._selectedTargets);
+    if (kind !== "window") {
+      const nextHour = new Date(Date.now() + 60 * 60 * 1000);
+      nextHour.setMinutes(0, 0, 0);
+      this._viewY = nextHour.getFullYear();
+      this._viewM = nextHour.getMonth();
+      this._date = nextHour.getDate();
+      this._hour = nextHour.getHours();
+      this._minute = 0;
+      this._pick = "custom";
+    }
+    if (kind === "plan" && !this._planKey && this._plans.length) {
+      this._planKey = String(this._plans[0].key ?? 0);
+    }
+    this._dirty = true;
   }
 
   /* ---- the resolved moment, and the wiring seam ---------------------------
@@ -830,12 +987,10 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     this._handleAction(close);
   }
 
-  _commit() {
+  async _commit() {
     if (!this._hasSelection) return;
+    if (this._isSingle) return this._commitSingle();
     if (this._isWindow) return this._commitWindow();
-
-    this._armed = { ...this._describe, repeating: this._repeating, mode: this._mode };
-    this._open = false;
 
     // Per-preset / per-trigger action wins over the card-level one, so a single
     // picker can drive several different backends — a timer for the relative
@@ -849,11 +1004,18 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       ?? this.config.confirm_action;
 
     if (action) {
-      this._handleAction(this._fill(action, this._actionContext()));
+      const result = await this._handleAction(this._fill(action, this._actionContext()));
+      if (result?.cancelled) return;
+      if (result?.ok === false) {
+        this._commitError = result.error?.message || t("sched_save_failed", this.hass);
+        return;
+      }
     } else {
       // Nothing wired: stays a mock, and says so on the face of the card.
       this._fireHaptic("success");
     }
+    this._armed = { ...this._describe, repeating: this._repeating, mode: this._mode };
+    this._open = false;
     // Committing from inside a modal should close it — otherwise the sheet sits
     // there after the job is done and reads as though nothing happened.
     if (this._isSheet) this._dismiss();
@@ -968,20 +1130,113 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     };
   }
 
-  _commitWindow() {
-    if (this._windowBlocked) return;
-    this._armed = { head: this._windowLabel, sub: this._windowDaysSummary, repeating: true, mode: "window" };
-    this._open = false;
-    this._dirty = false;
+  _singleTags() {
+    return [...new Set([
+      ...(this._entityTags || []).filter((tag) => !String(tag).startsWith("materia_once_")),
+      this.config.manager_tag,
+    ].filter(Boolean))];
+  }
 
-    const action = this.config.confirm_action ?? this._defaultWindowAction();
-    if (action) {
-      this._handleAction(this._fill(action, this._windowActionContext()));
-    } else {
-      this._fireHaptic("success");
+  async _schedulerCall(service, data) {
+    let lastError;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        return await this.hass.callService("scheduler", service, data);
+      } catch (error) {
+        lastError = error;
+        if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 250));
+      }
     }
-    if (this._isManager) this._activeScheduleEntity = null;
-    if (this._isSheet) this._dismiss();
+    throw lastError;
+  }
+
+  async _commitSingle() {
+    if (!this._hasSelection || this._commitBusy) return;
+    const when = this._resolvedWhen;
+    this._commitBusy = true;
+    this._commitError = null;
+
+    try {
+      if (this.config.confirm_action) {
+        // Advanced escape hatch retains the established action-placeholder API.
+        // Default manager mode below is awaited and provides reliable errors.
+        const result = await this._handleAction(this._fill(this.config.confirm_action, this._actionContext()));
+        if (result?.cancelled) return;
+        if (result?.ok === false) throw result.error || new Error(t("sched_save_failed", this.hass));
+      } else if (this._scheduleKind === "plan") {
+        const plan = this._selectedPlan;
+        const oldGroupTag = (this._entityTags || []).find((tag) => String(tag).startsWith("materia_plan_"));
+        const oldGroup = oldGroupTag
+          ? Object.values(this.hass?.states || {}).filter((stateObj) =>
+              stateObj.entity_id.startsWith("switch.schedule_")
+              && (stateObj.attributes.tags || []).includes(oldGroupTag))
+          : [];
+        const payloads = planPayloads({
+          plan,
+          arrival: when,
+          managerTag: this.config.manager_tag,
+          instanceId: `${when.getTime()}_${Math.random().toString(36).slice(2, 7)}`,
+        });
+        for (const payload of payloads) {
+          await this._schedulerCall("add", payload);
+        }
+        // Add the replacement first: a failed save leaves the known-good plan
+        // intact. Only after every new phase exists do we retire the old group.
+        for (const stateObj of oldGroup) {
+          await this._schedulerCall("remove", { entity_id: stateObj.entity_id });
+        }
+      } else {
+        const payload = oneShotPayload({
+          name: `${this._targetSelectionName()} · ${this._actionName(this._targetAction)}`,
+          when,
+          actions: this._scheduledActions(this._targetAction),
+          tags: this._singleTags(),
+        });
+        if (this._scheduleEntity) {
+          await this._schedulerCall("edit", { ...payload, entity_id: this._scheduleEntity });
+        } else {
+          await this._schedulerCall("add", payload);
+        }
+      }
+
+      this._armed = { ...this._describe, repeating: false, mode: this._scheduleKind };
+      this._dirty = false;
+      this._activeScheduleEntity = null;
+      this._fireHaptic("success");
+      if (this._isSheet) this._dismiss();
+      else this._open = false;
+    } catch (error) {
+      this._commitError = error?.message || t("sched_save_failed", this.hass);
+      this._fireHaptic("failure");
+    } finally {
+      this._commitBusy = false;
+    }
+  }
+
+  async _commitWindow() {
+    if (this._windowBlocked) return;
+    if (this._commitBusy) return;
+    this._commitBusy = true;
+    this._commitError = null;
+    const action = this.config.confirm_action ?? this._defaultWindowAction();
+    try {
+      if (action) {
+        const result = await this._handleAction(this._fill(action, this._windowActionContext()));
+        if (result?.cancelled) return;
+        if (result?.ok === false) throw result.error || new Error(t("sched_save_failed", this.hass));
+      } else {
+        this._fireHaptic("success");
+      }
+      this._armed = { head: this._windowLabel, sub: this._windowDaysSummary, repeating: true, mode: "window" };
+      this._open = false;
+      this._dirty = false;
+      if (this._isManager) this._activeScheduleEntity = null;
+      if (this._isSheet) this._dismiss();
+    } catch (error) {
+      this._commitError = error?.message || t("sched_save_failed", this.hass);
+    } finally {
+      this._commitBusy = false;
+    }
   }
 
   _renderStrip() {
@@ -1028,13 +1283,21 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     }
     this._activeScheduleEntity = null;
     this._selectTarget(this._managerTargets[0]?.entity);
-    this._hour = 9;
+    const nextHour = new Date(Date.now() + 60 * 60 * 1000);
+    nextHour.setMinutes(0, 0, 0);
+    this._viewY = nextHour.getFullYear();
+    this._viewM = nextHour.getMonth();
+    this._date = nextHour.getDate();
+    this._hour = this._scheduleKind === "window" ? 9 : nextHour.getHours();
     this._minute = 0;
+    this._pick = this._scheduleKind === "window" ? null : "custom";
     this._stopHour = 10;
     this._stopMinute = 0;
     this._days = [true, true, true, true, true, true, true];
     this._multipleSlots = false;
     this._removeArmed = false;
+    this._planKey = this._plans.length ? String(this._plans[0].key ?? 0) : null;
+    this._commitError = null;
     this._dirty = true;
     this._open = true;
   }
@@ -1057,6 +1320,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       type: "custom:materia-schedule",
       presentation: "manager-editor",
       editor_presentation: "inline",
+      schedule_kind: this._scheduleKind,
     };
     delete content.grid_options;
     delete content.visibility;
@@ -1089,8 +1353,19 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     return new Intl.DateTimeFormat(this._lang, { weekday: "short", hour: "2-digit", minute: "2-digit" }).format(date);
   }
 
+  async _toggleScheduleRow(entries, enabled) {
+    this._commitError = null;
+    const result = await this._callService(
+      "switch",
+      enabled ? "turn_off" : "turn_on",
+      {},
+      { entity_id: entries.map((entry) => entry.entity_id) }
+    );
+    if (!result.ok) this._commitError = result.error?.message || t("sched_save_failed", this.hass);
+  }
+
   _renderManager() {
-    const schedules = this._managedSchedules;
+    const rows = this._managedScheduleRows;
     return html`<ha-card><div class="sheet manager">
       <div class="manager-head">
         <div>
@@ -1102,7 +1377,9 @@ class MateriaSchedule extends ActionMixin(LitElement) {
         </button>
       </div>
       <div class="schedule-list">
-        ${schedules.length ? schedules.map((stateObj) => {
+        ${this._commitError ? html`<div class="commit-error" role="alert">${this._commitError}</div>` : nothing}
+        ${rows.length ? rows.map((row) => {
+          const stateObj = row.entries[0];
           const targets = stateObj.attributes.entities || [];
           const target = targets[0];
           const marker = (stateObj.attributes.tags || []).find((tag) => String(tag).startsWith("materia_window_"));
@@ -1116,21 +1393,26 @@ class MateriaSchedule extends ActionMixin(LitElement) {
           const time = markerMatch
             ? `${markerStart} - ${markerMatch[3]}:${markerMatch[4]}`
             : timeslots[0] || "";
+          const plan = row.groupTag && this._plans.find((item) => row.groupTag.startsWith(`materia_plan_${slug(item.key || item.name || item.label)}_`));
+          const enabled = row.entries.every((entry) => entry.state === "on");
+          const nextEntry = [...row.entries].sort((a, b) => String(a.attributes.next_trigger || "9999").localeCompare(String(b.attributes.next_trigger || "9999")))[0];
           return html`<div class="schedule-row">
             <button class="schedule-main" @click=${() => this._openSchedule(stateObj)}>
-              <ha-icon icon=${targets.length > 1 ? "m3o:devices" : (this._targetConfig(target)?.icon ?? "m3o:schedule")}></ha-icon>
+              <ha-icon icon=${plan?.icon || (targets.length > 1 ? "m3o:devices" : (this._targetConfig(target)?.icon ?? "m3o:schedule"))}></ha-icon>
               <span class="schedule-text">
-                <span class="schedule-name">${this._targetSelectionName(targets)} · ${this._actionName(service, target)}</span>
-                <span class="schedule-sub">${time} · ${this._formatNext(stateObj)}</span>
+                <span class="schedule-name">${plan?.name || plan?.label || `${this._targetSelectionName(targets)} · ${this._actionName(service, target)}`}</span>
+                <span class="schedule-sub">${plan
+                  ? `${row.entries.length} ${t("sched_phases", this.hass)} · ${this._formatNext(nextEntry)}`
+                  : `${time} · ${this._formatNext(stateObj)}`}</span>
               </span>
               <ha-icon icon="m3o:edit"></ha-icon>
             </button>
             <button
-              class="schedule-toggle ${stateObj.state === "on" ? "on" : ""}"
+              class="schedule-toggle ${enabled ? "on" : ""}"
               role="switch"
-              aria-checked=${stateObj.state === "on" ? "true" : "false"}
-              aria-label=${stateObj.state === "on" ? t("sched_disable", this.hass) : t("sched_enable", this.hass)}
-              @click=${() => this.hass.callService("switch", stateObj.state === "on" ? "turn_off" : "turn_on", {}, { entity_id: stateObj.entity_id })}
+              aria-checked=${enabled ? "true" : "false"}
+              aria-label=${enabled ? t("sched_disable", this.hass) : t("sched_enable", this.hass)}
+              @click=${() => this._toggleScheduleRow(row.entries, enabled)}
             ><i></i></button>
           </div>`;
         }) : html`<button class="manager-empty" @click=${this._openNewSchedule}>
@@ -1142,6 +1424,43 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   }
 
   _renderManagerFields() {
+    if (this._scheduleKind === "plan") {
+      const selectedPlan = this._selectedPlan;
+      return html`<div class="manager-fields">
+        <div class="manager-field"><span>${t("sched_plan", this.hass)}</span>
+          <button
+            class="target-field ${this._targetPickerOpen ? "open" : ""}"
+            aria-haspopup="listbox"
+            aria-expanded=${this._targetPickerOpen ? "true" : "false"}
+            @click=${() => { this._targetPickerOpen = !this._targetPickerOpen; }}
+          >
+            <ha-icon icon=${selectedPlan?.icon || "m3o:event-upcoming"}></ha-icon>
+            <span>${selectedPlan?.name || selectedPlan?.label || t("sched_choose_plan", this.hass)}</span>
+            <ha-icon class="expand" icon="m3o:expand-more"></ha-icon>
+          </button>
+          ${this._targetPickerOpen ? html`<div class="target-options" role="listbox">
+            ${this._plans.map((plan, index) => {
+              const key = String(plan.key ?? index);
+              const selected = key === String(this._planKey);
+              return html`<button
+                class=${selected ? "selected" : ""}
+                role="option"
+                aria-selected=${selected ? "true" : "false"}
+                @click=${() => {
+                  this._planKey = key;
+                  this._targetPickerOpen = false;
+                  this._dirty = true;
+                }}
+              >
+                <ha-icon icon=${plan.icon || "m3o:event-upcoming"}></ha-icon>
+                <span>${plan.name || plan.label || key}</span>
+                ${selected ? html`<ha-icon icon="m3o:check"></ha-icon>` : nothing}
+              </button>`;
+            })}
+          </div>` : nothing}
+        </div>
+      </div>`;
+    }
     const selectedTargets = this._selectedTargets;
     const targetSummary = selectedTargets.length
       ? this._targetSelectionName(selectedTargets)
@@ -1183,18 +1502,34 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     </div>`;
   }
 
-  _removeSchedule() {
+  async _removeSchedule() {
     if (!this._scheduleEntity) return;
     if (!this._removeArmed) {
       this._removeArmed = true;
       this._fireHaptic("warning");
       return;
     }
-    this.hass.callService("scheduler", "remove", { entity_id: this._scheduleEntity });
-    this._activeScheduleEntity = null;
-    this._removeArmed = false;
-    this._open = false;
-    if (this._isManagerEditor) this._dismiss();
+    this._commitBusy = true;
+    this._commitError = null;
+    try {
+      const groupTag = (this._entityTags || []).find((tag) => String(tag).startsWith("materia_plan_"));
+      const entries = groupTag
+        ? Object.values(this.hass?.states || {}).filter((stateObj) =>
+            stateObj.entity_id.startsWith("switch.schedule_")
+            && (stateObj.attributes.tags || []).includes(groupTag))
+        : [{ entity_id: this._scheduleEntity }];
+      for (const entry of entries) {
+        await this._schedulerCall("remove", { entity_id: entry.entity_id });
+      }
+      this._activeScheduleEntity = null;
+      this._removeArmed = false;
+      this._open = false;
+      if (this._isManagerEditor) this._dismiss();
+    } catch (error) {
+      this._commitError = error?.message || t("sched_delete_failed", this.hass);
+    } finally {
+      this._commitBusy = false;
+    }
   }
 
   render() {
@@ -1239,6 +1574,16 @@ class MateriaSchedule extends ActionMixin(LitElement) {
             })()}
           </div>
 
+          ${this._isManager && this._managerScheduleKinds.length > 1 && !this._scheduleEntity
+            ? html`<materia-button-group
+                class="schedule-kinds"
+                .hass=${this.hass}
+                .value=${this._scheduleKind}
+                .config=${this._scheduleKindConfig}
+                @option-selected=${(event) => this._setScheduleKind(event.detail.value)}
+              ></materia-button-group>`
+            : nothing}
+
           ${this._isManager ? this._renderManagerFields() : nothing}
 
           ${this._modes.length > 1
@@ -1274,12 +1619,14 @@ class MateriaSchedule extends ActionMixin(LitElement) {
               </div>`
             : nothing}
 
-          ${isClock ? (this._isWindow ? this._renderWindow() : this._renderClock()) : this._renderTriggers()}
+          ${isClock
+            ? (this._isSingle ? this._renderSingle() : (this._isWindow ? this._renderWindow() : this._renderClock()))
+            : this._renderTriggers()}
 
           <!-- A window is always recurring — it carries its own weekday chips
                inside _renderWindow() — so the generic once/weekly switch below
                is for the classic single-moment picker and the trigger tab only. -->
-          ${this._isWindow
+          ${this._isWindow || this._isSingle
             ? nothing
             : html`
                 <div class="repeat">
@@ -1322,9 +1669,13 @@ class MateriaSchedule extends ActionMixin(LitElement) {
                   : nothing}
               `}
 
+          ${this._commitError && !this._isSingle
+            ? html`<div class="commit-error" role="alert">${this._commitError}</div>`
+            : nothing}
+
           <div class="actions">
             ${this._isManager && this._scheduleEntity
-              ? html`<button class="remove ${this._removeArmed ? "armed" : ""}" @click=${this._removeSchedule}>
+              ? html`<button class="remove ${this._removeArmed ? "armed" : ""}" ?disabled=${this._commitBusy} @click=${this._removeSchedule}>
                   ${this._removeArmed ? t("sched_delete_confirm", this.hass) : t("sched_delete", this.hass)}
                 </button>`
               : nothing}
@@ -1337,9 +1688,11 @@ class MateriaSchedule extends ActionMixin(LitElement) {
               @click=${this._commit}
             >
               <ha-icon icon="m3o:alarm-on"></ha-icon>
-              <span>${this._isWindow || this._repeating
-                ? t("sched_save_schedule", this.hass)
-                : t("sched_set_timer", this.hass)}</span>
+              <span>${this._commitBusy
+                ? t("sched_saving", this.hass)
+                : (this._isWindow || this._isSingle || this._repeating
+                  ? t("sched_save_schedule", this.hass)
+                  : t("sched_set_timer", this.hass))}</span>
             </button>
           </div>
 
@@ -1471,6 +1824,76 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       // Firefox and older WebViews have no programmatic picker; focus still
       // exposes their native editable time field.
     }
+  }
+
+  _renderSingle() {
+    const when = this._resolvedWhen;
+    const hasPastPhase = this._scheduleKind === "plan" && this._selectedPlan && when
+      ? this._selectedPlan.phases.some((phase) =>
+          when.getTime() + Number(phase.offset_minutes ?? phase.offset ?? 0) * 60_000 <= Date.now())
+      : false;
+    const actionOptions = this._commonTargetActions().map((item) => ({
+      value: this._actionKey(item),
+      label: item.label || this._actionName(this._actionKey(item)),
+    }));
+    const dateTime = (value) => new Intl.DateTimeFormat(this._lang, {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(value);
+
+    return html`<div class="single-schedule">
+      <div class="single-time native-datetime" @click=${this._showNativeTimePicker}>
+        <div class="single-time-copy">
+          <span>${this._scheduleKind === "plan" ? t("sched_arrival", this.hass) : t("sched_run_at", this.hass)}</span>
+          <b>${when ? dateTime(when) : t("sched_pick_date_time", this.hass)}</b>
+        </div>
+        <input
+          class="single-datetime-input"
+          type="datetime-local"
+          required
+          step="60"
+          aria-label=${t("sched_pick_date_time", this.hass)}
+          min=${this._localDateTimeValue(new Date())}
+          .value=${this._nativeDateTimeValue}
+          @input=${(event) => {
+            this._setNativeDateTime(event);
+            this._dirty = true;
+            this._commitError = null;
+          }}
+        />
+      </div>
+
+      ${this._scheduleKind === "once" ? html`<div class="single-action">
+        <span>${t("sched_action", this.hass)}</span>
+        <ha-selector
+          .hass=${this.hass}
+          .selector=${{ select: { mode: "dropdown", options: actionOptions } }}
+          .value=${this._targetAction || ""}
+          @value-changed=${(event) => {
+            this._targetAction = event.detail.value;
+            this._dirty = true;
+            this._commitError = null;
+          }}
+        ></ha-selector>
+      </div>
+      ${!actionOptions.length ? html`<div class="setup-note">${t("sched_configure_actions", this.hass)}</div>` : nothing}` : nothing}
+
+      ${this._scheduleKind === "plan" && this._selectedPlan ? html`<div class="plan-phases">
+        ${this._selectedPlan.phases.map((phase, index) => {
+          const phaseWhen = new Date(when.getTime() + Number(phase.offset_minutes ?? phase.offset ?? 0) * 60_000);
+          return html`<div class="plan-phase">
+            <span class="plan-phase-index">${index + 1}</span>
+            <span><b>${phase.name || phase.label || `${t("sched_phase", this.hass)} ${index + 1}`}</b><small>${dateTime(phaseWhen)}</small></span>
+          </div>`;
+        })}
+      </div>` : nothing}
+
+      ${hasPastPhase ? html`<div class="commit-error" role="alert">${t("sched_phase_in_past", this.hass)}</div>` : nothing}
+      ${this._commitError ? html`<div class="commit-error" role="alert">${this._commitError}</div>` : nothing}
+    </div>`;
   }
 
   _renderWindow() {
@@ -1614,6 +2037,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-schedule",
   name: "Materia Schedule",
-  description: "Shortcuts-first schedule picker — quick chips, non-clock triggers, and a calendar that stays folded until asked for. Mocked, no backend.",
+  description: "Schedule one-time actions, recurring windows, triggers, and configured multi-step plans.",
   preview: true,
 });

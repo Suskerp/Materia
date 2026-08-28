@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { effectiveEditorValue, isImplicitDefaultEvent } from "./editor-defaults.js";
 import { computeLabel } from "./editor-helpers.js";
 import { COLOR_GROUPS, COLOR_VALUES } from "./palette.js";
 
@@ -512,18 +513,18 @@ export class SmartEditorBase extends LitElement {
     if (!this.hass || !this._config) return html``;
     const data = this._formData();
     return html`
-      ${this._sectionsMemo.map((s) => this._renderSection(s, data))}
+      ${this._sectionsMemo.map((s, index) => this._renderSection(s, data, index))}
       ${this._renderExtra ? this._renderExtra(data) : ""}
     `;
   }
 
-  _renderSection(section, data) {
+  _renderSection(section, data, index) {
     return html`
       <ha-expansion-panel
         outlined
         .header=${section.title}
         .secondary=${section.secondary || ""}
-        .expanded=${section.expanded ?? true}
+        .expanded=${section.expanded ?? index === 0}
       >
         ${section.icon
           ? html`<ha-icon slot="leading-icon" .icon=${section.icon}></ha-icon>`
@@ -536,7 +537,9 @@ export class SmartEditorBase extends LitElement {
   }
 
   _renderField(field, data) {
-    const value = data[field.name];
+    const value = effectiveEditorValue(this._config, data, field);
+    this.__displayedFieldValues ??= new Map();
+    this.__displayedFieldValues.set(field.name, value);
     const label = field.label ?? computeLabel(field);
     const templatable = !!field.template;
     const mode = templatable ? this._modeFor(field.name, value) : "simple";
@@ -614,7 +617,9 @@ export class SmartEditorBase extends LitElement {
 
   _fieldChanged(name, ev) {
     ev.stopPropagation();
-    this._setField(name, ev.detail?.value);
+    const value = ev.detail?.value;
+    if (isImplicitDefaultEvent(this._config, name, value, this.__displayedFieldValues?.get(name))) return;
+    this._setField(name, value);
   }
 
   _setField(name, value) {

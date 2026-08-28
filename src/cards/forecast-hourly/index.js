@@ -15,6 +15,7 @@ class MateriaForecastHourly extends ActionMixin(LitElement) {
     hass: { attribute: false },
     config: { state: true },
     _forecast: { state: true },
+    _forecastError: { state: true },
   };
 
   static styles = styles;
@@ -30,7 +31,9 @@ class MateriaForecastHourly extends ActionMixin(LitElement) {
 
   setConfig(config) {
     if (!config.entity) throw new Error("entity is required");
+    if (this.config?.entity && this.config.entity !== config.entity) this._unsubForecast();
     this.config = { ...config };
+    this._forecastRetryCount = 0;
     this._fcEntity = undefined; // (re)subscribe forecast for the (new) entity
   }
 
@@ -59,7 +62,8 @@ class MateriaForecastHourly extends ActionMixin(LitElement) {
     if (!this.hass || !entity || this._fcEntity === entity) return;
     this._unsubForecast();
     this._fcEntity = entity;
-    this._forecast = [];
+    this._forecast = null;
+    this._forecastError = false;
     const p = this.hass.connection.subscribeMessage(
       (ev) => {
         this._forecast = ev?.forecast || [];
@@ -67,10 +71,28 @@ class MateriaForecastHourly extends ActionMixin(LitElement) {
       { type: "weather/subscribe_forecast", forecast_type: "hourly", entity_id: entity }
     );
     this._fcUnsub = p;
-    p.catch(() => {}); // entity may not support hourly forecasts
+    p.catch(() => {
+      this._forecastError = true;
+      this.requestUpdate();
+      this._forecastFailed(p);
+    });
+  }
+
+  _forecastFailed(promise) {
+    if (this._fcUnsub !== promise) return;
+    this._fcUnsub = null;
+    this._fcEntity = this.config?.entity;
+    if (!this.isConnected || (this._forecastRetryCount || 0) >= 2) return;
+    this._forecastRetryCount = (this._forecastRetryCount || 0) + 1;
+    clearTimeout(this._forecastRetryTimer);
+    this._forecastRetryTimer = setTimeout(() => {
+      this._fcEntity = undefined;
+      this._subscribeForecast();
+    }, this._forecastRetryCount * 1500);
   }
 
   _unsubForecast() {
+    clearTimeout(this._forecastRetryTimer);
     if (this._fcUnsub) {
       this._fcUnsub.then((u) => u && u()).catch(() => {});
       this._fcUnsub = null;
@@ -111,8 +133,12 @@ class MateriaForecastHourly extends ActionMixin(LitElement) {
 
     const stateObj = this.hass.states[this.config.entity];
     const unavailable = this._isUnavailable(stateObj);
+    if (!stateObj || unavailable) return html`<div class="data-state" role="status"><ha-icon icon="mdi:weather-cloudy-alert"></ha-icon><span>${t("data_unavailable", this.hass)}</span></div>`;
     const hours = (this._forecast || []).slice(0, this.config.hours ?? 24);
-    if (!hours.length) return html``;
+    if (!hours.length) {
+      const loading = this._forecast === null && !this._forecastError;
+      return html`<div class="data-state" role="status" aria-live="polite"><ha-icon icon=${loading ? "mdi:clock-outline" : "mdi:weather-cloudy-alert"}></ha-icon><span>${t(loading ? "data_loading" : "forecast_not_supported", this.hass)}</span></div>`;
+    }
 
     const locale = this.hass?.locale?.language || navigator.language || "en";
 

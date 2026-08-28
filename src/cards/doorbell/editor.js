@@ -21,6 +21,7 @@ class MateriaDoorbellEditor extends SmartEditorBase {
             name: "timeout",
             label: "Popup timeout (seconds)",
             helper: "Match the popup timeout so the top bar and the dialog agree.",
+            default: 30,
             selector: { number: { min: 5, max: 300, mode: "box" } },
           },
           {
