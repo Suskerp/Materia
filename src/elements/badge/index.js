@@ -265,12 +265,13 @@ class MateriaBadge extends ActionMixin(LitElement) {
     const shape = action ? (this.config.shape === "leaf-flip" ? "leaf-flip" : "leaf") : "";
     const icon = html`<ha-icon .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon} style="color: ${textColor};"></ha-icon>`;
     const name = this._isTemplate(this.config.name) ? this._resolvedName : this.config.name;
-    // The sub line: configured secondary wins; a quiet badge falls back to
-    // its state word ("Off", "Locked") — when open, the value says it bigger.
+    // The sub line: configured secondary wins; otherwise the state stays in
+    // this same slot in BOTH quiet and active states. State may change colour
+    // and shape, but it must not reflow the control beneath the user's finger.
     // A hold-only badge that was tapped flashes the hint here instead.
     const sub = this._holdHint
       ? t("badge_hold_hint", this.hass)
-      : secondary || (!open && showState ? stateDisplay : "");
+      : secondary || (showState ? stateDisplay : "");
     // Rising fill while a timer runs — the action badge IS the countdown.
     const timerProgress =
       action && entity?.startsWith("timer.") && stateObj?.state === "active"
@@ -307,9 +308,6 @@ class MateriaBadge extends ActionMixin(LitElement) {
                 <div class="name">${name}</div>
                 ${sub ? html`<div class="sub">${sub}</div>` : ""}
               </div>
-              ${showState
-                ? html`<div class="value-wrap"><span class="value">${stateDisplay}</span></div>`
-                : ""}
             `
           : html`
               <div class="row-top">

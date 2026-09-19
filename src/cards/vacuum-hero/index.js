@@ -134,11 +134,17 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
     const cacheable = sibs.length > 0;
     const pick = (keys, domains) => {
       for (const key of keys) {
-        const hit = sibs.find((id) => {
-          if (domains && !domains.includes(id.split(".")[0])) return false;
-          return id.split(".")[1].endsWith(key) || id.split(".")[1].includes(key);
-        });
-        if (hit) return hit;
+        // Domain order is significant. Roborock replaced its deprecated mop
+        // drying binary sensor with a controllable switch, so that switch must
+        // win while both entities coexist during Home Assistant's transition
+        // period. Other capabilities continue to prefer ordinary sensors.
+        for (const domain of domains ?? [null]) {
+          const hit = sibs.find((id) => {
+            if (domain && id.split(".")[0] !== domain) return false;
+            return id.split(".")[1].endsWith(key) || id.split(".")[1].includes(key);
+          });
+          if (hit) return hit;
+        }
       }
       return null;
     };
@@ -146,7 +152,18 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
     const caps = {};
     for (const [cap, keys] of Object.entries(CAPABILITY_KEYS)) {
       // Explicit config always wins over discovery.
-      caps[cap] = this.config[`${cap}_entity`] ?? pick(keys, ["sensor", "binary_sensor"]);
+      let explicit = this.config[`${cap}_entity`];
+      if (cap === "mop_drying" && explicit?.startsWith("binary_sensor.")) {
+        // HA 2026.9 deprecates binary_sensor.*_mop_drying in favour of an
+        // identically named switch. Transparently follow that replacement for
+        // already-saved cards, without inventing a Roborock-specific entity id.
+        const replacement = `switch.${explicit.slice("binary_sensor.".length)}`;
+        if (this.hass?.states[replacement] || sibs.includes(replacement)) explicit = replacement;
+      }
+      const domains = cap === "mop_drying"
+        ? ["switch", "binary_sensor", "sensor"]
+        : ["sensor", "binary_sensor"];
+      caps[cap] = explicit ?? pick(keys, domains);
     }
     caps.consumables = this.config.consumable_entities
       ?? sibs.filter((id) => id.startsWith("sensor.") && CONSUMABLE_KEYS.some((k) => id.includes(k)));

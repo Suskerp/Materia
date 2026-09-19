@@ -162,10 +162,10 @@ export const styles = [
     /* ---- action layout: the button badge (design 20a) -----------------
        The silhouette is the role: navigation is a squircle, a verb wears
        M3's asymmetric shape-morph corners — nothing else may. Reads
-       horizontally: icon | name + sub | value; the value is the live
-       consequence (a ticking countdown, "Open") and fades with the open
-       state exactly like the navigate badge's payload. leaf rises to the
-       right, leaf-flip mirrors it — a facing pair. */
+       horizontally: icon | name + state/subtitle. State always occupies the
+       same text slot, so becoming active never pushes the copy sideways or
+       changes the control's width. leaf rises to the right, leaf-flip mirrors
+       it — a facing pair. */
     .badge.action {
       flex-direction: row;
       align-items: center;
@@ -197,23 +197,6 @@ export const styles = [
     .badge.action.leaf-flip.active,
     .badge.action.leaf-flip.fired {
       border-radius: 42px 16px 42px 16px;
-    }
-
-    /* The value's column animates 0fr -> 1fr, so the badge visibly GROWS to
-       admit the state info — real animated width, whatever the text length. */
-    .badge.action .value-wrap {
-      display: grid;
-      grid-template-columns: 0fr;
-      transition: grid-template-columns var(--md-sys-motion-expressive-default-spatial);
-    }
-
-    .badge.action.open .value-wrap {
-      grid-template-columns: 1fr;
-    }
-
-    .badge.action .value-wrap .value {
-      overflow: hidden;
-      min-width: 0;
     }
 
     .badge.action .icon-cell ha-icon {
