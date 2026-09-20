@@ -45,7 +45,7 @@ export const styles = [
       height: 84px;
       min-width: 116px;
       max-width: 116px;
-      padding: 10px 16px;
+      padding: 10px 20px;
       /* Blend with the page: the corner comes from the theme, like every
          other Materia surface. 28px is the 18c fallback. */
       border-radius: var(--ha-card-border-radius, 28px);
