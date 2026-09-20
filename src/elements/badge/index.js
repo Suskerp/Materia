@@ -265,19 +265,17 @@ class MateriaBadge extends ActionMixin(LitElement) {
     const shape = action ? (this.config.shape === "leaf-flip" ? "leaf-flip" : "leaf") : "";
     const icon = html`<ha-icon .icon=${this._isTemplate(this.config.icon) ? this._resolvedIcon : this.config.icon} style="color: ${textColor};"></ha-icon>`;
     const name = this._isTemplate(this.config.name) ? this._resolvedName : this.config.name;
-    // The sub line: configured secondary wins; otherwise the state stays in
-    // this same slot in BOTH quiet and active states. State may change colour
-    // and shape, but it must not reflow the control beneath the user's finger.
-    // A hold-only badge that was tapped flashes the hint here instead.
+    // State has one location only: the top-right value slot. The subtitle is
+    // reserved for actual supporting copy or the temporary hold hint.
     const sub = this._holdHint
       ? t("badge_hold_hint", this.hass)
-      : secondary || (showState ? stateDisplay : "");
+      : secondary || "";
     // Rising fill while a timer runs — the action badge IS the countdown.
     const timerProgress =
       action && entity?.startsWith("timer.") && stateObj?.state === "active"
         ? this._timerProgress(stateObj)
         : null;
-    const rootClass = `badge ${action ? `action ${shape}` : ""} ${activeClass} ${this._firedFlash ? "fired" : ""} ${open ? "open" : ""} ${alarm ? "alarm" : ""} ${unavailable ? "unavailable" : ""}`;
+    const rootClass = `badge ${action ? `action ${shape}` : ""} ${showState ? "has-state" : ""} ${activeClass} ${this._firedFlash ? "fired" : ""} ${open ? "open" : ""} ${alarm ? "alarm" : ""} ${unavailable ? "unavailable" : ""}`;
 
     return html`
       <div
@@ -298,27 +296,17 @@ class MateriaBadge extends ActionMixin(LitElement) {
         ${this._haArming
           ? html`<div class="hold-fill" style="animation-duration: ${HOLD_MS}ms;"></div>`
           : ""}
-        ${action
-          ? html`
-              ${timerProgress != null
-                ? html`<div class="run-fill" style="height: ${Math.round(timerProgress * 100)}%;"></div>`
-                : ""}
-              <div class="icon-cell">${icon}</div>
-              <div class="text">
-                <div class="name">${name}</div>
-                ${sub ? html`<div class="sub">${sub}</div>` : ""}
-              </div>
-            `
-          : html`
-              <div class="row-top">
-                <div class="icon-cell">${icon}</div>
-                ${showState ? html`<span class="value">${stateDisplay}</span>` : ""}
-              </div>
-              <div class="text">
-                <div class="name">${name}</div>
-                ${sub ? html`<div class="sub">${sub}</div>` : ""}
-              </div>
-            `}
+        ${timerProgress != null
+          ? html`<div class="run-fill" style="height: ${Math.round(timerProgress * 100)}%;"></div>`
+          : ""}
+        <div class="row-top">
+          <div class="icon-cell">${icon}</div>
+          ${showState ? html`<span class="value">${stateDisplay}</span>` : ""}
+        </div>
+        <div class="text">
+          <div class="name">${name}</div>
+          ${sub ? html`<div class="sub">${sub}</div>` : ""}
+        </div>
       </div>
     `;
   }
