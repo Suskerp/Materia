@@ -162,18 +162,46 @@ export const styles = [
     /* ---- action layout: the button badge (design 20a) -----------------
        The silhouette is the role: navigation is a squircle, a verb wears
        M3's asymmetric shape-morph corners — nothing else may. Reads
-       The action role changes the silhouette, not the information hierarchy:
-       icon remains top-left, state top-right and name below. Its wider fixed
-       footprint accommodates the verb without changing size on activation. */
+       With a state, the action role changes only the silhouette: icon remains
+       top-left, state top-right and name below. Without a state it keeps the
+       original compact horizontal action anatomy: icon | name + subtitle. */
     .badge.action {
-      width: 160px;
-      min-width: 160px;
-      max-width: 160px;
       border-radius: 42px 16px 42px 16px;
     }
 
-    .badge.action.open {
+    .badge.action.has-state {
+      width: 160px;
+      min-width: 160px;
       max-width: 160px;
+    }
+
+    .badge.action.has-state.open {
+      max-width: 160px;
+    }
+
+    .badge.action:not(.has-state) {
+      width: auto;
+      min-width: 116px;
+      max-width: none;
+      padding: 0 22px 0 18px;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 12px;
+    }
+
+    .badge.action:not(.has-state).open {
+      max-width: none;
+    }
+
+    .badge.action:not(.has-state) .icon-cell ha-icon {
+      --mdc-icon-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+
+    .badge.action:not(.has-state) .text {
+      line-height: 1.2;
     }
 
     /* Going active mirrors the asymmetry — the corner morph IS the state

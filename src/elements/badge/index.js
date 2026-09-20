@@ -299,14 +299,24 @@ class MateriaBadge extends ActionMixin(LitElement) {
         ${timerProgress != null
           ? html`<div class="run-fill" style="height: ${Math.round(timerProgress * 100)}%;"></div>`
           : ""}
-        <div class="row-top">
-          <div class="icon-cell">${icon}</div>
-          ${showState ? html`<span class="value">${stateDisplay}</span>` : ""}
-        </div>
-        <div class="text">
-          <div class="name">${name}</div>
-          ${sub ? html`<div class="sub">${sub}</div>` : ""}
-        </div>
+        ${action && !showState
+          ? html`
+              <div class="icon-cell">${icon}</div>
+              <div class="text">
+                <div class="name">${name}</div>
+                ${sub ? html`<div class="sub">${sub}</div>` : ""}
+              </div>
+            `
+          : html`
+              <div class="row-top">
+                <div class="icon-cell">${icon}</div>
+                ${showState ? html`<span class="value">${stateDisplay}</span>` : ""}
+              </div>
+              <div class="text">
+                <div class="name">${name}</div>
+                ${sub ? html`<div class="sub">${sub}</div>` : ""}
+              </div>
+            `}
       </div>
     `;
   }
