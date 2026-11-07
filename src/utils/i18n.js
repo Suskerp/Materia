@@ -421,7 +421,6 @@ export const STRINGS = {
   media_volume_value: { en: "Volume {value}", nl: "Volume {value}" },
   media_stations: { en: "Stations", nl: "Zenders" },
   media_link_zones: { en: "Link zones", nl: "Zones koppelen" },
-  media_follows: { en: "{zone} follows: {value}", nl: "{zone} volgt: {value}" },
   media_zone_2: { en: "Zone 2", nl: "Zone 2" },
   media_limit: { en: "limit {value}", nl: "limiet {value}" },
   media_previous: { en: "Previous", nl: "Vorige" },

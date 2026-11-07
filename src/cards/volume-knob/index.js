@@ -237,6 +237,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
 
   updated(changed) {
     super.updated?.(changed);
+    this.toggleAttribute("panel-fit", this._style === "tap" && !!this.config?.in_panel);
     const dial = this.renderRoot.querySelector(".dial-svg");
     if (dial && dial !== this._dialEl) {
       // Wheel must be non-passive to stop the page scrolling under the dial.
@@ -264,7 +265,6 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
         limit < MAX_STEPS && Math.round(v) >= limit ? t("media_limit", this.hass, { value: limit }) : "";
       return;
     }
-    $(".pct").textContent = off ? "" : `${Math.round((v / MAX_STEPS) * 100)} %`;
     const limitText = t("media_limit", this.hass, { value: limit });
     dial.setAttribute("aria-valuenow", String(Math.round(v)));
     if (this._knob) {
@@ -332,20 +332,6 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
       entity_id: this.config.zones[this._zone].entity,
       is_volume_muted: !this._zoneState()?.attributes?.is_volume_muted,
     });
-  }
-
-  _followText(link) {
-    const zones = this.config.zones;
-    if (link?.state !== "on" || !zones[1]) return "";
-    const z2 = this.hass.states[zones[1].entity];
-    if (!z2) return "";
-    const own = this._zoneState()?.attributes ?? {};
-    const offset = formatOffset(z2.attributes?.offset ?? own.offset);
-    const text = t("media_follows", this.hass, {
-      zone: zones[1].name ?? t("media_zone_2", this.hass),
-      value: volumeSteps(z2),
-    });
-    return offset ? `${text} (${offset})` : text;
   }
 
   /* ---------------------------------------------------------------- tap style */
@@ -417,7 +403,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
       return isMediaOff(zs) || zs?.attributes?.is_volume_muted ? t("state_off", this.hass) : volumeSteps(zs);
     };
     return html`
-      <ha-card class="panel tap ${this.config.in_sheet ? "in-sheet" : ""} ${off ? "off" : ""} ${muted ? "muted" : ""}">
+      <ha-card class="panel tap ${this.config.in_sheet ? "in-sheet" : ""} ${this.config.in_panel ? "in-panel" : ""} ${off ? "off" : ""} ${muted ? "muted" : ""}">
         <div class="phead">
           <h3>${name}</h3>
           ${this._linkChip(link)} ${this._closeButton()}
@@ -524,7 +510,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
               @option-selected=${this._selectZone}
             ></materia-button-group>`
           : nothing}
-        <div class="readout"><b class="num"></b><span>/ ${MAX_STEPS}</span><small class="pct"></small></div>
+        <div class="readout"><b class="num"></b><span>/ ${MAX_STEPS}</span></div>
         <div class="dial">
           <svg
             class="dial-svg"
@@ -546,7 +532,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
           <button class="round ${muted ? "on" : ""}" aria-label=${t("media_mute", this.hass)} aria-pressed=${muted ? "true" : "false"} @click=${this._toggleMute}>
             <ha-icon icon=${muted ? "mdi:volume-off" : "mdi:volume-high"}></ha-icon>
           </button>
-          <div class="info">${this._followText(link)}</div>
+          <div class="info"></div>
           <div class="pm">
             <button aria-label=${t("media_volume_down", this.hass)} @click=${() => this._setVolume(this._volValue() - 1, true)}>
               <ha-icon icon="mdi:minus"></ha-icon>
