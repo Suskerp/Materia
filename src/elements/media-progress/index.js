@@ -70,7 +70,10 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     // saw this key ourselves — so a stale timestamp can never look further
     // back than the track change we already detected.
     const key = `${this.config.entity}|${s.attributes.media_content_id ?? s.attributes.media_title ?? ""}`;
-    if (key !== this._latchKey) this._trackAnchorAt = Date.now();
+    // Only a track change seen while the card was open anchors: on a (re)load
+    // the attribute's timestamp is all we have, and anchoring to "now" made the
+    // bar start over from the position HA last stored on every page load.
+    if (key !== this._latchKey) this._trackAnchorAt = this._latchKey === undefined ? null : Date.now();
     if (playing && updated) {
       const since = Math.max(new Date(updated).getTime(), this._trackAnchorAt ?? 0);
       pos += Math.max(0, Date.now() - since) / 1000;
@@ -230,10 +233,24 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
 
   /* ---- variant: player ------------------------------------------------- */
 
+  /**
+   * The bar's real width. The ResizeObserver can miss the final size (a card
+   * first laid out hidden or tiny), which drew everything at a few px: only a
+   * dot of wave, no track, no stop. Read it directly, it's one cheap property.
+   */
+  _barWidth() {
+    const live = this._observedBar?.clientWidth;
+    if (live && live !== this._w) {
+      this._w = live;
+      this.requestUpdate(); // the wave path and track end are drawn for a width
+    }
+    return this._w || 300;
+  }
+
   /** Played x of the player variant (the drag position while seeking). */
   _playerX() {
     const { pos, dur, live } = this._position();
-    const w = this._w || 300;
+    const w = this._barWidth();
     const at = this._dragPos ?? pos;
     const frac = live ? 1 : dur > 0 ? Math.max(0, Math.min(1, at / dur)) : 0;
     return { x: 2 + frac * (w - 4), w, pos: at, dur, live };
