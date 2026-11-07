@@ -63,6 +63,7 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
       entity: this.config.entity,
       stations: this.config.stations,
       name: this._stationsLabel,
+      ...(this.config.logo_fill ? { logo_fill: true } : {}),
     };
     this._openSheet(e.currentTarget, card, this._stationsLabel, "stations");
   }

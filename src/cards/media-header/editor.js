@@ -29,6 +29,7 @@ class MateriaMediaHeaderEditor extends SmartEditorBase {
           { name: "show_source", label: "Source button", selector: { boolean: {} } },
           { name: "show_volume", label: "Volume ring", selector: { boolean: {} } },
           { name: "show_power", label: "Power (menu per zone)", selector: { boolean: {} } },
+          { name: "logo_fill", label: "Station logos fill their tile", selector: { boolean: {} } },
         ],
       },
       {
