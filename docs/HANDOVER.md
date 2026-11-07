@@ -166,6 +166,10 @@ adding shape morphing, springier motion and a stronger emphasis on tonal contain
 Materia targets Expressive. You need not memorise it, but you must know where the answers
 live and which four token families govern almost every decision.
 
+> **Full reference:** [M3_EXPRESSIVE.md](M3_EXPRESSIVE.md) covers the component specs
+> (button groups, sliders, progress, toolbars…), web translations, a review checklist,
+> and the known divergences between this section, the code and the spec.
+
 ### 1 · Colour roles — the one to internalise
 
 M3 does not have colours, it has **roles**. A role is a job; the theme supplies the value.
