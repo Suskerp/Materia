@@ -174,8 +174,8 @@ export function availableHeight(viewportHeight, top) {
 /** Smallest cover in auto mode (tuned prototype), and the default largest. */
 export const ART_MIN = 136;
 export const ART_MAX = 420;
-/** Kept free below the player inside a clipping container (pagination dots). */
-export const ART_FIT_MARGIN = 16;
+/** Kept free below the player inside a clipping container: room for a swipe card's pagination dots. */
+export const ART_FIT_MARGIN = 40;
 
 /**
  * Cover size for art_size: auto. `max` is the width available (capped by
