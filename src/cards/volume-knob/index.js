@@ -590,7 +590,6 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
       options: zones.map((z, i) => ({
         label: this._zoneName(i),
         value: String(i),
-        icon: i === this._zone ? "mdi:check" : undefined,
       })),
     };
 
