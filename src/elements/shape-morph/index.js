@@ -58,7 +58,6 @@ class MateriaShapeMorph extends HTMLElement {
       </style><canvas aria-hidden="true"></canvas>`;
       this._canvas = this.shadowRoot.querySelector("canvas");
     }
-    this._t0 = performance.now();
     this._ro = new ResizeObserver(() => this._resize());
     this._ro.observe(this);
     this._io = new IntersectionObserver(([e]) => {
@@ -86,7 +85,7 @@ class MateriaShapeMorph extends HTMLElement {
     this._canvas.width = Math.max(1, Math.round(r.width * dpr));
     this._canvas.height = Math.max(1, Math.round(r.height * dpr));
     this._colors = null; // re-read after a theme or palette change
-    this._draw(this._reduce ? 3 : (performance.now() - this._t0) / 1000);
+    this._draw(this._reduce ? 3 : performance.now() / 1000);
     this._schedule();
   }
 
@@ -98,7 +97,9 @@ class MateriaShapeMorph extends HTMLElement {
         this._raf = requestAnimationFrame(frame);
         if (now - last < 33) return; // ~30 fps is plenty for this pace
         last = now;
-        this._draw((now - this._t0) / 1000);
+        // The page clock, not one started per element: HA re-attaches cards on
+        // re-render, and a per-element start made the shapes snap back each time.
+        this._draw(now / 1000);
       };
       this._raf = requestAnimationFrame(frame);
     } else if (!run && this._raf) {
