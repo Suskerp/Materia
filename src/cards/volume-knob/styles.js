@@ -327,23 +327,6 @@ export const styles = [
       background: none;
     }
 
-    /* In a kiosk side panel: fit the content and sit centred next to the
-       cover and player, instead of stretching the bar over the full height. */
-    :host([panel-fit]) {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    ha-card.panel.tap.in-panel {
-      height: auto;
-      max-height: 100%;
-    }
-
-    ha-card.panel.tap.in-panel .tbody {
-      flex: 0 1 256px;
-      min-height: 160px;
-    }
 
     .linkchip {
       height: 40px;
@@ -426,7 +409,7 @@ export const styles = [
 
     .tbody {
       flex: 1;
-      min-height: 280px;
+      min-height: 160px;
       display: flex;
       gap: 24px;
       align-items: stretch;

@@ -142,13 +142,19 @@ export const styles = [
     }
 
     /* Fixed width, so the panel is revealed rather than squeezed. */
+    /* Every panel (volume, stations, …) gets the same height, centred:
+       between the tallest (stations, full height) and the shortest (volume). */
     .k-panel-inner {
       width: var(--k-panel, 400px);
       height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     .k-panel-inner > * {
-      height: 100%;
+      height: var(--materia-kiosk-panel-height, 80%);
+      min-height: 0;
     }
 
     /* Kiosk type: headline-medium-emphasized title on two lines, a

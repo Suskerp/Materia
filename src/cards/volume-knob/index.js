@@ -237,8 +237,6 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
 
   updated(changed) {
     super.updated?.(changed);
-    // Kiosk side panel: fit the content. In place (panel_back) it fills the subview instead.
-    this.toggleAttribute("panel-fit", this._style === "tap" && !!this.config?.in_panel && !this.config?.panel_back);
     const dial = this.renderRoot.querySelector(".dial-svg");
     if (dial && dial !== this._dialEl) {
       // Wheel must be non-passive to stop the page scrolling under the dial.

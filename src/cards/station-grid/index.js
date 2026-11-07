@@ -41,6 +41,8 @@ class MateriaStationGrid extends ActionMixin(LitElement) {
         border-radius: 32px;
         height: 100%;
         box-sizing: border-box;
+        /* A short screen: the grid scrolls inside the panel instead of growing it. */
+        overflow-y: auto;
       }
       /* In place of the player: the art scope's card pads and draws the surface. */
       ha-card.in-panel.sub {
