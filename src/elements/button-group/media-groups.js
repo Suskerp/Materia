@@ -122,9 +122,12 @@ export function renderToolbar(el) {
     if (b.type === "volume") {
       // Alone it reads "Volume"; the level itself is shown in the panel.
       const label = solo ? t("media_volume", hass) : b.label;
+      // Nothing to set while the player is off.
+      const disabled = isMediaOff(s);
       return html`<button
         type="button"
         class="${edge} ${el._openPanel === "volume" ? "open" : ""}"
+        ?disabled=${disabled}
         aria-label=${t("media_volume", hass)}
         aria-expanded=${el._openPanel === "volume" ? "true" : "false"}
         @click=${(e) => el._mediaOpenVolume(e)}
@@ -352,6 +355,12 @@ export const mediaGroupStyles = [
       border-radius: 26px;
       background: var(--md-sys-color-secondary-container, rgba(127, 127, 127, 0.3));
       color: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
+    }
+
+    .toolbar button:disabled {
+      opacity: 0.38;
+      cursor: default;
+      pointer-events: none;
     }
 
     .toolbar.solo button {

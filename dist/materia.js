@@ -7695,27 +7695,28 @@ rows:
     </div>
   </ha-card>`}function ao(e){const{hass:t,config:i}=e,a=t.states[i.entity],n=a?.attributes??{},s=yi(a),o=function(e){return Ws(e.buttons).map(e=>"string"==typeof e?{type:e}:{...e})}(i),{visible:r,first:l,last:c,solo:h,mode:d}=function(e,t){const i=e.map(e=>"shuffle"===e.type?t.includes("shuffle"):"repeat"!==e.type||t.includes("repeat")),{first:a,last:n}=wi(i),s=a>=0&&a===n;let o="group";return a<0?o="none":s&&"volume"===e[a].type&&(o="pill"),{visible:i,first:a,last:n,solo:s,mode:o}}(o,s);if("none"===d)return U``;return U`<ha-card class="toolbar-card ${"start"===i.align?"start":""}">
     <div class="toolbar ${h?"solo":""}" role="toolbar" style="--tp-solo:${280}px;">
-      ${o.map((i,a)=>{if(!r[a])return W;const s=`${a===l?"first":""} ${a===c?"last":""}`;if("shuffle"===i.type){const a=Ti(e._pendingMode?.shuffle,!!n.shuffle);return U`<button
+      ${o.map((i,s)=>{if(!r[s])return W;const o=`${s===l?"first":""} ${s===c?"last":""}`;if("shuffle"===i.type){const a=Ti(e._pendingMode?.shuffle,!!n.shuffle);return U`<button
         type="button"
-        class="${s} ${a?"on":""}"
+        class="${o} ${a?"on":""}"
         aria-label=${Ri("media_shuffle",t)}
         aria-pressed=${a?"true":"false"}
         @click=${()=>e._setPlayMode("shuffle",!a,"shuffle_set",{shuffle:!a})}
       ><ha-icon .icon=${i.icon||"mdi:shuffle-variant"}></ha-icon></button>`}if("repeat"===i.type){const i=Ti(e._pendingMode?.repeat,n.repeat??"off");return U`<button
         type="button"
-        class="${s} ${"off"!==i?"on":""}"
+        class="${o} ${"off"!==i?"on":""}"
         aria-label=${Ri("media_repeat",t)}
         aria-pressed=${"off"!==i?"true":"false"}
         @click=${()=>e._setPlayMode("repeat",xi(i),"repeat_set",{repeat:xi(i)})}
-      ><ha-icon .icon=${"one"===i?"mdi:repeat-once":"mdi:repeat"}></ha-icon></button>`}if("volume"===i.type){const a=h?Ri("media_volume",t):i.label;return U`<button
+      ><ha-icon .icon=${"one"===i?"mdi:repeat-once":"mdi:repeat"}></ha-icon></button>`}if("volume"===i.type){const n=h?Ri("media_volume",t):i.label,s=bi(a);return U`<button
         type="button"
-        class="${s} ${"volume"===e._openPanel?"open":""}"
+        class="${o} ${"volume"===e._openPanel?"open":""}"
+        ?disabled=${s}
         aria-label=${Ri("media_volume",t)}
         aria-expanded=${"volume"===e._openPanel?"true":"false"}
         @click=${t=>e._mediaOpenVolume(t)}
-      >${U`<ha-icon .icon=${i.icon||"mdi:volume-high"}></ha-icon>`}${a?U`<span>${a}</span>`:W}</button>`}const o=!!i.entity&&e._truthy(t.states[i.entity]?.state),d=i.panel&&e._openPanel===i.panel;return U`<button
+      >${U`<ha-icon .icon=${i.icon||"mdi:volume-high"}></ha-icon>`}${n?U`<span>${n}</span>`:W}</button>`}const d=!!i.entity&&e._truthy(t.states[i.entity]?.state),u=i.panel&&e._openPanel===i.panel;return U`<button
       type="button"
-      class="${s} ${o?"on":""} ${d?"open":""}"
+      class="${o} ${d?"on":""} ${u?"open":""}"
       aria-label=${i.aria_label||i.label||i.icon||""}
       @click=${t=>e._mediaCustom(i,t)}
     >${i.icon?U`<ha-icon .icon=${i.icon}></ha-icon>`:W}${i.label?U`<span>${i.label}</span>`:W}</button>`})}
@@ -7860,6 +7861,12 @@ rows:
       border-radius: 26px;
       background: var(--md-sys-color-secondary-container, rgba(127, 127, 127, 0.3));
       color: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
+    }
+
+    .toolbar button:disabled {
+      opacity: 0.38;
+      cursor: default;
+      pointer-events: none;
     }
 
     .toolbar.solo button {
