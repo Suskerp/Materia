@@ -5,6 +5,8 @@ import {
   isMediaOff,
   nextRepeat,
   toolbarLayout,
+  heldValue,
+  holdSkipButtons,
 } from "../../utils/media.js";
 import { SIZES } from "./styles.js";
 import { toolbarList } from "../../utils/media-editor-model.js";
@@ -46,8 +48,10 @@ export function renderTransport(el) {
   const ctrl = mediaControls(s);
   if (isMediaOff(s) || !ctrl.includes("play_pause")) return html``;
   const playing = s.state === "playing";
-  const prev = ctrl.includes("previous");
-  const next = ctrl.includes("next");
+  // Kept through the brief gap in controls while a track changes.
+  const skip = holdSkipButtons(el._skipHold, { prev: ctrl.includes("previous"), next: ctrl.includes("next") });
+  el._skipHold = skip.hold;
+  const { prev, next } = skip;
   const height = SIZES[config.size]?.height ?? TRANSPORT_HEIGHT;
   const pressed = el._mediaPressed;
   const press = (key) => ({
@@ -91,23 +95,24 @@ export function renderToolbar(el) {
     if (!visible[i]) return nothing;
     const edge = `${i === first ? "first" : ""} ${i === last ? "last" : ""}`;
     if (b.type === "shuffle") {
-      const on = !!a.shuffle;
+      // Shown at once; the streamer reports a play-mode change only with its next update.
+      const on = heldValue(el._pendingMode?.shuffle, !!a.shuffle);
       return html`<button
         type="button"
         class="${edge} ${on ? "on" : ""}"
         aria-label=${t("media_shuffle", hass)}
         aria-pressed=${on ? "true" : "false"}
-        @click=${() => el._mediaService("shuffle_set", { shuffle: !a.shuffle })}
+        @click=${() => el._setPlayMode("shuffle", !on, "shuffle_set", { shuffle: !on })}
       ><ha-icon .icon=${b.icon || "mdi:shuffle-variant"}></ha-icon></button>`;
     }
     if (b.type === "repeat") {
-      const mode = a.repeat ?? "off";
+      const mode = heldValue(el._pendingMode?.repeat, a.repeat ?? "off");
       return html`<button
         type="button"
         class="${edge} ${mode !== "off" ? "on" : ""}"
         aria-label=${t("media_repeat", hass)}
         aria-pressed=${mode !== "off" ? "true" : "false"}
-        @click=${() => el._mediaService("repeat_set", { repeat: nextRepeat(mode) })}
+        @click=${() => el._setPlayMode("repeat", nextRepeat(mode), "repeat_set", { repeat: nextRepeat(mode) })}
       ><ha-icon .icon=${mode === "one" ? "mdi:repeat-once" : "mdi:repeat"}></ha-icon></button>`;
     }
     if (b.type === "volume") {
@@ -146,6 +151,15 @@ export const MediaGroupMixin = (superClass) =>
     _mediaService(service, data = {}) {
       this._fireHaptic("light");
       this._callService("media_player", service, { entity_id: this.config.entity, ...data });
+    }
+
+    /** Shuffle / repeat: show the new value now, hold it until the player reports it (6 s at most). */
+    _setPlayMode(key, value, service, data) {
+      this._pendingMode = { ...(this._pendingMode ?? {}), [key]: { value, until: Date.now() + 6000 } };
+      this.requestUpdate();
+      clearTimeout(this.__modeTimer);
+      this.__modeTimer = setTimeout(() => this.requestUpdate(), 6100);
+      this._mediaService(service, data);
     }
 
     /** Touch releases too fast for :active to be seen; hold the pressed shape briefly. */

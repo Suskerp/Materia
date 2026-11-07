@@ -22,6 +22,7 @@ import {
   availableHeight,
 } from "../src/utils/media.js";
 import { scopeGridColumns, panelCardConfig, kioskTracks } from "../src/cards/art-scope/layout.js";
+import { heldValue, holdSkipButtons } from "../src/utils/media.js";
 import { themeSettings, schemeKey } from "../src/utils/art-settings.js";
 
 const player = (attributes, state = "playing") => ({ state, attributes });
@@ -271,4 +272,21 @@ test("kiosk tracks: one width drives closed, open and the sheet fallback", () =>
   const narrow = kioskTracks(800, true);
   assert.equal(narrow.canOpen, false);
   assert.equal(narrow.columns, kioskTracks(800, false).columns);
+});
+
+test("a tapped shuffle/repeat value shows until the player reports it or the hold ends", () => {
+  const pending = { value: true, until: 1000 };
+  assert.equal(heldValue(pending, false, 500), true, "player not caught up yet");
+  assert.equal(heldValue(pending, true, 600), true);
+  assert.equal(heldValue(pending, false, 1500), false, "hold over: the player wins");
+  assert.equal(heldValue(undefined, "all", 0), "all");
+});
+
+test("previous/next survive the brief gap while a track changes", () => {
+  const a = holdSkipButtons(null, { prev: true, next: true }, 0);
+  assert.deepEqual([a.prev, a.next], [true, true]);
+  const gap = holdSkipButtons(a.hold, { prev: false, next: false }, 1500);
+  assert.deepEqual([gap.prev, gap.next], [true, true], "held during the gap");
+  const later = holdSkipButtons(gap.hold, { prev: false, next: false }, 6000);
+  assert.deepEqual([later.prev, later.next], [false, false], "a source without skip loses them after the hold");
 });

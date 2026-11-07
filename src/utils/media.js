@@ -164,6 +164,26 @@ export function toolbarLayout(items, controls) {
   return { visible, first, last, solo, mode };
 }
 
+/**
+ * A value set by a tap, shown until the player reports it or `until` passes:
+ * `pending` = { value, until } (ms) or undefined.
+ */
+export function heldValue(pending, reported, now = Date.now()) {
+  if (!pending || now > pending.until || reported === pending.value) return reported;
+  return pending.value;
+}
+
+/**
+ * Previous/next during a track change: the player briefly reports neither, so
+ * keep the last pair for `holdMs` instead of collapsing the transport to one
+ * button. Returns the pair to show and the new hold.
+ */
+export function holdSkipButtons(hold, { prev, next }, now = Date.now(), holdMs = 4000) {
+  if (prev || next) return { prev, next, hold: { prev, next, until: now + holdMs } };
+  if (hold && now <= hold.until) return { prev: hold.prev, next: hold.next, hold };
+  return { prev, next, hold: null };
+}
+
 /** Kiosk height: from the scope's top to the bottom of the visible viewport. */
 export function availableHeight(viewportHeight, top) {
   return Math.max(0, Math.round(viewportHeight - Math.max(0, top)));
