@@ -169,7 +169,10 @@ class MateriaMedia extends ActionMixin(LitElement) {
 
   /** Room below `unit` in what bounds it (negative = overflow), or null when unbounded. */
   _spareBelow(unit) {
-    const rect = unit.getBoundingClientRect();
+    // The scope's content, not its box: in a fixed slot the scope card is
+    // stretched to the slot's height, which would always read as "no room".
+    const content = unit.renderRoot?.querySelector?.(".children") ?? unit;
+    const rect = content.getBoundingClientRect();
     // Once found, the bounding ancestor is kept: whether it "clips" depends on
     // the cover's own size, so re-deciding every time flipped between two
     // references and made the cover pulse between two sizes.
@@ -181,12 +184,16 @@ class MateriaMedia extends ActionMixin(LitElement) {
     }
     for (let node = unit.parentNode || unit.host; node; node = node.parentNode || node.host) {
       if (!(node instanceof Element) || node === document.body || node === document.documentElement) continue;
+      // A sections-view card slot with fixed rows: its height comes from the
+      // grid, never from the content, so it is a real bound even when the card
+      // fills it exactly (the swipe card inside it then looks content-sized).
+      const fixedSlot = node.classList.contains("fit-rows");
       const oy = getComputedStyle(node).overflowY;
-      if (oy === "visible") continue;
+      if (oy === "visible" && !fixedSlot) continue;
       const box = node.getBoundingClientRect();
       // Content-sized (nothing clipped, no room either): it follows the card,
       // so it bounds nothing. Shrinking against it would never stop.
-      if (node.scrollHeight <= node.clientHeight + 1 && box.bottom - rect.bottom < 1) continue;
+      if (!fixedSlot && node.scrollHeight <= node.clientHeight + 1 && box.bottom - rect.bottom < 1) continue;
       const top = rect.top - box.top + node.scrollTop;
       if (top > node.clientHeight / 2) return null;
       this._fitBound = node;
