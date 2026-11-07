@@ -101,17 +101,18 @@ export const styles = [motionTokens, css`
 
   /* ---- art size modes (any variant) ---- */
 
-  /* auto: shrinks with the viewport height so, on a phone, the header and
-     both button rows stay visible under the art (tuned prototype formula). */
+  /* auto: sized in JS by the space the player really has (a swipe slide, a
+     view, the viewport), so the header and both button rows stay visible.
+     Before the first measurement: the width, capped by --materia-art-max. */
   .art.art-auto {
-    width: clamp(136px, calc(100svh - 600px), 420px);
+    width: var(--mm-auto-size, min(100%, var(--materia-art-max, 420px)));
     max-width: 100%;
     transition: width var(--md-sys-motion-default-effects);
   }
 
   .art.art-fill {
     width: 100%;
-    max-width: none;
+    max-width: var(--materia-art-max, none);
   }
 
   /* ---- variant: player ---- */

@@ -140,6 +140,27 @@ export function nowPlayingText({ source, app, title, artist, album } = {}) {
   return { chip, title: t, subtitle: parts.join(" · "), appChip: distinctApp || null };
 }
 
+/* ---- art_size: auto ------------------------------------------------------ */
+
+/** Smallest cover in auto mode (tuned prototype), and the default largest. */
+export const ART_MIN = 136;
+export const ART_MAX = 420;
+/** Kept free below the player inside a clipping container (pagination dots). */
+export const ART_FIT_MARGIN = 16;
+
+/**
+ * Cover size for art_size: auto. `max` is the width available (capped by
+ * art_max); `spare` is the vertical room left below the player in the space
+ * it really has — negative when it overflows — or null when nothing bounds
+ * its height. The cover grows or shrinks by exactly that room, which fits in
+ * one step (the player moves by the same amount).
+ */
+export function fitArtSize({ current, max, spare }) {
+  const cap = Math.max(ART_MIN, Math.floor(max));
+  if (spare == null || !Number.isFinite(spare)) return cap;
+  return Math.round(Math.max(ART_MIN, Math.min(cap, current + spare)));
+}
+
 /** Next entry of source_list after the current source (null when there is no list). */
 export function nextSource(stateObj) {
   const a = stateObj?.attributes ?? {};

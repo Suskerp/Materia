@@ -1,7 +1,7 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { SheetOpenerMixin } from "../../primitives/sheet.js";
-import { isMediaOff, isLive, nextSource, visibleEdges, nowPlayingText } from "../../utils/media.js";
+import { isMediaOff, isLive, nextSource, visibleEdges, nowPlayingText, sameText } from "../../utils/media.js";
 import { t } from "../../utils/i18n.js";
 import { volumeRing } from "../../elements/volume-ring/ring.js";
 import "../../cards/volume-knob/index.js";
@@ -75,11 +75,26 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
     return this.config.stations_label || t("media_stations", this.hass);
   }
 
+  /** zone_name, else this player's name in the volume zones, else its friendly name. */
+  get _zoneName() {
+    if (this.config.zone_name) return this.config.zone_name;
+    const zones = this._volumeKnobConfig().zones;
+    const named = Array.isArray(zones) ? zones.find((z) => z?.entity === this.config.entity)?.name : null;
+    return named || this._stateObj?.attributes?.friendly_name;
+  }
+
+  /** "app · zone": the app only when it is neither the title nor the source. */
   get _subtitle() {
     const s = this._stateObj;
     const a = s?.attributes ?? {};
-    const app = isMediaOff(s) ? t("state_off", this.hass) : isLive(s) ? t("media_radio", this.hass) : a.app_name;
-    return [app, this.config.zone_name ?? a.friendly_name].filter(Boolean).join(" · ");
+    const zone = this._zoneName;
+    if (isMediaOff(s)) return [t("state_off", this.hass), zone].filter(Boolean).join(" · ");
+    const { appChip } = nowPlayingText({
+      source: a.source ?? a.input,
+      app: isLive(s) ? t("media_radio", this.hass) : a.app_name,
+      title: a.media_title,
+    });
+    return [appChip, sameText(appChip, zone) ? null : zone].filter(Boolean).join(" · ");
   }
 
   _renderKiosk(s, hasStations) {

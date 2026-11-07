@@ -1,7 +1,16 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
-import { isLive, isMediaOff, nowPlayingText, sameText as same } from "../../utils/media.js";
+import {
+  isLive,
+  isMediaOff,
+  nowPlayingText,
+  sameText as same,
+  fitArtSize,
+  ART_MAX,
+  ART_FIT_MARGIN,
+} from "../../utils/media.js";
+import { volumeContext } from "../../primitives/sheet.js";
 import { t } from "../../utils/i18n.js";
 import "./editor.js";
 
@@ -48,11 +57,86 @@ class MateriaMedia extends ActionMixin(LitElement) {
       }
       this._lastTrack = track;
     }
+    this._watchArt();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     clearTimeout(this._beatTimer);
+    this._artRo?.disconnect();
+    this._artWatched = null;
+    window.removeEventListener("resize", this._onArtResize);
+  }
+
+  /* ---- art_size: auto — size the cover by the space really available ---- */
+
+  /** Observe the auto-sized cover; refit on its width changing and on window resize. */
+  _watchArt() {
+    const art = this.renderRoot?.querySelector(".art.art-auto") ?? null;
+    if (art === this._artWatched) return;
+    this._artWatched = art;
+    this._onArtResize ??= () => this._scheduleFit();
+    this._artRo ??= new ResizeObserver(() => this._scheduleFit());
+    this._artRo.disconnect();
+    window.removeEventListener("resize", this._onArtResize);
+    if (!art) {
+      this.style.removeProperty("--mm-auto-size");
+      return;
+    }
+    this._artRo.observe(this);
+    window.addEventListener("resize", this._onArtResize);
+    this._scheduleFit();
+  }
+
+  _scheduleFit() {
+    cancelAnimationFrame(this._fitRaf);
+    this._fitRaf = requestAnimationFrame(() => this._fitArt());
+  }
+
+  /**
+   * The unit that must fit is the enclosing materia-art-scope (header, art,
+   * progress, transport and toolbar together) or this card on its own. Its
+   * height is bounded by the nearest ancestor that clips vertically (a swipe
+   * card's slide, a scrolling view), else by the viewport — but the viewport
+   * only when the unit starts in the upper half of it, i.e. when it is the
+   * main content and not a card further down a long column.
+   */
+  _fitArt() {
+    const art = this._artWatched;
+    if (!art || !this.isConnected) return;
+    const width = art.parentElement?.clientWidth ?? 0;
+    if (!width) return; // a hidden slide: measure when it is shown
+    // art_max, or --materia-art-max from a theme / card-mod, else ART_MAX.
+    const cssMax = parseFloat(getComputedStyle(art).getPropertyValue("--materia-art-max"));
+    const max = Math.min(width, cssMax > 0 ? cssMax : ART_MAX);
+    const unit = volumeContext(this).scope ?? this;
+    const current = art.getBoundingClientRect().height;
+    const spare = this._spareBelow(unit);
+    const size = fitArtSize({ current, max, spare: spare == null ? null : spare - ART_FIT_MARGIN });
+    if (size !== this._artPx) {
+      this._artPx = size;
+      this.style.setProperty("--mm-auto-size", `${size}px`);
+    }
+  }
+
+  /** Room below `unit` in what bounds it (negative = overflow), or null when unbounded. */
+  _spareBelow(unit) {
+    const rect = unit.getBoundingClientRect();
+    for (let node = unit.parentNode || unit.host; node; node = node.parentNode || node.host) {
+      if (!(node instanceof Element) || node === document.body || node === document.documentElement) continue;
+      const oy = getComputedStyle(node).overflowY;
+      if (oy === "visible") continue;
+      const box = node.getBoundingClientRect();
+      // Content-sized (nothing clipped, no room either): it follows the card,
+      // so it bounds nothing. Shrinking against it would never stop.
+      if (node.scrollHeight <= node.clientHeight + 1 && box.bottom - rect.bottom < 1) continue;
+      const top = rect.top - box.top + node.scrollTop;
+      if (top > node.clientHeight / 2) return null;
+      return node.clientHeight - (top + rect.height);
+    }
+    const top = rect.top + window.scrollY;
+    if (top > window.innerHeight / 2) return null;
+    return window.innerHeight - (top + rect.height);
   }
 
   get _stateObj() {
@@ -94,7 +178,8 @@ class MateriaMedia extends ActionMixin(LitElement) {
    */
   _artSize() {
     const size = this.config.art_size ?? (this.config.variant === "player" ? "auto" : null);
-    if (size === "auto" || size === "fill") return { cls: `art-${size}`, style: "" };
+    const max = Number(this.config.art_max) > 0 ? `--materia-art-max:${Number(this.config.art_max)}px;` : "";
+    if (size === "auto" || size === "fill") return { cls: `art-${size}`, style: max };
     const px = Number(size);
     return { cls: "", style: Number.isFinite(px) && px > 0 ? `--mm-art:${px}px;` : "" };
   }

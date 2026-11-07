@@ -170,13 +170,22 @@ cards:
 type: custom:materia-media
 entity: media_player.arcam_living
 variant: player
-art_size: auto      # auto (shrinks with the phone's height) | fill | a number in px
-show_app: true      # app_name chip
+art_size: auto      # auto | fill | a number in px
+art_max: 420        # largest auto / fill size (or --materia-art-max)
+show_app: true      # app chip, never when it repeats the title or source
 show_titles: true   # false: art only (kiosk cover)
 live_logo: true     # live radio: logo on white, contained
 ```
 
-`art_size: auto | fill` also works on the default variant. Existing numeric
+`art_size: auto` sizes the cover by the space the player really has. It
+measures the enclosing `materia-art-scope` (or the card alone) against the
+nearest container that clips it, such as a swipe card's slide or the view.
+The cover then shrinks or grows so the header, transport and toolbar stay
+visible, between 136 px and `art_max`. It falls back to the viewport only when
+the player is the view's main content. Further down a long column it simply
+fills the width up to `art_max`.
+
+`art_size: auto | fill` also works on the default variant. Numeric
 `art_size` values keep their meaning.
 
 ### materia-media-progress — `variant: player`

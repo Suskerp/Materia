@@ -16,6 +16,8 @@ import {
   isMediaOff,
   isLive,
   nowPlayingText,
+  fitArtSize,
+  ART_MIN,
 } from "../src/utils/media.js";
 import { scopeGridColumns, panelCardConfig, kioskTracks } from "../src/cards/art-scope/layout.js";
 import { themeSettings, schemeKey } from "../src/utils/art-settings.js";
@@ -207,6 +209,20 @@ test("now-playing text keeps a distinct app and drops empty or repeated byline p
   assert.equal(nowPlayingText({ title: "T", artist: "A", album: "a" }).subtitle, "A");
   assert.equal(nowPlayingText({ source: "Radio", title: "" }).title, "Radio", "no title: the source");
   assert.deepEqual(nowPlayingText(), { chip: "", title: "", subtitle: "", appChip: null });
+});
+
+test("art_size auto: the cover absorbs exactly the spare room, within 136 px and the width/art_max", () => {
+  // Unbounded height (further down a column): fill the width up to the max.
+  assert.equal(fitArtSize({ current: 300, max: 358, spare: null }), 358);
+  // A swipe slide 120 px too short: shrink by 120.
+  assert.equal(fitArtSize({ current: 358, max: 358, spare: -120 }), 238);
+  // Room left: grow, but never past the width / art_max.
+  assert.equal(fitArtSize({ current: 238, max: 358, spare: 50 }), 288);
+  assert.equal(fitArtSize({ current: 300, max: 358, spare: 500 }), 358);
+  // Never below the prototype's 136 px, even when it still overflows.
+  assert.equal(fitArtSize({ current: 200, max: 358, spare: -400 }), ART_MIN);
+  // Stable: once it fits, the same measurement gives the same size.
+  assert.equal(fitArtSize({ current: 238, max: 358, spare: 0 }), 238);
 });
 
 test("kiosk tracks: one width drives closed, open and the sheet fallback", () => {

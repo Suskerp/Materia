@@ -71,6 +71,7 @@ class MateriaArtScope extends LitElement {
       e.stopPropagation();
       e.detail.volume = this.config.volume;
       e.detail.entity = this.config.entity;
+      e.detail.scope = this;
       e.detail.kiosk = this.config.layout === "kiosk" && !this._tracks(false).stacked;
     });
     this.addEventListener("materia-dismiss", (e) => {
