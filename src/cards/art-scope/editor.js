@@ -4,6 +4,12 @@ import { VOLUME_STYLE_SELECTOR } from "../../utils/media-editors.js";
 
 const PANEL_STYLE_LABEL = "Stijl van het volumepaneel (kiosk)";
 
+const PANEL_TIMEOUT_FIELD = {
+  name: "panel_timeout",
+  label: "Return to the player after (s without a touch, 0 = never)",
+  selector: { number: { min: 0, max: 60, step: 1, mode: "slider", unit_of_measurement: "s" } },
+};
+
 /** Reuses the expander's card list (add / edit / reorder child cards). */
 class MateriaArtScopeEditor extends MateriaExpanderEditor {
   _formData() {
@@ -11,7 +17,7 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
   }
 
   _sectionsSignature() {
-    return this._config?.layout || "stack";
+    return `${this._config?.layout || "stack"}|${this._config?.panel_mode || "sheet"}`;
   }
 
   /** panels.volume.style, edited as one select; other panel overrides are kept. */
@@ -89,6 +95,7 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
                     { value: "inline", label: "In place of the cards (with back)" },
                   ] } },
                 },
+                ...(this._config?.panel_mode === "inline" ? [PANEL_TIMEOUT_FIELD] : []),
               ]),
         ],
       },
@@ -99,11 +106,7 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
               icon: "mdi:dock-right",
               fields: [
                 { name: "fill", label: "Vul het scherm (hoogte)", selector: { boolean: {} } },
-                {
-                  name: "panel_timeout",
-                  label: "Sluit het paneel na (s, 0 = nooit)",
-                  selector: { number: { min: 0, max: 60, step: 1, mode: "slider", unit_of_measurement: "s" } },
-                },
+                { ...PANEL_TIMEOUT_FIELD, label: "Close the panel after (s without a touch, 0 = never)" },
                 {
                   name: "panels",
                   render: (value) => html`<ha-selector
