@@ -93,8 +93,12 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     // infinite target instead of an empty bar. Explicit live mode deliberately
     // outranks the entity state: Music Assistant can report `idle` while an
     // external receiver continues playing its NET/radio stream.
+    // A player that states `live` itself (the Arcam template player does) is
+    // taken at its word: the rolling-end guess would otherwise latch on a
+    // stale position (TV) or at a track end, hiding the track and blocking seek.
+    const stated = s.attributes.live !== undefined && s.attributes.live !== null;
     const live =
-      this.config.live === true || (playing && this._live) || (this._player && isLive(s));
+      this.config.live === true || (stated ? isLive(s) : (playing && this._live) || (this._player && isLive(s)));
 
     if (dur) pos = Math.min(pos, dur);
     return { pos: Math.max(0, pos), dur, playing, live };
