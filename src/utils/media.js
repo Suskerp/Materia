@@ -133,12 +133,18 @@ export function currentStationIndex(stations, stateObj) {
 }
 
 /**
- * The volume-knob card config an opener (volume ring, toolbar, header) shows
- * in its sheet: the opener's `volume:` block, defaulting to its own entity.
+ * The volume-knob card config an opener (volume ring, toolbar, header) shows:
+ * its own `volume:` block, else the one it inherits from an enclosing
+ * materia-art-scope (`inherited` = { volume, entity }), defaulting to one zone
+ * — the opener's own entity.
  */
-export function volumeKnobConfig(config) {
-  const v = config?.volume ?? {};
-  return { ...v, type: "custom:materia-volume-knob", entity: v.entity ?? config?.entity ?? v.zones?.[0]?.entity };
+export function volumeKnobConfig(config, inherited) {
+  const v = config?.volume ?? inherited?.volume ?? {};
+  return {
+    ...v,
+    type: "custom:materia-volume-knob",
+    entity: v.entity ?? config?.entity ?? inherited?.entity ?? v.zones?.[0]?.entity,
+  };
 }
 
 export function formatMediaTime(seconds) {

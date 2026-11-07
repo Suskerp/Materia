@@ -6,6 +6,7 @@ import { styles } from "./styles.js";
 import "./editor.js";
 
 import { KIOSK_MIN_WIDTH, scopeGridColumns, panelCardConfig } from "./layout.js";
+import { inheritScopeEntity } from "../../utils/media-editor-model.js";
 
 const PANEL_CLOSE_MS = 400;
 
@@ -47,9 +48,12 @@ class MateriaArtScope extends LitElement {
     return {
       entity,
       cards: [
-        { type: "custom:materia-media", entity, variant: "player" },
-        { type: "custom:materia-media-progress", entity, variant: "player" },
-        { type: "custom:materia-button-group", group: "transport", entity },
+        // Media cards inside take the scope's entity; none is repeated here.
+        { type: "custom:materia-media-header" },
+        { type: "custom:materia-media", variant: "player" },
+        { type: "custom:materia-media-progress", variant: "player" },
+        { type: "custom:materia-button-group", group: "transport" },
+        { type: "custom:materia-button-group", group: "toolbar" },
       ],
     };
   }
@@ -57,6 +61,14 @@ class MateriaArtScope extends LitElement {
   constructor() {
     super();
     this.addEventListener("materia-open-panel", (e) => this._onOpenPanel(e));
+    // Cards inside inherit the scope's volume settings (and player) unless
+    // they configure their own.
+    this.addEventListener("materia-volume-context", (e) => {
+      if (!this.config) return;
+      e.stopPropagation();
+      e.detail.volume = this.config.volume;
+      e.detail.entity = this.config.entity;
+    });
     this.addEventListener("materia-dismiss", (e) => {
       if (!this._panelId) return;
       e.stopPropagation();
@@ -68,7 +80,7 @@ class MateriaArtScope extends LitElement {
     if (!config.entity) throw new Error("entity is required");
     if (!Array.isArray(config.cards)) throw new Error("cards is required");
     this.config = { layout: "stack", gap: 16, background: true, panel_timeout: 10, ...config };
-    const sig = JSON.stringify(config.cards);
+    const sig = JSON.stringify([config.entity, config.cards]);
     if (this.__cardsSig !== sig) {
       this.__cardsSig = sig;
       this._cards = null;
@@ -82,7 +94,7 @@ class MateriaArtScope extends LitElement {
     const helpers = await loadCardHelpers();
     const els = await Promise.all(
       this.config.cards.map(async (c) => {
-        const el = await helpers.createCardElement(c);
+        const el = await helpers.createCardElement(inheritScopeEntity(c, this.config.entity));
         if (this.hass) el.hass = this.hass;
         return el;
       })

@@ -6,10 +6,10 @@ import {
   nextRepeat,
   visibleEdges,
   volumeSteps,
-  volumeKnobConfig,
 } from "../../utils/media.js";
 import { volumeRing, volumeRingStyles } from "../volume-ring/ring.js";
 import { SIZES } from "./styles.js";
+import { toolbarList } from "../../utils/media-editor-model.js";
 
 /**
  * The media configurations of materia-button-group:
@@ -38,7 +38,7 @@ export const MEDIA_GROUPS = new Set(["transport", "toolbar"]);
 const TOOLBAR_TYPES = new Set(["shuffle", "repeat", "volume"]);
 
 export function toolbarItems(config) {
-  const raw = Array.isArray(config.buttons) && config.buttons.length ? config.buttons : ["shuffle", "repeat", "volume"];
+  const raw = toolbarList(config.buttons);
   return raw.map((b) => (typeof b === "string" ? { type: b } : { ...b }));
 }
 
@@ -93,7 +93,7 @@ export function renderToolbar(el) {
   const { first, last } = visibleEdges(visible);
   if (first < 0) return html``;
   const solo = first === last;
-  const knob = volumeKnobConfig(config);
+  const knob = el._volumeKnobConfig();
 
   const button = (b, i) => {
     if (!visible[i]) return nothing;
@@ -175,7 +175,7 @@ export const MediaGroupMixin = (superClass) =>
 
     _mediaOpenVolume(e) {
       this._fireHaptic("light");
-      this._openSheet(e.currentTarget, volumeKnobConfig(this.config), undefined, "volume");
+      this._openSheet(e.currentTarget, this._volumeKnobConfig(), undefined, "volume");
     }
 
     /** A custom button with `card:` opens that card (in kiosk panel `panel:`, else a sheet). */

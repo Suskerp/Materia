@@ -1,22 +1,18 @@
+import { html } from "lit";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
+import "../../utils/media-editors.js";
 
-/** Shared by every editor that embeds a volume-knob config (`volume:` block). */
-export const VOLUME_FIELDS = [
-  {
-    name: "style",
-    selector: { select: { mode: "dropdown", options: [
-      { value: "knob", label: "Knob (turns freely, coasts)" },
-      { value: "arc", label: "Arc (270° dial with ticks)" },
-      { value: "tap", label: "Tap (level bar, for tablets)" },
-    ] } },
-  },
-  { name: "zones", label: "Zones (list of { entity, name })", selector: { object: {} } },
-  { name: "link_entity", label: "Zone link switch", selector: { entity: { domain: ["switch", "input_boolean"] } } },
-];
+const BLOCK_KEYS = ["zones", "link_entity", "style"];
 
+/** The knob's own config IS a volume block (zones, link_entity, style) at the top level. */
 class MateriaVolumeKnobEditor extends SmartEditorBase {
-  _formData() {
-    return { style: "knob", ...this._config };
+  _setBlock(block) {
+    const next = { ...this._config };
+    for (const k of BLOCK_KEYS) {
+      if (block?.[k] === undefined) delete next[k];
+      else next[k] = block[k];
+    }
+    this._commit(next);
   }
 
   get _sections() {
@@ -27,7 +23,18 @@ class MateriaVolumeKnobEditor extends SmartEditorBase {
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: "media_player" } } },
           { name: "name", label: "Title", selector: { text: {} } },
-          ...VOLUME_FIELDS,
+          {
+            name: "zones",
+            render: (_value, data) => html`<materia-volume-editor
+              .hass=${this.hass}
+              .value=${Object.fromEntries(BLOCK_KEYS.filter((k) => data[k] !== undefined).map((k) => [k, data[k]]))}
+              .defaultEntity=${data.entity}
+              @value-changed=${(e) => {
+                e.stopPropagation();
+                this._setBlock(e.detail.value);
+              }}
+            ></materia-volume-editor>`,
+          },
         ],
       },
     ];

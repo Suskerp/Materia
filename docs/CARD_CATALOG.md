@@ -54,6 +54,19 @@ present, else `volume_level` × 99; the `limit` attribute caps it.
 | Volume ring | `materia-volume-ring` | 48 px button that opens the volume panel. |
 | Stations | `materia-station-grid` | White square logos; the current one is ringed. |
 
+**Configure once, inherit everywhere.** Inside a `materia-art-scope`:
+- media cards without an `entity` take the scope's entity, also inside stacks;
+- the volume ring, the toolbar's volume button, the header's ring and the
+  kiosk volume panel use the scope's `volume:` block (`zones`,
+  `link_entity`, `style`) unless they have their own;
+- without any `volume:` block the volume panel has one zone, the card's own
+  entity, and zone names default to the friendly name.
+
+So a plain `group: toolbar` with only `entity` (or none, inside a scope)
+already has a working volume button. Every editor edits these settings with
+HA selectors (zones, link switch, style picker, button and station lists), so
+no YAML is needed in normal use.
+
 Buttons that open something (volume ring, toolbar volume, header stations,
 toolbar buttons with `card:`) open it in a **bottom sheet**. Inside a
 `materia-art-scope` with `layout: kiosk` that is at least 900 px wide, they
@@ -73,7 +86,30 @@ layout: stack            # stack | row | grid | kiosk
 columns: 2               # grid: a number or a grid-template-columns string
 gap: 16
 background: true         # false: colours only, no surface
+volume:                  # inherited by every volume button inside
+  zones:
+    - { entity: media_player.arcam_living, name: Living }
+    - { entity: media_player.arcam_eetkamer_keuken }      # name: the friendly name
+  link_entity: switch.arcam_zones_koppelen
+  style: knob            # knob | arc | tap
 cards: [ … ]
+```
+
+A phone player:
+
+```yaml
+type: custom:materia-art-scope
+entity: media_player.arcam_living
+volume:
+  zones: [ { entity: media_player.arcam_living, name: Living }, { entity: media_player.arcam_eetkamer_keuken } ]
+  link_entity: switch.arcam_zones_koppelen
+cards:
+  - type: custom:materia-media-header
+    stations: [ { name: Radio 1, image: /local/radio/radio1.png, action: script.radio_1 } ]
+  - { type: custom:materia-media, variant: player }
+  - { type: custom:materia-media-progress, variant: player }
+  - { type: custom:materia-button-group, group: transport }
+  - { type: custom:materia-button-group, group: toolbar }
 ```
 
 `grid` and `row` stack below 600 px. `kiosk` places the first card as the
@@ -92,27 +128,22 @@ padding: 32
 gap: 20
 panel_timeout: 10
 panels:
-  volume: { style: tap }
+  volume: { style: tap }   # the kiosk panel taps; phones keep the knob
+volume:
+  zones: [ { entity: media_player.arcam_living, name: Living }, { entity: media_player.arcam_eetkamer_keuken } ]
+  link_entity: switch.arcam_zones_koppelen
 cards:
-  - { type: custom:materia-media, entity: media_player.arcam_living, variant: player, art_size: fill, show_titles: false }
+  - { type: custom:materia-media, variant: player, art_size: fill, show_titles: false }
   - type: custom:materia-media-header
-    entity: media_player.arcam_living
     variant: kiosk
-    stations:
-      - { name: Radio 1, image: /local/radio/radio1.png, action: script.radio_1 }
-  - { type: custom:materia-media, entity: media_player.arcam_living, variant: player, show_art: false }
-  - { type: custom:materia-media-progress, entity: media_player.arcam_living, variant: player }
-  - { type: custom:materia-button-group, group: transport, entity: media_player.arcam_living }
+    stations: [ { name: Radio 1, image: /local/radio/radio1.png, action: script.radio_1 } ]
+  - { type: custom:materia-media, variant: player, show_art: false }
+  - { type: custom:materia-media-progress, variant: player }
+  - { type: custom:materia-button-group, group: transport }
   - type: custom:materia-button-group
     group: toolbar
-    entity: media_player.arcam_living
     align: start
     buttons: [shuffle, repeat, { type: volume, style: ring }]
-    volume:
-      zones:
-        - { entity: media_player.arcam_living, name: Living }
-        - { entity: media_player.arcam_eetkamer_keuken, name: Eetkamer & keuken }
-      link_entity: switch.arcam_zones_koppelen
 ```
 
 ### materia-media — `variant: player`

@@ -1,11 +1,5 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
-
-/** The `volume:` block shared by every element that opens the volume knob. */
-export const VOLUME_BLOCK_FIELD = {
-  name: "volume",
-  label: "Volume knob (entity, zones, link_entity, style)",
-  selector: { object: {} },
-};
+import { volumeOverrideSection } from "../../utils/media-editors.js";
 
 class MateriaVolumeRingEditor extends SmartEditorBase {
   get _sections() {
@@ -14,10 +8,14 @@ class MateriaVolumeRingEditor extends SmartEditorBase {
         title: "Content",
         icon: "mdi:card-text-outline",
         fields: [
-          { name: "entity", required: true, selector: { entity: { domain: "media_player" } } },
-          VOLUME_BLOCK_FIELD,
+          {
+            name: "entity",
+            label: "Speler (in een art scope: die van de scope)",
+            selector: { entity: { domain: "media_player" } },
+          },
         ],
       },
+      volumeOverrideSection(this),
     ];
   }
 }

@@ -373,6 +373,7 @@ export const DISABLED_FIELD = {
 /*    { name, label?, helper?, required?,                              */
 /*      selector,            // the friendly selector ({ icon:{} } …)   */
 /*      template?: true,     // adds a </> toggle → {{ template }}      */
+/*      render?: (value, data) => template  // a custom control        */
 /*      color?: true,        // friendly mode uses materia-color-picker */
 /*      context? }                                                     */
 /*                                                                     */
@@ -537,6 +538,10 @@ export class SmartEditorBase extends LitElement {
   }
 
   _renderField(field, data) {
+    // A field with its own control (a list editor, the volume block, …):
+    // render(value) returns the template; the control writes through
+    // _setField / _commit itself.
+    if (field.render) return html`<div class="field-block">${field.render(data[field.name], data)}</div>`;
     const value = effectiveEditorValue(this._config, data, field);
     this.__displayedFieldValues ??= new Map();
     this.__displayedFieldValues.set(field.name, value);

@@ -1,5 +1,5 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
-import { VOLUME_BLOCK_FIELD } from "../../elements/volume-ring/editor.js";
+import { stationsField, volumeOverrideSection } from "../../utils/media-editors.js";
 
 class MateriaMediaHeaderEditor extends SmartEditorBase {
   _formData() {
@@ -12,7 +12,11 @@ class MateriaMediaHeaderEditor extends SmartEditorBase {
         title: "Content",
         icon: "mdi:card-text-outline",
         fields: [
-          { name: "entity", required: true, selector: { entity: { domain: "media_player" } } },
+          {
+            name: "entity",
+            label: "Speler (in een art scope: die van de scope)",
+            selector: { entity: { domain: "media_player" } },
+          },
           {
             name: "variant",
             selector: { select: { mode: "dropdown", options: [
@@ -26,14 +30,12 @@ class MateriaMediaHeaderEditor extends SmartEditorBase {
         ],
       },
       {
-        title: "Sheets",
-        icon: "mdi:dock-bottom",
+        title: "Zenders",
+        icon: "mdi:radio",
         expanded: false,
-        fields: [
-          { name: "stations", label: "Stations (name, image, tap_action, match)", selector: { object: {} } },
-          VOLUME_BLOCK_FIELD,
-        ],
+        fields: [{ name: "stations", render: (value) => stationsField(this, value) }],
       },
+      volumeOverrideSection(this),
     ];
   }
 }

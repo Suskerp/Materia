@@ -1,7 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { SheetOpenerMixin } from "../../primitives/sheet.js";
-import { volumeKnobConfig } from "../../utils/media.js";
 import { t } from "../../utils/i18n.js";
 import { hostStyles, haCardReset } from "../../styles/card-styles.js";
 import { motionTokens } from "../../utils/motion.js";
@@ -69,12 +68,12 @@ class MateriaVolumeRing extends SheetOpenerMixin(ActionMixin(LitElement)) {
 
   _open(e) {
     this._fireHaptic("light");
-    this._openSheet(e.currentTarget, volumeKnobConfig(this.config), undefined, "volume");
+    this._openSheet(e.currentTarget, this._volumeKnobConfig(), undefined, "volume");
   }
 
   render() {
     if (!this.hass || !this.config) return html``;
-    const knob = volumeKnobConfig(this.config);
+    const knob = this._volumeKnobConfig();
     const s = this.hass.states[knob.entity];
     return html`<ha-card>
       <button

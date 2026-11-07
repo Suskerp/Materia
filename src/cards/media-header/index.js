@@ -1,7 +1,7 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { SheetOpenerMixin } from "../../primitives/sheet.js";
-import { isMediaOff, isLive, nextSource, visibleEdges, volumeKnobConfig } from "../../utils/media.js";
+import { isMediaOff, isLive, nextSource, visibleEdges } from "../../utils/media.js";
 import { t } from "../../utils/i18n.js";
 import { volumeRing } from "../../elements/volume-ring/ring.js";
 import "../../cards/volume-knob/index.js";
@@ -66,7 +66,7 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
 
   _openVolume(e) {
     this._fireHaptic("light");
-    this._openSheet(e.currentTarget, volumeKnobConfig(this.config), undefined, "volume");
+    this._openSheet(e.currentTarget, this._volumeKnobConfig(), undefined, "volume");
   }
 
   get _subtitle() {
@@ -103,7 +103,7 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
     const pair = [hasStations, showVolume];
     const { first, last } = visibleEdges(pair);
     const edge = (i) => `${i === first ? "first" : ""} ${i === last ? "last" : ""}`;
-    const knob = volumeKnobConfig(this.config);
+    const knob = this._volumeKnobConfig();
     return html`<ha-card>
       <div class="top">
         ${showSource

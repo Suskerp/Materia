@@ -1,4 +1,8 @@
+import { html } from "lit";
 import { MateriaExpanderEditor } from "../expander/editor.js";
+import { VOLUME_STYLE_SELECTOR } from "../../utils/media-editors.js";
+
+const PANEL_STYLE_LABEL = "Stijl van het volumepaneel (kiosk)";
 
 /** Reuses the expander's card list (add / edit / reorder child cards). */
 class MateriaArtScopeEditor extends MateriaExpanderEditor {
@@ -10,6 +14,17 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
     return this._config?.layout || "stack";
   }
 
+  /** panels.volume.style, edited as one select; other panel overrides are kept. */
+  _setPanelStyle(style) {
+    const panels = { ...(this._config.panels ?? {}) };
+    const volume = { ...(panels.volume ?? {}) };
+    if (style) volume.style = style;
+    else delete volume.style;
+    if (Object.keys(volume).length) panels.volume = volume;
+    else delete panels.volume;
+    this._setField("panels", Object.keys(panels).length ? panels : undefined);
+  }
+
   get _sections() {
     const layout = this._config?.layout || "stack";
     return [
@@ -17,7 +32,31 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
         title: "Content",
         icon: "mdi:card-text-outline",
         fields: [
-          { name: "entity", label: "Colours from (media player)", required: true, selector: { entity: { domain: "media_player" } } },
+          {
+            name: "entity",
+            label: "Speler (kleuren, en standaard voor de kaarten erin)",
+            required: true,
+            selector: { entity: { domain: "media_player" } },
+          },
+        ],
+      },
+      {
+        title: "Volume",
+        icon: "mdi:volume-high",
+        expanded: false,
+        fields: [
+          {
+            name: "volume",
+            render: (value, data) => html`<materia-volume-editor
+              .hass=${this.hass}
+              .value=${value}
+              .defaultEntity=${data.entity}
+              @value-changed=${(e) => {
+                e.stopPropagation();
+                this._setField("volume", e.detail.value);
+              }}
+            ></materia-volume-editor>`,
+          },
         ],
       },
       {
@@ -39,14 +78,36 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
           { name: "gap", label: "Gap (px)", selector: { number: { min: 0, max: 64, mode: "box" } } },
           { name: "padding", label: "Padding (px)", selector: { number: { min: 0, max: 64, mode: "box" } } },
           { name: "background", label: "Draw the surface", selector: { boolean: {} } },
-          ...(layout === "kiosk"
-            ? [
-                { name: "panel_timeout", label: "Close the side panel after (s, 0 = never)", selector: { number: { min: 0, max: 120, mode: "box" } } },
-                { name: "panels", label: "Panel overrides (per panel id)", selector: { object: {} } },
-              ]
-            : []),
         ],
       },
+      ...(layout === "kiosk"
+        ? [
+            {
+              title: "Kiosk panel",
+              icon: "mdi:dock-right",
+              fields: [
+                {
+                  name: "panel_timeout",
+                  label: "Sluit het paneel na (s, 0 = nooit)",
+                  selector: { number: { min: 0, max: 60, step: 1, mode: "slider", unit_of_measurement: "s" } },
+                },
+                {
+                  name: "panels",
+                  render: (value) => html`<ha-selector
+                    .hass=${this.hass}
+                    .selector=${VOLUME_STYLE_SELECTOR}
+                    .label=${PANEL_STYLE_LABEL}
+                    .value=${value?.volume?.style ?? this._config.volume?.style ?? "knob"}
+                    @value-changed=${(e) => {
+                      e.stopPropagation();
+                      this._setPanelStyle(e.detail.value);
+                    }}
+                  ></ha-selector>`,
+                },
+              ],
+            },
+          ]
+        : []),
     ];
   }
 

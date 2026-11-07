@@ -2,7 +2,7 @@ import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
 import { PRESETS } from "./styles.js";
-import { VOLUME_BLOCK_FIELD } from "../volume-ring/editor.js";
+import { volumeOverrideSection } from "../../utils/media-editors.js";
 
 class MateriaButtonGroupEditor extends SmartEditorBase {
   static properties = {
@@ -88,7 +88,11 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
         icon: "mdi:tune",
         fields: [
           this._groupField,
-          { name: "entity", required: true, selector: { entity: { domain: "media_player" } } },
+          {
+            name: "entity",
+            label: "Speler (in een art scope: die van de scope)",
+            selector: { entity: { domain: "media_player" } },
+          },
           ...(group === "transport"
             ? [{ name: "size", label: "Height (default 88 px)", selector: { select: { mode: "dropdown", options: [
                 { value: "m", label: "M (56dp)" },
@@ -96,11 +100,35 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
                 { value: "xl", label: "XL (136dp)" },
               ] } } }]
             : [
-                { name: "buttons", label: "Buttons (shuffle, repeat, volume, or { icon, label, tap_action })", selector: { object: {} } },
-                VOLUME_BLOCK_FIELD,
+                { name: "align", label: "Uitlijning", selector: { select: { mode: "dropdown", options: [
+                  { value: "center", label: "Midden" },
+                  { value: "start", label: "Links" },
+                ] } } },
               ]),
         ],
       },
+      ...(group === "toolbar"
+        ? [
+            {
+              title: "Knoppen",
+              icon: "mdi:gesture-tap-button",
+              fields: [
+                {
+                  name: "buttons",
+                  render: (value) => html`<materia-toolbar-buttons-editor
+                    .hass=${this.hass}
+                    .value=${value}
+                    @value-changed=${(e) => {
+                      e.stopPropagation();
+                      this._setField("buttons", e.detail.value);
+                    }}
+                  ></materia-toolbar-buttons-editor>`,
+                },
+              ],
+            },
+            volumeOverrideSection(this),
+          ]
+        : []),
     ];
   }
 

@@ -3,6 +3,7 @@ import { motionTokens } from "../utils/motion.js";
 import { hostStyles } from "../styles/card-styles.js";
 import { ART_VARIABLES } from "../utils/art-palette.js";
 import { loadCardHelpers } from "../styles/shared.js";
+import { volumeKnobConfig } from "../utils/media.js";
 
 /**
  * <materia-sheet> — M3 bottom sheet that hosts any card (the volume knob, the
@@ -245,6 +246,18 @@ export function requestPanel(origin, id, cardConfig) {
 }
 
 /**
+ * What an enclosing materia-art-scope offers its cards: its `volume:` block
+ * and its entity ({} when there is no scope, or before `el` is connected).
+ */
+export function volumeContext(el) {
+  const detail = { volume: undefined, entity: undefined };
+  if (el.isConnected) {
+    el.dispatchEvent(new CustomEvent("materia-volume-context", { detail, bubbles: true, composed: true }));
+  }
+  return detail;
+}
+
+/**
  * Mixin for elements that open a card in a kiosk panel or a bottom sheet:
  * forwards every hass update to an open sheet, tracks which panel of its
  * host is open (for the buttons' active state) and closes its sheet when the
@@ -254,6 +267,11 @@ export const SheetOpenerMixin = (superClass) =>
   class extends superClass {
     // Lit merges reactive properties up the class chain on finalize.
     static properties = { _openPanel: { state: true } };
+
+    /** Volume panel config: own `volume:` block, else the art scope's, else one zone. */
+    _volumeKnobConfig() {
+      return volumeKnobConfig(this.config, this.config?.volume ? undefined : volumeContext(this));
+    }
 
     /** Panel `id` of an enclosing kiosk host when there is one, else a bottom sheet. */
     _openSheet(origin, cardConfig, heading, id = null) {
