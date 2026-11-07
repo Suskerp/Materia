@@ -2,7 +2,7 @@ import { html } from "lit";
 import { MateriaExpanderEditor } from "../expander/editor.js";
 import { VOLUME_STYLE_SELECTOR } from "../../utils/media-editors.js";
 
-const PANEL_STYLE_LABEL = "Stijl van het volumepaneel (kiosk)";
+const PANEL_STYLE_LABEL = "Volume panel style";
 
 const PANEL_TIMEOUT_FIELD = {
   name: "panel_timeout",
@@ -29,6 +29,23 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
     if (Object.keys(volume).length) panels.volume = volume;
     else delete panels.volume;
     this._setField("panels", Object.keys(panels).length ? panels : undefined);
+  }
+
+  /** Knob or slider in the panel: panels.volume.style, as one select. */
+  _panelStyleField() {
+    return {
+      name: "panels",
+      render: (value) => html`<ha-selector
+        .hass=${this.hass}
+        .selector=${VOLUME_STYLE_SELECTOR}
+        .label=${PANEL_STYLE_LABEL}
+        .value=${value?.volume?.style ?? this._config.volume?.style ?? "knob"}
+        @value-changed=${(e) => {
+          e.stopPropagation();
+          this._setPanelStyle(e.detail.value);
+        }}
+      ></ha-selector>`,
+    };
   }
 
   get _sections() {
@@ -95,7 +112,7 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
                     { value: "inline", label: "In place of the cards (with back)" },
                   ] } },
                 },
-                ...(this._config?.panel_mode === "inline" ? [PANEL_TIMEOUT_FIELD] : []),
+                ...(this._config?.panel_mode === "inline" ? [PANEL_TIMEOUT_FIELD, this._panelStyleField()] : []),
               ]),
         ],
       },
@@ -107,19 +124,7 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
               fields: [
                 { name: "fill", label: "Vul het scherm (hoogte)", selector: { boolean: {} } },
                 { ...PANEL_TIMEOUT_FIELD, label: "Close the panel after (s without a touch, 0 = never)" },
-                {
-                  name: "panels",
-                  render: (value) => html`<ha-selector
-                    .hass=${this.hass}
-                    .selector=${VOLUME_STYLE_SELECTOR}
-                    .label=${PANEL_STYLE_LABEL}
-                    .value=${value?.volume?.style ?? this._config.volume?.style ?? "knob"}
-                    @value-changed=${(e) => {
-                      e.stopPropagation();
-                      this._setPanelStyle(e.detail.value);
-                    }}
-                  ></ha-selector>`,
-                },
+                this._panelStyleField(),
               ],
             },
           ]
