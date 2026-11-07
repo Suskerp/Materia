@@ -260,7 +260,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     if (this._style === "tap") {
       dial.setAttribute("aria-valuenow", String(Math.round(v)));
       // The bar spans 0 … the limit: the range above it can't be used, so it isn't drawn.
-      $(".tfill").style.height = `${off ? 0 : Math.min(1, v / limit) * 100}%`;
+      dial.style.setProperty("--p", String(off ? 0 : Math.max(0, Math.min(1, v / limit))));
       $(".limlabel").textContent =
         limit < MAX_STEPS && Math.round(v) >= limit ? t("media_limit", this.hass, { value: limit }) : "";
       return;
@@ -436,7 +436,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
             @click=${this._tapBar}
             @keydown=${this._key}
           >
-            <span class="tfill"></span>
+            <span class="tin"></span><span class="thandle"></span><span class="tfill"></span>
           </button>
           <div class="treadout">
             <span class="num"></span>

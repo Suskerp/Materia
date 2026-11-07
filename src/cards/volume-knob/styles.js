@@ -416,28 +416,74 @@ export const styles = [
       padding: 8px 0;
     }
 
+    /* M3 Expressive slider, vertical: active track (bottom) | 6 px gap |
+       4 px handle, a little wider than the track | 6 px gap | inactive track
+       with a stop dot at its end. Outer corners round, inner corners 4 px.
+       --p (0 … 1) is set from JS; the parts transition on its result. */
     .tbar {
+      --p: 0;
+      --gap: 6px;
+      --hw: 4px;
       width: 64px;
       flex: none;
       position: relative;
-      overflow: hidden;
       display: block;
-      border-radius: 22px;
-      background: var(--mx-s3);
+      background: none;
+      overflow: visible;
       touch-action: manipulation;
     }
 
-    .tfill {
+    .tfill,
+    .tin,
+    .thandle {
       position: absolute;
+      transition:
+        height 0.18s ease-out,
+        bottom 0.18s ease-out;
+    }
+
+    .tfill {
       left: 0;
       right: 0;
       bottom: 0;
-      height: 0;
+      height: max(0px, calc(var(--p) * 100% - var(--gap) - var(--hw) / 2));
+      border-radius: 4px 4px 22px 22px;
       background: var(--mx-p);
-      transition: height 0.18s ease-out;
     }
 
-    .muted .tfill {
+    .tin {
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: min(100%, calc(var(--p) * 100% + var(--gap) + var(--hw) / 2));
+      border-radius: 22px 22px 4px 4px;
+      background: var(--mx-s3);
+    }
+
+    /* Stop indicator at the end of the inactive track. */
+    .tin::after {
+      content: "";
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      width: 4px;
+      height: 4px;
+      margin-left: -2px;
+      border-radius: 2px;
+      background: var(--mx-p);
+    }
+
+    .thandle {
+      left: -8px;
+      right: -8px;
+      height: var(--hw);
+      bottom: calc(var(--p) * 100% - var(--hw) / 2);
+      border-radius: 2px;
+      background: var(--mx-p);
+    }
+
+    .muted .tfill,
+    .muted .thandle {
       background: var(--md-sys-color-outline, var(--mx-onv));
     }
 

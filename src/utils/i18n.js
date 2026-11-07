@@ -434,7 +434,7 @@ export const STRINGS = {
   media_back: { en: "Back", nl: "Terug" },
   media_close: { en: "Close", nl: "Sluiten" },
   media_linked: { en: "linked {offset}", nl: "gekoppeld {offset}" },
-  media_unlinked: { en: "separate", nl: "los" },
+  media_unlinked: { en: "unlinked", nl: "ontkoppeld" },
 };
 
 function primaryTag(lang) {
