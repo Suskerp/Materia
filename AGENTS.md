@@ -24,7 +24,7 @@ change. It is the operating manual, and its traps fail silently.
 
 ## UI work
 
-- **Read [docs/M3_EXPRESSIVE.md](docs/M3_EXPRESSIVE.md) before any UI change.**
+- **Before any UI change, read §10–§12 of [docs/M3_EXPRESSIVE.md](docs/M3_EXPRESSIVE.md)** (checklist, Materia mapping, known divergences); use the rest as reference.
   It covers colour roles, the type, shape and motion tokens, component specs
   and the review checklist. Look a value up there or in the spec. Never
   improvise one.

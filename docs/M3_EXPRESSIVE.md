@@ -108,7 +108,7 @@ and the decisions agents most often get wrong.
 | Accent | `--md-sys-color-{primary,secondary,tertiary,error}` with `--md-sys-color-on-*` | Ink, strokes and fills with no text on them, or a filled button's container paired with its `on-*`. |
 | Container | `--md-sys-color-*-container` with `--md-sys-color-on-*-container` | Any filled surface carrying text or icons. The pair carries a contrast guarantee. |
 | Fixed **[U]** | `--md-sys-color-{primary,secondary,tertiary}-fixed`, `*-fixed-dim`, `on-*-fixed`, `on-*-fixed-variant` | Colours that keep the **same tone in light and dark** themes. |
-| Surface ladder | `--md-sys-color-surface-container-{lowest,low,,high,highest}` | Elevation *inside* a card. |
+| Surface ladder | `--md-sys-color-surface-container`, `-lowest`, `-low`, `-high`, `-highest` | Elevation *inside* a card. |
 | Surface ends | `--md-sys-color-surface`, `surface-dim`, `surface-bright` **[U]** | Backgrounds. Rarely needed in a card. |
 | Inverse | `--md-sys-color-inverse-surface`, `inverse-on-surface`, `inverse-primary` | Tooltips, the slider value indicator **[T]**, snackbars. |
 | Outline | `--md-sys-color-outline`, `outline-variant` | Borders. Expressive outlined buttons use `outline-variant`. Draw unknown values in `outline-variant` (Trap 18). |
@@ -269,7 +269,7 @@ buttons is:
 | Resting, round variant | full |
 | Resting, square variant | per size: M → large 16, L/XL → extra-large 28, XS/S → medium 12 |
 | **Pressed** | a *smaller* radius that is the same for round and square (XS/S 8, M 12, L/XL 16) |
-| Selected (toggle) | the inverse of resting: round becomes square, square becomes round |
+| Selected (toggle) | round becomes square **[T]**; square becomes round **[U]** (spec prose; Compose's default checked shape is the square) |
 
 On the web, a corner morph between rounded rectangles is just a
 `border-radius` transition:
@@ -383,7 +383,7 @@ time as the duration. With mass 1, settling to within 0.2% gives the following
 | expressive default spatial | ≈ 410 ms | 1.5 % |
 | expressive slow spatial | ≈ 570 ms | 1.5 % |
 | standard fast / default / slow spatial | ≈ 155 / 220 / 335 ms | 0.15 % |
-| fast / default / slow effects | ≈ 140 / 210 / 300 ms | 0 |
+| fast / default / slow effects | ≈ 140 / 210 / 300 ms (0.5 % settle; motion.js uses 150 / 233 / 329 ms at a tighter threshold, keep those) | 0 |
 
 Only **expressive fast spatial** visibly bounces. Default and slow expressive
 settle with barely any overshoot. They feel softer, not springier.
@@ -409,8 +409,11 @@ Rules:
 - Never pair a spring's `-easing` with a duration you chose yourself. A
   `linear()` curve stretched to a different duration is a different spring.
 - `linear()` needs Chrome 113, Firefox 112 or Safari 17.2. The HA companion apps
-  on older iOS will ignore the whole declaration. If that matters, add a
-  `cubic-bezier` fallback declaration before it.
+  on older iOS will ignore the whole declaration. A `cubic-bezier` fallback
+  declaration placed before it only helps for literal values: a `var()`-based
+  declaration always parses, wins the cascade and then drops to no easing. For
+  tokens, put the fallback inside motion.js, e.g. under
+  `@supports not (transition-timing-function: linear(0, 1))`.
 - **Interruption.** A real spring retargets from its current velocity, but a CSS
   transition restarts from the current *value* with zero velocity. For drags,
   drive position directly from the pointer, and use the spring only for the
@@ -563,9 +566,11 @@ is animatable:
 .group > .pressed { flex-grow: 1.15; }
 ```
 
-This is only exact for equal-width (`flex-basis: 0`) buttons. For
-content-sized buttons, measure the widths and animate them with WAAPI.
-Neighbours shrinking slightly is part of the effect. Do not compensate for it.
+This is an approximation: with n equal items, `flex-grow: 1.15` widens the
+pressed button by 0.15/(n+0.15) (≈ 9.5 % for three) and shrinks all siblings,
+not only its neighbours, whereas Compose grows 15 % and takes the space from the
+adjacent buttons. For content-sized buttons, measure the widths and animate them
+with WAAPI. Neighbours shrinking slightly is part of the effect.
 
 **Connected button group.** This replaces the deprecated segmented button.
 
@@ -769,7 +774,7 @@ foundation for this.
 
 - **Navigation bar:** shorter in M3E. Items can show the icon above the label
   (narrow screens) or beside it (medium screens). The active indicator is a
-  pill behind the icon. ("Short navigation bar", Compose 1.5.)
+  pill behind the icon. ("Short navigation bar".)
 - **Navigation rail:** collapsed and expanded states. The expanded rail
   replaces the navigation drawer in many layouts. The active item's indicator
   grows to hold the label. `materia-tabs` (vertical tab rail) follows this
@@ -855,18 +860,18 @@ Use this when reviewing a card or element.
 
 **Don't**
 
-- [ ] Add a new card where an option on an existing one would do (HANDOVER §1).
-- [ ] Use explanatory small text, helper sentences or captions in production
+- Add a new card where an option on an existing one would do (HANDOVER §1).
+- Use explanatory small text, helper sentences or captions in production
       UI. Labels and state words only.
-- [ ] Use `999px` on a shape with mixed corner sizes.
-- [ ] Use literal `cubic-bezier(...)` or `ms` values for state changes, or pair
+- Use `999px` on a shape with mixed corner sizes.
+- Use literal `cubic-bezier(...)` or `ms` values for state changes, or pair
       a spring easing with your own duration.
-- [ ] Use `transform: scale()` to change a component's layout size.
-- [ ] Use a segmented button, bottom app bar or speed dial (§8.13).
-- [ ] Use a shape from the 35-shape library as a control's container.
-- [ ] Put a spinner on something that has a known end (HANDOVER §4.4).
-- [ ] Add more than one wavy, morphing or looping animation visible per card.
-- [ ] Put a backtick anywhere inside a `css` template (Trap 11).
+- Use `transform: scale()` to change a component's layout size.
+- Use a segmented button, bottom app bar or speed dial (§8.13).
+- Use a shape from the 35-shape library as a control's container.
+- Put a spinner on something that has a known end (HANDOVER §4.4).
+- Add more than one wavy, morphing or looping animation visible per card.
+- Put a backtick anywhere inside a `css` template (Trap 11).
 
 ---
 
