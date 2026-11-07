@@ -199,7 +199,11 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
   get _subtitle() {
     const s = this._stateObj;
     const a = s?.attributes ?? {};
-    const zone = this._zoneName;
+    // The zone name only says something when the zones differ (one on, one
+    // off); with both off or both on it is noise.
+    const zones = this._powerZones;
+    const differ = zones.length > 1 && new Set(zones.map((z) => isMediaOff(this.hass.states[z.entity]))).size > 1;
+    const zone = differ ? this._zoneName : null;
     if (isMediaOff(s)) return [t("state_off", this.hass), zone].filter(Boolean).join(" · ");
     const { appChip } = nowPlayingText({
       source: a.source ?? a.input,

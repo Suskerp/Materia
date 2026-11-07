@@ -17,11 +17,22 @@ const SHAPES = [
   { n: 6, a: 0.13 }, // flower
   { n: 9, a: 0.07 }, // soft burst
 ];
-const SEGMENT_S = 6; // one shape change every 6 s
-const MORPH_S = 2.4; // of which 2.4 s morphing
+const SEGMENT_S = 6; // one shape to the next every 6 s, morphing the whole time
 const STEPS = 180;
 
-const ease = (x) => 0.5 - 0.5 * Math.cos(Math.PI * x);
+/**
+ * Shape blend at time `t` (s): a continuous walk through SHAPES with no pause
+ * or jump at the segment edges. `lag` (in segments) offsets a second layer.
+ */
+function shapeAt(t, lag = 0) {
+  const u = Math.max(0, t / SEGMENT_S - lag);
+  const i = Math.floor(u);
+  return {
+    s1: SHAPES[i % SHAPES.length],
+    s2: SHAPES[(i + 1) % SHAPES.length],
+    k: u - i,
+  };
+}
 
 function morphPath(ctx, cx, cy, r, s1, s2, k, rot) {
   ctx.beginPath();
@@ -113,16 +124,14 @@ class MateriaShapeMorph extends HTMLElement {
     const c = Math.min(w, h);
     const cx = w / 2;
     const cy = h / 2;
-    const i = Math.floor(t / SEGMENT_S) % SHAPES.length;
-    const k = ease(Math.min(1, (t % SEGMENT_S) / MORPH_S));
-    const s1 = SHAPES[i];
-    const s2 = SHAPES[(i + 1) % SHAPES.length];
+    const front = shapeAt(t);
+    const back = shapeAt(t, 0.5); // half a shape behind, so the layers never match
     ctx.clearRect(0, 0, w, h);
     ctx.fillStyle = this._colors.back;
-    morphPath(ctx, cx + c * 0.04, cy + c * 0.05, c * 0.34, s2, s1, k, -t * 0.05);
+    morphPath(ctx, cx + c * 0.04, cy + c * 0.05, c * 0.34, back.s1, back.s2, back.k, -t * 0.05);
     ctx.fill();
     ctx.fillStyle = this._colors.front;
-    morphPath(ctx, cx, cy, c * 0.3, s1, s2, k, t * 0.08);
+    morphPath(ctx, cx, cy, c * 0.3, front.s1, front.s2, front.k, t * 0.08);
     ctx.fill();
     ctx.fillStyle = this._colors.back;
     ctx.beginPath();
