@@ -133,7 +133,13 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     this._w = bar.clientWidth;
     if (!this._ro) {
       this._ro = new ResizeObserver((entries) => {
-        this._w = entries[0].contentRect.width;
+        const w = Math.round(entries[0].contentRect.width);
+        if (w === this._w) return;
+        this._w = w;
+        // The wave path, track end and stop dot are drawn for this width:
+        // redraw. (First measured while hidden or before the layout settled,
+        // they would otherwise keep that size.)
+        this.requestUpdate();
       });
     }
     this._ro.disconnect();
