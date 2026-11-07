@@ -436,6 +436,8 @@ export const STRINGS = {
   media_power: { en: "Power", nl: "Aan/uit" },
   media_all_off: { en: "All off", nl: "Alles uit" },
   media_all_on: { en: "All on", nl: "Alles aan" },
+  media_turning_on: { en: "Starting…", nl: "Opstarten…" },
+  media_turning_off: { en: "Switching off…", nl: "Uitschakelen…" },
   media_back: { en: "Back", nl: "Terug" },
   media_close: { en: "Close", nl: "Sluiten" },
   media_linked: { en: "linked {offset}", nl: "gekoppeld {offset}" },

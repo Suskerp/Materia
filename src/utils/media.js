@@ -184,6 +184,15 @@ export function holdSkipButtons(hold, { prev, next }, now = Date.now(), holdMs =
   return { prev, next, hold: null };
 }
 
+/**
+ * "turning_on" / "turning_off" while a player is on its way (an Arcam waking
+ * from standby takes seconds), else null. Read from the `transition` attribute.
+ */
+export function powerTransition(stateObj) {
+  const v = stateObj?.attributes?.transition;
+  return v === "turning_on" || v === "turning_off" ? v : null;
+}
+
 /** Kiosk height: from the scope's top to the bottom of the visible viewport. */
 export function availableHeight(viewportHeight, top) {
   return Math.max(0, Math.round(viewportHeight - Math.max(0, top)));

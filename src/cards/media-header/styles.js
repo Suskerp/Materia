@@ -150,6 +150,24 @@ export const styles = [
       color: var(--mx-err);
     }
 
+    /* Starting up / switching off: a slow pulse until the player confirms. */
+    .power.busy ha-icon {
+      animation: power-busy 1.2s ease-in-out infinite;
+    }
+
+    @keyframes power-busy {
+      50% {
+        opacity: 0.35;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .power.busy ha-icon {
+        animation: none;
+        opacity: 0.6;
+      }
+    }
+
     .power.open {
       background: var(--mx-sc);
     }

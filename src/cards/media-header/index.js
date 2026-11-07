@@ -1,7 +1,7 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { SheetOpenerMixin } from "../../primitives/sheet.js";
-import { isMediaOff, isLive, nextSource, visibleEdges, nowPlayingText, sameText } from "../../utils/media.js";
+import { isMediaOff, isLive, nextSource, visibleEdges, nowPlayingText, sameText, powerTransition } from "../../utils/media.js";
 import { t } from "../../utils/i18n.js";
 import { volumeRing } from "../../elements/volume-ring/ring.js";
 import "../../cards/volume-knob/index.js";
@@ -173,8 +173,9 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
 
   _powerButton(cls = "iconbtn") {
     const anyOn = this._powerZones.some((z) => !isMediaOff(this.hass.states[z.entity]));
+    const busy = this._powerZones.some((z) => powerTransition(this.hass.states[z.entity]));
     return html`<button
-      class="${cls} power ${anyOn ? "on" : ""} ${this._power ? "open" : ""}"
+      class="${cls} power ${anyOn ? "on" : ""} ${busy ? "busy" : ""} ${this._power ? "open" : ""}"
       aria-label=${t("media_power", this.hass)}
       aria-haspopup="menu"
       aria-expanded=${this._power ? "true" : "false"}
@@ -204,6 +205,8 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
     const zones = this._powerZones;
     const differ = zones.length > 1 && new Set(zones.map((z) => isMediaOff(this.hass.states[z.entity]))).size > 1;
     const zone = differ ? this._zoneName : null;
+    const transition = powerTransition(s);
+    if (transition) return t(transition === "turning_on" ? "media_turning_on" : "media_turning_off", this.hass);
     if (isMediaOff(s)) return [t("state_off", this.hass), zone].filter(Boolean).join(" · ");
     const { appChip } = nowPlayingText({
       source: a.source ?? a.input,

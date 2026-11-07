@@ -2,7 +2,7 @@ import "../shape-morph/index.js";
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
-import {
+import { powerTransition,
   isLive,
   isMediaOff,
   nowPlayingText,
@@ -270,7 +270,14 @@ class MateriaMedia extends ActionMixin(LitElement) {
       artist: a.media_artist,
       album: a.media_album_name,
     });
-    const title = this.config.name ? this._title : off ? t("state_off", this.hass) : np.title;
+    const transition = powerTransition(s);
+    const title = this.config.name
+      ? this._title
+      : transition
+        ? t(transition === "turning_on" ? "media_turning_on" : "media_turning_off", this.hass)
+        : off
+          ? t("state_off", this.hass)
+          : np.title;
     const subtitle = this.config.subtitle ? this._subtitle : off ? "" : np.subtitle;
     const app = this.config.show_app !== false && !off && !same(np.appChip, title) ? np.appChip : null;
     return html`
