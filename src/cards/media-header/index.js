@@ -116,6 +116,18 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
     this._closePowerMenu();
   }
 
+  updated(changed) {
+    super.updated?.(changed);
+    const menu = this.renderRoot.querySelector(".pmenu");
+    if (menu && !menu.matches(":popover-open")) {
+      try {
+        menu.showPopover();
+      } catch {
+        /* no popover support: it stays a fixed element */
+      }
+    }
+  }
+
   _setZonePower(entity, on) {
     this._fireHaptic("light");
     this._callService("media_player", on ? "turn_on" : "turn_off", { entity_id: entity });
@@ -134,7 +146,9 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
     const zones = this._powerZones;
     const anyOn = zones.some((z) => !isMediaOff(this.hass.states[z.entity]));
     const { top, left, width } = this._power;
-    return html`<div class="pmenu" role="menu" style="top:${top}px;left:${left}px;width:${width}px;">
+    // popover: shown in the top layer, so no transformed or clipping ancestor
+    // (a swipe card, an art scope) can hide or shift it.
+    return html`<div class="pmenu" popover="manual" role="menu" style="top:${top}px;left:${left}px;width:${width}px;">
       ${zones.map((z) => {
         const on = !isMediaOff(this.hass.states[z.entity]);
         return html`<button

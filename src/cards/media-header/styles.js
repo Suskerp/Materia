@@ -164,6 +164,10 @@ export const styles = [
 
     .pmenu {
       position: fixed;
+      inset: auto;
+      margin: 0;
+      border: none;
+      overflow: visible;
       z-index: 10;
       padding: 6px 0;
       border-radius: 16px;
