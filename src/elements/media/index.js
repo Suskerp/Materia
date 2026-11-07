@@ -88,6 +88,7 @@ class MateriaMedia extends ActionMixin(LitElement) {
     super.disconnectedCallback();
     clearTimeout(this._beatTimer);
     clearTimeout(this._fitHold);
+    this._fitBound = null;
     this._artRo?.disconnect();
     this._artWatched = null;
     window.removeEventListener("resize", this._onArtResize);
@@ -138,12 +139,21 @@ class MateriaMedia extends ActionMixin(LitElement) {
     const current = art.getBoundingClientRect().height;
     const spare = this._spareBelow(unit);
     const size = fitArtSize({ current, max, spare: spare == null ? null : spare - ART_FIT_MARGIN });
+    // Hysteresis: shrink whenever it overflows, but grow only for clear room,
+    // and not right after a shrink, so it can't settle into a back-and-forth.
+    const growing = this._artPx != null && size > this._artPx;
+    if (growing && (size - this._artPx < 24 || Date.now() - (this._shrunkAt ?? 0) < 5000)) {
+      clearTimeout(this._fitHold);
+      this._fitHold = null;
+      return;
+    }
     if (size === this._artPx) {
       clearTimeout(this._fitHold);
       this._fitHold = null;
       return;
     }
     const apply = () => {
+      if (this._artPx != null && size < this._artPx) this._shrunkAt = Date.now();
       this._artPx = size;
       this.style.setProperty("--mm-auto-size", `${size}px`);
     };
@@ -160,6 +170,15 @@ class MateriaMedia extends ActionMixin(LitElement) {
   /** Room below `unit` in what bounds it (negative = overflow), or null when unbounded. */
   _spareBelow(unit) {
     const rect = unit.getBoundingClientRect();
+    // Once found, the bounding ancestor is kept: whether it "clips" depends on
+    // the cover's own size, so re-deciding every time flipped between two
+    // references and made the cover pulse between two sizes.
+    const bound = this._fitBound;
+    if (bound?.isConnected) {
+      const box = bound.getBoundingClientRect();
+      const top = rect.top - box.top + bound.scrollTop;
+      return bound.clientHeight - (top + rect.height);
+    }
     for (let node = unit.parentNode || unit.host; node; node = node.parentNode || node.host) {
       if (!(node instanceof Element) || node === document.body || node === document.documentElement) continue;
       const oy = getComputedStyle(node).overflowY;
@@ -170,6 +189,7 @@ class MateriaMedia extends ActionMixin(LitElement) {
       if (node.scrollHeight <= node.clientHeight + 1 && box.bottom - rect.bottom < 1) continue;
       const top = rect.top - box.top + node.scrollTop;
       if (top > node.clientHeight / 2) return null;
+      this._fitBound = node;
       return node.clientHeight - (top + rect.height);
     }
     const top = rect.top + window.scrollY;

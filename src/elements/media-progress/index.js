@@ -103,6 +103,15 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     const live =
       this.config.live === true || (stated ? isLive(s) : (playing && this._live) || (this._player && isLive(s)));
 
+    // Optimistic seek: continue from where the drag ended until the player's own
+    // position agrees (within 3 s) or 5 s have passed.
+    const seek = this._pendingSeek;
+    if (seek) {
+      const target = seek.pos + (playing ? (Date.now() - seek.at) / 1000 : 0);
+      if (Date.now() > seek.until || Math.abs(pos - target) < 3) this._pendingSeek = null;
+      else pos = target;
+    }
+
     if (dur) pos = Math.min(pos, dur);
     return { pos: Math.max(0, pos), dur, playing, live };
   }
@@ -140,7 +149,9 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     this._w = bar.clientWidth;
     if (!this._ro) {
       this._ro = new ResizeObserver((entries) => {
-        const w = Math.round(entries[0].contentRect.width);
+        // clientWidth, as _barWidth() reads: two measures that differ by padding
+        // would keep overriding each other and redraw every frame.
+        const w = entries[0].target.clientWidth;
         if (w === this._w) return;
         this._w = w;
         // The wave path, track end and stop dot are drawn for this width:
@@ -307,6 +318,7 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     if (this._dragPos == null) return;
     const seek = Math.round(this._dragPos);
     this._dragPos = null;
+    this._pendingSeek = { pos: seek, at: Date.now(), until: Date.now() + 5000 };
     this._callService("media_player", "media_seek", { entity_id: this.config.entity, seek_position: seek });
   }
 
