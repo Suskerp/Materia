@@ -3,7 +3,7 @@ import { stationsField, volumeOverrideSection } from "../../utils/media-editors.
 
 class MateriaMediaHeaderEditor extends SmartEditorBase {
   _formData() {
-    return { show_source: true, show_volume: true, ...this._config };
+    return { show_source: true, show_volume: true, show_power: true, ...this._config };
   }
 
   get _sections() {
@@ -28,6 +28,7 @@ class MateriaMediaHeaderEditor extends SmartEditorBase {
           { name: "stations_label", label: "Label van de zenderknop (standaard: vertaald)", selector: { text: {} } },
           { name: "show_source", label: "Source button", selector: { boolean: {} } },
           { name: "show_volume", label: "Volume ring", selector: { boolean: {} } },
+          { name: "show_power", label: "Power (menu per zone)", selector: { boolean: {} } },
         ],
       },
       {

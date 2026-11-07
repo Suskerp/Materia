@@ -25,6 +25,8 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
+    /** Viewport position of the open power menu, or null when closed. */
+    _power: { state: true },
   };
 
   static styles = styles;
@@ -68,6 +70,101 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
   _openVolume(e) {
     this._fireHaptic("light");
     this._openSheet(e.currentTarget, this._volumeKnobConfig(), undefined, "volume");
+  }
+
+  /* ---- power: a button that opens a menu with a switch per zone + "all off/on" ---- */
+
+  /** The zones the power menu switches: the volume zones, else this player alone. */
+  get _powerZones() {
+    const zones = this._volumeKnobConfig().zones;
+    return Array.isArray(zones) && zones.length ? zones : [{ entity: this.config.entity }];
+  }
+
+  _zoneLabel(z) {
+    return z.name ?? this.hass.states[z.entity]?.attributes?.friendly_name ?? z.entity;
+  }
+
+  _togglePowerMenu(e) {
+    this._fireHaptic("light");
+    if (this._power) return this._closePowerMenu();
+    const r = e.currentTarget.getBoundingClientRect();
+    const width = 248;
+    const left = Math.max(8, Math.min(r.right - width, window.innerWidth - width - 8));
+    this._power = { top: r.bottom + 8, left, width };
+    this._onOutside ??= (ev) => {
+      if (!ev.composedPath().includes(this)) this._closePowerMenu();
+    };
+    this._onKey ??= (ev) => ev.key === "Escape" && this._closePowerMenu();
+    this._onMove ??= () => this._closePowerMenu();
+    window.addEventListener("pointerdown", this._onOutside, true);
+    window.addEventListener("keydown", this._onKey);
+    window.addEventListener("scroll", this._onMove, true);
+    window.addEventListener("resize", this._onMove);
+  }
+
+  _closePowerMenu() {
+    this._power = null;
+    window.removeEventListener("pointerdown", this._onOutside, true);
+    window.removeEventListener("keydown", this._onKey);
+    window.removeEventListener("scroll", this._onMove, true);
+    window.removeEventListener("resize", this._onMove);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._closePowerMenu();
+  }
+
+  _setZonePower(entity, on) {
+    this._fireHaptic("light");
+    this._callService("media_player", on ? "turn_on" : "turn_off", { entity_id: entity });
+  }
+
+  /** All off while any zone is on; all on when every zone is off. */
+  _allPower(anyOn) {
+    const zones = this._powerZones;
+    const targets = zones.filter((z) => isMediaOff(this.hass.states[z.entity]) === !anyOn).map((z) => z.entity);
+    if (targets.length) this._setZonePower(targets, !anyOn);
+    this._closePowerMenu();
+  }
+
+  _renderPowerMenu() {
+    if (!this._power) return nothing;
+    const zones = this._powerZones;
+    const anyOn = zones.some((z) => !isMediaOff(this.hass.states[z.entity]));
+    const { top, left, width } = this._power;
+    return html`<div class="pmenu" role="menu" style="top:${top}px;left:${left}px;width:${width}px;">
+      ${zones.map((z) => {
+        const on = !isMediaOff(this.hass.states[z.entity]);
+        return html`<button
+          class="prow"
+          role="menuitemcheckbox"
+          aria-checked=${on ? "true" : "false"}
+          @click=${() => this._setZonePower(z.entity, !on)}
+        >
+          <span class="pname">${this._zoneLabel(z)}</span>
+          <span class="psw ${on ? "on" : ""}" aria-hidden="true"></span>
+        </button>`;
+      })}
+      ${zones.length > 1
+        ? html`<div class="pdiv" role="separator"></div>
+            <button class="prow all ${anyOn ? "off" : ""}" role="menuitem" @click=${() => this._allPower(anyOn)}>
+              <ha-icon icon="mdi:power"></ha-icon>
+              <span class="pname">${t(anyOn ? "media_all_off" : "media_all_on", this.hass)}</span>
+            </button>`
+        : nothing}
+    </div>`;
+  }
+
+  _powerButton(cls = "iconbtn") {
+    const anyOn = this._powerZones.some((z) => !isMediaOff(this.hass.states[z.entity]));
+    return html`<button
+      class="${cls} power ${anyOn ? "on" : ""} ${this._power ? "open" : ""}"
+      aria-label=${t("media_power", this.hass)}
+      aria-haspopup="menu"
+      aria-expanded=${this._power ? "true" : "false"}
+      @click=${this._togglePowerMenu}
+    ><ha-icon icon="mdi:power"></ha-icon></button>`;
   }
 
   /** `stations_label`, else the translated "Stations". */
@@ -114,7 +211,9 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
               <ha-icon icon="mdi:radio"></ha-icon>${this._stationsLabel}
             </button>`
           : nothing}
+        ${this.config.show_power !== false ? this._powerButton("pill") : nothing}
       </div>
+      ${this._renderPowerMenu()}
     </ha-card>`;
   }
 
@@ -125,8 +224,9 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
     const hasStations = Array.isArray(this.config.stations) && this.config.stations.length > 0;
     if (this.config.variant === "kiosk") return this._renderKiosk(s, hasStations);
     const showVolume = this.config.show_volume !== false;
+    const showPower = this.config.show_power !== false;
     const showSource = this.config.show_source !== false && Array.isArray(a.source_list) && a.source_list.length > 0;
-    const pair = [hasStations, showVolume];
+    const pair = [hasStations, showVolume, showPower];
     const { first, last } = visibleEdges(pair);
     const edge = (i) => `${i === first ? "first" : ""} ${i === last ? "last" : ""}`;
     const knob = this._volumeKnobConfig();
@@ -157,9 +257,11 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
                     @click=${this._openVolume}
                   >${volumeRing(this.hass.states[knob.entity])}</button>`
                 : nothing}
+              ${showPower ? this._powerButton(`iconbtn ${edge(2)}`) : nothing}
             </div>`
           : nothing}
       </div>
+      ${this._renderPowerMenu()}
     </ha-card>`;
   }
 
