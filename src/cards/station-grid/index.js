@@ -42,6 +42,12 @@ class MateriaStationGrid extends ActionMixin(LitElement) {
         height: 100%;
         box-sizing: border-box;
       }
+      /* In place of the player: the art scope's card pads and draws the surface. */
+      ha-card.in-panel.sub {
+        padding: 0;
+        border-radius: 0;
+        background: none;
+      }
       .head {
         display: flex;
         align-items: center;
@@ -148,7 +154,7 @@ class MateriaStationGrid extends ActionMixin(LitElement) {
     // A sheet shows its own heading; the grid adds one only in a panel or standalone.
     const heading = c.in_sheet ? null : c.in_panel ? (c.name ?? t("media_stations", this.hass)) : c.name;
     return html`
-      <ha-card class="${c.in_sheet ? "in-sheet" : ""} ${c.in_panel ? "in-panel" : ""}">
+      <ha-card class="${c.in_sheet ? "in-sheet" : ""} ${c.in_panel ? "in-panel" : ""} ${c.panel_back ? "sub" : ""}">
         ${heading || c.in_panel
           ? html`<div class="head">
               ${c.panel_back

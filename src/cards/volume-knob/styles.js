@@ -338,6 +338,14 @@ export const styles = [
       padding: 8px 4px 0;
     }
 
+    /* In place of the player (a subview of the art scope's card): the scope
+       already pads and draws the surface. */
+    ha-card.panel.sub {
+      padding: 0;
+      border-radius: 0;
+      background: none;
+    }
+
     /* In a kiosk side panel: fit the content and sit centred next to the
        cover and player, instead of stretching the bar over the full height. */
     :host([panel-fit]) {

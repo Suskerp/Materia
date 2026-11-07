@@ -237,7 +237,8 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
 
   updated(changed) {
     super.updated?.(changed);
-    this.toggleAttribute("panel-fit", this._style === "tap" && !!this.config?.in_panel);
+    // Kiosk side panel: fit the content. In place (panel_back) it fills the subview instead.
+    this.toggleAttribute("panel-fit", this._style === "tap" && !!this.config?.in_panel && !this.config?.panel_back);
     const dial = this.renderRoot.querySelector(".dial-svg");
     if (dial && dial !== this._dialEl) {
       // Wheel must be non-passive to stop the page scrolling under the dial.
@@ -412,7 +413,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
       return isMediaOff(zs) || zs?.attributes?.is_volume_muted ? t("state_off", this.hass) : volumeSteps(zs);
     };
     return html`
-      <ha-card class="panel tap ${this.config.in_sheet ? "in-sheet" : ""} ${this.config.in_panel ? "in-panel" : ""} ${off ? "off" : ""} ${muted ? "muted" : ""}">
+      <ha-card class="panel tap ${this.config.panel_back ? "sub" : ""} ${this.config.in_sheet ? "in-sheet" : ""} ${this.config.in_panel && !this.config.panel_back ? "in-panel" : ""} ${off ? "off" : ""} ${muted ? "muted" : ""}">
         <div class="phead">
           ${this._backButton()}
           <h3>${name}</h3>
@@ -497,7 +498,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     };
 
     return html`
-      <ha-card class="panel ${this.config.in_sheet ? "in-sheet" : ""} ${off ? "off" : ""}">
+      <ha-card class="panel ${this.config.panel_back ? "sub" : ""} ${this.config.in_sheet ? "in-sheet" : ""} ${off ? "off" : ""}">
         <div class="phead">
           ${this._backButton()}
           <h3>${name}</h3>

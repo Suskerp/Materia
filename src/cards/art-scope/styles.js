@@ -33,19 +33,24 @@ export const styles = [
       --ha-card-border-width: 0;
     }
 
+    /* !important: .children.stack/.row/.grid set display at the same specificity. */
     .children[hidden] {
-      display: none;
+      display: none !important;
     }
 
-    /* In place: the requested card fills the scope's former height. */
+    /* In place: a subview of the same card, exactly as tall as the player was. */
     .inline-panel {
       display: flex;
       flex-direction: column;
+      overflow-y: auto;
       animation: inline-in var(--md-sys-motion-expressive-default-spatial, 0.35s ease) both;
     }
 
     .inline-panel > * {
       flex: 1;
+      min-height: 0;
+      /* Same card: no card-in-card surface or padding of its own. */
+      --ha-card-background: transparent;
     }
 
     @keyframes inline-in {

@@ -260,7 +260,7 @@ class MateriaArtScope extends LitElement {
     }
     clearTimeout(this._panelRemoveTimer);
     if (this._inline && !this._panelId) {
-      // Keep the scope's height, so the page does not jump when the cards swap.
+      // The subview takes the player's height, so the card does not change size.
       this._inlineMin = this.renderRoot.querySelector(".children")?.offsetHeight ?? 0;
     }
     const el = createCardContent(panelCardConfig(e.detail.config, this.config.panels, id, this._inline));
@@ -334,7 +334,7 @@ class MateriaArtScope extends LitElement {
                 ?hidden=${!!this._panelEl}
               >${cards}</div>
               ${this._panelEl
-                ? html`<div class="inline-panel" style="min-height:${this._inlineMin ?? 0}px" @pointerdown=${this._touchPanel}>
+                ? html`<div class="inline-panel" style="height:${this._inlineMin ?? 0}px" @pointerdown=${this._touchPanel}>
                     ${this._panelEl}
                   </div>`
                 : nothing}`}
