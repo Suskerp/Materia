@@ -503,12 +503,6 @@ export const styles = [
       font-variant-numeric: tabular-nums;
     }
 
-    .treadout .of {
-      font-size: 16px;
-      color: var(--mx-onv);
-      margin-left: 4px;
-    }
-
     .treadout .limlabel {
       text-align: start;
       font-size: 15px;

@@ -442,7 +442,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
             <span class="tfill"></span>
           </button>
           <div class="treadout">
-            <span class="num"></span><span class="of">/ ${MAX_STEPS}</span>
+            <span class="num"></span>
             <div class="limlabel"></div>
           </div>
         </div>
