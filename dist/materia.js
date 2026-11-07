@@ -16289,7 +16289,7 @@ const Qo=No(class extends Lo{constructor(){super(...arguments),this.key=W}render
       aria-haspopup="menu"
       aria-expanded=${this._power?"true":"false"}
       @click=${this._togglePowerMenu}
-    ><ha-icon icon="mdi:power"></ha-icon></button>`}get _stationsLabel(){return this.config.stations_label||Ni("media_stations",this.hass)}get _zoneName(){if(this.config.zone_name)return this.config.zone_name;const e=this._volumeKnobConfig().zones,t=Array.isArray(e)?e.find(e=>e?.entity===this.config.entity)?.name:null;return t||this._stateObj?.attributes?.friendly_name}get _subtitle(){const e=this._stateObj,t=e?.attributes??{},i=this._powerZones,a=i.length>1&&new Set(i.map(e=>bi(this.hass.states[e.entity]))).size>1,n=a?this._zoneName:null,s=Ai(e);if(s)return Ni("turning_on"===s?"media_turning_on":"media_turning_off",this.hass);if(bi(e))return[Ni("state_off",this.hass),n].filter(Boolean).join(" · ");const{appChip:o}=Si({source:t.source??t.input,app:vi(e)?Ni("media_radio",this.hass):t.app_name,title:t.media_title});return[o,$i(o,n)?null:n].filter(Boolean).join(" · ")}_renderKiosk(e,t){const i=e?.attributes??{},{chip:a}=Si({source:i.source??i.input,app:vi(e)?Ni("media_radio",this.hass):i.app_name,title:i.media_title}),n="stations"===this._openPanel;return U`<ha-card>
+    ><ha-icon icon="mdi:power"></ha-icon></button>`}get _stationsLabel(){return this.config.stations_label||Ni("media_stations",this.hass)}get _zoneName(){if(this.config.zone_name)return this.config.zone_name;const e=this._volumeKnobConfig().zones,t=Array.isArray(e)?e.find(e=>e?.entity===this.config.entity)?.name:null;return t||this._stateObj?.attributes?.friendly_name}get _headTitle(){const e=this._stateObj,t=e?.attributes??{};if(!bi(e)&&!Ai(e))return t.source??t.input??t.friendly_name??"";if(this.config.device_name)return this.config.device_name;const i=t.friendly_name??"",a=this._zoneName;return(a&&i.toLowerCase().endsWith(` ${String(a).toLowerCase()}`)?i.slice(0,-a.length-1):i)||i}get _subtitle(){const e=this._stateObj,t=e?.attributes??{},i=this._powerZones,a=i.length>1&&new Set(i.map(e=>bi(this.hass.states[e.entity]))).size>1,n=a?this._zoneName:null,s=Ai(e);if(s)return Ni("turning_on"===s?"media_turning_on":"media_turning_off",this.hass);if(bi(e))return[Ni("state_off",this.hass),n].filter(Boolean).join(" · ");const{appChip:o}=Si({source:t.source??t.input,app:vi(e)?Ni("media_radio",this.hass):t.app_name,title:t.media_title});return[o,$i(o,n)?null:n].filter(Boolean).join(" · ")}_renderKiosk(e,t){const i=e?.attributes??{},{chip:a}=Si({source:i.source??i.input,app:vi(e)?Ni("media_radio",this.hass):i.app_name,title:i.media_title}),n="stations"===this._openPanel;return U`<ha-card>
       <div class="top kiosk">
         ${a?U`<span class="chip">${a}</span>`:W}
         ${t?U`<button class="pill ${n?"open":""}" aria-expanded=${n?"true":"false"} @click=${this._openStations}>
@@ -16304,7 +16304,7 @@ const Qo=No(class extends Lo{constructor(){super(...arguments),this.key=W}render
               <ha-icon icon="mdi:import"></ha-icon>
             </button>`:W}
         <div class="where">
-          <b>${t.source??t.input??t.friendly_name??""}</b>
+          <b>${this._headTitle}</b>
           <span>${this._subtitle}</span>
         </div>
         ${r>=0?U`<div class="pair">

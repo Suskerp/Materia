@@ -196,6 +196,21 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
     return named || this._stateObj?.attributes?.friendly_name;
   }
 
+  /**
+   * The source while on; off (or on its way), the device's name: the source it
+   * last had says nothing then. "Arcam Living" minus its zone reads "Arcam".
+   */
+  get _headTitle() {
+    const s = this._stateObj;
+    const a = s?.attributes ?? {};
+    if (!isMediaOff(s) && !powerTransition(s)) return a.source ?? a.input ?? a.friendly_name ?? "";
+    if (this.config.device_name) return this.config.device_name;
+    const name = a.friendly_name ?? "";
+    const zone = this._zoneName;
+    const trimmed = zone && name.toLowerCase().endsWith(` ${String(zone).toLowerCase()}`) ? name.slice(0, -zone.length - 1) : name;
+    return trimmed || name;
+  }
+
   /** "app · zone": the app only when it is neither the title nor the source. */
   get _subtitle() {
     const s = this._stateObj;
@@ -260,7 +275,7 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
             </button>`
           : nothing}
         <div class="where">
-          <b>${a.source ?? a.input ?? a.friendly_name ?? ""}</b>
+          <b>${this._headTitle}</b>
           <span>${this._subtitle}</span>
         </div>
         ${first >= 0
