@@ -175,7 +175,7 @@ export function availableHeight(viewportHeight, top) {
 export const ART_MIN = 136;
 export const ART_MAX = 420;
 /** Kept free below the player inside a clipping container: room for a swipe card's pagination dots. */
-export const ART_FIT_MARGIN = 64;
+export const ART_FIT_MARGIN = 96;
 
 /**
  * Cover size for art_size: auto. `max` is the width available (capped by
