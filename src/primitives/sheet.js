@@ -312,6 +312,12 @@ export const SheetOpenerMixin = (superClass) =>
       if (changed.has("hass") && this.__sheet?.open) this.__sheet.setHass(this.hass);
     }
 
+    connectedCallback() {
+      super.connectedCallback();
+      // (Re)attached, e.g. inside an art scope: ask its context again.
+      this.requestUpdate();
+    }
+
     disconnectedCallback() {
       super.disconnectedCallback();
       if (this.__sheet?.open) this.__sheet.close();

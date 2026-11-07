@@ -77,7 +77,9 @@ class MateriaArtScope extends LitElement {
       e.detail.volume = this.config.volume;
       e.detail.entity = this.config.entity;
       e.detail.scope = this;
-      e.detail.kiosk = this.config.layout === "kiosk" && !this._tracks(false).stacked;
+      // From the config, not the measurement: a card that asks before the
+      // first ResizeObserver callback must get the same answer as one after.
+      e.detail.kiosk = this.config.layout === "kiosk";
     });
     this.addEventListener("materia-dismiss", (e) => {
       if (!this._panelId) return;
@@ -154,7 +156,7 @@ class MateriaArtScope extends LitElement {
 
   /** Tell cards that read the scope context (kiosk or not) when it changes. */
   _announceLayout() {
-    const kiosk = this.config?.layout === "kiosk" && !this._tracks(false).stacked;
+    const kiosk = this.config?.layout === "kiosk";
     if (kiosk === this._lastKiosk) return;
     this._lastKiosk = kiosk;
     this.dispatchEvent(new CustomEvent("materia-scope-changed", { detail: { kiosk } }));
