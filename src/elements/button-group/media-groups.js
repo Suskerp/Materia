@@ -47,7 +47,8 @@ export function renderTransport(el) {
   const s = hass.states[config.entity];
   const ctrl = mediaControls(s);
   if (isMediaOff(s) || !ctrl.includes("play_pause")) return html``;
-  const playing = s.state === "playing";
+  // Shown at once on tap; the player confirms a moment later.
+  const playing = heldValue(el._pendingPlay, s.state === "playing");
   // Kept through the brief gap in controls while a track changes.
   const skip = holdSkipButtons(el._skipHold, { prev: ctrl.includes("previous"), next: ctrl.includes("next") });
   el._skipHold = skip.hold;
@@ -65,7 +66,10 @@ export function renderTransport(el) {
       class="${cls} ${p.cls}"
       aria-label=${label}
       @pointerdown=${p.down}
-      @click=${() => el._mediaService(service)}
+      @click=${() => {
+        if (key === "play") el._setPending("_pendingPlay", !playing, 4000);
+        el._mediaService(service);
+      }}
     ><ha-icon .icon=${icon}></ha-icon></button>`;
   };
   return html`<ha-card>
@@ -151,6 +155,14 @@ export const MediaGroupMixin = (superClass) =>
     _mediaService(service, data = {}) {
       this._fireHaptic("light");
       this._callService("media_player", service, { entity_id: this.config.entity, ...data });
+    }
+
+    /** Shows a tapped value now and re-renders when its hold ends. */
+    _setPending(prop, value, ms) {
+      this[prop] = { value, until: Date.now() + ms };
+      this.requestUpdate();
+      clearTimeout(this[`${prop}Timer`]);
+      this[`${prop}Timer`] = setTimeout(() => this.requestUpdate(), ms + 100);
     }
 
     /** Shuffle / repeat: show the new value now, hold it until the player reports it (6 s at most). */

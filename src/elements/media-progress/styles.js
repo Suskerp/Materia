@@ -93,8 +93,11 @@ export const styles = css`
     cursor: pointer;
   }
 
+  /* M3 Expressive progress indicator: the remaining track is secondary
+     container, clearly visible against the card (surface-container-highest
+     nearly vanished on a dark card). */
   .wrap.player .track {
-    stroke: var(--md-sys-color-surface-container-highest, rgba(127, 127, 127, 0.3));
+    stroke: var(--md-sys-color-secondary-container, rgba(127, 127, 127, 0.3));
   }
 
   .wave.p-wave {
