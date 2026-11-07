@@ -521,7 +521,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
               @option-selected=${this._selectZone}
             ></materia-button-group>`
           : nothing}
-        <div class="readout"><b class="num"></b><span>/ ${MAX_STEPS}</span></div>
+        <div class="readout"><b class="num"></b></div>
         <div class="dial">
           <svg
             class="dial-svg"

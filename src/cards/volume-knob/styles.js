@@ -112,12 +112,6 @@ export const styles = [
       font-variant-numeric: tabular-nums;
     }
 
-    .readout span {
-      font-size: 16px;
-      color: var(--mx-onv);
-      margin-left: 4px;
-    }
-
     .dial {
       width: min(300px, 74vw, 100%);
       aspect-ratio: 1;
