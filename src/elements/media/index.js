@@ -59,31 +59,35 @@ class MateriaMedia extends ActionMixin(LitElement) {
       this._lastTrack = track;
     }
     this._watchArt();
-    this._blurOnNewCover();
+    this._preloadCover();
   }
 
-  /** New cover: blur the old one until the new image has loaded, then sharpen into it. */
-  _blurOnNewCover() {
+  /**
+   * A new cover replaces the old one only once it has loaded: a plain swap,
+   * with no empty frame in between (and no blur or cross-fade).
+   */
+  _preloadCover() {
     const image = this._image;
-    const art = this.renderRoot?.querySelector(".art.pl-art");
-    if (!art || image === this._shownImage) return;
-    const previous = this._shownImage;
-    this._shownImage = image;
-    if (!previous || !image) return;
-    art.classList.add("swapping");
-    const done = () => art.classList.remove("swapping");
+    if (image === this._wantedImage) return;
+    this._wantedImage = image;
+    if (!image || !this._shownImage) {
+      this._shownImage = image;
+      return;
+    }
     const img = new Image();
-    img.onload = img.onerror = () => setTimeout(done, 120);
+    const show = () => {
+      if (this._wantedImage !== image) return; // a newer cover arrived meanwhile
+      this._shownImage = image;
+      this.requestUpdate();
+    };
+    img.onload = img.onerror = show;
     img.src = image;
-    clearTimeout(this._swapTimer);
-    this._swapTimer = setTimeout(done, 2500); // never stay blurred
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     clearTimeout(this._beatTimer);
     clearTimeout(this._fitHold);
-    clearTimeout(this._swapTimer);
     this._artRo?.disconnect();
     this._artWatched = null;
     window.removeEventListener("resize", this._onArtResize);
@@ -226,7 +230,7 @@ class MateriaMedia extends ActionMixin(LitElement) {
     const s = this._stateObj;
     const a = s?.attributes ?? {};
     const off = isMediaOff(s);
-    const image = this._image;
+    const image = this._shownImage ?? this._image;
     const size = this._artSize();
     // Live radio sends a station LOGO: white ground, contained, never cropped.
     const logo = this.config.live_logo !== false && isLive(s);
