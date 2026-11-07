@@ -115,11 +115,90 @@ class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
 
   updated(changed) {
     super.updated?.(changed);
+    this._watchMaxHeights();
     if (changed.has("hass") && this._panes) {
       for (const pane of this._panes) {
         if (pane) for (const el of pane) el.hass = this.hass;
       }
     }
+  }
+
+  /* ---- max_height: content taller than allowed is narrowed until it fits ---- */
+
+  /** max_height (px number, "NNpx", "NNvh", or a list: the smallest) in px; null when unset/invalid. */
+  static maxHeightPx(spec, viewportHeight = window.innerHeight) {
+    const one = (v) => {
+      if (typeof v === "number") return v;
+      const m = /^\s*([\d.]+)\s*(px|vh)?\s*$/.exec(String(v));
+      if (!m) return null;
+      return m[2] === "vh" ? (Number(m[1]) * viewportHeight) / 100 : Number(m[1]);
+    };
+    const values = (Array.isArray(spec) ? spec : [spec]).map(one).filter((v) => v > 0);
+    return values.length ? Math.min(...values) : null;
+  }
+
+  _watchMaxHeights() {
+    const slots = [...(this.renderRoot?.querySelectorAll(".pane-card[data-max-height]") ?? [])].filter((s) => s.dataset.maxHeight);
+    if (!slots.length) return;
+    this._maxRo ??= new ResizeObserver(() => this._fitMaxHeights());
+    this._onMaxResize ??= () => this._fitMaxHeights();
+    if (!this._maxWatching) {
+      this._maxWatching = true;
+      window.addEventListener("resize", this._onMaxResize);
+    }
+    for (const slot of slots) {
+      if (slot.__maxObserved) continue;
+      slot.__maxObserved = true;
+      this._maxRo.observe(slot.parentElement); // the pane's width
+      if (slot.firstElementChild) this._maxRo.observe(slot.firstElementChild); // the content's height
+    }
+    this._fitMaxHeights();
+  }
+
+  /**
+   * Content whose height grows with its width (a map, plus fixed controls under
+   * it): height ≈ a·width + b. Two measurements give a and b, so the width that
+   * meets the cap follows directly; content that doesn't scale stays full width.
+   */
+  _fitMaxHeights() {
+    for (const slot of this.renderRoot?.querySelectorAll(".pane-card[data-max-height]") ?? []) {
+      if (!slot.dataset.maxHeight) continue;
+      const cap = MateriaTabs.maxHeightPx(JSON.parse(slot.dataset.maxHeight));
+      const content = slot.firstElementChild;
+      const full = slot.parentElement?.clientWidth ?? 0;
+      if (!cap || !content || !full) continue;
+      const w = content.offsetWidth;
+      const h = content.offsetHeight;
+      if (!w || !h) continue; // hidden pane: fitted when shown
+      const target = MateriaTabs.fitWidth({ w, h, prev: slot.__maxSample, cap, full });
+      slot.__maxSample = { w, h };
+      if (target != null && Math.abs(target - w) > 2) {
+        slot.style.width = `${target}px`;
+        slot.style.marginInline = "auto";
+      }
+    }
+  }
+
+  /** Width that brings the height to `cap` (pure; null = leave as is). */
+  static fitWidth({ w, h, prev, cap, full }) {
+    const min = Math.round(full * 0.3);
+    if (h <= cap + 2 && (w >= full - 2 || h >= cap - 8)) return null; // fits, and not needlessly narrow
+    if (prev && Math.abs(prev.w - w) > 4) {
+      const a = (h - prev.h) / (w - prev.w);
+      if (a < 0.05) return full; // height doesn't follow width: narrowing can't help
+      const b = h - a * w;
+      return Math.max(min, Math.min(full, Math.floor((cap - b) / a)));
+    }
+    // First step: proportional guess (overshoots when part of the height is fixed).
+    return Math.max(min, Math.min(full, Math.floor((cap * w) / h)));
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback?.();
+    this._maxRo?.disconnect();
+    window.removeEventListener("resize", this._onMaxResize);
+    this._maxWatching = false;
+    for (const slot of this.renderRoot?.querySelectorAll(".pane-card") ?? []) slot.__maxObserved = false;
   }
 
   get _stateObj() {
@@ -253,7 +332,9 @@ class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
                     aria-hidden=${current === value ? "false" : "true"}
                     tabindex=${current === value ? "0" : "-1"}
                   >
-                    ${this._panes[i].map((el) => html`<div class="pane-card">${el}</div>`)}
+                    ${this._panes[i].map(
+                      (el) => html`<div class="pane-card" data-max-height=${item.max_height != null ? JSON.stringify(item.max_height) : ""}>${el}</div>`
+                    )}
                   </div>`
                 : nothing;
             })}
