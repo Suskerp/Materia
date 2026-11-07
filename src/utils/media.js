@@ -113,6 +113,33 @@ export function mediaByline(attributes) {
   return [a.media_artist, album].filter(Boolean).join(" · ");
 }
 
+const norm = (s) => String(s ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+/** Same text, ignoring case and whitespace (empty is never the same). */
+export const sameText = (a, b) => !!norm(a) && norm(a) === norm(b);
+const same = sameText;
+
+/**
+ * Now-playing text with every distinct value shown once. Players that report
+ * no title fall back to the app or source name (Google TV: title = app =
+ * "TV VLAANDEREN", source = "Google TV"), so values are compared case- and
+ * whitespace-insensitively:
+ *   chip     — source, plus " · app" when the app is neither title nor source
+ *   title    — the title (else the source)
+ *   subtitle — artist · album, empty parts and repeats of the title dropped
+ *   appChip  — the app, unless it equals the title or the source
+ */
+export function nowPlayingText({ source, app, title, artist, album } = {}) {
+  const t = String(title ?? "").trim() || String(source ?? "").trim();
+  const distinctApp = app && !same(app, t) && !same(app, source) ? String(app).trim() : "";
+  const chip = [String(source ?? "").trim(), distinctApp].filter(Boolean).join(" · ");
+  const parts = [];
+  for (const p of [artist, album]) {
+    const v = String(p ?? "").trim();
+    if (v && !same(v, t) && !parts.some((q) => same(q, v))) parts.push(v);
+  }
+  return { chip, title: t, subtitle: parts.join(" · "), appChip: distinctApp || null };
+}
+
 /** Next entry of source_list after the current source (null when there is no list). */
 export function nextSource(stateObj) {
   const a = stateObj?.attributes ?? {};

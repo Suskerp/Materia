@@ -25,6 +25,7 @@ class MateriaMediaHeaderEditor extends SmartEditorBase {
             ] } },
           },
           { name: "zone_name", label: "Zone name (defaults to the friendly name)", selector: { text: {} } },
+          { name: "stations_label", label: "Label van de zenderknop (standaard: vertaald)", selector: { text: {} } },
           { name: "show_source", label: "Source button", selector: { boolean: {} } },
           { name: "show_volume", label: "Volume ring", selector: { boolean: {} } },
         ],

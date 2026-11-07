@@ -5,7 +5,7 @@ import { createCardContent } from "../../primitives/sheet.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
-import { KIOSK_MIN_WIDTH, scopeGridColumns, panelCardConfig } from "./layout.js";
+import { kioskTracks, scopeGridColumns, panelCardConfig } from "./layout.js";
 import { inheritScopeEntity } from "../../utils/media-editor-model.js";
 
 const PANEL_CLOSE_MS = 400;
@@ -25,7 +25,8 @@ const PANEL_CLOSE_MS = 400;
  * `panels.<id>` is merged over the card config the button asks for, so the
  * kiosk can show e.g. the tap-style volume card where a phone shows the knob.
  * The panel closes after `panel_timeout` seconds without a touch inside it,
- * on a second tap of its button, on × and below KIOSK_MIN_WIDTH, where the
+ * on a second tap of its button, on × and when cover + player + panel no
+ * longer fit (layout.js kioskTracks); below 600 px the
  * kiosk stacks and the buttons fall back to bottom sheets.
  */
 class MateriaArtScope extends LitElement {
@@ -35,6 +36,8 @@ class MateriaArtScope extends LitElement {
     _cards: { state: true },
     _panelEl: { state: true },
     _panelId: { state: true },
+    /** Content-box width of the kiosk: the ONE measurement its layout uses. */
+    _kw: { state: true },
   };
 
   static styles = styles;
@@ -68,6 +71,7 @@ class MateriaArtScope extends LitElement {
       e.stopPropagation();
       e.detail.volume = this.config.volume;
       e.detail.entity = this.config.entity;
+      e.detail.kiosk = this.config.layout === "kiosk" && !this._tracks(false).stacked;
     });
     this.addEventListener("materia-dismiss", (e) => {
       if (!this._panelId) return;
@@ -105,11 +109,32 @@ class MateriaArtScope extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     clearTimeout(this._panelTimer);
+    this._ro?.disconnect();
+    this._observed = null;
+  }
+
+  /** Kiosk tracks for the measured width. */
+  _tracks(open) {
+    return kioskTracks(this._kw ?? 0, open);
+  }
+
+  /** Watch the kiosk's content box; close the panel when it no longer fits. */
+  _observeKiosk() {
+    const el = this.renderRoot?.querySelector(".kiosk");
+    if (el === this._observed) return;
+    this._observed = el;
+    this._ro ??= new ResizeObserver((entries) => {
+      this._kw = Math.floor(entries[0].contentRect.width);
+      if (this._panelId && !this._tracks(true).canOpen) this._closePanel(true);
+    });
+    this._ro.disconnect();
+    if (el) this._ro.observe(el);
   }
 
   /* ---------------------------------------------------------------- colours */
 
   updated(changed) {
+    this._observeKiosk();
     if (changed.has("hass") && this.hass) {
       if (this._cards) for (const el of this._cards) el.hass = this.hass;
       const panel = this._panelEl?.real ?? this._panelEl;
@@ -148,13 +173,12 @@ class MateriaArtScope extends LitElement {
     return this._panelId ?? null;
   }
 
-  _wide() {
-    const card = this.renderRoot?.querySelector("ha-card");
-    return !!card && card.clientWidth >= KIOSK_MIN_WIDTH;
-  }
-
   _onOpenPanel(e) {
-    if (this.config?.layout !== "kiosk" || !this._wide()) return;
+    // Too narrow for cover + player + panel: let the button open a sheet.
+    if (this.config?.layout !== "kiosk" || !this._tracks(true).canOpen) {
+      if (this._panelId) this._closePanel(true);
+      return;
+    }
     e.stopPropagation();
     e.detail.host = this;
     const id = e.detail.id;
@@ -207,10 +231,20 @@ class MateriaArtScope extends LitElement {
     const pad = c.padding ?? (c.background === false ? 0 : 16);
     const kiosk = c.layout === "kiosk";
     const open = kiosk && !!this._panelId;
+    const tracks = this._tracks(open);
+    // Kiosk fills the viewport below HA's header (panel view or a full-width
+    // section); fill: false opts out.
+    const fill = kiosk && c.fill !== false;
     return html`
-      <ha-card class="${c.background === false ? "bare" : ""}" style="padding:${Number(pad)}px;">
+      <ha-card
+        class="${c.background === false ? "bare" : ""} ${fill ? "fill" : ""}"
+        style="padding:${Number(pad)}px;--k-pad:${Number(pad)}px;"
+      >
         ${kiosk
-          ? html`<div class="kiosk ${open ? "open" : ""}">
+          ? html`<div
+              class="kiosk ${open ? "open" : ""} ${tracks.stacked ? "stacked" : ""}"
+              style=${tracks.columns ? `grid-template-columns:${tracks.columns};--k-panel:${tracks.panel}px;` : ""}
+            >
               <div class="k-cover">${cards[0] ?? nothing}</div>
               <div class="k-player" style="gap:${Number(c.gap)}px;">${cards.slice(1)}</div>
               <div class="k-panel" @pointerdown=${this._touchPanel} ?inert=${!open}>

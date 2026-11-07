@@ -142,7 +142,8 @@ class MateriaStationGrid extends ActionMixin(LitElement) {
     const stations = c.stations;
     const current = currentStationIndex(stations, c.entity ? this.hass.states[c.entity] : null);
     const cols = c.columns ?? (c.in_panel ? 3 : null);
-    const heading = c.in_panel ? (c.name ?? t("media_stations", this.hass)) : c.name;
+    // A sheet shows its own heading; the grid adds one only in a panel or standalone.
+    const heading = c.in_sheet ? null : c.in_panel ? (c.name ?? t("media_stations", this.hass)) : c.name;
     return html`
       <ha-card class="${c.in_sheet ? "in-sheet" : ""} ${c.in_panel ? "in-panel" : ""}">
         ${heading || c.in_panel

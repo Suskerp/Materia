@@ -1,7 +1,7 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
-import { isLive, isMediaOff, mediaByline } from "../../utils/media.js";
+import { isLive, isMediaOff, nowPlayingText, sameText as same } from "../../utils/media.js";
 import { t } from "../../utils/i18n.js";
 import "./editor.js";
 
@@ -108,9 +108,18 @@ class MateriaMedia extends ActionMixin(LitElement) {
     const size = this._artSize();
     // Live radio sends a station LOGO: white ground, contained, never cropped.
     const logo = this.config.live_logo !== false && isLive(s);
-    const title = this.config.name ? this._title : off ? t("state_off", this.hass) : (a.media_title ?? a.source ?? "");
-    const subtitle = this.config.subtitle ? this._subtitle : off ? "" : mediaByline(a);
-    const app = this.config.show_app !== false && !off ? a.app_name : null;
+    // Each distinct value once: a TV app that reports no title arrives as
+    // title = app name, and must not be repeated as the app chip.
+    const np = nowPlayingText({
+      source: a.source,
+      app: a.app_name,
+      title: a.media_title,
+      artist: a.media_artist,
+      album: a.media_album_name,
+    });
+    const title = this.config.name ? this._title : off ? t("state_off", this.hass) : np.title;
+    const subtitle = this.config.subtitle ? this._subtitle : off ? "" : np.subtitle;
+    const app = this.config.show_app !== false && !off && !same(np.appChip, title) ? np.appChip : null;
     return html`
       <ha-card>
         <div class="player ${off ? "off" : ""}">

@@ -15,8 +15,9 @@ import {
   volumeKnobConfig,
   isMediaOff,
   isLive,
+  nowPlayingText,
 } from "../src/utils/media.js";
-import { scopeGridColumns, panelCardConfig, KIOSK_MIN_WIDTH } from "../src/cards/art-scope/layout.js";
+import { scopeGridColumns, panelCardConfig, kioskTracks } from "../src/cards/art-scope/layout.js";
 import { themeSettings, schemeKey } from "../src/utils/art-settings.js";
 
 const player = (attributes, state = "playing") => ({ state, attributes });
@@ -162,7 +163,6 @@ test("kiosk panels merge the kiosk's override over the button's request", () => 
     in_panel: true,
   });
   assert.deepEqual(panelCardConfig(requested, undefined, "volume"), { ...requested, in_panel: true });
-  assert.equal(KIOSK_MIN_WIDTH, 900);
 });
 
 test("grid columns: a number is equal tracks, a string is used as written", () => {
@@ -187,4 +187,45 @@ test("Material You settings: per-user helper, then global, then defaults", () =>
   assert.deepEqual(themeSettings(undefined), { scheme: "tonalspot", contrast: 0, spec: "2025", platform: "phone" });
   assert.equal(schemeKey("Tonal Spot"), "tonalspot");
   assert.equal(schemeKey("fruit_salad"), "fruitsalad");
+});
+
+test("now-playing text shows each distinct value once (Google TV, TV app without a title)", () => {
+  const np = nowPlayingText({ source: "Google TV", app: "TV VLAANDEREN", title: "TV VLAANDEREN" });
+  assert.deepEqual(np, { chip: "Google TV", title: "TV VLAANDEREN", subtitle: "", appChip: null });
+  // Case and whitespace do not make a value new.
+  assert.equal(nowPlayingText({ source: "Google TV", app: " tv  vlaanderen", title: "TV VLAANDEREN" }).chip, "Google TV");
+  assert.equal(nowPlayingText({ source: "Spotify", app: "spotify", title: "Song" }).chip, "Spotify");
+});
+
+test("now-playing text keeps a distinct app and drops empty or repeated byline parts", () => {
+  assert.deepEqual(
+    nowPlayingText({ source: "Streaming", app: "Spotify", title: "Late Night Tones", artist: "Nova Quartet", album: "After Hours" }),
+    { chip: "Streaming · Spotify", title: "Late Night Tones", subtitle: "Nova Quartet · After Hours", appChip: "Spotify" }
+  );
+  assert.equal(nowPlayingText({ title: "T", artist: "", album: "B" }).subtitle, "B");
+  assert.equal(nowPlayingText({ title: "Same", artist: "A", album: "same" }).subtitle, "A");
+  assert.equal(nowPlayingText({ title: "T", artist: "A", album: "a" }).subtitle, "A");
+  assert.equal(nowPlayingText({ source: "Radio", title: "" }).title, "Radio", "no title: the source");
+  assert.deepEqual(nowPlayingText(), { chip: "", title: "", subtitle: "", appChip: null });
+});
+
+test("kiosk tracks: one width drives closed, open and the sheet fallback", () => {
+  // Stacked below 600 px: no panel at all.
+  assert.deepEqual(kioskTracks(500, true), { stacked: true, canOpen: false, columns: null, panel: 0 });
+  // Closed: exactly 50/50 with a 48 px gap, five px tracks.
+  assert.equal(kioskTracks(1000, false).columns, "476px 48px 476px 0px 0px");
+  // The user's tablet (~1000 px viewport, 32 px padding): the cover shrinks
+  // so the player keeps 360 px and the panel still fits.
+  const tablet = kioskTracks(936, true);
+  assert.equal(tablet.canOpen, true);
+  const [cover, gap1, player, gap2, panel] = tablet.columns.split(" ").map((v) => parseFloat(v));
+  assert.equal(cover + gap1 + player + gap2 + panel, 936);
+  assert.ok(player >= 360 && cover >= 200 && panel >= 320, tablet.columns);
+  // The 1280 px design: every column at a comfortable size.
+  const wide = kioskTracks(1216, true).columns.split(" ").map((v) => parseFloat(v));
+  assert.ok(wide[2] >= 360 && wide[4] <= 400 && wide[0] <= 400);
+  // Too narrow to open: buttons get a sheet, the layout stays closed.
+  const narrow = kioskTracks(800, true);
+  assert.equal(narrow.canOpen, false);
+  assert.equal(narrow.columns, kioskTracks(800, false).columns);
 });

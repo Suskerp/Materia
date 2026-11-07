@@ -146,35 +146,47 @@ export const styles = [motionTokens, css`
     min-width: 0;
   }
 
+  /* Type roles (docs/M3_EXPRESSIVE.md section 4). Phone: title is
+     headline-small-emphasized (24/32, 500), the byline body-large (16/24).
+     A kiosk scope overrides the custom properties: headline-medium-emphasized
+     (28/36, two lines) and title-large (22/28). The title is the card's one
+     emphasized style. */
   .pl-title {
-    font-size: 24px;
-    line-height: 30px;
+    font-size: var(--mx-player-title-size, 24px);
+    line-height: var(--mx-player-title-line, 32px);
     font-weight: 500;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--mx-player-title-lines, 1);
     overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
   }
 
   .pl-sub {
-    font-size: 15px;
+    margin-top: 4px;
+    font-size: var(--mx-player-sub-size, 16px);
+    line-height: var(--mx-player-sub-line, 24px);
+    letter-spacing: var(--mx-player-sub-tracking, 0.5px);
     color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
+  /* label-medium (12/16, 500). The kiosk header shows the app instead. */
   .chip {
     flex: none;
     height: 28px;
     padding: 0 12px;
-    display: flex;
+    display: var(--mx-player-app-chip, flex);
     align-items: center;
     border-radius: 8px;
     background: var(--md-sys-color-surface-container-high, rgba(127, 127, 127, 0.12));
     color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
     font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
+    line-height: 16px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
   }
 

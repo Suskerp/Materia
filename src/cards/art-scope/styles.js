@@ -61,25 +61,36 @@ export const styles = [
       }
     }
 
+
     /* ---- kiosk: cover | player, plus a side panel ----
-       Five length-percentage tracks (cover, gap, player, gap, panel) so the
-       open/close interpolates; fr tracks would only flip. */
-    .kiosk {
-      display: grid;
-      grid-template-columns: calc(50% - 24px) 48px calc(50% - 24px) 0px 0px;
-      align-items: center;
-      transition: grid-template-columns var(--md-sys-motion-standard-default-spatial);
+       The JS measures the kiosk's content box once (ResizeObserver) and sets
+       grid-template-columns as five px tracks (cover, gap, player, gap,
+       panel); px to px interpolates, so open/close animates. */
+    ha-card.fill {
+      /* The viewport below HA's header, minus the safe areas. */
+      --k-avail: calc(
+        100dvh - var(--header-height, 56px) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+      );
+      min-height: var(--k-avail);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
-    .kiosk.open {
-      grid-template-columns: 400px 32px calc(100% - 864px) 32px 400px;
+    .kiosk {
+      display: grid;
+      grid-template-columns: 1fr 0px 1fr 0px 0px;
+      grid-template-rows: minmax(0, 1fr);
+      align-items: center;
+      flex: 1 1 auto;
+      transition: grid-template-columns var(--md-sys-motion-standard-default-spatial);
     }
 
     .k-cover {
       grid-column: 1;
       grid-row: 1;
-      width: 100%;
-      max-width: 560px;
+      /* A square that fits both its column and the available height. */
+      width: min(100%, 560px, calc(var(--k-avail, 100vh) - 2 * var(--k-pad, 0px)));
       justify-self: center;
     }
 
@@ -101,7 +112,7 @@ export const styles = [
 
     /* Fixed width, so the panel is revealed rather than squeezed. */
     .k-panel-inner {
-      width: 400px;
+      width: var(--k-panel, 400px);
       height: 100%;
     }
 
@@ -109,21 +120,30 @@ export const styles = [
       height: 100%;
     }
 
-    @container (max-width: 899px) {
-      .kiosk,
-      .kiosk.open {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
+    /* Kiosk type: headline-medium-emphasized title on two lines, a
+       title-large byline; the header chip names the app, so no app chip. */
+    .kiosk {
+      --mx-player-title-size: 28px;
+      --mx-player-title-line: 36px;
+      --mx-player-title-lines: 2;
+      --mx-player-sub-size: 22px;
+      --mx-player-sub-line: 28px;
+      --mx-player-sub-tracking: 0px;
+      --mx-player-app-chip: none;
+    }
 
-      .k-cover {
-        max-width: none;
-      }
+    .kiosk.stacked {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
 
-      .k-panel {
-        display: none;
-      }
+    .kiosk.stacked .k-cover {
+      width: 100%;
+    }
+
+    .kiosk.stacked .k-panel {
+      display: none;
     }
   `,
 ];

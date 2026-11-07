@@ -7,7 +7,7 @@ const PANEL_STYLE_LABEL = "Stijl van het volumepaneel (kiosk)";
 /** Reuses the expander's card list (add / edit / reorder child cards). */
 class MateriaArtScopeEditor extends MateriaExpanderEditor {
   _formData() {
-    return { layout: "stack", gap: 16, background: true, panel_timeout: 10, ...this._config };
+    return { layout: "stack", gap: 16, background: true, panel_timeout: 10, fill: true, ...this._config };
   }
 
   _sectionsSignature() {
@@ -86,6 +86,7 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
               title: "Kiosk panel",
               icon: "mdi:dock-right",
               fields: [
+                { name: "fill", label: "Vul het scherm (hoogte)", selector: { boolean: {} } },
                 {
                   name: "panel_timeout",
                   label: "Sluit het paneel na (s, 0 = nooit)",

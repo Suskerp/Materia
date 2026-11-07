@@ -112,13 +112,31 @@ cards:
   - { type: custom:materia-button-group, group: toolbar }
 ```
 
-`grid` and `row` stack below 600 px. `kiosk` places the first card as the
-cover and the rest as the player column, at exactly 50/50. An open side
-panel turns it into cover 400 | player | panel 400. The panel closes after
-`panel_timeout` seconds without a touch (default 10, 0 = never), on a second
-tap of its button, or on ×. Below 900 px the kiosk stacks and the buttons
-fall back to sheets. `panels.<id>` is merged over what a button asks for. The
-ids are `volume` and `stations`, plus any `panel:` of a custom toolbar button.
+`grid` and `row` stack below 600 px.
+
+`kiosk` places the first card as the cover and the rest as the player column,
+at exactly 50/50.
+- **Height:** it fills the viewport below HA's header (a panel view or a
+  full-width section) and centres its content vertically; `fill: false` opts
+  out. The cover is a square that fits both its column and the height (at most
+  560 px).
+- **Side panel:** opening it gives a three-column layout. The panel takes
+  320–400 px; the cover shrinks first (400 down to 200 px) so the player keeps
+  at least 360 px.
+- **Too narrow:** when even that doesn't fit (below about 930 px of content
+  width), the buttons open a bottom sheet instead; below 600 px the kiosk
+  stacks. One measurement, the kiosk's own content width, decides all of it.
+- **Closing:** after `panel_timeout` seconds without a touch (default 10,
+  0 = never), on a second tap of its button, or on ×.
+- **Overrides:** `panels.<id>` is merged over what a button asks for. The ids
+  are `volume` and `stations`, plus any `panel:` of a custom toolbar button.
+- **Type:** in the kiosk the player title is headline-medium (28/36, two
+  lines) and the byline title-large (22/28). The app chip moves to the
+  header chip, which shows the source plus the app only when the app differs
+  from both the title and the source.
+- **Solo volume:** when the toolbar has only the volume button (TV, radio), the
+  kiosk shows it as a compact 56 px volume ring next to the transport, not the
+  phone's wide "Volume NN" pill.
 
 ```yaml
 type: custom:materia-art-scope
@@ -224,6 +242,7 @@ volume:
 type: custom:materia-media-header
 entity: media_player.arcam_living
 zone_name: Living              # default: the friendly name
+stations_label: Zenders        # default: the translated "Stations"
 stations: [ { name: Radio 1, image: /local/radio/radio1.png, action: script.radio_1 } ]
 volume: { zones: [ … ], link_entity: switch.arcam_zones_koppelen }
 # variant: kiosk  → an "input · app" chip and a labelled stations button

@@ -1,7 +1,7 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { SheetOpenerMixin } from "../../primitives/sheet.js";
-import { isMediaOff, isLive, nextSource, visibleEdges } from "../../utils/media.js";
+import { isMediaOff, isLive, nextSource, visibleEdges, nowPlayingText } from "../../utils/media.js";
 import { t } from "../../utils/i18n.js";
 import { volumeRing } from "../../elements/volume-ring/ring.js";
 import "../../cards/volume-knob/index.js";
@@ -60,13 +60,19 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
       type: "custom:materia-station-grid",
       entity: this.config.entity,
       stations: this.config.stations,
+      name: this._stationsLabel,
     };
-    this._openSheet(e.currentTarget, card, t("media_stations", this.hass), "stations");
+    this._openSheet(e.currentTarget, card, this._stationsLabel, "stations");
   }
 
   _openVolume(e) {
     this._fireHaptic("light");
     this._openSheet(e.currentTarget, this._volumeKnobConfig(), undefined, "volume");
+  }
+
+  /** `stations_label`, else the translated "Stations". */
+  get _stationsLabel() {
+    return this.config.stations_label || t("media_stations", this.hass);
   }
 
   get _subtitle() {
@@ -78,14 +84,19 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
 
   _renderKiosk(s, hasStations) {
     const a = s?.attributes ?? {};
-    const chip = [a.source ?? a.input, isLive(s) ? t("media_radio", this.hass) : a.app_name].filter(Boolean).join(" · ");
+    // The source once, plus the app only when it says something new.
+    const { chip } = nowPlayingText({
+      source: a.source ?? a.input,
+      app: isLive(s) ? t("media_radio", this.hass) : a.app_name,
+      title: a.media_title,
+    });
     const open = this._openPanel === "stations";
     return html`<ha-card>
       <div class="top kiosk">
         ${chip ? html`<span class="chip">${chip}</span>` : nothing}
         ${hasStations
           ? html`<button class="pill ${open ? "open" : ""}" aria-expanded=${open ? "true" : "false"} @click=${this._openStations}>
-              <ha-icon icon="mdi:radio"></ha-icon>${t("media_stations", this.hass)}
+              <ha-icon icon="mdi:radio"></ha-icon>${this._stationsLabel}
             </button>`
           : nothing}
       </div>
@@ -120,7 +131,7 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
               ${hasStations
                 ? html`<button
                     class="iconbtn ${edge(0)} ${this._openPanel === "stations" ? "open" : ""}"
-                    aria-label=${t("media_stations", this.hass)}
+                    aria-label=${this._stationsLabel}
                     @click=${this._openStations}
                   ><ha-icon icon="mdi:radio"></ha-icon></button>`
                 : nothing}

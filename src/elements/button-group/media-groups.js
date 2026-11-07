@@ -9,6 +9,7 @@ import {
 } from "../../utils/media.js";
 import { volumeRing, volumeRingStyles } from "../volume-ring/ring.js";
 import { SIZES } from "./styles.js";
+import { volumeContext } from "../../primitives/sheet.js";
 import { toolbarList } from "../../utils/media-editor-model.js";
 
 /**
@@ -94,6 +95,21 @@ export function renderToolbar(el) {
   if (first < 0) return html``;
   const solo = first === last;
   const knob = el._volumeKnobConfig();
+
+  // Kiosk, and volume is all there is (TV, radio): the compact ring, aligned
+  // with the transport — the wide "Volume NN" pill is the phone's solo form.
+  if (solo && items[first].type === "volume" && volumeContext(el).kiosk) {
+    const open = el._openPanel === "volume";
+    return html`<ha-card class="toolbar-card start">
+      <button
+        type="button"
+        class="solo-ring ${open ? "open" : ""}"
+        aria-label=${t("media_volume", hass)}
+        aria-expanded=${open ? "true" : "false"}
+        @click=${(e) => el._mediaOpenVolume(e)}
+      >${volumeRing(hass.states[knob.entity])}</button>
+    </ha-card>`;
+  }
 
   const button = (b, i) => {
     if (!visible[i]) return nothing;
@@ -270,6 +286,39 @@ export const mediaGroupStyles = [
 
     ha-card.toolbar-card.start {
       justify-content: flex-start;
+    }
+
+    /* Kiosk solo volume: a 56 px (M) round button with the ring inside. */
+    .solo-ring {
+      width: 56px;
+      height: 56px;
+      display: grid;
+      place-items: center;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      border-radius: 28px;
+      background: var(--md-sys-color-surface-container-high, rgba(127, 127, 127, 0.12));
+      color: var(--md-sys-color-primary, var(--primary-color));
+      transition:
+        border-radius var(--md-sys-motion-expressive-fast-spatial),
+        background-color var(--md-sys-motion-fast-effects),
+        color var(--md-sys-motion-fast-effects);
+    }
+
+    .solo-ring:active {
+      border-radius: 16px;
+    }
+
+    .solo-ring.open {
+      background: var(--md-sys-color-secondary-container, rgba(127, 127, 127, 0.3));
+      color: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
+    }
+
+    .solo-ring:focus-visible {
+      outline: 3px solid var(--md-sys-color-secondary, currentColor);
+      outline-offset: 2px;
     }
 
     .toolbar {

@@ -110,10 +110,14 @@ export const styles = [
       padding: 0 14px;
       display: flex;
       align-items: center;
-      border-radius: 10px;
+      border-radius: 8px;
       background: var(--mx-s2);
       color: var(--mx-onv);
-      font-size: 15px;
+      /* label-large (14/20, 500) */
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 500;
+      letter-spacing: 0.1px;
       min-width: 0;
       white-space: nowrap;
       overflow: hidden;
@@ -130,8 +134,10 @@ export const styles = [
       border-radius: 22px;
       background: var(--mx-sc);
       color: var(--mx-osc);
-      font-size: 15px;
+      font-size: 14px;
+      line-height: 20px;
       font-weight: 500;
+      letter-spacing: 0.1px;
       transition:
         border-radius var(--md-sys-motion-expressive-fast-spatial),
         background-color var(--md-sys-motion-fast-effects),
