@@ -1,4 +1,4 @@
-import { LitElement, html, nothing } from "lit";
+import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
 import { isLive, isMediaOff, mediaControls } from "../../utils/media.js";
@@ -354,13 +354,13 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
               </defs>
               ${live
                 ? nothing
-                : html`<line class="track" x1=${x + P_GAP} y1=${MID} x2=${w - 2} y2=${MID}></line>`}
+                : svg`<line class="track" x1=${x + P_GAP} y1=${MID} x2=${w - 2} y2=${MID}></line>`}
               <g clip-path="url(#${this._cid})">
                 <path class="wave p-wave ${playing ? "playing" : ""}" d=${this._pWave}></path>
               </g>
               ${live
                 ? nothing
-                : html`<line class="handle" x1=${x} x2=${x} y1=${MID - 12} y2=${MID + 12}></line>
+                : svg`<line class="handle" x1=${x} x2=${x} y1=${MID - 12} y2=${MID + 12}></line>
                     <circle class="stop" cx=${w - 2} cy=${MID} r="2"></circle>`}
             </svg>
           </div>
