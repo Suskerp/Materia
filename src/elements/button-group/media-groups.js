@@ -285,6 +285,8 @@ export const mediaGroupStyles = [
 
     /* Kiosk solo volume: a 56 px (M) round button with the ring inside. */
     .solo-ring {
+      /* The group's generic button rule grows every button (flex: 1 0 auto). */
+      flex: none;
       width: 56px;
       height: 56px;
       display: grid;
