@@ -4,6 +4,14 @@ import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.j
 import { unavailableStyles } from "../../styles/card-styles.js";
 import { MOTION } from "../../utils/motion.js";
 import { styles, PRESETS, SIZES } from "./styles.js";
+import { SheetOpenerMixin } from "../../primitives/sheet.js";
+import {
+  MEDIA_GROUPS,
+  MediaGroupMixin,
+  mediaGroupStyles,
+  renderToolbar,
+  renderTransport,
+} from "./media-groups.js";
 import "../button/index.js";
 import "../split-button/index.js";
 import "./editor.js";
@@ -22,13 +30,17 @@ const SPLIT_TYPES = new Set(["split", "split-button", "materia-split-button"]);
  *                entries with `options` render as split buttons. Configured
  *                with `buttons`.
  *
+ *   transport — prev / play-pause / next of a media player (media-groups.js).
+ *   toolbar   — shuffle / repeat / volume / custom buttons of a media player
+ *               as a connected group on its own container (media-groups.js).
+ *
  * `group` defaults to `connected` so every existing config keeps working, and
  * the old `materia-icon-row` type forwards here as `group: standard`.
  *
  * Note `variant` is the SURFACE style (filled/tonal) — it predates this merge,
  * which is why the configuration axis is `group` and not `variant`.
  */
-export class MateriaButtonGroup extends DisabledMixin(ActionMixin(LitElement)) {
+export class MateriaButtonGroup extends MediaGroupMixin(SheetOpenerMixin(DisabledMixin(ActionMixin(LitElement)))) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -62,9 +74,16 @@ export class MateriaButtonGroup extends DisabledMixin(ActionMixin(LitElement)) {
     };
   }
 
-  static styles = [unavailableStyles, styles, disabledConditionStyles];
+  static styles = [unavailableStyles, styles, mediaGroupStyles, disabledConditionStyles];
 
   setConfig(config) {
+    if (MEDIA_GROUPS.has(config.group)) {
+      // The media groups size themselves (transport: the tuned 88 px row,
+      // toolbar: 52 px buttons); an explicit `size` still wins for transport.
+      if (!config.entity) throw new Error("entity is required");
+      this.config = { ...config };
+      return;
+    }
     this.config = {
       size: "m",
       ...config,
@@ -192,6 +211,8 @@ export class MateriaButtonGroup extends DisabledMixin(ActionMixin(LitElement)) {
   render() {
     if (!this.hass || !this.config) return html``;
     if (this.config.group === "standard") return this._renderStandard();
+    if (this.config.group === "transport") return renderTransport(this);
+    if (this.config.group === "toolbar") return renderToolbar(this);
 
     const stateObj = this.config.entity ? this.hass.states[this.config.entity] : undefined;
     const unavailable = stateObj ? this._isUnavailable(stateObj) : false;
@@ -364,6 +385,8 @@ export class MateriaButtonGroup extends DisabledMixin(ActionMixin(LitElement)) {
   }
 
   updated(changedProps) {
+    // Reaches SheetOpenerMixin, which keeps an open volume sheet live.
+    super.updated?.(changedProps);
     if (changedProps.has("hass") && this.hass) {
       this._resolveField("color_active", "_resolvedColorActive");
       this._resolveField("color_on_active", "_resolvedColorOnActive");
@@ -423,6 +446,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-button-group",
   name: "Materia Button Group",
-  description: "M3 button group — connected (segmented, entity-driven) or standard (a spaced row of buttons).",
+  description: "M3 button group — connected (segmented, entity-driven), standard (a spaced row of buttons), or a media transport / toolbar.",
   preview: true,
 });

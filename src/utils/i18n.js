@@ -413,6 +413,29 @@ export const STRINGS = {
 
   /* ---- materia-split-button --------------------------------------------- */
   sb_more_actions: { en: "more actions", nl: "meer acties" },
+
+  /* ---- expressive media family ------------------------------------------ */
+  media_live: { en: "LIVE", nl: "LIVE" },
+  media_radio: { en: "Radio", nl: "Radio" },
+  media_volume: { en: "Volume", nl: "Volume" },
+  media_volume_value: { en: "Volume {value}", nl: "Volume {value}" },
+  media_stations: { en: "Stations", nl: "Zenders" },
+  media_link_zones: { en: "Link zones", nl: "Zones koppelen" },
+  media_follows: { en: "{zone} follows: {value}", nl: "{zone} volgt: {value}" },
+  media_zone_2: { en: "Zone 2", nl: "Zone 2" },
+  media_limit: { en: "limit {value}", nl: "limiet {value}" },
+  media_previous: { en: "Previous", nl: "Vorige" },
+  media_next: { en: "Next", nl: "Volgende" },
+  media_play_pause: { en: "Play/pause", nl: "Afspelen/pauzeren" },
+  media_shuffle: { en: "Shuffle", nl: "Shuffle" },
+  media_repeat: { en: "Repeat", nl: "Herhalen" },
+  media_mute: { en: "Mute", nl: "Dempen" },
+  media_volume_down: { en: "Volume down", nl: "Zachter" },
+  media_volume_up: { en: "Volume up", nl: "Luider" },
+  media_source: { en: "Source", nl: "Ingang" },
+  media_close: { en: "Close", nl: "Sluiten" },
+  media_linked: { en: "linked {offset}", nl: "gekoppeld {offset}" },
+  media_unlinked: { en: "separate", nl: "los" },
 };
 
 function primaryTag(lang) {

@@ -6,7 +6,11 @@ const source = await readFile(path);
 const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 const { size } = await stat(path);
 const gzipSize = gzipSync(source).byteLength;
-const limits = { size: 1_050_000, gzipSize: 260_000 };
+// Raised from 1_050_000 / 260_000 for the expressive media family (0.72.0):
+// @material/material-color-utilities alone is ~127 KB raw / ~23 KB gzip, and
+// it is the one library that must not be replaced (art colours have to match
+// the Material You theme, which ships the same build).
+const limits = { size: 1_250_000, gzipSize: 300_000 };
 
 console.log(`Bundle: ${size} bytes (${gzipSize} bytes gzip).`);
 if (size > limits.size || gzipSize > limits.gzipSize) {

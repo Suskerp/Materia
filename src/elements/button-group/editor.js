@@ -2,6 +2,7 @@ import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
 import { PRESETS } from "./styles.js";
+import { VOLUME_BLOCK_FIELD } from "../volume-ring/editor.js";
 
 class MateriaButtonGroupEditor extends SmartEditorBase {
   static properties = {
@@ -68,6 +69,9 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
      safe. Max columns stays out: the card reads a missing value as 0 ("as many
      as fit"), which the 1–8 selector cannot represent. */
   _formData() {
+    // The media groups size themselves; seeding size/variant would write
+    // config they never read.
+    if (["transport", "toolbar"].includes(this._config?.group)) return { ...this._config };
     return { group: "connected", size: "m", variant: "tonal", ...this._config };
   }
 
@@ -75,7 +79,46 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
     return `${this._config?.group || ""}|${this._config?.preset || ""}|${this._config?.multi_select ? 1 : 0}`;
   }
 
+  /** transport / toolbar: a media player's controls, not an options list. */
+  get _mediaSections() {
+    const group = this._config?.group;
+    return [
+      {
+        title: "Setup",
+        icon: "mdi:tune",
+        fields: [
+          this._groupField,
+          { name: "entity", required: true, selector: { entity: { domain: "media_player" } } },
+          ...(group === "transport"
+            ? [{ name: "size", label: "Height (default 88 px)", selector: { select: { mode: "dropdown", options: [
+                { value: "m", label: "M (56dp)" },
+                { value: "l", label: "L (96dp)" },
+                { value: "xl", label: "XL (136dp)" },
+              ] } } }]
+            : [
+                { name: "buttons", label: "Buttons (shuffle, repeat, volume, or { icon, label, tap_action })", selector: { object: {} } },
+                VOLUME_BLOCK_FIELD,
+              ]),
+        ],
+      },
+    ];
+  }
+
+  get _groupField() {
+    return { name: "group", label: "Configuration", selector: { select: { mode: "dropdown", options: [
+      { value: "connected", label: "Connected (segmented, entity-driven)" },
+      { value: "standard", label: "Standard (spaced row of buttons)" },
+      { value: "transport", label: "Media transport (prev / play / next)" },
+      { value: "toolbar", label: "Media toolbar (shuffle / repeat / volume)" },
+    ] } } };
+  }
+
+  get _isMediaGroup() {
+    return ["transport", "toolbar"].includes(this._config?.group);
+  }
+
   get _sections() {
+    if (this._isMediaGroup) return this._mediaSections;
     const standard = this._config?.group === "standard";
     const presetOptions = [
       ...Object.keys(PRESETS).map((k) => ({
@@ -89,10 +132,7 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
       title: "Setup",
       icon: "mdi:tune",
       fields: [
-        { name: "group", label: "Configuration", selector: { select: { mode: "dropdown", options: [
-          { value: "connected", label: "Connected (segmented, entity-driven)" },
-          { value: "standard", label: "Standard (spaced row of buttons)" },
-        ] } } },
+        this._groupField,
         ...(standard ? [] : [
           { name: "entity", selector: { entity: {} } },
           { name: "attribute", selector: { text: {} } },
@@ -179,6 +219,7 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
   }
 
   _renderExtra() {
+    if (this._isMediaGroup) return html``;
     const key = this._listKey;
     const standard = key === "buttons";
     const items = this._config[key] || [];

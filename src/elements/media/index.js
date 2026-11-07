@@ -1,6 +1,8 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
+import { isLive, isMediaOff, mediaByline } from "../../utils/media.js";
+import { t } from "../../utils/i18n.js";
 import "./editor.js";
 
 class MateriaMedia extends ActionMixin(LitElement) {
@@ -85,8 +87,57 @@ class MateriaMedia extends ActionMixin(LitElement) {
     this._handleAction(this.config.tap_action || { action: "more-info" });
   }
 
+  /**
+   * Art size: a number is a px cap (the original behaviour); "auto" shrinks
+   * with the viewport height so a phone keeps the header and both button
+   * rows on screen; "fill" takes the full width (kiosk cover column).
+   */
+  _artSize() {
+    const size = this.config.art_size ?? (this.config.variant === "player" ? "auto" : null);
+    if (size === "auto" || size === "fill") return { cls: `art-${size}`, style: "" };
+    const px = Number(size);
+    return { cls: "", style: Number.isFinite(px) && px > 0 ? `--mm-art:${px}px;` : "" };
+  }
+
+  /** variant: player — the M3 Expressive now-playing block (art, title row, app chip). */
+  _renderPlayer() {
+    const s = this._stateObj;
+    const a = s?.attributes ?? {};
+    const off = isMediaOff(s);
+    const image = this._image;
+    const size = this._artSize();
+    // Live radio sends a station LOGO: white ground, contained, never cropped.
+    const logo = this.config.live_logo !== false && isLive(s);
+    const title = this.config.name ? this._title : off ? t("state_off", this.hass) : (a.media_title ?? a.source ?? "");
+    const subtitle = this.config.subtitle ? this._subtitle : off ? "" : mediaByline(a);
+    const app = this.config.show_app !== false && !off ? a.app_name : null;
+    return html`
+      <ha-card>
+        <div class="player ${off ? "off" : ""}">
+          ${this.config.show_art === false
+            ? nothing
+            : html`<div
+                class="art pl-art ${size.cls} ${logo ? "logo" : ""}"
+                style="${size.style}${image ? `background-image:url('${image}');` : ""}"
+                @click=${this._tap}
+              ></div>`}
+          ${this.config.show_titles === false
+            ? nothing
+            : html`<div class="titlerow">
+                <div class="titles">
+                  <div class="pl-title">${title}</div>
+                  ${subtitle ? html`<div class="pl-sub">${subtitle}</div>` : nothing}
+                </div>
+                ${app ? html`<div class="chip">${app}</div>` : nothing}
+              </div>`}
+        </div>
+      </ha-card>
+    `;
+  }
+
   render() {
     if (!this.hass || !this.config) return html``;
+    if (this.config.variant === "player") return this._renderPlayer();
     const stateObj = this._stateObj;
     const unavailable = this._isUnavailable(stateObj);
     const image = this._image;
@@ -104,7 +155,8 @@ class MateriaMedia extends ActionMixin(LitElement) {
       .filter(Boolean)
       .map((u) => `url('${u}')`)
       .join(", ");
-    const artStyle = `${this.config.art_size ? `--mm-art:${this.config.art_size}px;` : ""}${layers ? `background-image:${layers};` : ""}`;
+    const size = this._artSize();
+    const artStyle = `${size.style}${layers ? `background-image:${layers};` : ""}`;
 
     // Editorial typography only when a real track is showing — a device name
     // (off/idle) is not a headline.
@@ -115,7 +167,7 @@ class MateriaMedia extends ActionMixin(LitElement) {
         <div class="wrap ${unavailable ? "unavailable" : ""} ${editorial ? "editorial" : ""} ${this._beat ? "beat" : ""} ${paused ? "paused" : ""}" @click=${this._tap}>
           ${this.config.show_art === false
             ? nothing
-            : html`<div class="art" style=${artStyle}></div>`}
+            : html`<div class="art ${size.cls}" style=${artStyle}></div>`}
           ${title ? html`<div class="title">${title}</div>` : nothing}
           ${subtitle ? html`<div class="subtitle">${subtitle}</div>` : nothing}
         </div>
@@ -134,6 +186,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-media",
   name: "Materia Media",
-  description: "Now-playing card — album art, title and subtitle (all templatable).",
+  description: "Now-playing card — album art, title and subtitle (all templatable); variant player for the expressive player.",
   preview: true,
 });

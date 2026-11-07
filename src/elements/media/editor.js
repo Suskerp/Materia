@@ -2,7 +2,7 @@ import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 class MateriaMediaEditor extends SmartEditorBase {
   _formData() {
-    return { show_art: true, ...this._config };
+    return { show_art: true, show_titles: true, show_app: true, live_logo: true, ...this._config };
   }
 
   get _sections() {
@@ -22,8 +22,27 @@ class MateriaMediaEditor extends SmartEditorBase {
         title: "Appearance",
         icon: "mdi:palette-outline",
         fields: [
+          {
+            name: "variant",
+            selector: { select: { mode: "dropdown", options: [
+              { value: "default", label: "Default (centred, editorial)" },
+              { value: "player", label: "Player (expressive now playing)" },
+            ] } },
+          },
           { name: "show_art", selector: { boolean: {} } },
-          { name: "art_size", label: "Art size (px)", selector: { number: { min: 80, max: 480, mode: "box" } } },
+          {
+            name: "art_size",
+            label: "Art size (auto, fill or px)",
+            selector: { select: { custom_value: true, mode: "dropdown", options: [
+              { value: "auto", label: "Auto (fits the phone screen)" },
+              { value: "fill", label: "Fill the width" },
+              { value: "240", label: "240 px" },
+              { value: "320", label: "320 px" },
+            ] } },
+          },
+          { name: "show_titles", label: "Title row (player)", selector: { boolean: {} } },
+          { name: "show_app", label: "App chip (player)", selector: { boolean: {} } },
+          { name: "live_logo", label: "Live radio logo on white (player)", selector: { boolean: {} } },
         ],
       },
       {

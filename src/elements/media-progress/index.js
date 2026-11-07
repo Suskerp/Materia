@@ -1,6 +1,8 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
+import { isLive, isMediaOff, mediaControls } from "../../utils/media.js";
+import { t } from "../../utils/i18n.js";
 import "./editor.js";
 
 const H = 28;
@@ -8,6 +10,11 @@ const MID = 14;
 const AMP = 2; // center-to-peak amplitude (kept low / flat per M3 spec)
 const WL = 32; // wavelength (must match the CSS mp-flow keyframe translateX)
 const STEP = 2;
+// variant: player — the expressive player's wave (tuned prototype): a little
+// taller and longer, flat while paused, with a 6 px gap either side of the handle.
+const P_AMP = 3;
+const P_WL = 36;
+const P_GAP = 6;
 
 let _uid = 0;
 
@@ -86,7 +93,8 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     // infinite target instead of an empty bar. Explicit live mode deliberately
     // outranks the entity state: Music Assistant can report `idle` while an
     // external receiver continues playing its NET/radio stream.
-    const live = this.config.live === true || (playing && this._live);
+    const live =
+      this.config.live === true || (playing && this._live) || (this._player && isLive(s));
 
     if (dur) pos = Math.min(pos, dur);
     return { pos: Math.max(0, pos), dur, playing, live };
@@ -101,11 +109,15 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
   }
 
+  get _player() {
+    return this.config?.variant === "player";
+  }
+
   /** Sine wave path between two x positions (px). */
-  _wavePath(fromX, toX) {
+  _wavePath(fromX, toX, amp = AMP, wl = WL) {
     let d = "";
     for (let x = fromX; x <= toX; x += STEP) {
-      const y = MID - AMP * Math.sin((2 * Math.PI * x) / WL);
+      const y = MID - amp * Math.sin((2 * Math.PI * x) / wl);
       d += `${d ? " L" : "M"} ${x.toFixed(1)} ${y.toFixed(1)}`;
     }
     return d || "M 0 14";
@@ -132,9 +144,16 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     // Cache the few nodes the rAF loop mutates so it never has to touch Lit.
     const root = this.shadowRoot;
     this._clipRect = root?.querySelector("clipPath rect");
-    this._thumbEl = root?.querySelector(".thumb");
+    this._thumbEl = root?.querySelector(this._player ? ".handle" : ".thumb");
     this._trackEl = root?.querySelector(".track");
     this._posEl = root?.querySelector(".time");
+    // The player variant renders no bar while off / unseekable; observe the
+    // bar whenever a new one appears, not only on first render.
+    const bar = root?.querySelector(".bar");
+    if (bar && bar !== this._observedBar) {
+      this._observedBar = bar;
+      this._observeBar();
+    }
 
     const { playing, live } = this._position();
     // The rAF loop exists only to advance the played position smoothly. When
@@ -162,6 +181,10 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
   }
 
   _tickDom() {
+    if (this._player) {
+      this._tickPlayer();
+      return;
+    }
     const { pos, dur, live } = this._position();
     const w = this._w || 300;
     const frac = live ? 1 : dur > 0 ? Math.min(1, pos / dur) : 0;
@@ -195,6 +218,118 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     return this._wavePathCache;
   }
 
+  /* ---- variant: player ------------------------------------------------- */
+
+  /** Played x of the player variant (the drag position while seeking). */
+  _playerX() {
+    const { pos, dur, live } = this._position();
+    const w = this._w || 300;
+    const at = this._dragPos ?? pos;
+    const frac = live ? 1 : dur > 0 ? Math.max(0, Math.min(1, at / dur)) : 0;
+    return { x: 2 + frac * (w - 4), w, pos: at, dur, live };
+  }
+
+  _tickPlayer() {
+    const { x, w, pos, live } = this._playerX();
+    if (this._clipRect) this._clipRect.setAttribute("width", Math.max(0, live ? w : x - P_GAP));
+    if (this._trackEl) {
+      this._trackEl.setAttribute("x1", x + P_GAP);
+      this._trackEl.setAttribute("visibility", x + P_GAP < w - 2 ? "visible" : "hidden");
+    }
+    if (this._thumbEl) {
+      this._thumbEl.setAttribute("x1", x);
+      this._thumbEl.setAttribute("x2", x);
+    }
+    if (this._posEl) this._posEl.textContent = this._fmt(pos);
+    if (live) this._stopLoop();
+  }
+
+  get _canSeek() {
+    const s = this.hass?.states[this.config.entity];
+    return this.config.seekable !== false && mediaControls(s).includes("seek");
+  }
+
+  _seekAt(ev) {
+    const rect = this.shadowRoot.querySelector(".bar").getBoundingClientRect();
+    const { dur } = this._position();
+    return Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width)) * dur;
+  }
+
+  _dragStart(ev) {
+    const { dur, live } = this._position();
+    if (!this._canSeek || live || !dur) return;
+    ev.currentTarget.setPointerCapture(ev.pointerId);
+    this._dragPos = this._seekAt(ev);
+    this._tickPlayer();
+  }
+
+  _dragMove(ev) {
+    if (this._dragPos == null) return;
+    this._dragPos = this._seekAt(ev);
+    this._tickPlayer();
+  }
+
+  _dragEnd() {
+    if (this._dragPos == null) return;
+    const seek = Math.round(this._dragPos);
+    this._dragPos = null;
+    this._callService("media_player", "media_seek", { entity_id: this.config.entity, seek_position: seek });
+  }
+
+  _renderPlayer(stateObj) {
+    const { pos, dur, playing, live } = this._position();
+    const seek = this._canSeek;
+    if (isMediaOff(stateObj) || (!seek && !live)) return html``;
+    const { x, w } = this._playerX();
+    // Paused: the wave lies flat (and stops flowing).
+    const amp = playing ? P_AMP : 0;
+    const key = `${w}|${amp}`;
+    if (this._pWaveKey !== key) {
+      this._pWaveKey = key;
+      this._pWave = this._wavePath(-P_WL, w + P_WL, amp, P_WL);
+    }
+    const showTimes = this.config.show_times !== false && !live;
+    const color = this._resolvedColor || this.config.color;
+    return html`
+      <ha-card>
+        <div class="wrap player ${seek && !live ? "seekable" : ""}" style=${color ? `--mp-color:${color};` : ""}>
+          <div
+            class="bar"
+            @pointerdown=${this._dragStart}
+            @pointermove=${this._dragMove}
+            @pointerup=${this._dragEnd}
+            @pointercancel=${this._dragEnd}
+          >
+            <svg width="100%" height=${H}>
+              <defs>
+                <clipPath id=${this._cid}>
+                  <rect x="0" y="0" width=${Math.max(0, live ? w : x - P_GAP)} height=${H}></rect>
+                </clipPath>
+              </defs>
+              ${live
+                ? nothing
+                : html`<line class="track" x1=${x + P_GAP} y1=${MID} x2=${w - 2} y2=${MID}></line>`}
+              <g clip-path="url(#${this._cid})">
+                <path class="wave p-wave ${playing ? "playing" : ""}" d=${this._pWave}></path>
+              </g>
+              ${live
+                ? nothing
+                : html`<line class="handle" x1=${x} x2=${x} y1=${MID - 12} y2=${MID + 12}></line>
+                    <circle class="stop" cx=${w - 2} cy=${MID} r="2"></circle>`}
+            </svg>
+          </div>
+          ${showTimes
+            ? html`<div class="times">
+                <span class="time">${this._fmt(pos)}</span>
+                <span class="time">${this._fmt(dur)}</span>
+              </div>`
+            : nothing}
+          ${live ? html`<div class="livechip"><i></i>${t("media_live", this.hass)}</div>` : nothing}
+        </div>
+      </ha-card>
+    `;
+  }
+
   disconnectedCallback() {
     super.disconnectedCallback();
     this._stopLoop();
@@ -216,6 +351,7 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
   render() {
     if (!this.hass || !this.config) return html``;
     const stateObj = this.hass.states[this.config.entity];
+    if (this._player) return this._renderPlayer(stateObj);
     const unavailable = this._isUnavailable(stateObj);
     const { pos, dur, playing, live } = this._position();
     const w = this._w || 300;

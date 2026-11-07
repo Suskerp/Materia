@@ -98,4 +98,87 @@ export const styles = [motionTokens, css`
     opacity: 0.5;
     pointer-events: none;
   }
+
+  /* ---- art size modes (any variant) ---- */
+
+  /* auto: shrinks with the viewport height so, on a phone, the header and
+     both button rows stay visible under the art (tuned prototype formula). */
+  .art.art-auto {
+    width: clamp(136px, calc(100svh - 600px), 420px);
+    max-width: 100%;
+    transition: width var(--md-sys-motion-default-effects);
+  }
+
+  .art.art-fill {
+    width: 100%;
+    max-width: none;
+  }
+
+  /* ---- variant: player ---- */
+  .player {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    color: var(--md-sys-color-on-surface, var(--primary-text-color));
+  }
+
+  .art.pl-art {
+    align-self: center;
+    border-radius: 28px;
+    cursor: pointer;
+    background-color: var(--md-sys-color-surface-container-high, rgba(127, 127, 127, 0.12));
+  }
+
+  /* Live radio: the station logo on white, contained. */
+  .art.logo {
+    background-color: #fff;
+    background-size: contain;
+  }
+
+  .titlerow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .titles {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pl-title {
+    font-size: 24px;
+    line-height: 30px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pl-sub {
+    font-size: 15px;
+    color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chip {
+    flex: none;
+    height: 28px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    background: var(--md-sys-color-surface-container-high, rgba(127, 127, 127, 0.12));
+    color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .player.off .art {
+    opacity: 0.6;
+  }
 `];

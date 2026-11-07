@@ -79,6 +79,72 @@ export const styles = css`
     fill: var(--mp-color, var(--md-sys-color-primary));
   }
 
+  /* ---- variant: player ---- */
+  .wrap.player {
+    padding: 0;
+  }
+
+  .wrap.player .bar {
+    height: 32px;
+    cursor: default;
+  }
+
+  .wrap.player.seekable .bar {
+    cursor: pointer;
+  }
+
+  .wrap.player .track {
+    stroke: var(--md-sys-color-surface-container-highest, rgba(127, 127, 127, 0.3));
+  }
+
+  .wave.p-wave {
+    animation-name: mp-flow-player;
+  }
+
+  @keyframes mp-flow-player {
+    to {
+      transform: translateX(36px);
+    }
+  }
+
+  .handle {
+    stroke: var(--mp-color, var(--md-sys-color-primary));
+    stroke-width: 4;
+    stroke-linecap: round;
+  }
+
+  .stop {
+    fill: var(--mp-color, var(--md-sys-color-primary));
+  }
+
+  .wrap.player .times {
+    padding: 0;
+    margin-top: 2px;
+  }
+
+  .livechip {
+    width: fit-content;
+    margin: 6px auto 0;
+    height: 24px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 8px;
+    background: var(--md-sys-color-surface-container-high, rgba(127, 127, 127, 0.12));
+    color: var(--md-sys-color-on-surface, var(--primary-text-color));
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+
+  .livechip i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--md-sys-color-error, #b3261e);
+  }
+
   .wrap.unavailable {
     opacity: 0.5;
     pointer-events: none;

@@ -3,7 +3,7 @@ import { sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
 import { loadCardHelpers } from "../../styles/shared.js";
 
-class MateriaExpanderEditor extends SmartEditorBase {
+export class MateriaExpanderEditor extends SmartEditorBase {
   static properties = {
     _editingCard: { state: true },
   };
@@ -163,14 +163,21 @@ class MateriaExpanderEditor extends SmartEditorBase {
     return Array.isArray(this._config?.cards) ? this._config.cards : [];
   }
 
+  /** Heading and hint above the card list; container editors that reuse this list override them. */
+  get _cardsTitle() {
+    return "Behind the chevron";
+  }
+
+  get _cardsHint() {
+    return "These cards appear when the row is opened. The chevron only shows once there is at least one.";
+  }
+
   _renderExtra() {
     if (this._editingCard != null) return this._renderCardEditor();
     const cards = this._cards();
     return html`
-      <div class="cards-header"><span>Behind the chevron</span></div>
-      <div class="cards-hint">
-        These cards appear when the row is opened. The chevron only shows once there is at least one.
-      </div>
+      <div class="cards-header"><span>${this._cardsTitle}</span></div>
+      <div class="cards-hint">${this._cardsHint}</div>
 
       ${sortableList(
         (from, to) => this._moveCard(from, to),

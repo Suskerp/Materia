@@ -12,7 +12,7 @@ only when its extra interaction is the reason you chose it.
 | Room overview | `materia-room` | The page already supplies navigation and only needs a plain list. |
 | Compact sensor summary | `materia-glance-tile`, variant `plain` | A gauge/history visualization adds information rather than decoration. |
 | On/off row | `materia-switch` | The universal card already fits the page; do not replace it only for visual variety. |
-| Media summary | `materia-media` | Seeking is required; add `materia-media-progress` alongside it. |
+| Media summary | `materia-media` | Seeking is required; add `materia-media-progress` alongside it. For a full player, compose the expressive media family below. |
 | Weather overview | `materia-weather-glance` | The page needs a hero, forecast strip, or one detailed metric. |
 | Humidity control | `materia-humidifier` | A compact humidity control is enough; use `materia-climate-panel` when the full dial-and-sections layout is wanted. |
 | Safe consequential action | `materia-confirm` | Native HA confirmation is sufficient for the risk involved. |
@@ -33,6 +33,223 @@ only when its extra interaction is the reason you chose it.
   dehumidifiers. Prefer the entity's reported limits, step size, current
   humidity, and modes; configure an external sensor only when the integration
   does not expose `current_humidity`.
+
+## Expressive media family
+
+Composable parts of an M3 Expressive player. Each part is its own card;
+stack them, or put them in `materia-art-scope` to colour them from the cover.
+Every part reads the player's `controls` attribute (a list) when it has one,
+else its `supported_features`. Volume is in steps 0–99: `volume_steps` when
+present, else `volume_level` × 99; the `limit` attribute caps it.
+
+| Part | Type | Role |
+|---|---|---|
+| Art scope | `materia-art-scope` | Container. Colours its children from the cover; `kiosk` layout hosts a side panel. |
+| Media art | `materia-media`, `variant: player` | Cover, title, artist · album, app chip. |
+| Progress | `materia-media-progress`, `variant: player` | Wave up to the position, handle, drag to seek, LIVE chip. |
+| Transport | `materia-button-group`, `group: transport` | Prev / play-pause / next. |
+| Toolbar | `materia-button-group`, `group: toolbar` | Shuffle, repeat, volume, custom buttons. |
+| Header | `materia-media-header` | Source, input, app · zone, stations + volume ring. |
+| Volume | `materia-volume-knob` | Knob, arc or tap-first panel with zones and linking. |
+| Volume ring | `materia-volume-ring` | 48 px button that opens the volume panel. |
+| Stations | `materia-station-grid` | White square logos; the current one is ringed. |
+
+Buttons that open something (volume ring, toolbar volume, header stations,
+toolbar buttons with `card:`) open it in a **bottom sheet**. Inside a
+`materia-art-scope` with `layout: kiosk` that is at least 900 px wide, they
+open the kiosk's **side panel** instead.
+
+### materia-art-scope
+
+Sets the `--md-sys-color-*` tokens (plus HA's primary/text colours) from the
+cover. Colours are computed in the browser with the theme's own
+material-color-utilities build and the user's `material_you_*` helpers
+(per user, then global).
+
+```yaml
+type: custom:materia-art-scope
+entity: media_player.arcam_living
+layout: stack            # stack | row | grid | kiosk
+columns: 2               # grid: a number or a grid-template-columns string
+gap: 16
+background: true         # false: colours only, no surface
+cards: [ … ]
+```
+
+`grid` and `row` stack below 600 px. `kiosk` places the first card as the
+cover and the rest as the player column, at exactly 50/50. An open side
+panel turns it into cover 400 | player | panel 400. The panel closes after
+`panel_timeout` seconds without a touch (default 10, 0 = never), on a second
+tap of its button, or on ×. Below 900 px the kiosk stacks and the buttons
+fall back to sheets. `panels.<id>` is merged over what a button asks for. The
+ids are `volume` and `stations`, plus any `panel:` of a custom toolbar button.
+
+```yaml
+type: custom:materia-art-scope
+entity: media_player.arcam_living
+layout: kiosk
+padding: 32
+gap: 20
+panel_timeout: 10
+panels:
+  volume: { style: tap }
+cards:
+  - { type: custom:materia-media, entity: media_player.arcam_living, variant: player, art_size: fill, show_titles: false }
+  - type: custom:materia-media-header
+    entity: media_player.arcam_living
+    variant: kiosk
+    stations:
+      - { name: Radio 1, image: /local/radio/radio1.png, action: script.radio_1 }
+  - { type: custom:materia-media, entity: media_player.arcam_living, variant: player, show_art: false }
+  - { type: custom:materia-media-progress, entity: media_player.arcam_living, variant: player }
+  - { type: custom:materia-button-group, group: transport, entity: media_player.arcam_living }
+  - type: custom:materia-button-group
+    group: toolbar
+    entity: media_player.arcam_living
+    align: start
+    buttons: [shuffle, repeat, { type: volume, style: ring }]
+    volume:
+      zones:
+        - { entity: media_player.arcam_living, name: Living }
+        - { entity: media_player.arcam_eetkamer_keuken, name: Eetkamer & keuken }
+      link_entity: switch.arcam_zones_koppelen
+```
+
+### materia-media — `variant: player`
+
+```yaml
+type: custom:materia-media
+entity: media_player.arcam_living
+variant: player
+art_size: auto      # auto (shrinks with the phone's height) | fill | a number in px
+show_app: true      # app_name chip
+show_titles: true   # false: art only (kiosk cover)
+live_logo: true     # live radio: logo on white, contained
+```
+
+`art_size: auto | fill` also works on the default variant. Existing numeric
+`art_size` values keep their meaning.
+
+### materia-media-progress — `variant: player`
+
+```yaml
+type: custom:materia-media-progress
+entity: media_player.arcam_living
+variant: player
+```
+
+The wave runs up to the position, then a flat track, a handle and an end dot.
+Drag or tap to seek, only when `seek` is among the controls (and `seekable`
+is not false). A live stream (`live` attribute, `live: true`, or the
+rolling-duration latch) shows a full-width wave with a LIVE chip and no
+handle. The wave lies flat while paused. Hidden while off or when there is
+nothing to seek and nothing live.
+
+### materia-button-group — media groups
+
+`group: transport` is an M3 Expressive *standard* group of prev / play-pause /
+next. The pressed button widens and its neighbours shrink. Play is the
+larger tertiary-container shape, round when paused and squarer when playing;
+prev/next are primary-container. Without next/previous (radio), play stands
+alone. It is hidden while off. The default height is 88 px; `size: m | l | xl`
+overrides it.
+
+```yaml
+type: custom:materia-button-group
+group: transport
+entity: media_player.arcam_living
+```
+
+`group: toolbar` is a *connected* group on its own container (the M3
+Expressive toolbar). `buttons` defaults to `[shuffle, repeat, volume]`.
+Shuffle and repeat show only when the player supports them; repeat cycles
+off → all → one. Outer corners follow the visible buttons. When only the
+volume button is left, it reads "Volume NN" at the play button's width.
+`{ type: volume, style: ring }` draws the volume ring. A custom button runs
+its `tap_action`, or opens `card:` (in kiosk panel `panel:`, else a sheet).
+`volume:` is the config of the volume panel it opens. `align: start`
+left-aligns the toolbar.
+
+```yaml
+type: custom:materia-button-group
+group: toolbar
+entity: media_player.arcam_living
+buttons:
+  - shuffle
+  - repeat
+  - volume
+  - { icon: mdi:power, tap_action: { action: toggle } }
+volume:
+  zones:
+    - { entity: media_player.arcam_living, name: Living }
+    - { entity: media_player.arcam_eetkamer_keuken, name: Eetkamer & keuken }
+  link_entity: switch.arcam_zones_koppelen
+  style: knob
+```
+
+### materia-media-header
+
+```yaml
+type: custom:materia-media-header
+entity: media_player.arcam_living
+zone_name: Living              # default: the friendly name
+stations: [ { name: Radio 1, image: /local/radio/radio1.png, action: script.radio_1 } ]
+volume: { zones: [ … ], link_entity: switch.arcam_zones_koppelen }
+# variant: kiosk  → an "input · app" chip and a labelled stations button
+# show_source: false / show_volume: false
+```
+
+The source button cycles `source_list`. The stations button and the volume
+ring form a connected pair.
+
+### materia-volume-knob
+
+```yaml
+type: custom:materia-volume-knob
+entity: media_player.arcam_living
+style: knob          # knob | arc | tap
+zones:
+  - { entity: media_player.arcam_living, name: Living }
+  - { entity: media_player.arcam_eetkamer_keuken, name: Eetkamer & keuken }
+link_entity: switch.arcam_zones_koppelen
+```
+
+- **Knob:** turns freely, 24 steps per turn, and coasts after a flick.
+  The thin outer arc shows the volume the player reports.
+- **Arc:** a 270° dial with ticks.
+- **Tap (tablets):** a slim level bar next to a large number.
+  - A tap moves at most 5 steps toward the spot.
+  - Holding − or + repeats.
+  - The zone buttons show every zone's value.
+  - The link chip reads "gekoppeld −15" or "los".
+
+In every style, "limiet N" appears in the error colour from the `limit`
+attribute. The zone link line shows the second zone's value and `offset`.
+
+### materia-volume-ring
+
+```yaml
+type: custom:materia-volume-ring
+entity: media_player.arcam_living
+volume: { zones: [ … ], link_entity: switch.arcam_zones_koppelen }
+```
+
+### materia-station-grid
+
+```yaml
+type: custom:materia-station-grid
+entity: media_player.arcam_living     # rings the station that plays now
+columns: 3                            # default: as many as fit
+stations:
+  - name: Radio 1
+    image: /local/radio/radio1.png
+    match: [Radio 1]                  # default: the name, against album / title / channel
+    tap_action: { action: perform-action, perform_action: script.radio_1 }
+  - { name: Klara, image: /local/radio/klara.png, action: script.klara, data: {} }
+```
+
+In a sheet, a tap runs the action and closes the sheet. In a kiosk panel the
+panel stays open until its timer closes it.
 
 ## Deprecation policy
 

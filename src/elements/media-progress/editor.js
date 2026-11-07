@@ -13,6 +13,13 @@ class MateriaMediaProgressEditor extends SmartEditorBase {
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: "media_player" } } },
+          {
+            name: "variant",
+            selector: { select: { mode: "dropdown", options: [
+              { value: "default", label: "Default" },
+              { value: "player", label: "Player (handle, drag to seek, LIVE chip)" },
+            ] } },
+          },
           { name: "show_times", selector: { boolean: {} } },
           { name: "seekable", selector: { boolean: {} } },
           {

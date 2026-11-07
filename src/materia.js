@@ -12,6 +12,7 @@ import { injectFonts } from "./styles/shared.js";
 import "./primitives/slider.js";
 import "./primitives/drag-confirm.js";
 import "./primitives/calendar.js";
+import "./primitives/sheet.js";
 
 // Cards
 import "./cards/card/index.js";
@@ -47,6 +48,10 @@ import "./cards/level/index.js";
 import "./cards/alarm/index.js";
 import "./cards/confirm/index.js";
 import "./cards/bars/index.js";
+import "./cards/art-scope/index.js";
+import "./cards/media-header/index.js";
+import "./cards/volume-knob/index.js";
+import "./cards/station-grid/index.js";
 
 // Elements (native Lit)
 import "./elements/badge/index.js";
@@ -59,6 +64,7 @@ import "./elements/split-button/index.js";
 import "./elements/media-progress/index.js";
 import "./elements/media/index.js";
 import "./elements/clock/index.js";
+import "./elements/volume-ring/index.js";
 
 // Inject Figtree font globally
 injectFonts();
