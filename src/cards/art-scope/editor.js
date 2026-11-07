@@ -7,7 +7,7 @@ const PANEL_STYLE_LABEL = "Stijl van het volumepaneel (kiosk)";
 /** Reuses the expander's card list (add / edit / reorder child cards). */
 class MateriaArtScopeEditor extends MateriaExpanderEditor {
   _formData() {
-    return { layout: "stack", gap: 16, background: true, panel_timeout: 10, fill: true, ...this._config };
+    return { layout: "stack", gap: 16, background: true, panel_timeout: 10, fill: true, panel_mode: "sheet", ...this._config };
   }
 
   _sectionsSignature() {
@@ -78,6 +78,18 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
           { name: "gap", label: "Gap (px)", selector: { number: { min: 0, max: 64, mode: "box" } } },
           { name: "padding", label: "Padding (px)", selector: { number: { min: 0, max: 64, mode: "box" } } },
           { name: "background", label: "Draw the surface", selector: { boolean: {} } },
+          ...(layout === "kiosk"
+            ? []
+            : [
+                {
+                  name: "panel_mode",
+                  label: "Volume / stations open",
+                  selector: { select: { mode: "dropdown", options: [
+                    { value: "sheet", label: "In a bottom sheet" },
+                    { value: "inline", label: "In place of the cards (with back)" },
+                  ] } },
+                },
+              ]),
         ],
       },
       ...(layout === "kiosk"

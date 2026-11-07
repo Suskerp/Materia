@@ -55,7 +55,12 @@ export function scopeGridColumns(columns) {
   return typeof columns === "string" && columns.trim() ? columns : "repeat(2, minmax(0, 1fr))";
 }
 
-/** Card config shown in kiosk panel `id`: the button's request, then the kiosk's override. */
-export function panelCardConfig(requested, panels, id) {
-  return { ...requested, ...(panels?.[id] ?? {}), in_panel: true };
+/**
+ * Card config shown in panel `id`: the button's request, then the scope's
+ * override. In place (`inline`), its header shows a back arrow instead of ×.
+ */
+export function panelCardConfig(requested, panels, id, inline = false) {
+  const cfg = { ...requested, ...(panels?.[id] ?? {}), in_panel: true };
+  if (inline) cfg.panel_back = true;
+  return cfg;
 }

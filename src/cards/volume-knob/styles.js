@@ -326,6 +326,11 @@ export const styles = [
       color: var(--mx-onv);
     }
 
+.close.back {
+      margin-inline-start: -8px;
+      color: var(--mx-on);
+    }
+
     /* ---- tap style: calm, finger-tap first (tablets) ---- */
     ha-card.panel.tap {
       gap: 18px;

@@ -371,8 +371,17 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     this.dispatchEvent(new CustomEvent("materia-dismiss", { bubbles: true, composed: true }));
   }
 
+  /** In place of the player (art scope `panel_mode: inline`): a back arrow leads the header. */
+  _backButton() {
+    return this.config.panel_back
+      ? html`<button class="close back" aria-label=${t("media_back", this.hass)} @click=${this._dismiss}>
+          <ha-icon icon="mdi:arrow-left"></ha-icon>
+        </button>`
+      : nothing;
+  }
+
   _closeButton() {
-    return this.config.in_panel
+    return this.config.in_panel && !this.config.panel_back
       ? html`<button class="close" aria-label=${t("media_close", this.hass)} @click=${this._dismiss}>
           <ha-icon icon="mdi:close"></ha-icon>
         </button>`
@@ -405,6 +414,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     return html`
       <ha-card class="panel tap ${this.config.in_sheet ? "in-sheet" : ""} ${this.config.in_panel ? "in-panel" : ""} ${off ? "off" : ""} ${muted ? "muted" : ""}">
         <div class="phead">
+          ${this._backButton()}
           <h3>${name}</h3>
           ${this._linkChip(link)} ${this._closeButton()}
         </div>
@@ -489,6 +499,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     return html`
       <ha-card class="panel ${this.config.in_sheet ? "in-sheet" : ""} ${off ? "off" : ""}">
         <div class="phead">
+          ${this._backButton()}
           <h3>${name}</h3>
           ${link
             ? html`<button class="linklabel" @click=${this._toggleLink}>${t("media_link_zones", this.hass)}</button>

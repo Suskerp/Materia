@@ -48,7 +48,10 @@ class MateriaStationGrid extends ActionMixin(LitElement) {
         gap: 10px;
         margin-bottom: 18px;
       }
-      .head h3 {
+.head .back {
+        margin-inline-start: -8px;
+      }
+            .head h3 {
         flex: 1;
         margin: 0;
         font-size: 22px;
@@ -148,8 +151,15 @@ class MateriaStationGrid extends ActionMixin(LitElement) {
       <ha-card class="${c.in_sheet ? "in-sheet" : ""} ${c.in_panel ? "in-panel" : ""}">
         ${heading || c.in_panel
           ? html`<div class="head">
+              ${c.panel_back
+                ? html`<button
+                    class="close back"
+                    aria-label=${t("media_back", this.hass)}
+                    @click=${() => this.dispatchEvent(new CustomEvent("materia-dismiss", { bubbles: true, composed: true }))}
+                  ><ha-icon icon="mdi:arrow-left"></ha-icon></button>`
+                : nothing}
               <h3>${heading ?? ""}</h3>
-              ${c.in_panel
+              ${c.in_panel && !c.panel_back
                 ? html`<button
                     class="close"
                     aria-label=${t("media_close", this.hass)}

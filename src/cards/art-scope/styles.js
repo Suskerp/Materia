@@ -23,6 +23,7 @@ export const styles = [
 
     /* Children sit on the scope's surface: give their cards the next rung. */
     .children > *,
+    .inline-panel > *,
     .k-cover > *,
     .k-player > *,
     .k-panel-inner > * {
@@ -30,6 +31,28 @@ export const styles = [
       --ha-card-background: var(--md-sys-color-surface-container, var(--card-background-color));
       --ha-card-box-shadow: none;
       --ha-card-border-width: 0;
+    }
+
+    .children[hidden] {
+      display: none;
+    }
+
+    /* In place: the requested card fills the scope's former height. */
+    .inline-panel {
+      display: flex;
+      flex-direction: column;
+      animation: inline-in var(--md-sys-motion-expressive-default-spatial, 0.35s ease) both;
+    }
+
+    .inline-panel > * {
+      flex: 1;
+    }
+
+    @keyframes inline-in {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
     }
 
     .children.stack {

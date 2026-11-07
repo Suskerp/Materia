@@ -29,6 +29,10 @@ const PANEL_CLOSE_MS = 400;
  * on a second tap of its button, on × and when cover + player + panel no
  * longer fit (layout.js kioskTracks); below 600 px the
  * kiosk stacks and the buttons fall back to bottom sheets.
+ *
+ * INLINE (`panel_mode: inline`, stack / row / grid): the requested card
+ * replaces the scope's cards in place, at least as tall as they were, with a
+ * back arrow in its header; back, × or the timeout return to the cards.
  */
 class MateriaArtScope extends LitElement {
   static properties = {
@@ -92,7 +96,17 @@ class MateriaArtScope extends LitElement {
       this._cards = null;
       this._buildCards();
     }
-    if (this.config.layout !== "kiosk" && this._panelId) this._closePanel(true);
+    if (!this._hostsPanels() && this._panelId) this._closePanel(true);
+  }
+
+  /** Inline panels: the cards are swapped for the requested card in place. */
+  get _inline() {
+    return this.config?.layout !== "kiosk" && this.config?.panel_mode === "inline";
+  }
+
+  /** Whether this scope shows panels at all right now (else buttons open sheets). */
+  _hostsPanels() {
+    return this._inline || (this.config?.layout === "kiosk" && this._tracks(true).canOpen);
   }
 
   async _buildCards() {
@@ -230,8 +244,8 @@ class MateriaArtScope extends LitElement {
   }
 
   _onOpenPanel(e) {
-    // Too narrow for cover + player + panel: let the button open a sheet.
-    if (this.config?.layout !== "kiosk" || !this._tracks(true).canOpen) {
+    // No panels here (or too narrow for cover + player + panel): let the button open a sheet.
+    if (!this._hostsPanels()) {
       if (this._panelId) this._closePanel(true);
       return;
     }
@@ -243,7 +257,11 @@ class MateriaArtScope extends LitElement {
       return;
     }
     clearTimeout(this._panelRemoveTimer);
-    const el = createCardContent(panelCardConfig(e.detail.config, this.config.panels, id));
+    if (this._inline && !this._panelId) {
+      // Keep the scope's height, so the page does not jump when the cards swap.
+      this._inlineMin = this.renderRoot.querySelector(".children")?.offsetHeight ?? 0;
+    }
+    const el = createCardContent(panelCardConfig(e.detail.config, this.config.panels, id, this._inline));
     el.hass = this.hass;
     this._panelEl = el;
     this._panelId = id;
@@ -253,6 +271,7 @@ class MateriaArtScope extends LitElement {
 
   _closePanel(immediate = false) {
     clearTimeout(this._panelTimer);
+    if (this._inline) immediate = true; // nothing animates shut in place
     this._panelId = null;
     this._announce();
     // Keep the content while the column animates shut.
@@ -307,7 +326,16 @@ class MateriaArtScope extends LitElement {
                 <div class="k-panel-inner">${this._panelEl ?? nothing}</div>
               </div>
             </div>`
-          : html`<div class="children ${c.layout}" style="gap:${Number(c.gap)}px;${this._childStyle()}">${cards}</div>`}
+          : html`<div
+                class="children ${c.layout}"
+                style="gap:${Number(c.gap)}px;${this._childStyle()}"
+                ?hidden=${!!this._panelEl}
+              >${cards}</div>
+              ${this._panelEl
+                ? html`<div class="inline-panel" style="min-height:${this._inlineMin ?? 0}px" @pointerdown=${this._touchPanel}>
+                    ${this._panelEl}
+                  </div>`
+                : nothing}`}
       </ha-card>
     `;
   }

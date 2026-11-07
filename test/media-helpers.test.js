@@ -167,6 +167,11 @@ test("kiosk panels merge the kiosk's override over the button's request", () => 
     in_panel: true,
   });
   assert.deepEqual(panelCardConfig(requested, undefined, "volume"), { ...requested, in_panel: true });
+  assert.deepEqual(panelCardConfig(requested, undefined, "volume", true), {
+    ...requested,
+    in_panel: true,
+    panel_back: true,
+  }, "in place: a back arrow instead of ×");
 });
 
 test("grid columns: a number is equal tracks, a string is used as written", () => {
