@@ -261,7 +261,8 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     $(".num").textContent = off ? t("state_off", this.hass) : String(Math.round(v));
     if (this._style === "tap") {
       dial.setAttribute("aria-valuenow", String(Math.round(v)));
-      $(".tfill").style.height = `${off ? 0 : (v / MAX_STEPS) * 100}%`;
+      // The bar spans 0 … the limit: the range above it can't be used, so it isn't drawn.
+      $(".tfill").style.height = `${off ? 0 : Math.min(1, v / limit) * 100}%`;
       $(".limlabel").textContent =
         limit < MAX_STEPS && Math.round(v) >= limit ? t("media_limit", this.hass, { value: limit }) : "";
       return;
@@ -273,15 +274,14 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
       const angle = (this._dragging || this._coast) && this._knobAngle != null ? this._knobAngle : knobAngleFor(v);
       this._knobG.style.transform = `rotate(${angle}deg)`;
       // Outer thin arc = the volume the amplifier REPORTS, so it trails the knob.
-      const actual = off ? 0 : volumeSteps(s);
+      // Scaled to the limit: the full ring is the usable range.
+      const actual = off ? 0 : Math.min(MAX_STEPS, (volumeSteps(s) / limit) * MAX_STEPS);
       $(".actual").style.strokeDasharray = `${Math.max(actual, 0.001)} ${MAX_STEPS + 1}`;
-      $(".actlim").setAttribute("d", limit < MAX_STEPS ? dialArc(limit + 1, MAX_STEPS, 150) : "");
       $(".limlabel").textContent = limit < MAX_STEPS && Math.round(v) >= limit ? limitText : "";
       return;
     }
     $(".limlabel").textContent = limit < MAX_STEPS ? limitText : "";
     $(".trk").setAttribute("d", dialArc(0, limit));
-    $(".limz").setAttribute("d", limit < MAX_STEPS ? dialArc(limit + 1.5, MAX_STEPS) : "");
     $(".lvl").setAttribute("d", off ? "" : dialArc(0, Math.max(v, 0.01)));
     const [cx, cy] = polar(74, START + (SWEEP * v) / MAX_STEPS);
     const dot = $(".dot");
@@ -290,14 +290,12 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     for (const tick of root.querySelectorAll(".tick")) {
       const tv = Number(tick.dataset.v);
       tick.classList.toggle("t-on", !off && tv <= v);
-      tick.classList.toggle("t-lim", tv > limit);
     }
   }
 
   _dialContent() {
     if (this._knob) {
       return svg`
-        <path class="actlim"></path>
         <path class="actual" pathLength=${MAX_STEPS} d=${dialArc(0, MAX_STEPS, 150)}></path>
         <circle class="knobshadow" cx="150" cy="150" r="118"></circle>
         <g id="knobg">
@@ -307,7 +305,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     }
     return svg`
       ${TICKS.map((k) => svg`<line data-v=${k.v} class="tick ${k.major ? "major" : ""}" x1=${k.x1} y1=${k.y1} x2=${k.x2} y2=${k.y2}></line>`)}
-      <path class="trk"></path><path class="limz"></path><path class="lvl"></path>
+      <path class="trk"></path><path class="lvl"></path>
       <circle class="knob" cx="150" cy="150" r="96"></circle><circle class="dot" r="9"></circle>`;
   }
 
@@ -339,7 +337,8 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
 
   _tapBar(ev) {
     const r = ev.currentTarget.getBoundingClientRect();
-    this._setVolume(tapStep(this._volValue(), 1 - (ev.clientY - r.top) / r.height), true);
+    const limit = volumeLimit(this._zoneState());
+    this._setVolume(tapStep(this._volValue(), 1 - (ev.clientY - r.top) / r.height, limit), true);
   }
 
   /** Hold − / +: one step now, repeats after 380 ms, speeding from 140 to 70 ms. */
@@ -435,11 +434,10 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
             role="slider"
             aria-label=${name}
             aria-valuemin="0"
-            aria-valuemax=${MAX_STEPS}
+            aria-valuemax=${limit}
             @click=${this._tapBar}
             @keydown=${this._key}
           >
-            ${limit < MAX_STEPS ? html`<span class="tlim" style="height:${((MAX_STEPS - limit) / MAX_STEPS) * 100}%"></span>` : nothing}
             <span class="tfill"></span>
           </button>
           <div class="treadout">

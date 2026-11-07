@@ -3,7 +3,8 @@ import { MAX_STEPS, volumeSteps, volumeLimit, isMediaOff } from "../../utils/med
 import { dialArc } from "../../utils/kinetic-knob.js";
 
 /**
- * The volume ring: a thin 270° arc showing the level, with a speaker icon
+ * The volume ring: a thin 270° arc showing the level on 0 … the limit (the
+ * range above the limit can't be used, so it isn't drawn), with a speaker icon
  * inside (no number), drawn in a 48 px square. Shared by materia-volume-ring
  * and the media header, so both read identically.
  */
@@ -14,9 +15,8 @@ export function volumeRing(stateObj) {
   // r 20 in a 48 box: the 3 px stroke stays inside the 48 px target.
   const muted = off || !!stateObj?.attributes?.is_volume_muted;
   return html`<span class="vring-box" aria-hidden="true"><svg class="vring" viewBox="0 0 48 48">
-    <path class="vring-trk" d=${dialArc(0, limit, 20, 24)}></path>
-    ${limit < MAX_STEPS ? svg`<path class="vring-lim" d=${dialArc(limit + 3, MAX_STEPS, 20, 24)}></path>` : ""}
-    ${v > 0 ? svg`<path class="vring-lvl" d=${dialArc(0, v, 20, 24)}></path>` : ""}
+    <path class="vring-trk" d=${dialArc(0, MAX_STEPS, 20, 24)}></path>
+    ${v > 0 ? svg`<path class="vring-lvl" d=${dialArc(0, Math.min(MAX_STEPS, (v / limit) * MAX_STEPS), 20, 24)}></path>` : ""}
   </svg><ha-icon class="vring-icon" icon=${muted ? "mdi:volume-off" : "mdi:volume-high"}></ha-icon></span>`;
 }
 
@@ -49,9 +49,6 @@ export const volumeRingStyles = css`
   }
   .vring-trk {
     stroke: var(--md-sys-color-outline-variant, rgba(127, 127, 127, 0.4));
-  }
-  .vring-lim {
-    stroke: var(--md-sys-color-error-container, #8c1d18);
   }
   .vring-lvl {
     stroke: currentColor;

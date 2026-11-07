@@ -151,18 +151,9 @@ export const styles = [
       opacity: 1;
     }
 
-    .tick.t-lim {
-      stroke: var(--mx-ec);
-      opacity: 1;
-    }
 
     .trk,
     .lvl,
-    .limz {
-      fill: none;
-      stroke-width: 16;
-      stroke-linecap: round;
-    }
 
     .trk {
       stroke: var(--mx-s3);
@@ -172,9 +163,6 @@ export const styles = [
       stroke: var(--mx-p);
     }
 
-    .limz {
-      stroke: var(--mx-ec);
-    }
 
     .knob {
       fill: var(--mx-s2);
@@ -219,13 +207,6 @@ export const styles = [
       transition: stroke-dasharray 0.35s ease-out, stroke var(--md-sys-motion-slow-effects);
     }
 
-    .actlim {
-      fill: none;
-      stroke: var(--mx-ec);
-      stroke-width: 3;
-      stroke-linecap: round;
-      opacity: 0.8;
-    }
 
     #knobg {
       transform-origin: 150px 150px;
@@ -477,20 +458,6 @@ export const styles = [
       background: var(--md-sys-color-outline, var(--mx-onv));
     }
 
-    /* Above the limit: hatched in the error container, edged in error. */
-    .tlim {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 0;
-      box-sizing: border-box;
-      border-bottom: 3px solid var(--mx-err);
-      background: repeating-linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--mx-ec) 40%, transparent) 0 8px,
-        transparent 8px 16px
-      );
-    }
 
     .treadout {
       flex: 1;

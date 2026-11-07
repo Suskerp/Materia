@@ -104,8 +104,8 @@ export const REPEAT_MIN_MS = 70;
 export const REPEAT_ACCEL_MS = 8;
 
 /** New volume after a tap at `fraction` (0 = bottom, 1 = top) of the level bar. */
-export function tapStep(value, fraction) {
-  const target = Math.max(0, Math.min(1, fraction)) * MAX_STEPS;
+export function tapStep(value, fraction, max = MAX_STEPS) {
+  const target = Math.max(0, Math.min(1, fraction)) * max;
   return Math.round(value + Math.max(-TAP_MAX_STEPS, Math.min(TAP_MAX_STEPS, target - value)));
 }
 

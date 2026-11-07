@@ -116,6 +116,9 @@ test("tap style: a tap moves at most 5 steps toward the spot", () => {
   assert.equal(tapStep(30, 0), 25);
   assert.equal(tapStep(30, 32 / 99), 32, "a near tap lands exactly");
   assert.equal(tapStep(0, -1), 0);
+  // The bar spans 0 … the limit: a tap halfway up with limit 60 aims at 30.
+  assert.equal(tapStep(28, 0.5, 60), 30);
+  assert.equal(tapStep(58, 1, 60), 60, "the top of the bar is the limit");
 });
 
 test("tap style: hold repeats after 380 ms, speeding from 140 to 70 ms", () => {
