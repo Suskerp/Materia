@@ -554,7 +554,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
         <div class="phead">
           ${this._backButton()}
           <h3>${name}</h3>
-          ${this._powerButton()} ${this._linkChip(link)} ${this._closeButton()}
+          ${this._linkChip(link)} ${this._closeButton()}
         </div>
         ${zones.length > 1
           ? html`<div class="ztabs" role="radiogroup" aria-label=${name}>
@@ -620,7 +620,6 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
         <div class="phead">
           ${this._backButton()}
           <h3>${name}</h3>
-          ${this._powerButton()}
           ${link
             ? html`<button class="linklabel" @click=${this._toggleLink}>${t("media_link_zones", this.hass)}</button>
                 <button
