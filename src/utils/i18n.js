@@ -431,6 +431,8 @@ export const STRINGS = {
   media_volume_down: { en: "Volume down", nl: "Zachter" },
   media_volume_up: { en: "Volume up", nl: "Luider" },
   media_source: { en: "Source", nl: "Ingang" },
+  media_turn_on: { en: "Turn on", nl: "Aanzetten" },
+  media_turn_off: { en: "Turn off", nl: "Uitzetten" },
   media_back: { en: "Back", nl: "Terug" },
   media_close: { en: "Close", nl: "Sluiten" },
   media_linked: { en: "linked {offset}", nl: "gekoppeld {offset}" },

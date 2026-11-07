@@ -406,6 +406,27 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     this.dispatchEvent(new CustomEvent("materia-dismiss", { bubbles: true, composed: true }));
   }
 
+  /** Power toggle for the current zone: filled while on, outlined while off. */
+  _powerButton() {
+    const s = this._zoneState();
+    if (!s || this.config.show_power === false) return nothing;
+    const on = !isMediaOff(s);
+    return html`<button
+      class="power ${on ? "on" : ""}"
+      aria-label=${t(on ? "media_turn_off" : "media_turn_on", this.hass)}
+      aria-pressed=${on ? "true" : "false"}
+      @click=${this._togglePower}
+    ><ha-icon icon="mdi:power"></ha-icon></button>`;
+  }
+
+  _togglePower() {
+    const s = this._zoneState();
+    stepHaptic(this, "light");
+    this._callService("media_player", isMediaOff(s) ? "turn_on" : "turn_off", {
+      entity_id: this.config.zones[this._zone].entity,
+    });
+  }
+
   /** In place of the player (art scope `panel_mode: inline`): a back arrow leads the header. */
   _backButton() {
     return this.config.panel_back
@@ -497,7 +518,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     return html`
       <ha-card class="panel tap col ${off ? "off" : ""} ${muted ? "muted" : ""}">
         <div class="colhead">
-          <span class="zn">${name}</span>
+          <div class="zrow"><span class="zn">${name}</span>${this._powerButton()}</div>
           <span class="num"></span>
         </div>
         <div class="tbody">
@@ -533,7 +554,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
         <div class="phead">
           ${this._backButton()}
           <h3>${name}</h3>
-          ${this._linkChip(link)} ${this._closeButton()}
+          ${this._powerButton()} ${this._linkChip(link)} ${this._closeButton()}
         </div>
         ${zones.length > 1
           ? html`<div class="ztabs" role="radiogroup" aria-label=${name}>
@@ -599,6 +620,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
         <div class="phead">
           ${this._backButton()}
           <h3>${name}</h3>
+          ${this._powerButton()}
           ${link
             ? html`<button class="linklabel" @click=${this._toggleLink}>${t("media_link_zones", this.hass)}</button>
                 <button

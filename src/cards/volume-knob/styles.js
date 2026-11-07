@@ -496,6 +496,60 @@ export const styles = [
     }
 
 
+    /* Zone power: filled primary while on, outlined while off. */
+    .power {
+      width: 40px;
+      height: 40px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      border-radius: 20px;
+      border: 1px solid var(--mx-ov);
+      color: var(--mx-onv);
+      background: none;
+      transition:
+        background-color var(--md-sys-motion-fast-effects),
+        color var(--md-sys-motion-fast-effects),
+        border-radius var(--md-sys-motion-expressive-fast-spatial);
+    }
+
+    .power.on {
+      border-color: transparent;
+      background: var(--mx-p);
+      color: var(--md-sys-color-on-primary, #fff);
+    }
+
+    .power:active {
+      border-radius: 12px;
+    }
+
+    .power ha-icon {
+      --mdc-icon-size: 20px;
+    }
+
+    /* A zone that is off: its slider and −/+ stay visible but rest. */
+    .tap.off .tbody,
+    .tap.off .tfoot {
+      opacity: 0.38;
+      pointer-events: none;
+    }
+
+    .col .zrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 100%;
+    }
+
+    .col .zrow .power {
+      width: 32px;
+      height: 32px;
+    }
+
+    .col .zrow .power ha-icon {
+      --mdc-icon-size: 18px;
+    }
+
     /* zones_view: side — one column per zone under one header. */
     .tcols {
       flex: 1;
