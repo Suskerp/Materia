@@ -235,6 +235,12 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
 
   /* ---------------------------------------------------------------- render */
 
+  willUpdate(changed) {
+    super.willUpdate?.(changed);
+    // A column inside zones_view: side gets .config directly, without setConfig.
+    if (this.config && !(this._zone < this.config.zones?.length)) this._zone = 0;
+  }
+
   updated(changed) {
     super.updated?.(changed);
     const dial = this.renderRoot.querySelector(".dial-svg");
@@ -401,6 +407,85 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     ><ha-icon icon="mdi:link-variant"></ha-icon><span>${text}</span></button>`;
   }
 
+  /** − | mute | + under a slider; hold − / + to repeat. */
+  _tapFoot(muted) {
+    return html`
+        <div class="tfoot">
+          <button
+            class="step first"
+            aria-label=${t("media_volume_down", this.hass)}
+            @pointerdown=${(e) => this._repeatStart(e, -1)}
+            @pointerup=${this._repeatStop}
+            @pointerleave=${this._repeatStop}
+            @pointercancel=${this._repeatStop}
+            @keydown=${(e) => this._repeatKey(e, -1)}
+          ><ha-icon icon="mdi:minus"></ha-icon></button>
+          <button
+            class="mute ${muted ? "on" : ""}"
+            aria-label=${t("media_mute", this.hass)}
+            aria-pressed=${muted ? "true" : "false"}
+            @click=${this._toggleMute}
+          ><ha-icon icon=${muted ? "mdi:volume-off" : "mdi:volume-high"}></ha-icon></button>
+          <button
+            class="step last"
+            aria-label=${t("media_volume_up", this.hass)}
+            @pointerdown=${(e) => this._repeatStart(e, 1)}
+            @pointerup=${this._repeatStop}
+            @pointerleave=${this._repeatStop}
+            @pointercancel=${this._repeatStop}
+            @keydown=${(e) => this._repeatKey(e, 1)}
+          ><ha-icon icon="mdi:plus"></ha-icon></button>
+        </div>`;
+  }
+
+  /** zones_view: side — every zone its own column (slider and − mute +), one header. */
+  _renderTapSide(name, link) {
+    const zones = this.config.zones;
+    return html`
+      <ha-card class="panel tap side ${this.config.panel_back ? "sub" : ""} ${this.config.in_sheet ? "in-sheet" : ""} ${this.config.in_panel && !this.config.panel_back ? "in-panel" : ""}">
+        <div class="phead">
+          ${this._backButton()}
+          <h3>${name}</h3>
+          ${this._linkChip(link)} ${this._closeButton()}
+        </div>
+        <div class="tcols" style="--cols:${zones.length}">
+          ${zones.map(
+            (z, i) => html`<materia-volume-knob
+              .hass=${this.hass}
+              .config=${{ type: "custom:materia-volume-knob", style: "tap", column: true, name: this._zoneName(i), zones: [z] }}
+            ></materia-volume-knob>`
+          )}
+        </div>
+      </ha-card>
+    `;
+  }
+
+  /** One zone as a column inside zones_view: side. */
+  _renderTapColumn(name, off, muted) {
+    const limit = volumeLimit(this._zoneState());
+    return html`
+      <ha-card class="panel tap col ${off ? "off" : ""} ${muted ? "muted" : ""}">
+        <div class="colhead">
+          <span class="zn">${name}</span>
+          <span class="num"></span>
+        </div>
+        <div class="tbody">
+          <button
+            class="tbar dial-svg"
+            role="slider"
+            aria-label=${name}
+            aria-valuemin="0"
+            aria-valuemax=${limit}
+            @click=${this._tapBar}
+            @keydown=${this._key}
+          ><span class="tin"></span><span class="thandle"></span><span class="tfill"></span></button>
+        </div>
+        <div class="limlabel"></div>
+        ${this._tapFoot(muted)}
+      </ha-card>
+    `;
+  }
+
   _renderTap(name, link, off, muted) {
     const zones = this.config.zones;
     const s = this._zoneState();
@@ -443,32 +528,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
             <div class="limlabel"></div>
           </div>
         </div>
-        <div class="tfoot">
-          <button
-            class="step first"
-            aria-label=${t("media_volume_down", this.hass)}
-            @pointerdown=${(e) => this._repeatStart(e, -1)}
-            @pointerup=${this._repeatStop}
-            @pointerleave=${this._repeatStop}
-            @pointercancel=${this._repeatStop}
-            @keydown=${(e) => this._repeatKey(e, -1)}
-          ><ha-icon icon="mdi:minus"></ha-icon></button>
-          <button
-            class="mute ${muted ? "on" : ""}"
-            aria-label=${t("media_mute", this.hass)}
-            aria-pressed=${muted ? "true" : "false"}
-            @click=${this._toggleMute}
-          ><ha-icon icon=${muted ? "mdi:volume-off" : "mdi:volume-high"}></ha-icon></button>
-          <button
-            class="step last"
-            aria-label=${t("media_volume_up", this.hass)}
-            @pointerdown=${(e) => this._repeatStart(e, 1)}
-            @pointerup=${this._repeatStop}
-            @pointerleave=${this._repeatStop}
-            @pointercancel=${this._repeatStop}
-            @keydown=${(e) => this._repeatKey(e, 1)}
-          ><ha-icon icon="mdi:plus"></ha-icon></button>
-        </div>
+        ${this._tapFoot(muted)}
       </ha-card>
     `;
   }
@@ -482,7 +542,11 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     const linked = link?.state === "on";
     const muted = !!s?.attributes?.is_volume_muted;
     const name = this.config.name ?? t("media_volume", this.hass);
-    if (this._style === "tap") return this._renderTap(name, link, off, muted);
+    if (this._style === "tap") {
+      if (this.config.column) return this._renderTapColumn(name, off, muted);
+      if (this.config.zones_view === "side" && zones.length > 1) return this._renderTapSide(name, link);
+      return this._renderTap(name, link, off, muted);
+    }
     const zoneGroup = {
       size: "s",
       aria_label: name,

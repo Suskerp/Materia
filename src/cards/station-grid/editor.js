@@ -11,6 +11,7 @@ class MateriaStationGridEditor extends SmartEditorBase {
           { name: "entity", label: "Player (rings the current station)", selector: { entity: { domain: "media_player" } } },
           { name: "name", label: "Title", selector: { text: {} } },
           { name: "columns", selector: { number: { min: 1, max: 8, mode: "box" } } },
+          { name: "logo_fill", label: "Logo fills the tile (no white frame)", selector: { boolean: {} } },
         ],
       },
       {

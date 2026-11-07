@@ -488,6 +488,81 @@ export const styles = [
     }
 
 
+    /* zones_view: side — one column per zone under one header. */
+    .tcols {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .tcols > materia-volume-knob {
+      height: 100%;
+      min-height: 0;
+    }
+
+    ha-card.panel.tap.col {
+      height: 100%;
+      padding: 0;
+      gap: 12px;
+      border-radius: 0;
+      background: none;
+    }
+
+    .col .colhead {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .col .colhead .zn {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--mx-onv);
+    }
+
+    .col .colhead .num {
+      font-family: var(--materia-font-display);
+      font-size: 40px;
+      line-height: 44px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .col .tbody {
+      justify-content: center;
+      min-height: 120px;
+      padding: 8px 0;
+    }
+
+    .col .tbar {
+      width: 56px;
+    }
+
+    .col .limlabel {
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .col .limlabel:empty {
+      display: none;
+    }
+
+    .col .tfoot {
+      height: 56px;
+      gap: 3px;
+    }
+
+    .col .tfoot .mute {
+      width: 44px;
+    }
+
     .treadout {
       flex: 1;
       min-width: 0;

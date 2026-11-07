@@ -105,6 +105,12 @@ class MateriaStationGrid extends ActionMixin(LitElement) {
         background-origin: content-box;
         transition: border-radius var(--md-sys-motion-expressive-fast-spatial);
       }
+      /* logo_fill: the image fills the tile, no white frame around it. */
+      .grid.fill .logo {
+        padding: 0;
+        background-size: cover;
+        background-origin: border-box;
+      }
       .grid button.on .logo {
         border-radius: 32px;
         outline: 3px solid var(--mx-p);
@@ -176,7 +182,7 @@ class MateriaStationGrid extends ActionMixin(LitElement) {
                 : nothing}
             </div>`
           : nothing}
-        <div class="grid" style=${cols ? `--sg-cols:repeat(${Number(cols)}, minmax(0, 1fr));` : ""}>
+        <div class="grid ${c.logo_fill ? "fill" : ""}" style=${cols ? `--sg-cols:repeat(${Number(cols)}, minmax(0, 1fr));` : ""}>
           ${stations.map(
             (st, i) => html`<button class=${i === current ? "on" : ""} aria-pressed=${i === current ? "true" : "false"} @click=${() => this._pick(st)}>
               <div class="logo" style=${st.image ? `background-image:url('${st.image}')` : ""}></div>
