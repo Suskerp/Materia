@@ -123,10 +123,34 @@ export const styles = [motionTokens, css`
     color: var(--md-sys-color-on-surface, var(--primary-text-color));
   }
 
+  /* A new cover: the old one blurs while the new image loads, then the new one
+     sharpens in (background-image cross-fades in Chromium). */
+  .art.pl-art {
+    transition:
+      filter 0.35s ease,
+      background-image 0.35s ease;
+  }
+
+  .art.pl-art.swapping {
+    filter: blur(14px) saturate(1.1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .art.pl-art {
+      transition: none;
+    }
+  }
+
+  /* Off: the resting shape animation fills the cover area. */
+  .art.pl-art.resting {
+    display: grid;
+    background-image: none;
+  }
+
   .art.pl-art {
     align-self: center;
     border-radius: 28px;
-    cursor: pointer;
+    overflow: hidden;
     background-color: var(--md-sys-color-surface-container-high, rgba(127, 127, 127, 0.12));
   }
 
@@ -140,6 +164,10 @@ export const styles = [motionTokens, css`
     display: flex;
     align-items: center;
     gap: 12px;
+    /* Keeps its height while a track change briefly empties the titles. */
+    min-height: calc(
+      var(--mx-player-title-line, 32px) * var(--mx-player-title-lines, 1) + var(--mx-player-sub-line, 24px)
+    );
   }
 
   .titles {
@@ -193,5 +221,9 @@ export const styles = [motionTokens, css`
 
   .player.off .art {
     opacity: 0.6;
+  }
+
+  .player.off .art.resting {
+    opacity: 1;
   }
 `];

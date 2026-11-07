@@ -1,3 +1,4 @@
+import "../shape-morph/index.js";
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
@@ -58,11 +59,31 @@ class MateriaMedia extends ActionMixin(LitElement) {
       this._lastTrack = track;
     }
     this._watchArt();
+    this._blurOnNewCover();
+  }
+
+  /** New cover: blur the old one until the new image has loaded, then sharpen into it. */
+  _blurOnNewCover() {
+    const image = this._image;
+    const art = this.renderRoot?.querySelector(".art.pl-art");
+    if (!art || image === this._shownImage) return;
+    const previous = this._shownImage;
+    this._shownImage = image;
+    if (!previous || !image) return;
+    art.classList.add("swapping");
+    const done = () => art.classList.remove("swapping");
+    const img = new Image();
+    img.onload = img.onerror = () => setTimeout(done, 120);
+    img.src = image;
+    clearTimeout(this._swapTimer);
+    this._swapTimer = setTimeout(done, 2500); // never stay blurred
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     clearTimeout(this._beatTimer);
+    clearTimeout(this._fitHold);
+    clearTimeout(this._swapTimer);
     this._artRo?.disconnect();
     this._artWatched = null;
     window.removeEventListener("resize", this._onArtResize);
@@ -101,7 +122,7 @@ class MateriaMedia extends ActionMixin(LitElement) {
    * only when the unit starts in the upper half of it, i.e. when it is the
    * main content and not a card further down a long column.
    */
-  _fitArt() {
+  _fitArt(settled = false) {
     const art = this._artWatched;
     if (!art || !this.isConnected) return;
     const width = art.parentElement?.clientWidth ?? 0;
@@ -113,10 +134,23 @@ class MateriaMedia extends ActionMixin(LitElement) {
     const current = art.getBoundingClientRect().height;
     const spare = this._spareBelow(unit);
     const size = fitArtSize({ current, max, spare: spare == null ? null : spare - ART_FIT_MARGIN });
-    if (size !== this._artPx) {
+    if (size === this._artPx) {
+      clearTimeout(this._fitHold);
+      this._fitHold = null;
+      return;
+    }
+    const apply = () => {
       this._artPx = size;
       this.style.setProperty("--mm-auto-size", `${size}px`);
-    }
+    };
+    // First fit at once. After that a new size must hold for a moment: a track
+    // change briefly empties the titles and controls, and the cover would
+    // otherwise jump twice.
+    if (this._artPx == null || settled) return apply();
+    if (!this._fitHold) this._fitHold = setTimeout(() => {
+      this._fitHold = null;
+      this._fitArt(true);
+    }, 1200);
   }
 
   /** Room below `unit` in what bounds it (negative = overflow), or null when unbounded. */
@@ -168,7 +202,10 @@ class MateriaMedia extends ActionMixin(LitElement) {
   }
 
   _tap() {
-    this._handleAction(this.config.tap_action || { action: "more-info" });
+    // The player variant is a control surface: its cover does nothing on tap
+    // unless a tap_action asks for it. The plain card keeps more-info.
+    const fallback = this.config.variant === "player" ? { action: "none" } : { action: "more-info" };
+    this._handleAction(this.config.tap_action || fallback);
   }
 
   /**
@@ -211,10 +248,10 @@ class MateriaMedia extends ActionMixin(LitElement) {
           ${this.config.show_art === false
             ? nothing
             : html`<div
-                class="art pl-art ${size.cls} ${logo ? "logo" : ""}"
-                style="${size.style}${image ? `background-image:url('${image}');` : ""}"
+                class="art pl-art ${size.cls} ${logo ? "logo" : ""} ${off && this.config.off_animation !== false ? "resting" : ""}"
+                style="${size.style}${image && !(off && this.config.off_animation !== false) ? `background-image:url('${image}');` : ""}"
                 @click=${this._tap}
-              ></div>`}
+              >${off && this.config.off_animation !== false ? html`<materia-shape-morph></materia-shape-morph>` : nothing}</div>`}
           ${this.config.show_titles === false
             ? nothing
             : html`<div class="titlerow">

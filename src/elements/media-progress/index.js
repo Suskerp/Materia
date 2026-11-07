@@ -256,7 +256,14 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
 
   get _canSeek() {
     const s = this.hass?.states[this.config.entity];
-    return this.config.seekable !== false && mediaControls(s).includes("seek");
+    if (this.config.seekable === false) return false;
+    // Kept for a moment through the gap in controls while a track changes,
+    // so the bar doesn't vanish and resize the card.
+    if (mediaControls(s).includes("seek")) {
+      this._seekSeenAt = Date.now();
+      return true;
+    }
+    return !isMediaOff(s) && Date.now() - (this._seekSeenAt ?? 0) < 4000;
   }
 
   _seekAt(ev) {
