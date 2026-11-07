@@ -140,6 +140,37 @@ export function nowPlayingText({ source, app, title, artist, album } = {}) {
   return { chip, title: t, subtitle: parts.join(" · "), appChip: distinctApp || null };
 }
 
+/* ---- toolbar -------------------------------------------------------------- */
+
+/**
+ * What the media toolbar shows, decided on the VISIBLE buttons (shuffle and
+ * repeat hide when the player can't do them), never on the configured list.
+ * `items` are normalised entries ({ type, … }).
+ *   mode "none"  — nothing visible
+ *   mode "ring"  — kiosk, volume is the only visible button: the compact
+ *                  56 px volume ring, no toolbar container
+ *   mode "pill"  — phone, volume only: the wide "Volume NN" button
+ *   mode "group" — the connected toolbar (also a single non-volume button)
+ */
+export function toolbarLayout(items, controls, kiosk) {
+  const visible = items.map((b) => {
+    if (b.type === "shuffle") return controls.includes("shuffle");
+    if (b.type === "repeat") return controls.includes("repeat");
+    return true;
+  });
+  const { first, last } = visibleEdges(visible);
+  const solo = first >= 0 && first === last;
+  let mode = "group";
+  if (first < 0) mode = "none";
+  else if (solo && items[first].type === "volume") mode = kiosk ? "ring" : "pill";
+  return { visible, first, last, solo, mode };
+}
+
+/** Kiosk height: from the scope's top to the bottom of the visible viewport. */
+export function availableHeight(viewportHeight, top) {
+  return Math.max(0, Math.round(viewportHeight - Math.max(0, top)));
+}
+
 /* ---- art_size: auto ------------------------------------------------------ */
 
 /** Smallest cover in auto mode (tuned prototype), and the default largest. */

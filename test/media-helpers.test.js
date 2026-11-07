@@ -18,6 +18,8 @@ import {
   nowPlayingText,
   fitArtSize,
   ART_MIN,
+  toolbarLayout,
+  availableHeight,
 } from "../src/utils/media.js";
 import { scopeGridColumns, panelCardConfig, kioskTracks } from "../src/cards/art-scope/layout.js";
 import { themeSettings, schemeKey } from "../src/utils/art-settings.js";
@@ -209,6 +211,27 @@ test("now-playing text keeps a distinct app and drops empty or repeated byline p
   assert.equal(nowPlayingText({ title: "T", artist: "A", album: "a" }).subtitle, "A");
   assert.equal(nowPlayingText({ source: "Radio", title: "" }).title, "Radio", "no title: the source");
   assert.deepEqual(nowPlayingText(), { chip: "", title: "", subtitle: "", appChip: null });
+});
+
+test("toolbar layout is decided on the VISIBLE buttons", () => {
+  const prod = [{ type: "shuffle" }, { type: "repeat" }, { type: "volume", style: "ring" }];
+  // Google TV: no shuffle / repeat, so volume is the only visible button.
+  assert.equal(toolbarLayout(prod, ["play_pause"], true).mode, "ring", "kiosk: compact ring");
+  assert.equal(toolbarLayout(prod, ["play_pause"], false).mode, "pill", "phone: wide Volume NN");
+  const tv = toolbarLayout(prod, [], true);
+  assert.deepEqual([tv.visible, tv.first, tv.last, tv.solo], [[false, false, true], 2, 2, true]);
+  // Spotify: all three visible, a connected group in both layouts.
+  assert.equal(toolbarLayout(prod, ["shuffle", "repeat"], true).mode, "group");
+  // One custom button alone stays a (solo) group, never the volume ring.
+  assert.equal(toolbarLayout([{ type: "shuffle" }, { icon: "mdi:power" }], [], true).mode, "group");
+  assert.equal(toolbarLayout([{ type: "shuffle" }], [], true).mode, "none");
+});
+
+test("kiosk fill height runs from the scope's top to the viewport bottom", () => {
+  assert.equal(availableHeight(676, 56), 620, "HA header shown");
+  assert.equal(availableHeight(676, 0), 676, "header hidden by kiosk mode");
+  assert.equal(availableHeight(676, -20), 676, "scrolled: never taller than the viewport");
+  assert.equal(availableHeight(400, 500), 0);
 });
 
 test("art_size auto: the cover absorbs exactly the spare room, within 136 px and the width/art_max", () => {

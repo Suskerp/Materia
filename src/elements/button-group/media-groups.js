@@ -4,12 +4,11 @@ import {
   mediaControls,
   isMediaOff,
   nextRepeat,
-  visibleEdges,
+  toolbarLayout,
   volumeSteps,
 } from "../../utils/media.js";
 import { volumeRing, volumeRingStyles } from "../volume-ring/ring.js";
 import { SIZES } from "./styles.js";
-import { volumeContext } from "../../primitives/sheet.js";
 import { toolbarList } from "../../utils/media-editor-model.js";
 
 /**
@@ -86,19 +85,15 @@ export function renderToolbar(el) {
   const a = s?.attributes ?? {};
   const ctrl = mediaControls(s);
   const items = toolbarItems(config);
-  const visible = items.map((b) => {
-    if (b.type === "shuffle") return ctrl.includes("shuffle");
-    if (b.type === "repeat") return ctrl.includes("repeat");
-    return true;
-  });
-  const { first, last } = visibleEdges(visible);
-  if (first < 0) return html``;
-  const solo = first === last;
+  // Decided on the VISIBLE buttons; the scope context says kiosk or not, and
+  // the scope re-renders us when that changes (see SheetOpenerMixin).
+  const { visible, first, last, solo, mode } = toolbarLayout(items, ctrl, !!el._scopeContext().kiosk);
+  if (mode === "none") return html``;
   const knob = el._volumeKnobConfig();
 
   // Kiosk, and volume is all there is (TV, radio): the compact ring, aligned
   // with the transport — the wide "Volume NN" pill is the phone's solo form.
-  if (solo && items[first].type === "volume" && volumeContext(el).kiosk) {
+  if (mode === "ring") {
     const open = el._openPanel === "volume";
     return html`<ha-card class="toolbar-card start">
       <button
@@ -321,7 +316,9 @@ export const mediaGroupStyles = [
       outline-offset: 2px;
     }
 
+    /* Hugs its buttons: never stretched by the card, whatever the alignment. */
     .toolbar {
+      flex: 0 0 auto;
       width: fit-content;
       max-width: 100%;
       display: flex;

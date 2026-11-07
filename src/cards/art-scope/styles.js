@@ -67,9 +67,12 @@ export const styles = [
        grid-template-columns as five px tracks (cover, gap, player, gap,
        panel); px to px interpolates, so open/close animates. */
     ha-card.fill {
-      /* The viewport below HA's header, minus the safe areas. */
+      /* Measured in JS (--k-fill-px: visible viewport height minus the
+         scope's top), so it is right with HA's header shown or hidden by a
+         kiosk mode. Before the first measurement: 100dvh minus the header. */
       --k-avail: calc(
-        100dvh - var(--header-height, 56px) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+        var(--k-fill-px, calc(100dvh - var(--header-height, 56px) - env(safe-area-inset-top, 0px)))
+          - env(safe-area-inset-bottom, 0px)
       );
       min-height: var(--k-avail);
       display: flex;

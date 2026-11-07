@@ -268,9 +268,27 @@ export const SheetOpenerMixin = (superClass) =>
     // Lit merges reactive properties up the class chain on finalize.
     static properties = { _openPanel: { state: true } };
 
+    /**
+     * The enclosing art scope's context ({ volume, entity, kiosk, scope }).
+     * Subscribes to the scope's `materia-scope-changed`, so a layout change
+     * (first measurement, kiosk ↔ stacked) re-renders this element at once
+     * instead of waiting for the next hass update.
+     */
+    _scopeContext() {
+      const ctx = volumeContext(this);
+      if (ctx.scope !== this.__scope) {
+        this.__scope?.removeEventListener("materia-scope-changed", this.__onScope);
+        this.__scope = ctx.scope ?? null;
+        this.__onScope ??= () => this.requestUpdate();
+        this.__scope?.addEventListener("materia-scope-changed", this.__onScope);
+      }
+      return ctx;
+    }
+
     /** Volume panel config: own `volume:` block, else the art scope's, else one zone. */
     _volumeKnobConfig() {
-      return volumeKnobConfig(this.config, this.config?.volume ? undefined : volumeContext(this));
+      const ctx = this._scopeContext();
+      return volumeKnobConfig(this.config, this.config?.volume ? undefined : ctx);
     }
 
     /** Panel `id` of an enclosing kiosk host when there is one, else a bottom sheet. */
@@ -300,5 +318,7 @@ export const SheetOpenerMixin = (superClass) =>
       this.__sheet = null;
       this.__panelHost?.removeEventListener("materia-panel-changed", this.__onPanel);
       this.__panelHost = null;
+      this.__scope?.removeEventListener("materia-scope-changed", this.__onScope);
+      this.__scope = null;
     }
   };

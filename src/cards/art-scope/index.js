@@ -7,6 +7,7 @@ import "./editor.js";
 
 import { kioskTracks, scopeGridColumns, panelCardConfig } from "./layout.js";
 import { inheritScopeEntity } from "../../utils/media-editor-model.js";
+import { availableHeight } from "../../utils/media.js";
 
 const PANEL_CLOSE_MS = 400;
 
@@ -112,6 +113,8 @@ class MateriaArtScope extends LitElement {
     clearTimeout(this._panelTimer);
     this._ro?.disconnect();
     this._observed = null;
+    this._watchViewport(false);
+    cancelAnimationFrame(this._fillRaf);
   }
 
   /** Kiosk tracks for the measured width. */
@@ -127,15 +130,67 @@ class MateriaArtScope extends LitElement {
     this._ro ??= new ResizeObserver((entries) => {
       this._kw = Math.floor(entries[0].contentRect.width);
       if (this._panelId && !this._tracks(true).canOpen) this._closePanel(true);
+      this._announceLayout();
+      this._scheduleFill();
     });
     this._ro.disconnect();
     if (el) this._ro.observe(el);
+    this._watchViewport(!!el);
+  }
+
+  /** Tell cards that read the scope context (kiosk or not) when it changes. */
+  _announceLayout() {
+    const kiosk = this.config?.layout === "kiosk" && !this._tracks(false).stacked;
+    if (kiosk === this._lastKiosk) return;
+    this._lastKiosk = kiosk;
+    this.dispatchEvent(new CustomEvent("materia-scope-changed", { detail: { kiosk } }));
+  }
+
+  /* ---- kiosk height: measured, so it is right with HA's header shown or hidden ---- */
+
+  _watchViewport(on) {
+    this._onViewport ??= () => this._scheduleFill();
+    const vv = window.visualViewport;
+    window.removeEventListener("resize", this._onViewport);
+    window.removeEventListener("orientationchange", this._onViewport);
+    vv?.removeEventListener("resize", this._onViewport);
+    if (!on) return;
+    window.addEventListener("resize", this._onViewport);
+    window.addEventListener("orientationchange", this._onViewport);
+    vv?.addEventListener("resize", this._onViewport);
+    this._scheduleFill();
+  }
+
+  _scheduleFill() {
+    cancelAnimationFrame(this._fillRaf);
+    this._fillRaf = requestAnimationFrame(() => this._measureFill());
+  }
+
+  /**
+   * Available height = visible viewport height − the scope's top. That is
+   * right whether HA's header is shown (top ≈ 56) or hidden by a kiosk mode
+   * (top ≈ 0); the bottom safe area is subtracted in CSS. Until measured, the
+   * CSS falls back to 100dvh minus the header.
+   */
+  _measureFill() {
+    const card = this.renderRoot?.querySelector("ha-card.fill");
+    if (!card) {
+      this.style.removeProperty("--k-fill-px");
+      return;
+    }
+    const top = card.getBoundingClientRect().top + (window.scrollY || 0);
+    const h = availableHeight(window.visualViewport?.height ?? window.innerHeight, top);
+    if (h > 0 && h !== this._fillPx) {
+      this._fillPx = h;
+      this.style.setProperty("--k-fill-px", `${h}px`);
+    }
   }
 
   /* ---------------------------------------------------------------- colours */
 
   updated(changed) {
     this._observeKiosk();
+    this._announceLayout();
     if (changed.has("hass") && this.hass) {
       if (this._cards) for (const el of this._cards) el.hass = this.hass;
       const panel = this._panelEl?.real ?? this._panelEl;
