@@ -35,17 +35,6 @@ export function toggleToolbarBuiltin(buttons, type, on) {
   return list;
 }
 
-/** Volume button as a ring or a plain icon; keeps every other key of the entry. */
-export function setToolbarVolumeStyle(buttons, ring) {
-  return toolbarList(buttons).map((b) => {
-    if (toolbarType(b) !== "volume") return b;
-    const obj = typeof b === "string" ? { type: "volume" } : { ...b };
-    if (ring) obj.style = "ring";
-    else delete obj.style;
-    return Object.keys(obj).length === 1 ? "volume" : obj;
-  });
-}
-
 export const toolbarCustoms = (buttons) => toolbarList(buttons).filter((b) => !isBuiltin(b));
 
 /**

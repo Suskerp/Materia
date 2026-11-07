@@ -221,13 +221,12 @@ test("now-playing text keeps a distinct app and drops empty or repeated byline p
 test("toolbar layout is decided on the VISIBLE buttons", () => {
   const prod = [{ type: "shuffle" }, { type: "repeat" }, { type: "volume", style: "ring" }];
   // Google TV: no shuffle / repeat, so volume is the only visible button.
-  assert.equal(toolbarLayout(prod, ["play_pause"], true).mode, "ring", "kiosk: compact ring");
-  assert.equal(toolbarLayout(prod, ["play_pause"], false).mode, "pill", "phone: wide Volume NN");
+  assert.equal(toolbarLayout(prod, ["play_pause"]).mode, "pill", "alone: the wide Volume button");
   const tv = toolbarLayout(prod, [], true);
   assert.deepEqual([tv.visible, tv.first, tv.last, tv.solo], [[false, false, true], 2, 2, true]);
   // Spotify: all three visible, a connected group in both layouts.
   assert.equal(toolbarLayout(prod, ["shuffle", "repeat"], true).mode, "group");
-  // One custom button alone stays a (solo) group, never the volume ring.
+  // One custom button alone stays a (solo) group, never the volume pill.
   assert.equal(toolbarLayout([{ type: "shuffle" }, { icon: "mdi:power" }], [], true).mode, "group");
   assert.equal(toolbarLayout([{ type: "shuffle" }], [], true).mode, "none");
 });

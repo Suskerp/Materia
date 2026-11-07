@@ -3,7 +3,6 @@ import test from "node:test";
 import {
   toolbarList,
   toggleToolbarBuiltin,
-  setToolbarVolumeStyle,
   toolbarCustoms,
   setToolbarCustoms,
   zonesForEntities,
@@ -29,12 +28,6 @@ test("toolbar: built-ins toggle in canonical order and keep custom slots", () =>
   assert.deepEqual(toggleToolbarBuiltin([power], "volume", true), ["volume", power], "built-ins first");
   const list = ["shuffle", "repeat", "volume"];
   assert.equal(toggleToolbarBuiltin(list, "volume", true).length, 3, "already on: no duplicate");
-});
-
-test("toolbar: volume style switches between ring and icon, keeping other keys", () => {
-  assert.deepEqual(setToolbarVolumeStyle(["volume"], true), [{ type: "volume", style: "ring" }]);
-  assert.deepEqual(setToolbarVolumeStyle([{ type: "volume", style: "ring" }], false), ["volume"]);
-  assert.deepEqual(setToolbarVolumeStyle([{ type: "volume", label: "V" }], true), [{ type: "volume", label: "V", style: "ring" }]);
 });
 
 test("toolbar: custom buttons refill their slots, new ones append", () => {

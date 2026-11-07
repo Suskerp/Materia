@@ -147,12 +147,10 @@ export function nowPlayingText({ source, app, title, artist, album } = {}) {
  * repeat hide when the player can't do them), never on the configured list.
  * `items` are normalised entries ({ type, … }).
  *   mode "none"  — nothing visible
- *   mode "ring"  — kiosk, volume is the only visible button: the compact
- *                  56 px volume ring, no toolbar container
- *   mode "pill"  — phone, volume only: the wide "Volume NN" button
+ *   mode "pill"  — volume is the only visible button: the wide "Volume" button
  *   mode "group" — the connected toolbar (also a single non-volume button)
  */
-export function toolbarLayout(items, controls, kiosk) {
+export function toolbarLayout(items, controls) {
   const visible = items.map((b) => {
     if (b.type === "shuffle") return controls.includes("shuffle");
     if (b.type === "repeat") return controls.includes("repeat");
@@ -162,7 +160,7 @@ export function toolbarLayout(items, controls, kiosk) {
   const solo = first >= 0 && first === last;
   let mode = "group";
   if (first < 0) mode = "none";
-  else if (solo && items[first].type === "volume") mode = kiosk ? "ring" : "pill";
+  else if (solo && items[first].type === "volume") mode = "pill";
   return { visible, first, last, solo, mode };
 }
 

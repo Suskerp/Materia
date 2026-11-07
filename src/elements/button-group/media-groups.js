@@ -5,9 +5,7 @@ import {
   isMediaOff,
   nextRepeat,
   toolbarLayout,
-  volumeSteps,
 } from "../../utils/media.js";
-import { volumeRing, volumeRingStyles } from "../volume-ring/ring.js";
 import { SIZES } from "./styles.js";
 import { toolbarList } from "../../utils/media-editor-model.js";
 
@@ -85,26 +83,9 @@ export function renderToolbar(el) {
   const a = s?.attributes ?? {};
   const ctrl = mediaControls(s);
   const items = toolbarItems(config);
-  // Decided on the VISIBLE buttons; the scope context says kiosk or not, and
-  // the scope re-renders us when that changes (see SheetOpenerMixin).
-  const { visible, first, last, solo, mode } = toolbarLayout(items, ctrl, !!el._scopeContext().kiosk);
+  // Decided on the VISIBLE buttons (shuffle / repeat only where supported).
+  const { visible, first, last, solo, mode } = toolbarLayout(items, ctrl);
   if (mode === "none") return html``;
-  const knob = el._volumeKnobConfig();
-
-  // Kiosk, and volume is all there is (TV, radio): the compact ring, aligned
-  // with the transport — the wide "Volume NN" pill is the phone's solo form.
-  if (mode === "ring") {
-    const open = el._openPanel === "volume";
-    return html`<ha-card class="toolbar-card start">
-      <button
-        type="button"
-        class="solo-ring ${open ? "open" : ""}"
-        aria-label=${t("media_volume", hass)}
-        aria-expanded=${open ? "true" : "false"}
-        @click=${(e) => el._mediaOpenVolume(e)}
-      >${volumeRing(hass.states[knob.entity])}</button>
-    </ha-card>`;
-  }
 
   const button = (b, i) => {
     if (!visible[i]) return nothing;
@@ -130,15 +111,15 @@ export function renderToolbar(el) {
       ><ha-icon .icon=${mode === "one" ? "mdi:repeat-once" : "mdi:repeat"}></ha-icon></button>`;
     }
     if (b.type === "volume") {
-      const vs = hass.states[knob.entity];
-      const label = solo ? t("media_volume_value", hass, { value: volumeSteps(vs) }) : b.label;
+      // Alone it reads "Volume"; the level itself is shown in the panel.
+      const label = solo ? t("media_volume", hass) : b.label;
       return html`<button
         type="button"
-        class="${edge} ${b.style === "ring" ? "ring" : ""} ${el._openPanel === "volume" ? "open" : ""}"
+        class="${edge} ${el._openPanel === "volume" ? "open" : ""}"
         aria-label=${t("media_volume", hass)}
         aria-expanded=${el._openPanel === "volume" ? "true" : "false"}
         @click=${(e) => el._mediaOpenVolume(e)}
-      >${b.style === "ring" ? volumeRing(vs) : html`<ha-icon .icon=${b.icon || "mdi:volume-high"}></ha-icon>`}${label
+      >${html`<ha-icon .icon=${b.icon || "mdi:volume-high"}></ha-icon>`}${label
         ? html`<span>${label}</span>`
         : nothing}</button>`;
     }
@@ -205,7 +186,6 @@ export const MediaGroupMixin = (superClass) =>
   };
 
 export const mediaGroupStyles = [
-  volumeRingStyles,
   css`
     /* ---- transport: standard group with an expressive width/shape morph ---- */
     .transport {
@@ -283,41 +263,6 @@ export const mediaGroupStyles = [
       justify-content: flex-start;
     }
 
-    /* Kiosk solo volume: a 56 px (M) round button with the ring inside. */
-    .solo-ring {
-      /* The group's generic button rule grows every button (flex: 1 0 auto). */
-      flex: none;
-      width: 56px;
-      height: 56px;
-      display: grid;
-      place-items: center;
-      border: none;
-      padding: 0;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      border-radius: 28px;
-      background: var(--md-sys-color-surface-container-high, rgba(127, 127, 127, 0.12));
-      color: var(--md-sys-color-primary, var(--primary-color));
-      transition:
-        border-radius var(--md-sys-motion-expressive-fast-spatial),
-        background-color var(--md-sys-motion-fast-effects),
-        color var(--md-sys-motion-fast-effects);
-    }
-
-    .solo-ring:active {
-      border-radius: 16px;
-    }
-
-    .solo-ring.open {
-      background: var(--md-sys-color-secondary-container, rgba(127, 127, 127, 0.3));
-      color: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
-    }
-
-    .solo-ring:focus-visible {
-      outline: 3px solid var(--md-sys-color-secondary, currentColor);
-      outline-offset: 2px;
-    }
-
     /* Hugs its buttons: never stretched by the card, whatever the alignment. */
     .toolbar {
       flex: 0 0 auto;
@@ -381,15 +326,6 @@ export const mediaGroupStyles = [
       border-radius: 26px;
       background: var(--md-sys-color-secondary-container, rgba(127, 127, 127, 0.3));
       color: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
-    }
-
-    .toolbar button.ring {
-      padding: 0 10px;
-      color: var(--md-sys-color-primary, var(--primary-color));
-    }
-
-    .toolbar button.ring span {
-      color: var(--md-sys-color-on-surface, var(--primary-text-color));
     }
 
     .toolbar.solo button {

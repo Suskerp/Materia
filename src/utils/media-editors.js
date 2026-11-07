@@ -9,7 +9,6 @@ import {
   toolbarList,
   toolbarType,
   toggleToolbarBuiltin,
-  setToolbarVolumeStyle,
   toolbarCustoms,
   setToolbarCustoms,
   stationFormData,
@@ -321,9 +320,6 @@ const CUSTOM_BUTTON_SCHEMA = [
   { name: "tap_action", label: "Actie", selector: { ui_action: { default_action: "perform-action" } } },
 ];
 const BUILTIN_LABELS = { shuffle: "Shuffle", repeat: "Herhalen", volume: "Volume" };
-const VOLUME_LOOK_SELECTOR = {
-  select: { mode: "box", options: [{ value: "ring", label: "Ring met getal" }, { value: "icon", label: "Icoon" }] },
-};
 
 class MateriaToolbarButtonsEditor extends LitElement {
   static properties = {
@@ -378,8 +374,6 @@ class MateriaToolbarButtonsEditor extends LitElement {
     if (!this.hass) return nothing;
     const list = toolbarList(this.value);
     const has = (t) => list.some((b) => toolbarType(b) === t);
-    const vol = list.find((b) => toolbarType(b) === "volume");
-    const ring = typeof vol === "object" && vol?.style === "ring";
     return html`<div class="stack">
       <div class="chips" role="group" aria-label="Knoppen">
         ${Object.entries(BUILTIN_LABELS).map(
@@ -390,17 +384,6 @@ class MateriaToolbarButtonsEditor extends LitElement {
           ><ha-icon icon="mdi:check"></ha-icon>${label}</button>`
         )}
       </div>
-      ${has("volume")
-        ? html`<ha-selector
-            .hass=${this.hass}
-            .selector=${VOLUME_LOOK_SELECTOR}
-            .value=${ring ? "ring" : "icon"}
-            @value-changed=${(e) => {
-              e.stopPropagation();
-              this._emit(setToolbarVolumeStyle(this.value, e.detail.value === "ring"));
-            }}
-          ></ha-selector>`
-        : nothing}
       <materia-item-list-editor
         .hass=${this.hass}
         .items=${toolbarCustoms(this.value)}

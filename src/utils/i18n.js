@@ -418,7 +418,6 @@ export const STRINGS = {
   media_live: { en: "LIVE", nl: "LIVE" },
   media_radio: { en: "Radio", nl: "Radio" },
   media_volume: { en: "Volume", nl: "Volume" },
-  media_volume_value: { en: "Volume {value}", nl: "Volume {value}" },
   media_stations: { en: "Stations", nl: "Zenders" },
   media_link_zones: { en: "Link zones", nl: "Zones koppelen" },
   media_zone_2: { en: "Zone 2", nl: "Zone 2" },
