@@ -339,10 +339,41 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
 
   /* ---------------------------------------------------------------- tap style */
 
-  _tapBar(ev) {
-    const r = ev.currentTarget.getBoundingClientRect();
+  /* Slider: drag follows the finger over 0 … limit; a tap without moving
+     steps at most TAP_MAX_STEPS toward the spot (no accidental jumps). */
+  _barFrac(ev, bar) {
+    const r = bar.getBoundingClientRect();
+    return Math.max(0, Math.min(1, 1 - (ev.clientY - r.top) / r.height));
+  }
+
+  _barDown(ev) {
+    if (ev.button > 0) return;
+    const bar = ev.currentTarget;
+    bar.setPointerCapture?.(ev.pointerId);
+    this._bar = { id: ev.pointerId, y: ev.clientY, moved: false };
+    this._dragging = true;
+    bar.classList.add("dragging");
+  }
+
+  _barMove(ev) {
+    const d = this._bar;
+    if (!d || d.id !== ev.pointerId) return;
+    if (!d.moved && Math.abs(ev.clientY - d.y) < 6) return;
+    d.moved = true;
     const limit = volumeLimit(this._zoneState());
-    this._setVolume(tapStep(this._volValue(), 1 - (ev.clientY - r.top) / r.height, limit), true);
+    this._setVolume(this._barFrac(ev, ev.currentTarget) * limit, false);
+  }
+
+  _barUp(ev) {
+    const d = this._bar;
+    if (!d || d.id !== ev.pointerId) return;
+    this._bar = null;
+    this._dragging = false;
+    ev.currentTarget.classList.remove("dragging");
+    if (ev.type === "pointercancel") return;
+    const limit = volumeLimit(this._zoneState());
+    const frac = this._barFrac(ev, ev.currentTarget);
+    this._setVolume(d.moved ? frac * limit : tapStep(this._volValue(), frac, limit), true);
   }
 
   /** Hold − / +: one step now, repeats after 380 ms, speeding from 140 to 70 ms. */
@@ -476,7 +507,10 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
             aria-label=${name}
             aria-valuemin="0"
             aria-valuemax=${limit}
-            @click=${this._tapBar}
+            @pointerdown=${this._barDown}
+            @pointermove=${this._barMove}
+            @pointerup=${this._barUp}
+            @pointercancel=${this._barUp}
             @keydown=${this._key}
           ><span class="tin"></span><span class="thandle"></span><span class="tfill"></span></button>
         </div>
@@ -518,7 +552,10 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
             aria-label=${name}
             aria-valuemin="0"
             aria-valuemax=${limit}
-            @click=${this._tapBar}
+            @pointerdown=${this._barDown}
+            @pointermove=${this._barMove}
+            @pointerup=${this._barUp}
+            @pointercancel=${this._barUp}
             @keydown=${this._key}
           >
             <span class="tin"></span><span class="thandle"></span><span class="tfill"></span>

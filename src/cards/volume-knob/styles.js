@@ -430,7 +430,8 @@ export const styles = [
       display: block;
       background: none;
       overflow: visible;
-      touch-action: manipulation;
+      /* Vertical drags belong to the slider, not to page scrolling. */
+      touch-action: none;
     }
 
     .tfill,
@@ -440,6 +441,13 @@ export const styles = [
       transition:
         height 0.18s ease-out,
         bottom 0.18s ease-out;
+    }
+
+    /* While dragging the parts follow the finger without easing. */
+    .tbar.dragging .tfill,
+    .tbar.dragging .tin,
+    .tbar.dragging .thandle {
+      transition: none;
     }
 
     .tfill {
