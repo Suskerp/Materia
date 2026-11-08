@@ -107,7 +107,16 @@ export const styles = [motionTokens, css`
   .art.art-auto {
     width: var(--mm-auto-size, min(100%, var(--materia-art-max, 420px)));
     max-width: 100%;
+  }
+
+  /* Only fits after the first ease; the first lands at once (no shrink on load). */
+  :host([art-fitted]) .art.art-auto {
     transition: width var(--md-sys-motion-default-effects);
+  }
+
+  /* No remembered size yet: hidden until the first measurement places it. */
+  :host([art-pending]) .art.art-auto {
+    visibility: hidden;
   }
 
   .art.art-fill {

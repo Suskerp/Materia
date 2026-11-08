@@ -15,6 +15,23 @@ import { scopeContext } from "../../primitives/sheet.js";
 import { t } from "../../utils/i18n.js";
 import "./editor.js";
 
+/** Remembered auto cover sizes (best effort: storage can be unavailable). */
+function readArtCache(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeArtCache(key, size) {
+  try {
+    localStorage.setItem(key, String(size));
+  } catch {
+    /* private mode / quota: just don't remember */
+  }
+}
+
 class MateriaMedia extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
@@ -111,7 +128,22 @@ class MateriaMedia extends ActionMixin(LitElement) {
     }
     this._artRo.observe(this);
     window.addEventListener("resize", this._onArtResize);
+    // Start at the size this player had here last time, so a page load doesn't
+    // open on the full-width cover and then visibly shrink it.
+    if (this._artPx == null) {
+      const cached = Number(readArtCache(this._artCacheKey));
+      if (cached > 0) this.style.setProperty("--mm-auto-size", `${cached}px`);
+      else this.toggleAttribute("art-pending", true);
+      clearTimeout(this._pendingTimer);
+      // Never stay hidden: show it after a moment even if it can't be measured yet.
+      this._pendingTimer = setTimeout(() => this.removeAttribute("art-pending"), 800);
+    }
     this._scheduleFit();
+  }
+
+  /** Where the last fitted cover size of this player on this page is remembered. */
+  get _artCacheKey() {
+    return `materia-art-fit:${location.pathname}:${this.config?.entity ?? ""}`;
   }
 
   _scheduleFit() {
@@ -154,8 +186,16 @@ class MateriaMedia extends ActionMixin(LitElement) {
     }
     const apply = () => {
       if (this._artPx != null && size < this._artPx) this._shrunkAt = Date.now();
+      const first = this._artPx == null;
       this._artPx = size;
       this.style.setProperty("--mm-auto-size", `${size}px`);
+      writeArtCache(this._artCacheKey, size);
+      if (first) {
+        // The first fit lands without animating; later changes ease.
+        clearTimeout(this._pendingTimer);
+        this.removeAttribute("art-pending");
+        requestAnimationFrame(() => requestAnimationFrame(() => this.toggleAttribute("art-fitted", true)));
+      }
     };
     // First fit at once. After that a new size must hold for a moment: a track
     // change briefly empties the titles and controls, and the cover would
