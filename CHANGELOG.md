@@ -8,6 +8,31 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.74.1 — 2026-11-08
+
+Every card and option can now be set up in the visual editor, nested cards included,
+and the editors speak your Home Assistant language (English or Dutch).
+
+### Breaking changes
+None.
+
+### Added
+- **Visual editors for nested cards:**
+  - `materia-panel-host`: layout, the cards, and each panel (heading, head row,
+    head-row actions, content cards), all without YAML.
+  - `materia-stack`, `materia-switcher` (name, value and card per tab), and the kiosk
+    panels of `materia-art-scope`.
+  - The power list of `materia-media-header`, with a name per player.
+  - Card lists let you add, edit, reorder and remove cards with Home Assistant's own
+    card picker, and show each card by name.
+- **Fields for options that were YAML-only**, such as the tile grid's `active` matching
+  (entity and attributes).
+- **Translations:** every editor label, hint and choice in English and Dutch, following
+  the user's Home Assistant language (English when it is another language).
+
+### Fixed
+- **The time input editor opens again;** it showed an error instead of its fields.
+
 ## 0.74.0 — 2026-11-08
 
 The media family becomes composable: small generic cards that build today's Arcam
