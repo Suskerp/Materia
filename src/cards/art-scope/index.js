@@ -59,10 +59,12 @@ class MateriaArtScope extends PanelHostMixin(LitElement) {
 
   constructor() {
     super();
-    // Cards inside inherit the scope's player unless they configure their own.
+    // Cards inside inherit the scope's volume settings (and player) unless
+    // they configure their own.
     this.addEventListener("materia-scope-context", (e) => {
       if (!this.config) return;
       e.stopPropagation();
+      e.detail.volume = this.config.volume;
       e.detail.entity = this.config.entity;
       e.detail.scope = this;
       // From the config, not the measurement: a card that asks before the

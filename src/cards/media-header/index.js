@@ -4,6 +4,7 @@ import { SheetOpenerMixin } from "../../primitives/sheet.js";
 import { isMediaOff, isLive, nextSource, visibleEdges, nowPlayingText, sameText, powerTransition } from "../../utils/media.js";
 import { t } from "../../utils/i18n.js";
 import { volumeRing } from "../../elements/volume-ring/ring.js";
+import "../../cards/volume-knob/index.js";
 import "../../cards/station-grid/index.js";
 import { styles } from "./styles.js";
 import "./editor.js";
@@ -67,17 +68,16 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
   }
 
   _openVolume(e) {
-    this._openVolumePanel(e.currentTarget);
+    this._fireHaptic("light");
+    this._openSheet(e.currentTarget, this._volumeKnobConfig(), undefined, "volume");
   }
 
   /* ---- power: a button that opens a menu with a switch per zone + "all off/on" ---- */
 
-  /** What the power menu switches: `power_entities` (ids or { entity, name }), else this player alone. */
+  /** The zones the power menu switches: the volume zones, else this player alone. */
   get _powerZones() {
-    const list = (this.config.power_entities ?? [])
-      .map((p) => (typeof p === "string" ? { entity: p } : p))
-      .filter((p) => p?.entity);
-    return list.length ? list : [{ entity: this.config.entity }];
+    const zones = this._volumeKnobConfig().zones;
+    return Array.isArray(zones) && zones.length ? zones : [{ entity: this.config.entity }];
   }
 
   _zoneLabel(z) {
@@ -190,7 +190,8 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
   /** zone_name, else this player's name in the volume zones, else its friendly name. */
   get _zoneName() {
     if (this.config.zone_name) return this.config.zone_name;
-    const named = this._powerZones.find((z) => z.entity === this.config.entity)?.name;
+    const zones = this._volumeKnobConfig().zones;
+    const named = Array.isArray(zones) ? zones.find((z) => z?.entity === this.config.entity)?.name : null;
     return named || this._stateObj?.attributes?.friendly_name;
   }
 
@@ -264,6 +265,7 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
     const pair = [hasStations, showVolume, showPower];
     const { first, last } = visibleEdges(pair);
     const edge = (i) => `${i === first ? "first" : ""} ${i === last ? "last" : ""}`;
+    const knob = this._volumeKnobConfig();
     return html`<ha-card>
       <div class="top">
         ${showSource
@@ -289,7 +291,7 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
                     class="iconbtn ring ${edge(1)} ${this._openPanel === "volume" ? "open" : ""}"
                     aria-label=${t("media_volume", this.hass)}
                     @click=${this._openVolume}
-                  >${volumeRing(this._stateObj)}</button>`
+                  >${volumeRing(this.hass.states[knob.entity])}</button>`
                 : nothing}
               ${showPower ? this._powerButton(`iconbtn ${edge(2)}`) : nothing}
             </div>`

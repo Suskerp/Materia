@@ -1,4 +1,5 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { volumeOverrideSection } from "../../utils/media-editors.js";
 
 class MateriaVolumeRingEditor extends SmartEditorBase {
   get _sections() {
@@ -14,6 +15,7 @@ class MateriaVolumeRingEditor extends SmartEditorBase {
           },
         ],
       },
+      volumeOverrideSection(this),
     ];
   }
 }

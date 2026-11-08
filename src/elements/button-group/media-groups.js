@@ -195,7 +195,8 @@ export const MediaGroupMixin = (superClass) =>
     }
 
     _mediaOpenVolume(e) {
-      this._openVolumePanel(e.currentTarget);
+      this._fireHaptic("light");
+      this._openSheet(e.currentTarget, this._volumeKnobConfig(), undefined, "volume");
     }
 
     /** A custom button with `card:` opens that card (in kiosk panel `panel:`, else a sheet). */

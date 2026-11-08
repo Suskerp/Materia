@@ -3,10 +3,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import { OptimisticMixin } from "../../utils/optimistic.js";
 import { styles } from "./styles.js";
-import { t } from "../../utils/i18n.js";
-import { REPEAT_INITIAL_MS, repeatDelay } from "../../utils/kinetic-knob.js";
 import "../../primitives/slider.js";
-import "../../primitives/vslider.js";
 import "./editor.js";
 
 /**
@@ -25,18 +22,6 @@ import "./editor.js";
  * (volume_level, brightness, percentage, current_position), that attribute —
  * picked from the domain unless `attribute` says otherwise. The write side is
  * inferred from the same pair, and `service` / `service_key` override it.
- *
- * DISPLAY SCALE: `display_max: 99` shows the range as 0 … 99 whole steps
- * instead of a percentage (an amplifier that counts in steps) and moves in
- * those steps. `max_attribute: limit` caps the slider at an attribute that
- * holds the maximum in those display units; the range above it is not drawn.
- *
- * VERTICAL (`variant: vertical`): a tall M3 Expressive slider with the name
- * and reading above it, for a panel or a mixer column. A tap moves at most five
- * steps toward the spot; a drag follows the finger. `buttons: true` adds
- * − | mute | + beneath (mute only for a media player); hold − / + to repeat.
- * A media player's volume is sent while dragging (`live: false` to send only
- * on release).
  */
 
 /** Attributes whose scale is fixed by HA, not by the entity. */
@@ -167,29 +152,14 @@ class MateriaLevel extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement)
       unit: a.unit_of_measurement ?? "",
     };
     // A fan's step is per-device (a 3-speed fan steps by 33).
-    let step = this._attribute === "percentage" ? num(a.percentage_step, base.step) : base.step;
-    let factor = base.factor;
-    let unit = base.unit;
-
-    // display_max: show the native range as 0 … display_max whole steps.
-    const displayMax = num(this.config.display_max, NaN);
-    if (displayMax > 0) {
-      factor = displayMax / ((base.max - base.min) || 1);
-      step = 1 / factor;
-      unit = "";
-    }
-
-    let max = num(this.config.max ?? maxFromEntity, base.max);
-    // max_attribute: the entity says how far it may go (in display units).
-    const attrMax = this.config.max_attribute ? Number(a[this.config.max_attribute]) : NaN;
-    if (attrMax > 0) max = Math.min(max, base.min + attrMax / factor);
+    const step = this._attribute === "percentage" ? num(a.percentage_step, base.step) : base.step;
 
     return {
       min: num(this.config.min, base.min),
-      max,
+      max: num(this.config.max ?? maxFromEntity, base.max),
       step: num(this.config.step, step),
-      factor,
-      unit: this.config.unit ?? unit,
+      factor: base.factor,
+      unit: this.config.unit ?? base.unit,
     };
   }
 
@@ -242,14 +212,6 @@ class MateriaLevel extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement)
     e.stopPropagation();
     const v = Number(e.detail?.value);
     this._dragging = Number.isFinite(v) ? v : null;
-    // A volume is heard while it moves: send it now and then, not only on release.
-    if (this._dragging != null && this._domain === "media_player" && this.config.live !== false) {
-      const now = Date.now();
-      if (now - (this.__lastLive ?? 0) > 150) {
-        this.__lastLive = now;
-        this._send(this._quantize(this._dragging, this._scale), false);
-      }
-    }
   }
 
   _onCommit(e) {
@@ -257,11 +219,8 @@ class MateriaLevel extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement)
     const raw = Number(e.detail?.value);
     this._dragging = null;
     if (!Number.isFinite(raw)) return;
-    this._send(this._quantize(raw, this._scale), true);
-  }
+    const value = this._quantize(raw, this._scale);
 
-  /** Writes `value` (native units); `final` pins it optimistically with a haptic. */
-  _send(value, final) {
     const st = this._stateObj;
     if (!st) return;
 
@@ -270,7 +229,7 @@ class MateriaLevel extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement)
     const [service, key] = this._writeTarget();
     if (!service) return;
 
-    if (final) this._fireHaptic("selection");
+    this._fireHaptic("selection");
     // Pin before the call so the readout answers on THIS frame instead of a
     // poll cycle later. A wrong prediction releases itself the moment the real
     // value moves anywhere.
@@ -309,52 +268,6 @@ class MateriaLevel extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement)
     return typeof resolved === "string" ? resolved.trim() : resolved;
   }
 
-  /** − / + by one step; hold to repeat (380 ms, then speeding up). */
-  _nudgeStart(ev, dir) {
-    if (ev.button > 0) return;
-    this._nudgeStop();
-    const step = () => {
-      const scale = this._scale;
-      const from = this._current ?? scale.min;
-      this._send(this._quantize(from + dir * scale.step, scale), true);
-    };
-    step();
-    let ticks = 0;
-    const run = () => {
-      step();
-      ticks += 1;
-      this.__repeat = setTimeout(run, repeatDelay(ticks));
-    };
-    this.__repeat = setTimeout(run, REPEAT_INITIAL_MS);
-  }
-
-  _nudgeStop() {
-    clearTimeout(this.__repeat);
-    this.__repeat = null;
-  }
-
-  _nudgeKey(ev, dir) {
-    if (ev.key !== "Enter" && ev.key !== " ") return;
-    ev.preventDefault();
-    const scale = this._scale;
-    this._send(this._quantize((this._current ?? scale.min) + dir * scale.step, scale), true);
-  }
-
-  _toggleMute() {
-    const st = this._stateObj;
-    if (!st) return;
-    this._fireHaptic("light");
-    this._callService("media_player", "volume_mute", {
-      entity_id: st.entity_id,
-      is_volume_muted: !st.attributes?.is_volume_muted,
-    });
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    this._nudgeStop();
-  }
-
   _controlTap() {
     if (this.config.control_action) {
       this._handleAction(this.config.control_action);
@@ -362,63 +275,6 @@ class MateriaLevel extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement)
     }
     const entityId = this.config.control_entity;
     if (entityId) this._callService("homeassistant", "toggle", { entity_id: entityId });
-  }
-
-  /** variant: vertical — name and reading over a tall slider, − mute + beneath. */
-  _renderVertical(st, scale, value, dead, label, accent) {
-    const off = st?.state === "off";
-    const muted = !!st?.attributes?.is_volume_muted;
-    const media = this._domain === "media_player";
-    const shown = off ? t("state_off", this.hass) : this._display(value, scale);
-    return html`
-      <ha-card class="vertical ${dead ? "unavailable" : ""} ${off ? "off" : ""}" style="--ml-accent:${accent};">
-        <div class="vhead">
-          <span class="label">${label}</span>
-          <span class="value">${shown}${scale.unit && !dead ? html`<span class="unit">${scale.unit}</span>` : nothing}</span>
-        </div>
-        <materia-vslider
-          .min=${scale.min}
-          .max=${scale.max}
-          .step=${scale.step}
-          .value=${value ?? scale.min}
-          .label=${label}
-          ?muted=${muted}
-          ?disabled=${dead}
-          @value-dragging=${this._onDragging}
-          @value-changed=${this._onCommit}
-        ></materia-vslider>
-        ${this.config.buttons
-          ? html`<div class="vfoot ${dead ? "dead" : ""}">
-              <button
-                class="step first"
-                aria-label=${t("media_volume_down", this.hass)}
-                @pointerdown=${(e) => this._nudgeStart(e, -1)}
-                @pointerup=${this._nudgeStop}
-                @pointerleave=${this._nudgeStop}
-                @pointercancel=${this._nudgeStop}
-                @keydown=${(e) => this._nudgeKey(e, -1)}
-              ><ha-icon icon="mdi:minus"></ha-icon></button>
-              ${media
-                ? html`<button
-                    class="mute ${muted ? "on" : ""}"
-                    aria-label=${t("media_mute", this.hass)}
-                    aria-pressed=${muted ? "true" : "false"}
-                    @click=${this._toggleMute}
-                  ><ha-icon icon=${muted ? "mdi:volume-off" : "mdi:volume-high"}></ha-icon></button>`
-                : nothing}
-              <button
-                class="step last"
-                aria-label=${t("media_volume_up", this.hass)}
-                @pointerdown=${(e) => this._nudgeStart(e, 1)}
-                @pointerup=${this._nudgeStop}
-                @pointerleave=${this._nudgeStop}
-                @pointercancel=${this._nudgeStop}
-                @keydown=${(e) => this._nudgeKey(e, 1)}
-              ><ha-icon icon="mdi:plus"></ha-icon></button>
-            </div>`
-          : nothing}
-      </ha-card>
-    `;
   }
 
   render() {
@@ -448,8 +304,6 @@ class MateriaLevel extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement)
       fg ||
       "var(--md-sys-color-primary, var(--primary-color))";
     const trackColor = this._field("slider_track_color", "_resolvedSliderTrackColor") || "";
-
-    if (this.config.variant === "vertical") return this._renderVertical(st, scale, value, dead, label, accent);
 
     const shown = this._display(value, scale);
     const unit = scale.unit;
@@ -502,7 +356,7 @@ class MateriaLevel extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement)
   }
 
   getCardSize() {
-    return this.config?.variant === "vertical" ? 6 : 2;
+    return 2;
   }
 }
 
