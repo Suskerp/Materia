@@ -52,6 +52,7 @@ import "./cards/bars/index.js";
 import "./cards/art-scope/index.js";
 import "./cards/panel-host/index.js";
 import "./cards/media-header/index.js";
+import "./cards/volume/index.js";
 import "./cards/volume-knob/index.js";
 import "./cards/station-grid/index.js";
 

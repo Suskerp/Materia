@@ -125,6 +125,7 @@ const MEDIA_CARDS = new Set([
   "custom:materia-media",
   "custom:materia-media-progress",
   "custom:materia-media-header",
+  "custom:materia-volume",
   "custom:materia-volume-knob",
   "custom:materia-volume-ring",
   "custom:materia-station-grid",
