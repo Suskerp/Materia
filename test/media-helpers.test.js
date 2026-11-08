@@ -162,23 +162,38 @@ test("openers build the knob config from their volume block", () => {
 
 test("panel registry entries: a card, { card }, or { cards }, with an optional heading", () => {
   const grid = { type: "custom:materia-station-grid" };
-  assert.deepEqual(panelSpec(grid), { heading: "", cards: [grid] });
-  assert.deepEqual(panelSpec({ heading: "Zenders", card: grid }), { heading: "Zenders", cards: [grid] });
-  assert.deepEqual(panelSpec({ heading: "Volume", cards: [grid, grid] }), { heading: "Volume", cards: [grid, grid] });
-  assert.deepEqual(panelSpec(undefined, { card: grid, heading: "Own" }), { heading: "Own", cards: [grid] },
+  const spec = (heading, cards) => ({ heading, cards, actions: [], head: true });
+  assert.deepEqual(panelSpec(grid), spec("", [grid]));
+  assert.deepEqual(panelSpec({ heading: "Zenders", card: grid }), spec("Zenders", [grid]));
+  assert.deepEqual(panelSpec({ heading: "Volume", cards: [grid, grid] }), spec("Volume", [grid, grid]));
+  assert.deepEqual(panelSpec(undefined, { card: grid, heading: "Own" }), spec("Own", [grid]),
     "no entry: the request's own card");
-  assert.deepEqual(panelSpec({ card: grid }, { heading: "Request" }), { heading: "Request", cards: [grid] },
+  assert.deepEqual(panelSpec({ card: grid }, { heading: "Request" }), spec("Request", [grid]),
     "the entry's heading wins, else the request's");
-  assert.deepEqual(panelSpec(null, {}), { heading: "", cards: [] });
-  assert.deepEqual(panelSpec({ style: "tap" }, { card: grid }), { heading: "", cards: [grid] },
+  assert.deepEqual(panelSpec(null, {}), spec("", []));
+  assert.deepEqual(panelSpec({ style: "tap" }, { card: grid }), spec("", [grid]),
     "an entry without content is ignored");
 });
 
-test("one panel card is shown as is, several in a vertical stack", () => {
+test("panel head: actions sit beside the heading; head: false leaves the head row out", () => {
+  const grid = { type: "custom:materia-station-grid" };
+  const chip = { type: "custom:materia-chips" };
+  assert.deepEqual(panelSpec({ heading: "Volume", actions: [chip], cards: [grid] }).actions, [chip]);
+  assert.deepEqual(panelSpec(undefined, { card: grid, actions: [chip] }).actions, [chip], "a request may bring them");
+  assert.deepEqual(panelSpec({ card: grid, actions: [] }, { actions: [chip] }).actions, [], "the entry's actions win");
+  assert.deepEqual(panelSpec({ type: "a", actions: [chip] }).actions, [], "a bare card's own keys are its config");
+  assert.deepEqual(panelSpec({ card: grid, actions: chip }).actions, [], "actions must be a list");
+  assert.equal(panelSpec({ card: grid }).head, true);
+  assert.equal(panelSpec({ card: grid, head: false }).head, false);
+  assert.equal(panelSpec(undefined, { card: grid, head: false }).head, false);
+  assert.equal(panelSpec({ type: "a", head: false }).head, true, "a bare card's own keys are its config");
+});
+
+test("one panel card is shown as is, several in a stretching materia-stack column", () => {
   const a = { type: "a" };
   const b = { type: "b" };
   assert.deepEqual(panelCardConfig({ cards: [a] }), a);
-  assert.deepEqual(panelCardConfig({ cards: [a, b] }), { type: "vertical-stack", cards: [a, b] });
+  assert.deepEqual(panelCardConfig({ cards: [a, b] }), { type: "custom:materia-stack", direction: "column", cards: [a, b] });
 });
 
 test("a host takes a request it has a panel for, or one that brings its own card", () => {

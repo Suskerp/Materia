@@ -9,7 +9,7 @@ import { PanelHostMixin, panelChromeStyles } from "../../primitives/panels.js";
  *   mode: inline          # inline (default) | sheet
  *   timeout: 30           # seconds without a touch before a panel closes; 0 = never
  *   panels:
- *     volume: { heading: Volume, cards: [...] }
+ *     volume: { heading: Volume, actions: [...], cards: [...] }   # head: false = no head row
  *     stations: { type: custom:materia-station-grid, ... }
  *   cards: [...]
  *

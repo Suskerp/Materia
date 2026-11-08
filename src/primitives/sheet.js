@@ -21,6 +21,8 @@ import { openPanel } from "./panel-protocol.js";
 class MateriaSheet extends LitElement {
   static properties = {
     heading: { type: String },
+    head: { attribute: false },
+    actions: { attribute: false },
     _open: { state: true },
   };
 
@@ -91,6 +93,26 @@ class MateriaSheet extends LitElement {
         line-height: 28px;
         font-weight: 400;
       }
+      .head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0 4px 8px;
+      }
+      .head .heading {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+      }
+      .actions {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        --ha-card-background: transparent;
+        --ha-card-box-shadow: none;
+        --ha-card-border-width: 0;
+      }
       ::slotted(*) {
         --ha-card-background: transparent;
         --ha-card-box-shadow: none;
@@ -121,10 +143,20 @@ class MateriaSheet extends LitElement {
           @pointerup=${this._dragEnd}
           @pointercancel=${this._dragEnd}
         ><i></i></div>
-        ${this.heading ? html`<div class="heading">${this.heading}</div>` : ""}
+        ${this.head === false ? "" : this._renderHeading()}
         <slot></slot>
       </div>
     `;
+  }
+
+  /** Heading, with the panel's `actions` cards on the right when it has any. */
+  _renderHeading() {
+    const actions = this.actions ?? [];
+    if (!actions.length) return this.heading ? html`<div class="heading">${this.heading}</div>` : "";
+    return html`<div class="head">
+      <div class="heading">${this.heading}</div>
+      <div class="actions">${actions}</div>
+    </div>`;
   }
 
   _dragStart(e) {
@@ -208,19 +240,31 @@ export function createCardContent(cardConfig) {
 /**
  * Opens a card config in a sheet. Returns a controller: setHass() keeps the
  * content live (the opener forwards its own hass updates), close() closes it,
- * and `open` reports whether it is still showing.
+ * and `open` reports whether it is still showing. `options` (a panel spec)
+ * may carry `actions` (card configs beside the heading) and `head: false`
+ * (no heading row).
  */
-export function openSheet(origin, cardConfig, hass, heading, onClose) {
+export function openSheet(origin, cardConfig, hass, heading, onClose, options = {}) {
   current?.close();
   const content = createCardContent(cardConfig);
   content.hass = hass;
   const sheet = document.createElement("materia-sheet");
   sheet.heading = heading || "";
+  sheet.head = options.head !== false;
+  sheet.actions = sheet.head
+    ? (options.actions ?? []).map((c) => {
+        const a = createCardContent(c);
+        a.hass = hass;
+        return a;
+      })
+    : [];
   const controller = {
     open: true,
     setHass(h) {
-      const target = sheet.content?.real ?? sheet.content;
-      if (target) target.hass = h;
+      for (const el of [sheet.content, ...sheet.actions]) {
+        const target = el?.real ?? el;
+        if (target) target.hass = h;
+      }
     },
     close: () => sheet.close(),
   };
