@@ -12,7 +12,6 @@ import {
   nextSource,
   mediaByline,
   currentStationIndex,
-  volumeKnobConfig,
   isMediaOff,
   isLive,
   nowPlayingText,
@@ -144,22 +143,6 @@ test("off and live", () => {
   assert.equal(isLive(player({})), false);
 });
 
-test("openers build the knob config from their volume block", () => {
-  assert.deepEqual(volumeKnobConfig({ entity: "media_player.a" }), {
-    type: "custom:materia-volume-knob",
-    entity: "media_player.a",
-  });
-  const zones = [{ entity: "media_player.z1" }, { entity: "media_player.z2" }];
-  assert.deepEqual(volumeKnobConfig({ entity: "media_player.a", volume: { zones, style: "arc" } }), {
-    type: "custom:materia-volume-knob",
-    entity: "media_player.a",
-    zones,
-    style: "arc",
-  });
-  assert.equal(volumeKnobConfig({ volume: { zones } }).entity, "media_player.z1");
-  assert.equal(volumeKnobConfig({ entity: "media_player.a", volume: { entity: "media_player.b" } }).entity, "media_player.b");
-});
-
 test("panel registry entries: a card, { card }, or { cards }, with an optional heading", () => {
   const grid = { type: "custom:materia-station-grid" };
   assert.deepEqual(panelSpec(grid), { heading: "", cards: [grid] });
@@ -174,11 +157,11 @@ test("panel registry entries: a card, { card }, or { cards }, with an optional h
     "an entry without content is ignored");
 });
 
-test("one panel card is shown as is, several in a vertical stack", () => {
+test("one panel card is shown as is, several in a stretching materia-stack column", () => {
   const a = { type: "a" };
   const b = { type: "b" };
   assert.deepEqual(panelCardConfig({ cards: [a] }), a);
-  assert.deepEqual(panelCardConfig({ cards: [a, b] }), { type: "vertical-stack", cards: [a, b] });
+  assert.deepEqual(panelCardConfig({ cards: [a, b] }), { type: "custom:materia-stack", direction: "column", cards: [a, b] });
 });
 
 test("a host takes a request it has a panel for, or one that brings its own card", () => {

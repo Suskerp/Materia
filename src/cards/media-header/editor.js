@@ -1,5 +1,5 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
-import { stationsField, volumeOverrideSection } from "../../utils/media-editors.js";
+import { stationsField } from "../../utils/media-editors.js";
 
 class MateriaMediaHeaderEditor extends SmartEditorBase {
   _formData() {
@@ -38,7 +38,18 @@ class MateriaMediaHeaderEditor extends SmartEditorBase {
         expanded: false,
         fields: [{ name: "stations", render: (value) => stationsField(this, value) }],
       },
-      volumeOverrideSection(this),
+      {
+        title: "Power menu",
+        icon: "mdi:power",
+        expanded: false,
+        fields: [
+          {
+            name: "power_entities",
+            label: "Players the power menu switches (empty: this player)",
+            selector: { entity: { domain: "media_player", multiple: true } },
+          },
+        ],
+      },
     ];
   }
 }

@@ -53,38 +53,6 @@ export function setToolbarCustoms(buttons, customs) {
   return out;
 }
 
-/* ---- volume zones ------------------------------------------------------ */
-
-/** Entity ids of a zones list. */
-export const zoneEntities = (zones) => (Array.isArray(zones) ? zones.map((z) => z?.entity).filter(Boolean) : []);
-
-/** New zones list for a new entity selection: kept zones keep their name and keys. */
-export function zonesForEntities(zones, entities) {
-  const old = new Map((Array.isArray(zones) ? zones : []).map((z) => [z?.entity, z]));
-  return entities.map((entity) => old.get(entity) ?? { entity });
-}
-
-/** Sets (or, when blank, removes) the name override of one zone. */
-export function setZoneName(zones, entity, name) {
-  return zones.map((z) => {
-    if (z.entity !== entity) return z;
-    const next = { ...z };
-    if (name && name.trim()) next.name = name;
-    else delete next.name;
-    return next;
-  });
-}
-
-/** A block without keys means "inherit": the editor removes it instead of writing {}. */
-export function compactBlock(block) {
-  const out = {};
-  for (const [k, v] of Object.entries(block ?? {})) {
-    if (v === undefined || v === null || v === "" || (Array.isArray(v) && !v.length)) continue;
-    out[k] = v;
-  }
-  return Object.keys(out).length ? out : undefined;
-}
-
 /* ---- stations ----------------------------------------------------------- */
 
 /** The short form `action: script.x` + `data` as the ui_action it means. */
@@ -125,7 +93,6 @@ const MEDIA_CARDS = new Set([
   "custom:materia-media",
   "custom:materia-media-progress",
   "custom:materia-media-header",
-  "custom:materia-volume-knob",
   "custom:materia-volume-ring",
   "custom:materia-station-grid",
 ]);

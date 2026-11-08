@@ -6,12 +6,11 @@ import { hostStyles, haCardReset } from "../../styles/card-styles.js";
 import { motionTokens } from "../../utils/motion.js";
 import { mediaTokens } from "../../styles/media-styles.js";
 import { volumeRing, volumeRingStyles } from "./ring.js";
-import "../../cards/volume-knob/index.js";
 import "./editor.js";
 
 /**
  * materia-volume-ring — a 48 px button showing the volume as a thin 270° arc
- * plus the number. Tap opens materia-volume-knob in a bottom sheet; the
+ * plus the number. Tap opens panel `volume` (or one vertical level in a sheet); the
  * `volume:` block is that knob's config (zones, link_entity, style).
  */
 class MateriaVolumeRing extends SheetOpenerMixin(ActionMixin(LitElement)) {
@@ -62,19 +61,17 @@ class MateriaVolumeRing extends SheetOpenerMixin(ActionMixin(LitElement)) {
   }
 
   setConfig(config) {
-    if (!config.entity && !config.volume?.entity) throw new Error("entity is required");
+    if (!config.entity) throw new Error("entity is required");
     this.config = config;
   }
 
   _open(e) {
-    this._fireHaptic("light");
-    this._openSheet(e.currentTarget, this._volumeKnobConfig(), undefined, "volume");
+    this._openVolumePanel(e.currentTarget);
   }
 
   render() {
     if (!this.hass || !this.config) return html``;
-    const knob = this._volumeKnobConfig();
-    const s = this.hass.states[knob.entity];
+    const s = this.hass.states[this._mediaEntity()];
     return html`<ha-card>
       <button
         class=${this._openPanel === "volume" ? "open" : ""}

@@ -2,7 +2,6 @@ import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
 import { PRESETS } from "./styles.js";
-import { volumeOverrideSection } from "../../utils/media-editors.js";
 
 class MateriaButtonGroupEditor extends SmartEditorBase {
   static properties = {
@@ -126,7 +125,6 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
                 },
               ],
             },
-            volumeOverrideSection(this),
           ]
         : []),
     ];

@@ -51,8 +51,8 @@ import "./cards/confirm/index.js";
 import "./cards/bars/index.js";
 import "./cards/art-scope/index.js";
 import "./cards/panel-host/index.js";
+import "./cards/stack/index.js";
 import "./cards/media-header/index.js";
-import "./cards/volume-knob/index.js";
 import "./cards/station-grid/index.js";
 
 // Elements (native Lit)

@@ -23,10 +23,14 @@ export function panelSpec(entry, request = {}) {
   return { heading, cards };
 }
 
-/** One card config for the spec's cards: the card itself, or a vertical stack of them. */
+/**
+ * One card config for the spec's cards: the card itself, or a materia-stack
+ * column of them whose last card takes the remaining height (a mixer row of
+ * vertical levels then fills the panel).
+ */
 export function panelCardConfig(spec) {
   if (spec.cards.length === 1) return spec.cards[0];
-  return { type: "vertical-stack", cards: spec.cards };
+  return { type: "custom:materia-stack", direction: "column", cards: spec.cards };
 }
 
 /** Whether a registry entry has something to show (a card, `card` or `cards`). */

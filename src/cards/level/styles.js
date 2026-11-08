@@ -144,5 +144,105 @@ export const styles = [
       display: block;
       width: 100%;
     }
+
+    /* ---- variant: vertical — a mixer column ---- */
+    ha-card.vertical {
+      height: 100%;
+      min-height: 320px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      padding: 8px 0;
+      color: var(--md-sys-color-on-surface, var(--primary-text-color));
+    }
+
+    .vhead {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .vhead .label {
+      font-size: 13px;
+      line-height: 18px;
+      color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
+      text-align: center;
+    }
+
+    .vhead .value {
+      font-size: 34px;
+      line-height: 40px;
+      font-weight: 400;
+      font-variant-numeric: tabular-nums;
+    }
+
+    ha-card.vertical materia-vslider {
+      flex: 1 1 auto;
+      min-height: 160px;
+      --vs-active: var(--ml-accent);
+    }
+
+    .vfoot {
+      display: flex;
+      gap: 4px;
+      height: 56px;
+      width: 100%;
+      max-width: 220px;
+    }
+
+    .vfoot.dead,
+    ha-card.vertical.off .vfoot {
+      opacity: 0.38;
+      pointer-events: none;
+    }
+
+    .vfoot button {
+      display: grid;
+      place-items: center;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition:
+        border-radius var(--md-sys-motion-expressive-fast-spatial),
+        background-color var(--md-sys-motion-fast-effects);
+    }
+
+    .vfoot .step {
+      flex: 1;
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+
+    .vfoot .step.first {
+      border-radius: 28px 10px 10px 28px;
+    }
+
+    .vfoot .step.last {
+      border-radius: 10px 28px 28px 10px;
+    }
+
+    .vfoot .step:active {
+      border-radius: 16px;
+    }
+
+    .vfoot .mute {
+      width: 64px;
+      border-radius: 10px;
+      background: var(--md-sys-color-surface-container-highest, var(--secondary-background-color));
+      color: var(--md-sys-color-on-surface, var(--primary-text-color));
+    }
+
+    .vfoot .mute.on {
+      border-radius: 20px;
+      background: var(--ml-accent);
+      color: var(--md-sys-color-on-primary, #fff);
+    }
   `,
 ];

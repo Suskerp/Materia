@@ -3,7 +3,8 @@ import { motionTokens } from "../utils/motion.js";
 import { hostStyles } from "../styles/card-styles.js";
 import { ART_VARIABLES } from "../utils/art-palette.js";
 import { loadCardHelpers } from "../styles/shared.js";
-import { volumeKnobConfig } from "../utils/media.js";
+import { volumePanelCard } from "../utils/media.js";
+import { t } from "../utils/i18n.js";
 import { openPanel } from "./panel-protocol.js";
 
 /**
@@ -273,10 +274,19 @@ export const SheetOpenerMixin = (superClass) =>
       return ctx;
     }
 
-    /** Volume panel config: own `volume:` block, else the art scope's, else one zone. */
-    _volumeKnobConfig() {
-      const ctx = this._scopeContext();
-      return volumeKnobConfig(this.config, this.config?.volume ? undefined : ctx);
+    /** The player this element is about: its own `entity`, else the art scope's. */
+    _mediaEntity() {
+      return this.config?.entity ?? this._scopeContext().entity;
+    }
+
+    /** Opens panel `volume` (a host's mixer), else one vertical level for the player in a sheet. */
+    _openVolumePanel(origin) {
+      this._fireHaptic?.("light");
+      this._requestPanel(origin, {
+        panel: "volume",
+        card: volumePanelCard(this._mediaEntity()),
+        heading: t("media_volume", this.hass),
+      });
     }
 
     /**

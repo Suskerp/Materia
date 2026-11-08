@@ -1,4 +1,3 @@
-import { html } from "lit";
 import { MateriaExpanderEditor } from "../expander/editor.js";
 
 const PANEL_TIMEOUT_FIELD = {
@@ -29,25 +28,6 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
             label: "Speler (kleuren, en standaard voor de kaarten erin)",
             required: true,
             selector: { entity: { domain: "media_player" } },
-          },
-        ],
-      },
-      {
-        title: "Volume",
-        icon: "mdi:volume-high",
-        expanded: false,
-        fields: [
-          {
-            name: "volume",
-            render: (value, data) => html`<materia-volume-editor
-              .hass=${this.hass}
-              .value=${value}
-              .defaultEntity=${data.entity}
-              @value-changed=${(e) => {
-                e.stopPropagation();
-                this._setField("volume", e.detail.value);
-              }}
-            ></materia-volume-editor>`,
           },
         ],
       },
