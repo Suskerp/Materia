@@ -1,4 +1,5 @@
 import { LitElement, html, nothing } from "lit";
+import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { CommitGesture } from "../../utils/commit-gesture.js";
 import { conditionsMet } from "../../utils/conditions.js";
@@ -391,7 +392,7 @@ class MateriaButton extends ActionMixin(LitElement) {
     const confirm = this._confirmMode;
     const g = confirm ? this._syncGesture() : null;
     const accessibleName = this.config.aria_label || label || subtitle ||
-      stateObj?.attributes?.friendly_name || this.config.name || icon || "Action";
+      stateObj?.attributes?.friendly_name || this.config.name || icon || t("sched_action", this.hass);
 
     return html`
       <button

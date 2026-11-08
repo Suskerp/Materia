@@ -2,7 +2,7 @@ import { MateriaExpanderEditor } from "../expander/editor.js";
 
 const PANEL_TIMEOUT_FIELD = {
   name: "panel_timeout",
-  label: "Return to the player after (s without a touch, 0 = never)",
+  label: "e_return_player_after",
   selector: { number: { min: 0, max: 60, step: 1, mode: "slider", unit_of_measurement: "s" } },
 };
 
@@ -20,46 +20,46 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
     const layout = this._config?.layout || "stack";
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           {
             name: "entity",
-            label: "Speler (kleuren, en standaard voor de kaarten erin)",
+            label: "e_player_colours",
             required: true,
             selector: { entity: { domain: "media_player" } },
           },
         ],
       },
       {
-        title: "Layout",
+        title: "e_layout",
         icon: "mdi:view-dashboard-outline",
         fields: [
           {
             name: "layout",
             selector: { select: { mode: "dropdown", options: [
-              { value: "stack", label: "Stack" },
-              { value: "row", label: "Row" },
-              { value: "grid", label: "Grid" },
-              { value: "kiosk", label: "Kiosk (cover | player, side panel)" },
+              { value: "stack", label: "e_stack" },
+              { value: "row", label: "e_row" },
+              { value: "grid", label: "e_grid" },
+              { value: "kiosk", label: "e_kiosk_cover_player" },
             ] } },
           },
           ...(layout === "grid"
-            ? [{ name: "columns", label: "Columns (number or grid-template-columns)", selector: { text: {} } }]
+            ? [{ name: "columns", label: "e_column_number_grid", selector: { text: {} } }]
             : []),
-          { name: "gap", label: "Gap (px)", selector: { number: { min: 0, max: 64, mode: "box" } } },
-          { name: "padding", label: "Padding (px)", selector: { number: { min: 0, max: 64, mode: "box" } } },
-          { name: "background", label: "Draw the surface", selector: { boolean: {} } },
+          { name: "gap", label: "e_gap_px", selector: { number: { min: 0, max: 64, mode: "box" } } },
+          { name: "padding", label: "e_paddin_px", selector: { number: { min: 0, max: 64, mode: "box" } } },
+          { name: "background", label: "e_draw_surfac", selector: { boolean: {} } },
         ],
       },
       ...(layout === "kiosk"
         ? [
             {
-              title: "Kiosk panel",
+              title: "e_kiosk_panel",
               icon: "mdi:dock-right",
               fields: [
-                { name: "fill", label: "Fill the screen height", selector: { boolean: {} } },
-                { ...PANEL_TIMEOUT_FIELD, label: "Close the panel after (s without a touch, 0 = never)" },
+                { name: "fill", label: "e_fill_screen_height", selector: { boolean: {} } },
+                { ...PANEL_TIMEOUT_FIELD, label: "e_close_panel_after" },
               ],
             },
           ]
@@ -68,11 +68,11 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
   }
 
   get _cardsTitle() {
-    return "Cards";
+    return "e_cards";
   }
 
   get _cardsHint() {
-    return "Kiosk: the first card is the cover, the rest form the player column.";
+    return "e_kiosk_cards_hint";
   }
 }
 

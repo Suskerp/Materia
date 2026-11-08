@@ -34,112 +34,112 @@ class MateriaConfirmEditor extends SmartEditorBase {
 
     return [
       {
-        title: "Setup",
+        title: "e_setup",
         icon: "mdi:tune",
         fields: [
           {
             name: "entity",
-            label: "Entity to reflect and drive (optional)",
+            label: "e_entity_reflec_drive",
             helper:
-              "With an entity and no actions below, the gesture turns it on and the active face turns it off — nothing else to configure. Leave empty to fire an action only.",
+              "e_with_entity_no",
             selector: { entity: {} },
           },
           ...(hasEntity
             ? [{
                 name: "active_state",
-                label: "State that counts as active",
-                helper: 'Defaults to the usual on/open/unlocked family. Set this for a control whose "on" is spelled something else.',
+                label: "e_state_counts_as",
+                helper: "e_defaul_usual_on",
                 selector: { text: {} },
               }]
             : []),
           {
             name: "action",
-            label: "Action when committing",
-            helper: "Fired when the gesture completes. Overrides the default turn-on.",
+            label: "e_action_when_commit",
+            helper: "e_fired_when_gestur",
             selector: { ui_action: { default_action: "none" } },
           },
           {
             name: "deactivate_action",
-            label: "Action when switching off",
-            helper: "Fired by the active face. Overrides the default turn-off.",
+            label: "e_action_when_switch",
+            helper: "e_fired_by_active",
             selector: { ui_action: { default_action: "none" } },
           },
         ],
       },
       {
-        title: "Gesture",
+        title: "e_gesture",
         icon: "mdi:gesture-tap-hold",
         fields: [
           {
             name: "gesture",
-            label: "Commit gesture",
+            label: "e_commit_gestur",
             selector: { select: { mode: "dropdown", options: [
-              { value: "hold", label: "Press and hold" },
-              { value: "slide", label: "Slide across" },
+              { value: "hold", label: "e_press_hold" },
+              { value: "slide", label: "e_slide_across" },
             ] } },
           },
           {
             name: "require_gesture",
-            label: "Which direction needs the gesture",
+            label: "e_which_direct_needs",
             helper:
-              "Turning ON only, by default: switching an override off returns things to normal and costs nothing, and making the cheap direction ceremonial teaches people the gesture is a formality. Choose both where OFF is the dangerous direction — a control that disables a protection rather than enabling a cost.",
+              "e_turnin_on_only",
             selector: { select: { mode: "dropdown", options: [
-              { value: "activate", label: "Only turning on" },
-              { value: "both", label: "Both directions" },
+              { value: "activate", label: "e_only_turnin_on" },
+              { value: "both", label: "e_both_direct" },
             ] } },
           },
           ...(hold
             ? [{
                 name: "hold_ms",
-                label: "Hold for (ms, default 800)",
-                helper: "Keep this above 500ms — the platform long-press timeout — or an ordinary long-press commits by accident.",
+                label: "e_hold_for_ms",
+                helper: "e_keep_above_500ms",
                 selector: { number: { min: 300, max: 5000, step: 50, mode: "box" } },
               }]
             : [{
                 name: "threshold",
-                label: "Fraction of the track to cross (default 0.55)",
+                label: "e_fracti_track_cross",
                 selector: { number: { min: 0.2, max: 1, step: 0.05, mode: "box" } },
               }]),
           ...(hasEntity
             ? [{
                 name: "pending_timeout_ms",
-                label: "Give up waiting for the entity after (ms, default 10000)",
+                label: "e_give_up_waitin2",
                 selector: { number: { min: 1000, max: 60000, step: 500, mode: "box" } },
               }]
             : []),
         ],
       },
       {
-        title: "Words",
+        title: "e_words",
         icon: "mdi:text-short",
         fields: [
-          { name: "eyebrow", label: "Eyebrow (optional)", template: true, selector: { text: {} } },
+          { name: "eyebrow", label: "e_eyebro_option", template: true, selector: { text: {} } },
           {
             name: "label",
-            label: "Gesture label",
-            helper: "The instruction across the track. Keep it short — it sits on one line.",
+            label: "e_gestur_label",
+            helper: "e_instru_across_track",
             template: true,
             selector: { text: {} },
           },
           {
             name: "caption",
-            label: "Warning / consequence line",
+            label: "e_warnin_conseq_line",
             helper:
-              "THE POINT OF THIS CARD. Shown before the gesture is touched and while it is held, which is strictly more informative than a dialog that appears after the decision and gets dismissed by reflex. Put the cost or the consequence here.",
+              "e_point_card_shown",
             template: true,
             selector: { text: {} },
           },
-          { name: "caption_warn", label: "Colour the warning line", selector: { boolean: {} } },
+          { name: "caption_warn", label: "e_colour_warnin_line", selector: { boolean: {} } },
           {
             name: "active_label",
-            label: "Label while active",
+            label: "e_label_while_active",
             template: true,
             selector: { text: {} },
           },
           {
             name: "active_caption",
-            label: "Caption while active",
-            helper: "Falls back to the warning line above when empty.",
+            label: "e_captio_while_active",
+            helper: "e_falls_back_warnin",
             template: true,
             selector: { text: {} },
           },
@@ -147,34 +147,34 @@ class MateriaConfirmEditor extends SmartEditorBase {
             ? []
             : [{
                 name: "deactivate_hint",
-                label: 'Active face hint (default "Tap to stop")',
+                label: "e_active_face_hint",
                 selector: { text: {} },
               }]),
           ...(hasEntity
-            ? [{ name: "busy_label", label: 'While waiting (default "Working…")', selector: { text: {} } }]
+            ? [{ name: "busy_label", label: "e_while_waitin_defaul", selector: { text: {} } }]
             : []),
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "active_color", label: "Background while active", color: true, selector: { text: {} } },
-          { name: "active_color_on", label: "Text while active", color: true, selector: { text: {} } },
-          { name: "track_color", label: "Gesture track", color: true, selector: { text: {} } },
-          { name: "track_color_on", label: "Text on the track", color: true, selector: { text: {} } },
+          { name: "active_color", label: "e_backgr_while_active", color: true, selector: { text: {} } },
+          { name: "active_color_on", label: "e_text_while_active", color: true, selector: { text: {} } },
+          { name: "track_color", label: "e_gestur_track", color: true, selector: { text: {} } },
+          { name: "track_color_on", label: "e_text_on_track", color: true, selector: { text: {} } },
           ...(hold
             ? []
             : [
-                { name: "handle_color", label: "Slide handle", color: true, selector: { text: {} } },
-                { name: "handle_color_on", label: "Handle glyph", color: true, selector: { text: {} } },
+                { name: "handle_color", label: "e_slide_handle", color: true, selector: { text: {} } },
+                { name: "handle_color_on", label: "e_handle_glyph", color: true, selector: { text: {} } },
               ]),
-          { name: "active_icon", label: 'Icon while active (default "check-circle")', selector: { icon: {} } },
-          { name: "gesture_icon", label: "Icon on the gesture handle (optional)", selector: { icon: {} } },
+          { name: "active_icon", label: "e_icon_while_active", selector: { icon: {} } },
+          { name: "gesture_icon", label: "e_icon_on_gestur", selector: { icon: {} } },
         ],
       },
       {
-        title: "Disabled",
+        title: "e_disabled",
         icon: "mdi:cancel",
         expanded: false,
         fields: [DISABLED_FIELD],

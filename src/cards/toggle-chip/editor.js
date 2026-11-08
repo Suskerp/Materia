@@ -4,18 +4,18 @@ class MateriaToggleChipEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: ["switch", "input_boolean"] } } },
-          { name: "name", label: "Name (switch label, accessible name)", template: true, selector: { text: {} } },
+          { name: "name", label: "e_name_switch_label", template: true, selector: { text: {} } },
           { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
-          { name: "label_on", label: "Text when on", template: true, selector: { text: {} } },
-          { name: "label_off", label: "Text when off", template: true, selector: { text: {} } },
+          { name: "label_on", label: "e_text_when_on", template: true, selector: { text: {} } },
+          { name: "label_off", label: "e_text_when_off", template: true, selector: { text: {} } },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
           {
@@ -24,8 +24,8 @@ class MateriaToggleChipEditor extends SmartEditorBase {
               select: {
                 mode: "dropdown",
                 options: [
-                  { value: "chip", label: "Chip" },
-                  { value: "switch", label: "Label and switch" },
+                  { value: "chip", label: "e_chip" },
+                  { value: "switch", label: "e_label_switch" },
                 ],
               },
             },

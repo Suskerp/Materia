@@ -1,6 +1,7 @@
 import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { localize, t } from "../../utils/i18n.js";
 
 class MateriaMenuEditor extends SmartEditorBase {
   static properties = {
@@ -64,7 +65,7 @@ class MateriaMenuEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", selector: { entity: {} } },
@@ -78,39 +79,39 @@ class MateriaMenuEditor extends SmartEditorBase {
           {
             name: "position",
             selector: { select: { mode: "dropdown", options: [
-              { value: "auto", label: "Auto (flips to fit the viewport)" },
-              { value: "below", label: "Below" },
-              { value: "above", label: "Above" },
+              { value: "auto", label: "e_auto_flips_fit" },
+              { value: "below", label: "e_below" },
+              { value: "above", label: "e_above" },
             ] } },
           },
         ],
       },
       {
-        title: "Substate",
+        title: "e_substate",
         icon: "mdi:format-text-variant-outline",
         fields: [
-          { name: "substate", label: "Substate text / template", template: true, selector: { text: {} } },
-          { name: "substate_entity", label: "…or from entity", selector: { entity: {} } },
-          { name: "substate_attribute", label: "Entity attribute (optional)", selector: { text: {} } },
-          { name: "substate_separator", label: "Separator", selector: { select: { mode: "dropdown", custom_value: true, options: [
-            { value: "•", label: "Dot •" },
-            { value: "–", label: "Dash –" },
-            { value: "/", label: "Slash /" },
+          { name: "substate", label: "e_substa_text_templa", template: true, selector: { text: {} } },
+          { name: "substate_entity", label: "e_from_entity", selector: { entity: {} } },
+          { name: "substate_attribute", label: "e_entity_attrib_option", selector: { text: {} } },
+          { name: "substate_separator", label: "e_separator", selector: { select: { mode: "dropdown", custom_value: true, options: [
+            { value: "•", label: "e_dot" },
+            { value: "–", label: "e_dash" },
+            { value: "/", label: "e_slash" },
           ] } } },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "color", label: "Background", color: true, template: true, selector: { text: {} } },
-          { name: "color_on", label: "Text / icon", color: true, template: true, selector: { text: {} } },
-          { name: "menu_variant", label: "Menu style", selector: { select: { mode: "dropdown", options: [
-            { value: "surface", label: "Surface (classic)" },
-            { value: "expressive", label: "Expressive (container tone, trailing icons)" },
+          { name: "color", label: "e_background", color: true, template: true, selector: { text: {} } },
+          { name: "color_on", label: "e_text_icon", color: true, template: true, selector: { text: {} } },
+          { name: "menu_variant", label: "e_menu_style", selector: { select: { mode: "dropdown", options: [
+            { value: "surface", label: "e_surfac_classi" },
+            { value: "expressive", label: "e_expres_contai_tone" },
           ] } } },
-          { name: "menu_color", label: "Menu panel color (expressive)", color: true, selector: { text: {} } },
-          { name: "menu_color_on", label: "Menu text color (expressive)", color: true, selector: { text: {} } },
+          { name: "menu_color", label: "e_menu_panel_color", color: true, selector: { text: {} } },
+          { name: "menu_color_on", label: "e_menu_text_color", color: true, selector: { text: {} } },
         ],
       },
     ];
@@ -127,7 +128,7 @@ class MateriaMenuEditor extends SmartEditorBase {
   _renderExtra() {
     return html`
       <div class="options-header">
-        <span>Options</span>
+        <span>${t("e_options", this.hass)}</span>
         <ha-icon-button @click=${this._addOption}>
           <ha-icon icon="mdi:plus"></ha-icon>
         </ha-icon-button>
@@ -140,7 +141,7 @@ class MateriaMenuEditor extends SmartEditorBase {
             <div class="option-card">
               <div class="option-header">
                 <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
-                <span>${opt.label || opt.value || `Option ${i + 1}`}</span>
+                <span>${opt.label || opt.value || t("e_option_n", this.hass, { n: i + 1 })}</span>
                 <ha-icon-button @click=${() => this._toggleExpand(i)}>
                   <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
                 </ha-icon-button>
@@ -154,7 +155,7 @@ class MateriaMenuEditor extends SmartEditorBase {
                       <ha-form
                         .hass=${this.hass}
                         .data=${opt}
-                        .schema=${this._optionSchema}
+                        .schema=${localize(this._optionSchema, this.hass)}
                         .computeLabel=${computeLabel}
                         @value-changed=${(e) => this._updateOptionForm(i, e.detail.value)}
                       ></ha-form>
@@ -173,7 +174,7 @@ class MateriaMenuEditor extends SmartEditorBase {
     const items = Array.isArray(this._config.state_colors) ? this._config.state_colors : [];
     return html`
       <div class="options-header">
-        <span>State colors</span>
+        <span>${t("e_state_colors", this.hass)}</span>
         <ha-icon-button @click=${this._addStateColor}>
           <ha-icon icon="mdi:plus"></ha-icon>
         </ha-icon-button>
@@ -182,24 +183,26 @@ class MateriaMenuEditor extends SmartEditorBase {
         (it, i) => html`
           <div class="option-card">
             <div class="option-header">
-              <span>${this._stateLabel(it.state) || `State ${i + 1}`}</span>
+              <span>${this._stateLabel(it.state) || t("e_state_n", this.hass, { n: i + 1 })}</span>
               <ha-icon-button @click=${() => this._removeStateColor(i)}>
                 <ha-icon icon="mdi:delete"></ha-icon>
               </ha-icon-button>
             </div>
             <div class="option-body">
               <ha-textfield
-                label="State (comma-separated for multiple)"
+                .label=${t("e_state_csv", this.hass)}
                 .value=${this._stateLabel(it.state)}
                 @change=${(e) => this._updateStateColor(i, "state", this._parseStateInput(e.target.value))}
               ></ha-textfield>
               <materia-color-picker
-                label="Background"
+                .hass=${this.hass}
+                .label=${t("e_background", this.hass)}
                 .value=${it.color || ""}
                 @value-changed=${(e) => { e.stopPropagation(); this._updateStateColor(i, "color", e.detail.value); }}
               ></materia-color-picker>
               <materia-color-picker
-                label="Text / icon"
+                .hass=${this.hass}
+                .label=${t("e_text_icon", this.hass)}
                 .value=${it.color_on || ""}
                 @value-changed=${(e) => { e.stopPropagation(); this._updateStateColor(i, "color_on", e.detail.value); }}
               ></materia-color-picker>

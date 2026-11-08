@@ -15,38 +15,38 @@ class MateriaWeatherHeroEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: "weather" } } },
-          { name: "moon_entity", label: "Moon phase sensor (default: sensor.moon)", selector: { entity: { domain: "sensor" } } },
-          { name: "temperature_entity", label: "Real temperature sensor (optional)", selector: { entity: { domain: "sensor", device_class: "temperature" } } },
-          { name: "feels_like_entity", label: "Feels-like sensor (optional)", selector: { entity: { domain: "sensor" } } },
-          { name: "show_condition", label: "Show condition text", selector: { boolean: {} } },
-          { name: "show_icon", label: "Show condition glyph", selector: { boolean: {} } },
-          { name: "show_feels_like", label: "Show feels-like", selector: { boolean: {} } },
+          { name: "moon_entity", label: "e_moon_phase_sensor", selector: { entity: { domain: "sensor" } } },
+          { name: "temperature_entity", label: "e_real_temper_sensor", selector: { entity: { domain: "sensor", device_class: "temperature" } } },
+          { name: "feels_like_entity", label: "e_feels_like_sensor", selector: { entity: { domain: "sensor" } } },
+          { name: "show_condition", label: "e_show_condit_text", selector: { boolean: {} } },
+          { name: "show_icon", label: "e_show_condit_glyph", selector: { boolean: {} } },
+          { name: "show_feels_like", label: "e_show_feels_like", selector: { boolean: {} } },
         ],
       },
       {
-        title: "Night / Day",
+        title: "e_night_day",
         icon: "mdi:thermometer-lines",
         fields: [
-          { name: "show_minmax", label: "Show night / day range", selector: { boolean: {} } },
-          { name: "low_entity", label: "Low sensor (optional)", selector: { entity: { domain: "sensor" } } },
-          { name: "high_entity", label: "High sensor (optional)", selector: { entity: { domain: "sensor" } } },
-          { name: "night_label", label: "Night label", selector: { text: {} } },
-          { name: "day_label", label: "Day label", selector: { text: {} } },
+          { name: "show_minmax", label: "e_show_night_day", selector: { boolean: {} } },
+          { name: "low_entity", label: "e_low_sensor_option", selector: { entity: { domain: "sensor" } } },
+          { name: "high_entity", label: "e_high_sensor_option", selector: { entity: { domain: "sensor" } } },
+          { name: "night_label", label: "e_night_label", selector: { text: {} } },
+          { name: "day_label", label: "e_day_label", selector: { text: {} } },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "color_on", label: "Text color", color: true, template: true, selector: { text: {} } },
+          { name: "color_on", label: "e_text_color", color: true, template: true, selector: { text: {} } },
         ],
       },
       {
-        title: "Actions",
+        title: "e_actions",
         icon: "mdi:gesture-tap",
         fields: [
           { name: "tap_action", selector: { ui_action: { default_action: "more-info" } } },

@@ -31,15 +31,15 @@ class MateriaWeatherTileEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: "weather" } } },
-          { name: "moon_entity", label: "Moon phase sensor (default: sensor.moon)", selector: { entity: { domain: "sensor" } } },
-          { name: "temperature_entity", label: "Temperature sensor (optional)", selector: { entity: { domain: "sensor", device_class: "temperature" } } },
+          { name: "moon_entity", label: "e_moon_phase_sensor", selector: { entity: { domain: "sensor" } } },
+          { name: "temperature_entity", label: "e_temper_sensor_option", selector: { entity: { domain: "sensor", device_class: "temperature" } } },
           {
             name: "icon",
-            label: "Custom icon (overrides the colored glyph)",
+            label: "e_custom_icon_overri",
             template: true,
             selector: { icon: {} },
             context: { icon_entity: "entity" },
@@ -47,26 +47,26 @@ class MateriaWeatherTileEditor extends SmartEditorBase {
         ],
       },
       {
-        title: "Min / Max",
+        title: "e_min_max",
         icon: "mdi:thermometer-lines",
         fields: [
-          { name: "show_minmax", label: "Show min / max", selector: { boolean: {} } },
-          { name: "high_entity", label: "High sensor (optional)", selector: { entity: { domain: "sensor" } } },
-          { name: "low_entity", label: "Low sensor (optional)", selector: { entity: { domain: "sensor" } } },
+          { name: "show_minmax", label: "e_show_min_max", selector: { boolean: {} } },
+          { name: "high_entity", label: "e_high_sensor_option", selector: { entity: { domain: "sensor" } } },
+          { name: "low_entity", label: "e_low_sensor_option", selector: { entity: { domain: "sensor" } } },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "size", label: "Size (10 = fill)", selector: { number: { min: 1, max: 10, step: 1, mode: "slider" } } },
-          { name: "color", label: "Background", color: true, template: true, selector: { text: {} } },
-          { name: "color_on", label: "Text / temperature", color: true, template: true, selector: { text: {} } },
-          { name: "minmax_color", label: "Min / max color", color: true, template: true, selector: { text: {} } },
+          { name: "size", label: "e_size_10_fill", selector: { number: { min: 1, max: 10, step: 1, mode: "slider" } } },
+          { name: "color", label: "e_background", color: true, template: true, selector: { text: {} } },
+          { name: "color_on", label: "e_text_temper", color: true, template: true, selector: { text: {} } },
+          { name: "minmax_color", label: "e_min_max_color", color: true, template: true, selector: { text: {} } },
         ],
       },
       {
-        title: "Actions",
+        title: "e_actions",
         icon: "mdi:gesture-tap",
         fields: [
           { name: "tap_action", selector: { ui_action: { default_action: "more-info" } } },

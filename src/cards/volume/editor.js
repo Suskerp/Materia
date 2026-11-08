@@ -10,29 +10,29 @@ class MateriaVolumeCardEditor extends SmartEditorBase {
     const column = this._config?.style === "tap" && this._config?.column;
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
-          { name: "entity", label: "Player (empty: the art scope's)", selector: { entity: { domain: "media_player" } } },
-          { name: "name", label: "Name", selector: { text: {} } },
+          { name: "entity", label: "e_player_empty_art", selector: { entity: { domain: "media_player" } } },
+          { name: "name", label: "e_name", selector: { text: {} } },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
           {
             name: "style",
             selector: { select: { mode: "dropdown", options: [
-              { value: "knob", label: "Knob" },
-              { value: "arc", label: "Arc" },
-              { value: "tap", label: "Tap (vertical slider)" },
+              { value: "knob", label: "e_knob" },
+              { value: "arc", label: "e_arc" },
+              { value: "tap", label: "e_tap_vertic_slider" },
             ] } },
           },
           ...(this._config?.style === "tap"
-            ? [{ name: "column", label: "Narrow column", selector: { boolean: {} } }]
+            ? [{ name: "column", label: "e_narrow_column", selector: { boolean: {} } }]
             : []),
-          ...(column ? [{ name: "show_name", label: "Show the name", selector: { boolean: {} } }] : []),
+          ...(column ? [{ name: "show_name", label: "e_show_name", selector: { boolean: {} } }] : []),
         ],
       },
     ];

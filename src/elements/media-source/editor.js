@@ -4,15 +4,15 @@ class MateriaMediaSourceEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:import",
         fields: [
-          { name: "entity", label: "Player (in an art scope: the scope's)", selector: { entity: { domain: "media_player" } } },
+          { name: "entity", label: "e_player_in_art", selector: { entity: { domain: "media_player" } } },
           {
             name: "mode",
             selector: { select: { mode: "dropdown", options: [
-              { value: "cycle", label: "Cycle (tap: next source)" },
-              { value: "menu", label: "Menu (pick from a list)" },
+              { value: "cycle", label: "e_cycle_tap_next" },
+              { value: "menu", label: "e_menu_pick_from" },
             ] } },
           },
         ],

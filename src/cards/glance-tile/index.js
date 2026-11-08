@@ -204,7 +204,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     if (!st || this._isUnavailable(st)) {
       return html`<ha-card><div class="rect-tile unavailable">
         <div class="header"><ha-icon icon=${this._icon("mdi:help-circle-outline")}></ha-icon><span>${this._name}</span></div>
-        <div class="sub hint">${st ? this._fmtState() : "Entity not found"}</div>
+        <div class="sub hint">${st ? this._fmtState() : t("entity_not_found", this.hass)}</div>
       </div></ha-card>`;
     }
     const bodies = {

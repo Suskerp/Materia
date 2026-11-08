@@ -8,34 +8,34 @@ class MateriaBarSelectEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: {} } },
-          { name: "label", label: "Label", selector: { text: {} } },
-          { name: "attribute", label: "Attribute (e.g. fan_speed) instead of the state", selector: { text: {} } },
-          { name: "off_option", label: 'Option shown as its own round button (e.g. "off")', selector: { text: {} } },
-          { name: "off_icon", label: "Icon for that button", selector: { icon: {} } },
+          { name: "label", label: "e_label", selector: { text: {} } },
+          { name: "attribute", label: "e_attrib_fan_speed", selector: { text: {} } },
+          { name: "off_option", label: "e_option_shown_as", selector: { text: {} } },
+          { name: "off_icon", label: "e_icon_for_button", selector: { icon: {} } },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "accent", label: "Lit bar color", color: true, template: true, selector: { text: {} } },
-          { name: "accent_on", label: "Glyph color on the accent fill", color: true, template: true, selector: { text: {} } },
+          { name: "accent", label: "e_lit_bar_color", color: true, template: true, selector: { text: {} } },
+          { name: "accent_on", label: "e_glyph_color_on", color: true, template: true, selector: { text: {} } },
         ],
       },
       {
-        title: "Advanced",
+        title: "e_advanced",
         icon: "mdi:tune",
         fields: [
-          { name: "service", label: "Override service (domain.service)", selector: { text: {} } },
-          { name: "service_key", label: "Override service data key", selector: { text: {} } },
+          { name: "service", label: "e_overri_servic_domain", selector: { text: {} } },
+          { name: "service_key", label: "e_overri_servic_data", selector: { text: {} } },
         ],
       },
       {
-        title: "Disabled",
+        title: "e_disabled",
         icon: "mdi:cancel",
         expanded: false,
         fields: [DISABLED_FIELD],

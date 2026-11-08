@@ -4,20 +4,20 @@ class MateriaPowerMenuEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:power",
         fields: [
-          { name: "entity", label: "Player (in an art scope: the scope's)", selector: { entity: { domain: "media_player" } } },
+          { name: "entity", label: "e_player_in_art", selector: { entity: { domain: "media_player" } } },
           {
             name: "entities",
-            label: "Players the menu switches (empty: the player)",
+            label: "e_player_menu_switch",
             selector: { entity: { domain: "media_player", multiple: true } },
           },
           {
             name: "variant",
             selector: { select: { mode: "dropdown", options: [
-              { value: "default", label: "Default (48 px)" },
-              { value: "kiosk", label: "Kiosk (44 px)" },
+              { value: "default", label: "e_defaul_48_px" },
+              { value: "kiosk", label: "e_kiosk_44_px" },
             ] } },
           },
         ],

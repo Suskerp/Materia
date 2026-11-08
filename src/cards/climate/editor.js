@@ -8,7 +8,7 @@ class MateriaClimateEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: "climate" } } },
@@ -16,16 +16,16 @@ class MateriaClimateEditor extends SmartEditorBase {
         ],
       },
       {
-        title: "Sensors",
+        title: "e_sensors",
         icon: "mdi:thermometer",
         fields: [
-          { name: "temperature_entity", label: "Temperature sensor", selector: { entity: { domain: "sensor" } } },
-          { name: "humidity_entity", label: "Humidity sensor", selector: { entity: { domain: "sensor" } } },
-          { name: "outdoor_temp_entity", label: "Outdoor temperature sensor", selector: { entity: { domain: "sensor" } } },
+          { name: "temperature_entity", label: "e_temper_sensor", selector: { entity: { domain: "sensor" } } },
+          { name: "humidity_entity", label: "e_humidi_sensor", selector: { entity: { domain: "sensor" } } },
+          { name: "outdoor_temp_entity", label: "e_outdoo_temper_sensor", selector: { entity: { domain: "sensor" } } },
         ],
       },
       {
-        title: "Behavior",
+        title: "e_behavior",
         icon: "mdi:tune",
         fields: [
           { name: "step", default: 0.5, selector: { number: { min: 0.5, max: 5, step: 0.5, mode: "box" } } },

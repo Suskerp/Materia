@@ -9,32 +9,32 @@ class MateriaMediaProgressEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: "media_player" } } },
           {
             name: "variant",
             selector: { select: { mode: "dropdown", options: [
-              { value: "default", label: "Default" },
-              { value: "player", label: "Player (handle, drag to seek, LIVE chip)" },
+              { value: "default", label: "e_default" },
+              { value: "player", label: "e_player_handle_drag" },
             ] } },
           },
           { name: "show_times", selector: { boolean: {} } },
           { name: "seekable", selector: { boolean: {} } },
           {
             name: "live",
-            label: "Live stream",
-            helper: "Keep the track full and show ∞ for a live stream, even when the player reports idle.",
+            label: "e_live_stream",
+            helper: "e_keep_track_full",
             selector: { boolean: {} },
           },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "color", label: "Wave color", color: true, template: true, selector: { text: {} } },
+          { name: "color", label: "e_wave_color", color: true, template: true, selector: { text: {} } },
         ],
       },
     ];

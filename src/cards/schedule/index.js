@@ -84,8 +84,8 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     return document.createElement("materia-schedule-editor");
   }
 
-  static getStubConfig() {
-    return { name: "Start cleaning" };
+  static getStubConfig(hass) {
+    return { name: t("sched_stub_name", hass) };
   }
 
   setConfig(config) {
@@ -1356,7 +1356,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
   _formatNext(stateObj) {
     const raw = stateObj.attributes.next_trigger;
-    if (!raw) return stateObj.state === "on" ? t("sched_enabled", this.hass) : t("sched_disabled", this.hass);
+    if (!raw) return stateObj.state === "on" ? t("sched_enabled", this.hass) : t("e_disabled", this.hass);
     const date = new Date(raw);
     if (Number.isNaN(date.getTime())) return String(raw);
     return new Intl.DateTimeFormat(this._lang, { weekday: "short", hour: "2-digit", minute: "2-digit" }).format(date);

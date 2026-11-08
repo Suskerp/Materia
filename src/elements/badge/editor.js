@@ -1,22 +1,22 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 const VARIANT_OPTIONS = [
-  { value: "primary", label: "Primary" },
-  { value: "secondary", label: "Secondary" },
-  { value: "tertiary", label: "Tertiary" },
-  { value: "error", label: "Error" },
-  { value: "device", label: "Device" },
-  { value: "primary-container", label: "Primary Container" },
-  { value: "secondary-container", label: "Secondary Container" },
-  { value: "tertiary-container", label: "Tertiary Container" },
-  { value: "error-container", label: "Error Container" },
-  { value: "device-container", label: "Device Container" },
-  { value: "primary-state", label: "Primary State" },
-  { value: "secondary-state", label: "Secondary State" },
-  { value: "tertiary-state", label: "Tertiary State" },
-  { value: "error-state", label: "Error State" },
-  { value: "device-state", label: "Device State" },
-  { value: "battery", label: "Battery" },
+  { value: "primary", label: "e_primary" },
+  { value: "secondary", label: "e_secondary" },
+  { value: "tertiary", label: "e_tertiary" },
+  { value: "error", label: "gt_state_error" },
+  { value: "device", label: "sched_device" },
+  { value: "primary-container", label: "e_primar_contai" },
+  { value: "secondary-container", label: "e_second_contai" },
+  { value: "tertiary-container", label: "e_tertia_contai" },
+  { value: "error-container", label: "e_error_contai" },
+  { value: "device-container", label: "e_device_contai" },
+  { value: "primary-state", label: "e_primar_state" },
+  { value: "secondary-state", label: "e_second_state" },
+  { value: "tertiary-state", label: "e_tertia_state" },
+  { value: "error-state", label: "e_error_state" },
+  { value: "device-state", label: "e_device_state" },
+  { value: "battery", label: "e_battery" },
 ];
 
 class MateriaBadgeEditor extends SmartEditorBase {
@@ -48,7 +48,7 @@ class MateriaBadgeEditor extends SmartEditorBase {
 
     const sections = [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", selector: { entity: {} } },
@@ -63,19 +63,19 @@ class MateriaBadgeEditor extends SmartEditorBase {
           ...(this._actionRole
             ? [{
                 name: "shape",
-                helper: "The asymmetric corners rise to the right; the mirrored one makes a facing pair.",
+                helper: "e_asymme_corner_rise",
                 selector: { select: { mode: "dropdown", options: [
-                  { value: "leaf", label: "Asymmetric corners" },
-                  { value: "leaf-flip", label: "Asymmetric corners — mirrored" },
+                  { value: "leaf", label: "e_asymme_corner" },
+                  { value: "leaf-flip", label: "e_asymme_corner_mirror" },
                 ] } },
               }]
             : []),
           { name: "variant", selector: { select: { mode: "dropdown", options: VARIANT_OPTIONS } } },
           {
             name: "secondary",
-            label: "Secondary line",
+            label: "e_second_line",
             template: true,
-            helper: "One quiet line under the name. Left empty, a quiet badge shows its state word here instead.",
+            helper: "e_one_quiet_line",
             selector: { text: {} },
           },
         ],
@@ -84,7 +84,7 @@ class MateriaBadgeEditor extends SmartEditorBase {
 
     if (hasEntity) {
       sections.push({
-        title: "State",
+        title: "e_state",
         icon: "mdi:state-machine",
         fields: [
           { name: "show_state", selector: { boolean: {} } },
@@ -92,8 +92,8 @@ class MateriaBadgeEditor extends SmartEditorBase {
           { name: "state_display", template: true, selector: { text: {} } },
           {
             name: "busy_entity",
-            label: "Also active while (optional)",
-            helper: "A script/automation/timer whose 'on' also counts as active — for when the badge's own entity only reflects part of a longer sequence (e.g. a relay that pulses inside a multi-step unlock script).",
+            label: "e_also_active_while",
+            helper: "e_script_automa_timer",
             selector: { entity: { domain: ["script", "automation", "timer", "input_boolean", "binary_sensor"] } },
           },
         ],
@@ -102,21 +102,21 @@ class MateriaBadgeEditor extends SmartEditorBase {
 
     sections.push(
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "color", label: "Background", color: true, template: true, selector: { text: {} } },
-          { name: "color_on", label: "Text / icon", color: true, template: true, selector: { text: {} } },
+          { name: "color", label: "e_background", color: true, template: true, selector: { text: {} } },
+          { name: "color_on", label: "e_text_icon", color: true, template: true, selector: { text: {} } },
         ],
       },
       {
-        title: "Actions",
+        title: "e_actions",
         icon: "mdi:gesture-tap",
         fields: [
           { name: "tap_action", selector: { ui_action: { default_action: "toggle" } } },
           {
             name: "hold_action",
-            helper: "A hold is deliberate by construction — the right slot for actions a stray tap must never fire.",
+            helper: "e_hold_delibe_by",
             selector: { ui_action: { default_action: "none" } },
           },
           { name: "double_tap_action", selector: { ui_action: { default_action: "none" } } },

@@ -1,5 +1,6 @@
 import { LitElement, html, css, nothing } from "lit";
 import { computeLabel, sortableList } from "./editor-helpers.js";
+import { localize, t, tr } from "./i18n.js";
 import {
   DEFAULT_TOOLBAR,
   toolbarList,
@@ -142,8 +143,8 @@ class MateriaItemListEditor extends LitElement {
     const items = this._items;
     return html`
       <div class="head">
-        <span>${this.addLabel ?? ""}</span>
-        <ha-icon-button .label=${"Toevoegen"} @click=${this._add}><ha-icon icon="mdi:plus"></ha-icon></ha-icon-button>
+        <span>${tr(this.addLabel, this.hass) ?? ""}</span>
+        <ha-icon-button .label=${t("e_add", this.hass)} @click=${this._add}><ha-icon icon="mdi:plus"></ha-icon></ha-icon-button>
       </div>
       ${sortableList(
         (from, to) => this._move(from, to),
@@ -162,7 +163,7 @@ class MateriaItemListEditor extends LitElement {
                   <ha-form
                     .hass=${this.hass}
                     .data=${this.toForm ? this.toForm(item) : item}
-                    .schema=${this.schema}
+                    .schema=${localize(this.schema, this.hass)}
                     .computeLabel=${computeLabel}
                     @value-changed=${(e) => {
                       e.stopPropagation();
@@ -185,9 +186,9 @@ customElements.define("materia-item-list-editor", MateriaItemListEditor);
 /* ------------------------------------------------------------------ */
 
 const STATION_SCHEMA = [
-  { name: "name", label: "Naam", selector: { text: {} } },
-  { name: "image", label: "Logo (URL, bv. /local/radio/klara.png)", selector: { text: {} } },
-  { name: "tap_action", label: "Actie", selector: { ui_action: { default_action: "perform-action" } } },
+  { name: "name", label: "e_name", selector: { text: {} } },
+  { name: "image", label: "e_logo_url", selector: { text: {} } },
+  { name: "tap_action", label: "sched_action", selector: { ui_action: { default_action: "perform-action" } } },
 ];
 
 /** Stations list control for a SmartEditor `render` field. */
@@ -200,7 +201,7 @@ export function stationsField(editor, value, key = "stations") {
     .toForm=${stationFormData}
     .fromForm=${stationFromForm}
     .newItem=${() => ({ name: "" })}
-    addLabel=${key === "stations" ? "Zenders" : "Items"}
+    addLabel=${key === "stations" ? "media_stations" : "e_items"}
     @value-changed=${(e) => {
       e.stopPropagation();
       editor._setField(key, e.detail.value?.length ? e.detail.value : undefined);
@@ -213,11 +214,11 @@ export function stationsField(editor, value, key = "stations") {
 /* ------------------------------------------------------------------ */
 
 const CUSTOM_BUTTON_SCHEMA = [
-  { name: "icon", label: "Icoon", selector: { icon: {} } },
-  { name: "label", label: "Label", selector: { text: {} } },
-  { name: "tap_action", label: "Actie", selector: { ui_action: { default_action: "perform-action" } } },
+  { name: "icon", label: "e_icon", selector: { icon: {} } },
+  { name: "label", label: "e_label", selector: { text: {} } },
+  { name: "tap_action", label: "sched_action", selector: { ui_action: { default_action: "perform-action" } } },
 ];
-const BUILTIN_LABELS = { shuffle: "Shuffle", repeat: "Herhalen", volume: "Volume" };
+const BUILTIN_LABELS = { shuffle: "media_shuffle", repeat: "media_repeat", volume: "media_volume" };
 
 class MateriaToolbarButtonsEditor extends LitElement {
   static properties = {
@@ -273,13 +274,13 @@ class MateriaToolbarButtonsEditor extends LitElement {
     const list = toolbarList(this.value);
     const has = (t) => list.some((b) => toolbarType(b) === t);
     return html`<div class="stack">
-      <div class="chips" role="group" aria-label="Knoppen">
+      <div class="chips" role="group" aria-label=${t("e_buttons", this.hass)}>
         ${Object.entries(BUILTIN_LABELS).map(
           ([type, label]) => html`<button
             class="chip"
             aria-pressed=${has(type) ? "true" : "false"}
             @click=${() => this._emit(toggleToolbarBuiltin(this.value, type, !has(type)))}
-          ><ha-icon icon="mdi:check"></ha-icon>${label}</button>`
+          ><ha-icon icon="mdi:check"></ha-icon>${t(label, this.hass)}</button>`
         )}
       </div>
       <materia-item-list-editor
@@ -288,7 +289,7 @@ class MateriaToolbarButtonsEditor extends LitElement {
         .schema=${CUSTOM_BUTTON_SCHEMA}
         .itemLabel=${(b) => b?.label || b?.icon}
         .newItem=${() => ({ icon: "mdi:gesture-tap" })}
-        addLabel="Eigen knoppen"
+        addLabel="e_own_buttons"
         @value-changed=${(e) => {
           e.stopPropagation();
           this._emit(setToolbarCustoms(this.value, e.detail.value));

@@ -1,4 +1,5 @@
 import { LitElement, html, nothing } from "lit";
+import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin } from "../../utils/conditions.js";
 import { loadCardHelpers } from "../../styles/shared.js";
@@ -284,7 +285,7 @@ class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
       <div
         class="rail"
         role="tablist"
-        aria-label=${this.config.aria_label || this.config.title || "Sections"}
+        aria-label=${this.config.aria_label || this.config.title || t("e_sections", this.hass)}
         aria-orientation=${vertical ? "vertical" : "horizontal"}
         style="height:${vertical ? "auto" : `${HEIGHT}px`};"
       >

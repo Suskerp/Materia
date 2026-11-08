@@ -1,4 +1,5 @@
 import { LitElement, html, nothing } from "lit";
+import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import "../button/index.js";
@@ -186,7 +187,7 @@ class MateriaSplitButton extends DisabledMixin(ActionMixin(LitElement)) {
             @keydown=${this._triggerKeydown}
             aria-haspopup="menu"
             aria-expanded=${this._open ? "true" : "false"}
-            aria-label=${this.config.menu_aria_label || `${this.config.label || "Action"} options`}
+            aria-label=${this.config.menu_aria_label || t("e_x_options", this.hass, { x: this.config.label || t("sched_action", this.hass) })}
             ?disabled=${this._disabledByCondition}
           >
             <span class="trailing-surface">

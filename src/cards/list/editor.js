@@ -1,5 +1,6 @@
 import { html, css } from "lit";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { t } from "../../utils/i18n.js";
 
 class MateriaListEditor extends SmartEditorBase {
   static styles = [
@@ -42,47 +43,47 @@ class MateriaListEditor extends SmartEditorBase {
     const tonal = this._config?.variant === "tonal";
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           /* template: true on BOTH, because the card resolves both. An editor
              that cannot enter a template the card would honour is the same bug
              from the other side — and that half was missed on the expander. */
-          { name: "title", label: "Title", template: true, selector: { text: {} } },
-          { name: "icon", label: "Header icon", template: true, selector: { icon: {} } },
+          { name: "title", label: "e_title", template: true, selector: { text: {} } },
+          { name: "icon", label: "e_header_icon", template: true, selector: { icon: {} } },
           {
             name: "entities",
-            label: "Entities (rows)",
+            label: "e_entiti_rows",
             helper:
-              "For a list of readings. Mixed lists — text lines alongside entities — use the rows: key in YAML instead; see the note below.",
+              "e_for_list_readin",
             selector: { entity: { multiple: true } },
           },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
           {
             name: "variant",
-            label: "Surface",
+            label: "e_surface",
             helper:
-              "Tonal fills the card with a container pair, for a panel meant to read as one block rather than as part of the page.",
+              "e_tonal_fills_card",
             selector: { select: { mode: "dropdown", options: [
-              { value: "surface", label: "Card surface" },
-              { value: "tonal", label: "Tonal container" },
+              { value: "surface", label: "e_card_surfac" },
+              { value: "tonal", label: "e_tonal_contai" },
             ] } },
           },
           ...(tonal
             ? [
                 {
                   name: "color",
-                  label: "Container (default primary container)",
-                  helper: "Pick a CONTAINER role, not an accent — a container carries its matching text colour, an accent does not.",
+                  label: "e_contai_defaul_primar",
+                  helper: "e_pick_contai_role",
                   color: true,
                   selector: { text: {} },
                 },
-                { name: "color_on", label: "Text on the container", color: true, selector: { text: {} } },
+                { name: "color_on", label: "e_text_on_contai", color: true, selector: { text: {} } },
               ]
             : []),
         ],
@@ -98,11 +99,8 @@ class MateriaListEditor extends SmartEditorBase {
   _renderExtra() {
     return html`
       <div class="yaml-note">
-        <strong>Text lines and mixed lists are YAML-only.</strong>
-        Use <code>rows:</code> instead of <code>entities:</code> — it takes both
-        kinds and wins when both are present. A row with <code>text</code> is a
-        line; a row with <code>entity</code> is a reading. <code>text</code>, <code>icon</code> and
-        <code>name</code> all accept templates.
+        <strong>${t("e_list_yaml_title", this.hass)}</strong>
+        ${t("e_list_yaml_note", this.hass)}
         <pre>
 rows:
   - icon: mdi:leaf

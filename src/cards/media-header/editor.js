@@ -9,43 +9,43 @@ class MateriaMediaHeaderEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           {
             name: "entity",
-            label: "Speler (in een art scope: die van de scope)",
+            label: "e_player_in_art",
             selector: { entity: { domain: "media_player" } },
           },
           {
             name: "variant",
             selector: { select: { mode: "dropdown", options: [
-              { value: "default", label: "Default (source, title, stations + volume)" },
-              { value: "kiosk", label: "Kiosk (chip + stations button)" },
+              { value: "default", label: "e_defaul_source_title" },
+              { value: "kiosk", label: "e_kiosk_chip_statio" },
             ] } },
           },
-          { name: "zone_name", label: "Zone name (defaults to the friendly name)", selector: { text: {} } },
-          { name: "stations_label", label: "Label van de zenderknop (standaard: vertaald)", selector: { text: {} } },
-          { name: "show_source", label: "Source button", selector: { boolean: {} } },
-          { name: "show_volume", label: "Volume ring", selector: { boolean: {} } },
-          { name: "show_power", label: "Power (menu per zone)", selector: { boolean: {} } },
-          { name: "logo_fill", label: "Station logos fill their tile", selector: { boolean: {} } },
+          { name: "zone_name", label: "e_zone_name_defaul", selector: { text: {} } },
+          { name: "stations_label", label: "e_stations_label", selector: { text: {} } },
+          { name: "show_source", label: "e_source_button", selector: { boolean: {} } },
+          { name: "show_volume", label: "e_volume_ring", selector: { boolean: {} } },
+          { name: "show_power", label: "e_power_menu_per", selector: { boolean: {} } },
+          { name: "logo_fill", label: "e_statio_logos_fill", selector: { boolean: {} } },
         ],
       },
       {
-        title: "Zenders",
+        title: "media_stations",
         icon: "mdi:radio",
         expanded: false,
         fields: [{ name: "stations", render: (value) => stationsField(this, value) }],
       },
       {
-        title: "Power menu",
+        title: "e_power_menu",
         icon: "mdi:power",
         expanded: false,
         fields: [
           {
             name: "power_entities",
-            label: "Players the power menu switches (empty: this player)",
+            label: "e_player_power_menu",
             selector: { entity: { domain: "media_player", multiple: true } },
           },
         ],

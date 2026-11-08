@@ -2,6 +2,7 @@ import { html, css } from "lit";
 import { ref } from "lit/directives/ref.js";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, isTemplate } from "../../utils/smart-editor.js";
+import { localize, t } from "../../utils/i18n.js";
 import "../../elements/button/editor.js";
 
 class MateriaIconRowEditor extends SmartEditorBase {
@@ -97,7 +98,7 @@ class MateriaIconRowEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Layout",
+        title: "e_layout",
         icon: "mdi:tune",
         /* gap/padding stay honoured from YAML but are no longer offered:
            nobody tunes row plumbing per-card, and every knob in the form is a
@@ -111,7 +112,7 @@ class MateriaIconRowEditor extends SmartEditorBase {
     const buttons = this._config.buttons || [];
     return html`
       <div class="section-header">
-        <span>Buttons</span>
+        <span>${t("e_buttons", this.hass)}</span>
         <ha-icon-button @click=${this._addButton}>
           <ha-icon icon="mdi:plus"></ha-icon>
         </ha-icon-button>
@@ -124,7 +125,7 @@ class MateriaIconRowEditor extends SmartEditorBase {
           <div class="button-card">
             <div class="button-header" @click=${() => this._toggleButton(i)}>
               <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
-              <span>${btn.icon && !isTemplate(btn.icon) ? btn.icon : `Button ${i + 1}`}${btn.options?.length ? " · split" : ""}</span>
+              <span>${btn.icon && !isTemplate(btn.icon) ? btn.icon : t("e_button_n", this.hass, { n: i + 1 })}${btn.options?.length ? ` · ${t("e_split", this.hass)}` : ""}</span>
               <ha-icon-button @click=${(e) => { e.stopPropagation(); this._toggleButton(i); }}>
                 <ha-icon icon=${this._expandedButton === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
               </ha-icon-button>
@@ -150,7 +151,7 @@ class MateriaIconRowEditor extends SmartEditorBase {
                     ></materia-button-editor>
 
                     <div class="opt-header">
-                      <span>Menu options <span class="hint">(adding one makes a split button)</span></span>
+                      <span>${t("e_menu_options", this.hass)} <span class="hint">${t("e_menu_options_hint", this.hass)}</span></span>
                       <ha-icon-button @click=${(e) => { e.stopPropagation(); this._addOption(i); }}>
                         <ha-icon icon="mdi:plus"></ha-icon>
                       </ha-icon-button>
@@ -159,12 +160,12 @@ class MateriaIconRowEditor extends SmartEditorBase {
                       ? html`<ha-form
                           .hass=${this.hass}
                           .data=${{ menu_position: btn.menu_position || "bottom-right" }}
-                          .schema=${[{ name: "menu_position", label: "Menu alignment", selector: { select: { mode: "dropdown", options: [
-                            { value: "bottom-right", label: "Below · right-aligned" },
-                            { value: "bottom-left", label: "Below · left-aligned" },
-                            { value: "top-right", label: "Above · right-aligned" },
-                            { value: "top-left", label: "Above · left-aligned" },
-                          ] } } }]}
+                          .schema=${localize([{ name: "menu_position", label: "e_menu_alignm", selector: { select: { mode: "dropdown", options: [
+                            { value: "bottom-right", label: "e_below_right_aligne" },
+                            { value: "bottom-left", label: "e_below_left_aligne" },
+                            { value: "top-right", label: "e_above_right_aligne" },
+                            { value: "top-left", label: "e_above_left_aligne" },
+                          ] } } }], this.hass)}
                           .computeLabel=${computeLabel}
                           @value-changed=${(e) => this._buttonChanged(i, { ...btn, menu_position: e.detail.value.menu_position })}
                         ></ha-form>`
@@ -176,7 +177,7 @@ class MateriaIconRowEditor extends SmartEditorBase {
                           <div class="opt-card">
                             <div class="opt-row">
                               <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
-                              <span>${opt.label || (opt.icon && !isTemplate(opt.icon) ? opt.icon : `Option ${j + 1}`)}</span>
+                              <span>${opt.label || (opt.icon && !isTemplate(opt.icon) ? opt.icon : t("e_option_n", this.hass, { n: j + 1 }))}</span>
                               <ha-icon-button @click=${() => this._toggleOption(j)}>
                                 <ha-icon icon=${this._expandedOption === j ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
                               </ha-icon-button>
@@ -190,7 +191,7 @@ class MateriaIconRowEditor extends SmartEditorBase {
                                     <ha-form
                                       .hass=${this.hass}
                                       .data=${opt}
-                                      .schema=${this._optionSchema(opt)}
+                                      .schema=${localize(this._optionSchema(opt), this.hass)}
                                       .computeLabel=${computeLabel}
                                       @value-changed=${(e) => this._optionChanged(i, j, e.detail.value)}
                                     ></ha-form>
@@ -253,7 +254,7 @@ class MateriaIconRowEditor extends SmartEditorBase {
         ? { name: "icon", selector: { template: {} } }
         : { name: "icon", selector: { icon: {} } },
       { name: "label", selector: { text: {} } },
-      { name: "tap_action", label: "Action", selector: { ui_action: {} } },
+      { name: "tap_action", label: "sched_action", selector: { ui_action: {} } },
     ];
   }
 

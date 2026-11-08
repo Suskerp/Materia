@@ -1,29 +1,30 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { t } from "../../utils/i18n.js";
 
 const VARIANTS = [
-  { value: "percent", label: "Percent (filling cookie)" },
-  { value: "battery", label: "Battery (vertical bar)" },
-  { value: "temperature", label: "Temperature (thermometer)" },
-  { value: "power", label: "Power (load bars)" },
-  { value: "energy", label: "Energy" },
-  { value: "binary", label: "On/off (spinning star)" },
-  { value: "plain", label: "Plain value" },
-  { value: "vacuum", label: "Robot vacuum (state + room + battery bar)" },
+  { value: "percent", label: "e_percen_fillin_cookie" },
+  { value: "battery", label: "e_batter_vertic_bar" },
+  { value: "temperature", label: "e_temper_thermo" },
+  { value: "power", label: "e_power_load_bars" },
+  { value: "energy", label: "e_energy" },
+  { value: "binary", label: "e_on_off_spinni" },
+  { value: "plain", label: "e_plain_value" },
+  { value: "vacuum", label: "e_robot_vacuum_state" },
   // The gauge family: these spend the tile's empty half on the scale, so all
   // four need a max they can calibrate against (config, the entity's own max
   // attribute, or 100 for a percentage).
-  { value: "fill", label: "Gauge · tile floods to the value" },
-  { value: "bar", label: "Gauge · value over a track" },
-  { value: "ladder", label: "Gauge · ladder of bars" },
-  { value: "ring", label: "Gauge · ring beside the value" },
-  { value: "scale", label: "Gauge · position on a ramp, with reference marks" },
+  { value: "fill", label: "e_gauge_tile_floods" },
+  { value: "bar", label: "e_gauge_value_over" },
+  { value: "ladder", label: "e_gauge_ladder_bars" },
+  { value: "ring", label: "e_gauge_ring_beside" },
+  { value: "scale", label: "e_gauge_positi_on" },
   // The history family: these ask the recorder for the measurement's past.
-  { value: "spark", label: "History · area sparkline hero" },
-  { value: "sparkline", label: "History · bare line" },
-  { value: "weekbars", label: "History · a bar per day" },
-  { value: "events", label: "History · event ticks (tonal row)" },
-  { value: "detail", label: "Summary · value, history and supporting metrics" },
-  { value: "progress_summary", label: "Summary · progress ring and authored copy" },
+  { value: "spark", label: "e_histor_area_sparkl" },
+  { value: "sparkline", label: "e_histor_bare_line" },
+  { value: "weekbars", label: "e_histor_bar_per" },
+  { value: "events", label: "e_histor_event_ticks" },
+  { value: "detail", label: "e_summar_value_histor" },
+  { value: "progress_summary", label: "e_summar_progre_ring" },
 ];
 
 /** Variants that fetch history. */
@@ -48,10 +49,10 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
             critical_dry: 10,
             dry_below: 20,
             soggy_above: 60,
-            dry_label: "Needs water now",
-            soon_label: "Water soon",
-            optimal_label: "Optimal",
-            wet_label: "Overwatered",
+            dry_label: t("gt_needs_water_now", this.hass),
+            soon_label: t("gt_water_soon", this.hass),
+            optimal_label: t("gt_optimal", this.hass),
+            wet_label: t("gt_overwatered", this.hass),
           }
         : v === "power"
           ? // bars is seeded at 5 because that is the ladder's real default,
@@ -82,61 +83,61 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
     const v = this._config?.variant;
 
     const content = {
-      title: "Content",
+      title: "e_content",
       icon: "mdi:card-text-outline",
       fields: [
         { name: "entity", required: true, selector: { entity: {} } },
-        { name: "variant", label: "Category", required: true, selector: { select: { mode: "dropdown", options: VARIANTS } } },
-        { name: "name", label: "Title", selector: { text: {} } },
-        { name: "icon", label: "Icon (overrides entity icon)", selector: { icon: {} } },
-        { name: "label", label: "Subtitle", selector: { text: {} } },
-        { name: "active_state", label: "Active state (binary)", helper: "Optional state value or template for active styling, e.g. Charging.", template: true, selector: { text: {} } },
+        { name: "variant", label: "e_category", required: true, selector: { select: { mode: "dropdown", options: VARIANTS } } },
+        { name: "name", label: "e_title", selector: { text: {} } },
+        { name: "icon", label: "e_icon_overri_entity", selector: { icon: {} } },
+        { name: "label", label: "e_subtitle", selector: { text: {} } },
+        { name: "active_state", label: "e_active_state_binary", helper: "e_option_state_value", template: true, selector: { text: {} } },
       ],
     };
 
-    const extras = { title: "Options", icon: "mdi:tune", fields: [] };
+    const extras = { title: "e_options", icon: "mdi:tune", fields: [] };
     if (v === "temperature") {
       extras.fields.push(
-        { name: "min", label: "Scale min (default 10°)", selector: { number: { mode: "box" } } },
-        { name: "max", label: "Scale max (default 30°)", selector: { number: { mode: "box" } } },
+        { name: "min", label: "e_scale_min_defaul", selector: { number: { mode: "box" } } },
+        { name: "max", label: "e_scale_max_defaul", selector: { number: { mode: "box" } } },
       );
     }
     if (v === "power") {
       extras.fields.push(
-        { name: "max", label: "Full-load watts (default 3000)", selector: { number: { mode: "box" } } },
-        { name: "bars", label: "Number of bars (default 5)", selector: { number: { min: 2, max: 40, mode: "box" } } },
+        { name: "max", label: "e_full_load_watts", selector: { number: { mode: "box" } } },
+        { name: "bars", label: "e_number_bars_defaul", selector: { number: { min: 2, max: 40, mode: "box" } } },
       );
     }
     if (SCALED.includes(v)) {
       extras.fields.push(
         {
           name: "min",
-          label: "Scale min (default: the entity's min attribute, else 0)",
+          label: "e_scale_min_defaul2",
           selector: { number: { mode: "box", step: "any" } },
         },
         {
           name: "max",
-          label: "Scale max (default: the entity's max attribute, else 100 for a %)",
-          helper: "Without a max the gauge cannot be calibrated and the tile falls back to a plain value.",
+          label: "e_scale_max_defaul2",
+          helper: "e_withou_max_gauge",
           selector: { number: { mode: "box", step: "any" } },
         },
         {
           name: "caption",
-          label: "Caption under the gauge",
+          label: "e_captio_under_gauge",
           helper:
-            "Your sentence, in your language. Placeholders: {value} {min} {max} {unit} {percent}. Jinja templates work too. Empty shows the bare top of the scale.",
+            "e_your_senten_in",
           template: true,
           selector: { text: {} },
         },
         {
           name: "precision",
-          label: "Decimal places (default: at most 1)",
+          label: "e_decima_places_defaul",
           selector: { number: { min: 0, max: 6, mode: "box" } },
         },
       );
     }
     if (v === "ladder") {
-      extras.fields.push({ name: "bars", label: "Number of bars (default 5)", selector: { number: { min: 2, max: 40, mode: "box" } } });
+      extras.fields.push({ name: "bars", label: "e_number_bars_defaul", selector: { number: { min: 2, max: 40, mode: "box" } } });
     }
     // The bar variant needs no caption field of its own: the Content
     // section's Subtitle IS the caption override, and repeating that same
@@ -145,116 +146,116 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
       extras.fields.push(
         {
           name: "good",
-          label: "Which end is good",
+          label: "e_which_end_good",
           helper:
-            "Left empty the ramp is a neutral track and the card passes no judgement — the value's position and the reference marks still show. Set it and the ramp runs through the severity scale in that direction. Never inferred from the entity.",
+            "e_left_empty_ramp",
           selector: {
             select: {
               mode: "dropdown",
               options: [
-                { value: "low", label: "Low values are good (consumption, latency)" },
-                { value: "high", label: "High values are good (efficiency, signal)" },
+                { value: "low", label: "e_low_values_are" },
+                { value: "high", label: "e_high_values_are" },
               ],
             },
           },
         },
         {
           name: "min_label",
-          label: "Label at the low end",
-          helper: "Your words. Placeholders: {bound} {unit} {value} {min} {max}. Empty shows the bare bound.",
+          label: "e_label_at_low",
+          helper: "e_your_words_placeh",
           template: true,
           selector: { text: {} },
         },
         {
           name: "max_label",
-          label: "Label at the high end",
-          helper: "Same placeholders. Empty shows the bare bound.",
+          label: "e_label_at_high",
+          helper: "e_same_placeh_empty",
           template: true,
           selector: { text: {} },
         },
         {
           name: "show_delta",
-          label: "Show the change pill",
-          helper: "Fetches history only when switched on, since a change needs a window to measure over.",
+          label: "e_show_change_pill",
+          helper: "e_fetche_histor_only",
           selector: { boolean: {} },
         },
       );
     }
     if (v === "plain") {
-      extras.fields.push({ name: "battery_entity", label: "Paired battery sensor (adds the vertical bar)", selector: { entity: { domain: "sensor" } } });
+      extras.fields.push({ name: "battery_entity", label: "e_paired_batter_sensor", selector: { entity: { domain: "sensor" } } });
     }
     if (v === "detail") {
       extras.fields.push(
-        { name: "days", label: "History bars (days)", selector: { number: { min: 1, max: 90, mode: "box" } } },
+        { name: "days", label: "e_histor_bars_days", selector: { number: { min: 1, max: 90, mode: "box" } } },
         {
           name: "aggregate",
-          label: "What each history bar measures",
+          label: "e_what_each_histor",
           selector: {
             select: {
               mode: "dropdown",
               options: [
-                { value: "delta", label: "Change across the day" },
-                { value: "mean", label: "Average" },
-                { value: "min", label: "Minimum" },
-                { value: "max", label: "Maximum" },
-                { value: "sum", label: "Sum of samples" },
-                { value: "count", label: "Number of samples" },
+                { value: "delta", label: "e_change_across_day" },
+                { value: "mean", label: "e_average" },
+                { value: "min", label: "e_minimum" },
+                { value: "max", label: "e_maximum" },
+                { value: "sum", label: "e_sum_sample" },
+                { value: "count", label: "e_number_sample" },
               ],
             },
           },
         },
-        { name: "metric_1_entity", label: "Supporting metric 1", selector: { entity: {} } },
-        { name: "metric_1_label", label: "Metric 1 label", template: true, selector: { text: {} } },
-        { name: "metric_1_value", label: "Metric 1 display override", helper: "Optional Jinja or text. Placeholders: {value} {unit} {state} {history_changed} {history_date} {history_time}. History timestamps ignore same-value restores after unavailable.", template: true, selector: { text: {} } },
-        { name: "metric_1_tap_action", label: "Metric 1 tap action", selector: { ui_action: { default_action: "more-info" } } },
-        { name: "metric_2_entity", label: "Supporting metric 2", selector: { entity: {} } },
-        { name: "metric_2_label", label: "Metric 2 label", template: true, selector: { text: {} } },
-        { name: "metric_2_value", label: "Metric 2 display override", template: true, selector: { text: {} } },
-        { name: "metric_2_tap_action", label: "Metric 2 tap action", selector: { ui_action: { default_action: "more-info" } } },
-        { name: "metric_3_entity", label: "Supporting metric 3", selector: { entity: {} } },
-        { name: "metric_3_label", label: "Metric 3 label", template: true, selector: { text: {} } },
-        { name: "metric_3_value", label: "Metric 3 display override", template: true, selector: { text: {} } },
-        { name: "metric_3_tap_action", label: "Metric 3 tap action", selector: { ui_action: { default_action: "more-info" } } },
-        { name: "history_refresh", label: "Refresh history every N minutes", selector: { number: { min: 1, max: 180, mode: "box" } } },
+        { name: "metric_1_entity", label: "e_suppor_metric_1", selector: { entity: {} } },
+        { name: "metric_1_label", label: "e_metric_1_label", template: true, selector: { text: {} } },
+        { name: "metric_1_value", label: "e_metric_1_displa", helper: "e_option_jinja_text", template: true, selector: { text: {} } },
+        { name: "metric_1_tap_action", label: "e_metric_1_tap", selector: { ui_action: { default_action: "more-info" } } },
+        { name: "metric_2_entity", label: "e_suppor_metric_2", selector: { entity: {} } },
+        { name: "metric_2_label", label: "e_metric_2_label", template: true, selector: { text: {} } },
+        { name: "metric_2_value", label: "e_metric_2_displa", template: true, selector: { text: {} } },
+        { name: "metric_2_tap_action", label: "e_metric_2_tap", selector: { ui_action: { default_action: "more-info" } } },
+        { name: "metric_3_entity", label: "e_suppor_metric_3", selector: { entity: {} } },
+        { name: "metric_3_label", label: "e_metric_3_label", template: true, selector: { text: {} } },
+        { name: "metric_3_value", label: "e_metric_3_displa", template: true, selector: { text: {} } },
+        { name: "metric_3_tap_action", label: "e_metric_3_tap", selector: { ui_action: { default_action: "more-info" } } },
+        { name: "history_refresh", label: "e_refres_histor_every", selector: { number: { min: 1, max: 180, mode: "box" } } },
       );
     }
     if (v === "progress_summary") {
       extras.fields.push(
         {
           name: "headline",
-          label: "Headline",
-          helper: "Optional Jinja or text. Empty uses the entity state. Placeholders: {value} {min} {max} {unit} {percent}.",
+          label: "e_headline",
+          helper: "e_opt_jinja_headline",
           template: true,
           selector: { text: {} },
         },
         {
           name: "footer",
-          label: "Footer",
-          helper: "Optional Jinja or text. Uses the same placeholders as the headline.",
+          label: "e_footer",
+          helper: "e_opt_jinja_footer",
           template: true,
           selector: { text: {} },
         },
-        { name: "footer_icon", label: "Footer icon", selector: { icon: {} } },
+        { name: "footer_icon", label: "e_footer_icon", selector: { icon: {} } },
       );
     }
     if (v === "vacuum") {
       extras.fields.push(
-        { name: "status_entity", label: "Detailed status sensor (shown as the state)", selector: { entity: { domain: "sensor" } } },
-        { name: "room_entity", label: "Current room sensor (shown while cleaning)", selector: { entity: { domain: "sensor" } } },
-        { name: "battery_entity", label: "Battery sensor (adds the vertical bar)", selector: { entity: { domain: "sensor" } } },
+        { name: "status_entity", label: "e_detail_status_sensor", selector: { entity: { domain: "sensor" } } },
+        { name: "room_entity", label: "e_curren_room_sensor", selector: { entity: { domain: "sensor" } } },
+        { name: "battery_entity", label: "e_batter_sensor_adds", selector: { entity: { domain: "sensor" } } },
       );
     }
     // Only meaningful for device_class: moisture (soil sensors) — harmless
     // no-ops for battery/humidity/other percent entities.
     if (v === "percent") {
       extras.fields.push(
-        { name: "critical_dry", label: "Critical dry, ≤% (default 10 — red)", selector: { number: { min: 0, max: 100, mode: "box" } } },
-        { name: "dry_below", label: "Water soon, ≤% (default 20 — orange)", selector: { number: { min: 0, max: 100, mode: "box" } } },
-        { name: "soggy_above", label: "Overwatered, >% (default 60 — blue)", selector: { number: { min: 0, max: 100, mode: "box" } } },
-        { name: "dry_label", label: '"Needs water now" label', selector: { text: {} } },
-        { name: "soon_label", label: '"Water soon" label', selector: { text: {} } },
-        { name: "optimal_label", label: '"Optimal" label', selector: { text: {} } },
-        { name: "wet_label", label: '"Overwatered" label', selector: { text: {} } },
+        { name: "critical_dry", label: "e_critic_dry_defaul", selector: { number: { min: 0, max: 100, mode: "box" } } },
+        { name: "dry_below", label: "e_water_soon_defaul", selector: { number: { min: 0, max: 100, mode: "box" } } },
+        { name: "soggy_above", label: "e_overwa_defaul_60", selector: { number: { min: 0, max: 100, mode: "box" } } },
+        { name: "dry_label", label: "e_needs_water_now", selector: { text: {} } },
+        { name: "soon_label", label: "e_water_soon_label", selector: { text: {} } },
+        { name: "optimal_label", label: "e_optima_label", selector: { text: {} } },
+        { name: "wet_label", label: "e_overwa_label", selector: { text: {} } },
       );
     }
 
@@ -263,39 +264,39 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
         extras.fields.push(
           {
             name: "days",
-            label: "Days of history (default 3)",
+            label: "e_days_histor_defaul",
             helper:
-              "Kept short on purpose: a window longer than your recorder keeps returns nothing at all, not a shorter series. Days with no data are simply not drawn.",
+              "e_kept_short_on",
             selector: { number: { min: 1, max: 90, mode: "box" } },
           },
           {
             name: "aggregate",
-            label: "What each bar measures (default: change)",
-            helper: "change = how much the value moved that day (counters). mean/min/max/sum/count for measurements.",
+            label: "e_what_each_bar",
+            helper: "e_change_how_much",
             selector: {
               select: {
                 mode: "dropdown",
                 options: [
-                  { value: "delta", label: "Change across the day" },
-                  { value: "mean", label: "Average" },
-                  { value: "min", label: "Minimum" },
-                  { value: "max", label: "Maximum" },
-                  { value: "sum", label: "Sum of samples" },
-                  { value: "count", label: "Number of samples" },
+                  { value: "delta", label: "e_change_across_day" },
+                  { value: "mean", label: "e_average" },
+                  { value: "min", label: "e_minimum" },
+                  { value: "max", label: "e_maximum" },
+                  { value: "sum", label: "e_sum_sample" },
+                  { value: "count", label: "e_number_sample" },
                 ],
               },
             },
           },
           {
             name: "summary_period",
-            label: "Separate caption period",
+            label: "e_separa_captio_period",
             helper:
-              "Keeps the visible bars compact while exposing a wider change to the caption. Current month adds {summary_delta}, {summary_delta_signed}, and {summary_delta_pct}.",
+              "e_keeps_visibl_bars",
             selector: {
               select: {
                 mode: "dropdown",
                 options: [
-                  { value: "current_month", label: "Current calendar month" },
+                  { value: "current_month", label: "e_curren_calend_month" },
                 ],
               },
             },
@@ -305,16 +306,16 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
         extras.fields.push(
           {
             name: "hours",
-            label: "Hours of history (default 24)",
-            helper: "A window longer than your recorder keeps returns nothing at all.",
+            label: "e_hours_histor_defaul",
+            helper: "e_window_longer_than",
             selector: { number: { min: 1, max: 2160, mode: "box" } },
           },
-          { name: "points", label: "Points plotted (default 48)", selector: { number: { min: 2, max: 400, mode: "box" } } },
-          { name: "show_delta", label: "Show the change pill", selector: { boolean: {} } },
+          { name: "points", label: "e_points_plotte_defaul", selector: { number: { min: 2, max: 400, mode: "box" } } },
+          { name: "show_delta", label: "e_show_change_pill", selector: { boolean: {} } },
           {
             name: "delta_label",
-            label: "Change pill text",
-            helper: "Placeholders: {delta} {delta_pct} {from} {to} {unit} {hours} {days}. Empty shows just the signed change.",
+            label: "e_change_pill_text",
+            helper: "e_placeh_delta_delta",
             template: true,
             selector: { text: {} },
           },
@@ -323,33 +324,33 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
       extras.fields.push(
         {
           name: "caption",
-          label: "Caption",
-          helper: "Your words. Placeholders: {value} {unit} {hours} {days} {buckets} {summary_delta} {summary_delta_signed} {summary_delta_pct}. Jinja templates work too.",
+          label: "e_caption",
+          helper: "e_your_words_placeh2",
           template: true,
           selector: { text: {} },
         },
         {
           name: "history_refresh",
-          label: "Refresh every N minutes (default 5)",
-          helper: "History is polled on this interval, never on every state change.",
+          label: "e_refres_every_n",
+          helper: "e_histor_polled_on",
           selector: { number: { min: 1, max: 180, mode: "box" } },
         },
       );
     }
 
     const appearance = {
-      title: "Appearance",
+      title: "e_appearance",
       icon: "mdi:palette-outline",
       fields: [
-        { name: "accent", label: "Accent color (fill / bars / star)", color: true, selector: { text: {} } },
-        { name: "color", label: "Tile color", color: true, template: true, selector: { text: {} } },
-        { name: "color_on", label: "Text color", color: true, template: true, selector: { text: {} } },
-        { name: "show_icon", label: "Show icon beside the heading", selector: { boolean: {} } },
+        { name: "accent", label: "e_accent_color_fill", color: true, selector: { text: {} } },
+        { name: "color", label: "e_tile_color", color: true, template: true, selector: { text: {} } },
+        { name: "color_on", label: "e_text_color", color: true, template: true, selector: { text: {} } },
+        { name: "show_icon", label: "e_show_icon_beside", selector: { boolean: {} } },
       ],
     };
 
     const actions = {
-      title: "Actions",
+      title: "e_actions",
       icon: "mdi:gesture-tap",
       fields: [{ name: "tap_action", selector: { ui_action: { default_action: "more-info" } } }],
     };

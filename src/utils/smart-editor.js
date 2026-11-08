@@ -1,6 +1,7 @@
 import { LitElement, html, css } from "lit";
 import { effectiveEditorValue, isImplicitDefaultEvent } from "./editor-defaults.js";
 import { computeLabel } from "./editor-helpers.js";
+import { localize, resolveLanguage, t } from "./i18n.js";
 import { COLOR_GROUPS, COLOR_VALUES } from "./palette.js";
 
 /** Jinja2 template detection — mirrors the cards' own _isTemplate(). */
@@ -22,6 +23,7 @@ const TEMPLATE_SELECTOR = { template: {} };
 /* ------------------------------------------------------------------ */
 export class MateriaColorPicker extends LitElement {
   static properties = {
+    hass: { attribute: false },
     label: {},
     value: {},
     _open: { state: true },
@@ -130,9 +132,9 @@ export class MateriaColorPicker extends LitElement {
   }
 
   get _currentLabel() {
-    if (!this.value) return "Default";
+    if (!this.value) return t("e_default", this.hass);
     const opt = this._option(this.value);
-    return opt ? opt.label : "Custom";
+    return opt ? opt.label : t("al_mode_custom", this.hass);
   }
 
   get _currentHex() {
@@ -162,7 +164,7 @@ export class MateriaColorPicker extends LitElement {
             <div class="panel">
               <button type="button" class="opt ${!this.value ? "sel" : ""}" @click=${() => this._pick("")}>
                 <span class="swatch none"></span>
-                <span class="opt-label">Default (automatic)</span>
+                <span class="opt-label">${t("e_default_auto", this.hass)}</span>
                 ${!this.value ? check : ""}
               </button>
               ${COLOR_GROUPS.map(
@@ -181,7 +183,7 @@ export class MateriaColorPicker extends LitElement {
               )}
               <button type="button" class="opt ${this._isCustom ? "sel" : ""}" @click=${this._chooseCustom}>
                 <ha-icon class="cust-ic" icon="mdi:eyedropper-variant"></ha-icon>
-                <span class="opt-label">Custom…</span>
+                <span class="opt-label">${t("e_custom_more", this.hass)}</span>
                 ${this._isCustom ? check : ""}
               </button>
             </div>
@@ -191,7 +193,7 @@ export class MateriaColorPicker extends LitElement {
       ${this._isCustom || this._customOpen
         ? html`
             <ha-textfield
-              label="Custom CSS color"
+              .label=${t("e_custom_css", this.hass)}
               placeholder="#ff8800 · rgb(…) · var(--…)"
               .value=${this._isCustom ? this.value : ""}
               @input=${this._onCustomInput}
@@ -358,8 +360,8 @@ customElements.define("materia-conditions-field", MateriaConditionsField);
  *  hides any card carrying it truthy (see utils/conditions.js). */
 export const DISABLED_FIELD = {
   name: "disabled_when",
-  label: "Disabled when",
-  helper: "Card stays visible but inert (38%) while ALL conditions match.",
+  label: "e_disabl_when",
+  helper: "e_card_stays_visibl",
   conditions: true,
   template: true,
 };
@@ -475,10 +477,10 @@ export class SmartEditorBase extends LitElement {
   }
 
   get _sectionsMemo() {
-    const sig = this._sectionsSignature();
+    const sig = `${this._sectionsSignature()}|${resolveLanguage(this.hass)}`;
     if (this.__secSig !== sig || !this.__secVal) {
       this.__secSig = sig;
-      this.__secVal = this._sections;
+      this.__secVal = localize(this._sections, this.hass);
     }
     return this.__secVal;
   }
@@ -545,7 +547,7 @@ export class SmartEditorBase extends LitElement {
     const value = effectiveEditorValue(this._config, data, field);
     this.__displayedFieldValues ??= new Map();
     this.__displayedFieldValues.set(field.name, value);
-    const label = field.label ?? computeLabel(field);
+    const label = computeLabel(field, this.hass);
     const templatable = !!field.template;
     const mode = templatable ? this._modeFor(field.name, value) : "simple";
     // Resolve context references to their live data values, like ha-form does
@@ -580,6 +582,7 @@ export class SmartEditorBase extends LitElement {
       control = html`
         <materia-color-picker
           class="field-control"
+          .hass=${this.hass}
           .label=${label}
           .value=${value || ""}
         ></materia-color-picker>
@@ -607,7 +610,7 @@ export class SmartEditorBase extends LitElement {
           ? html`
               <ha-icon-button
                 class="tpl-toggle ${mode === "template" ? "active" : ""}"
-                .label=${mode === "template" ? "Use simple input" : "Use a template"}
+                .label=${t(mode === "template" ? "e_use_simple" : "e_use_template", this.hass)}
                 @click=${() => this._toggleMode(field.name)}
               >
                 <ha-icon icon="mdi:code-braces"></ha-icon>

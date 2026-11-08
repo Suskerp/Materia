@@ -10,7 +10,7 @@ class MateriaPillEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: {} } },
@@ -25,16 +25,16 @@ class MateriaPillEditor extends SmartEditorBase {
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "color", label: "Color", color: true, template: true, selector: { text: {} } },
-          { name: "color_on", label: "Text / icon", color: true, template: true, selector: { text: {} } },
+          { name: "color", label: "e_color", color: true, template: true, selector: { text: {} } },
+          { name: "color_on", label: "e_text_icon", color: true, template: true, selector: { text: {} } },
           { name: "background", selector: { boolean: {} } },
         ],
       },
       {
-        title: "Actions",
+        title: "e_actions",
         icon: "mdi:gesture-tap",
         fields: [
           { name: "tap_action", selector: { ui_action: {} } },

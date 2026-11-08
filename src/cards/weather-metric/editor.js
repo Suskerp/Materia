@@ -1,15 +1,15 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 
 const METRICS = [
-  { value: "wind", label: "Wind" },
-  { value: "uv", label: "UV index" },
-  { value: "aqi", label: "Air quality" },
-  { value: "pollen", label: "Pollen" },
-  { value: "precipitation", label: "Precipitation" },
-  { value: "sun", label: "Sunrise & sunset" },
-  { value: "visibility", label: "Visibility" },
-  { value: "humidity", label: "Humidity" },
-  { value: "pressure", label: "Pressure" },
+  { value: "wind", label: "wm_wind" },
+  { value: "uv", label: "wm_uv_index" },
+  { value: "aqi", label: "wm_air_quality" },
+  { value: "pollen", label: "wm_pollen" },
+  { value: "precipitation", label: "wm_precipitation" },
+  { value: "sun", label: "wm_sunrise_sunset" },
+  { value: "visibility", label: "wm_visibility" },
+  { value: "humidity", label: "wm_humidity" },
+  { value: "pressure", label: "wm_pressure" },
 ];
 
 /** The title each metric falls back to, and the defaults of its own fields.
@@ -43,86 +43,86 @@ class MateriaWeatherMetricEditor extends SmartEditorBase {
     const m = this._config?.metric;
 
     const content = {
-      title: "Content",
+      title: "e_content",
       icon: "mdi:card-text-outline",
       fields: [
         { name: "metric", required: true, selector: { select: { mode: "dropdown", options: METRICS } } },
         ...(m !== "sun" && m !== "pollen"
           ? [
-              { name: "entity", label: "Weather entity", selector: { entity: { domain: "weather" } } },
-              { name: "sensor", label: "Sensor override (optional)", selector: { entity: { domain: "sensor" } } },
+              { name: "entity", label: "e_weathe_entity", selector: { entity: { domain: "weather" } } },
+              { name: "sensor", label: "e_sensor_overri_option", selector: { entity: { domain: "sensor" } } },
             ]
           : []),
-        { name: "name", label: "Title", selector: { text: {} } },
-        { name: "icon", label: "Header icon (overrides default)", selector: { icon: {} } },
+        { name: "name", label: "e_title", selector: { text: {} } },
+        { name: "icon", label: "e_header_icon_overri", selector: { icon: {} } },
       ],
     };
 
-    const extras = { title: "Options", icon: "mdi:tune", fields: [] };
+    const extras = { title: "e_options", icon: "mdi:tune", fields: [] };
     if (m === "wind") {
       extras.fields.push(
-        { name: "unit", label: "Unit (converts from the source)", selector: { select: { mode: "dropdown", options: [
+        { name: "unit", label: "e_unit_conver_from", selector: { select: { mode: "dropdown", options: [
           { value: "km/h", label: "km/h" },
           { value: "m/s", label: "m/s" },
           { value: "mph", label: "mph" },
-          { value: "kn", label: "knots" },
+          { value: "kn", label: "e_knots" },
           { value: "bft", label: "Beaufort" },
         ] } } },
-        { name: "bearing_entity", label: "Bearing sensor (optional)", selector: { entity: { domain: "sensor" } } },
-        { name: "from_label", label: '"From" label', selector: { text: {} } },
+        { name: "bearing_entity", label: "e_bearin_sensor_option", selector: { entity: { domain: "sensor" } } },
+        { name: "from_label", label: "e_from_label", selector: { text: {} } },
       );
     }
     if (m === "humidity") {
       extras.fields.push(
-        { name: "dew_entity", label: "Dew point sensor (optional)", selector: { entity: { domain: "sensor" } } },
-        { name: "dew_label", label: "Dew point label", selector: { text: {} } },
+        { name: "dew_entity", label: "e_dew_point_sensor", selector: { entity: { domain: "sensor" } } },
+        { name: "dew_label", label: "e_dew_point_label", selector: { text: {} } },
       );
     }
     if (m === "pressure") {
       extras.fields.push(
-        { name: "min", label: "Gauge min", selector: { number: { mode: "box" } } },
-        { name: "max", label: "Gauge max", selector: { number: { mode: "box" } } },
+        { name: "min", label: "e_gauge_min", selector: { number: { mode: "box" } } },
+        { name: "max", label: "e_gauge_max", selector: { number: { mode: "box" } } },
       );
     }
     if (m === "precipitation") {
       extras.fields.push(
-        { name: "total_label", label: "Subtitle when raining", selector: { text: {} } },
-        { name: "none_label", label: '"None expected" label', selector: { text: {} } },
+        { name: "total_label", label: "e_subtit_when_rainin", selector: { text: {} } },
+        { name: "none_label", label: "e_none_expect_label", selector: { text: {} } },
       );
     }
     if (m === "sun") {
       extras.fields.push(
-        { name: "sun_entity", label: "Sun entity", selector: { entity: { domain: "sun" } } },
-        { name: "moon_entity", label: "Moon phase sensor (built-in Moon integration)", selector: { entity: { domain: "sensor" } } },
+        { name: "sun_entity", label: "e_sun_entity", selector: { entity: { domain: "sun" } } },
+        { name: "moon_entity", label: "e_moon_phase_sensor2", selector: { entity: { domain: "sensor" } } },
       );
     }
     if (m === "pollen") {
       extras.fields.push(
-        { name: "entities", label: "Pollen sensors", selector: { entity: { domain: "sensor", multiple: true } } },
-        { name: "variant", label: "Variant", selector: { select: { mode: "dropdown", options: [
-          { value: "gauges", label: "Gauges (wide)" },
-          { value: "small", label: "Small (dot list)" },
+        { name: "entities", label: "e_pollen_sensor", selector: { entity: { domain: "sensor", multiple: true } } },
+        { name: "variant", label: "e_variant", selector: { select: { mode: "dropdown", options: [
+          { value: "gauges", label: "e_gauges_wide" },
+          { value: "small", label: "e_small_dot_list" },
         ] } } },
-        { name: "max_shown", label: "Max species shown (worst first)", selector: { number: { min: 1, max: 6, step: 1, mode: "slider" } } },
-        { name: "hide_inactive", label: "Hide species at 'none'", selector: { boolean: {} } },
-        { name: "max", label: "Scale max for numeric sensors (default 4)", selector: { number: { min: 1, max: 10, mode: "box" } } },
+        { name: "max_shown", label: "e_max_specie_shown", selector: { number: { min: 1, max: 6, step: 1, mode: "slider" } } },
+        { name: "hide_inactive", label: "e_hide_specie_at", selector: { boolean: {} } },
+        { name: "max", label: "e_scale_max_for", selector: { number: { min: 1, max: 10, mode: "box" } } },
       );
     }
 
     const appearance = {
-      title: "Appearance",
+      title: "e_appearance",
       icon: "mdi:palette-outline",
       fields: [
         ...(m === "wind"
-          ? [{ name: "shape_color", label: "Shape color", color: true, template: true, selector: { text: {} } }]
+          ? [{ name: "shape_color", label: "e_shape_color", color: true, template: true, selector: { text: {} } }]
           : []),
-        { name: "color", label: "Tile color", color: true, template: true, selector: { text: {} } },
-        { name: "color_on", label: "Text color", color: true, template: true, selector: { text: {} } },
+        { name: "color", label: "e_tile_color", color: true, template: true, selector: { text: {} } },
+        { name: "color_on", label: "e_text_color", color: true, template: true, selector: { text: {} } },
       ],
     };
 
     const actions = {
-      title: "Actions",
+      title: "e_actions",
       icon: "mdi:gesture-tap",
       fields: [{ name: "tap_action", selector: { ui_action: { default_action: "more-info" } } }],
     };

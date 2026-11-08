@@ -2,6 +2,7 @@ import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
 import { PRESETS } from "./styles.js";
+import { localize, t } from "../../utils/i18n.js";
 
 class MateriaButtonGroupEditor extends SmartEditorBase {
   static properties = {
@@ -83,25 +84,25 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
     const group = this._config?.group;
     return [
       {
-        title: "Setup",
+        title: "e_setup",
         icon: "mdi:tune",
         fields: [
           this._groupField,
           {
             name: "entity",
-            label: "Speler (in een art scope: die van de scope)",
+            label: "e_player_in_art",
             selector: { entity: { domain: "media_player" } },
           },
           ...(group === "transport"
-            ? [{ name: "size", label: "Height (default 88 px)", selector: { select: { mode: "dropdown", options: [
+            ? [{ name: "size", label: "e_height_defaul_88", selector: { select: { mode: "dropdown", options: [
                 { value: "m", label: "M (56dp)" },
                 { value: "l", label: "L (96dp)" },
                 { value: "xl", label: "XL (136dp)" },
               ] } } }]
             : [
-                { name: "align", label: "Uitlijning", selector: { select: { mode: "dropdown", options: [
-                  { value: "center", label: "Midden" },
-                  { value: "start", label: "Links" },
+                { name: "align", label: "e_alignment", selector: { select: { mode: "dropdown", options: [
+                  { value: "center", label: "e_centre" },
+                  { value: "start", label: "e_left" },
                 ] } } },
               ]),
         ],
@@ -109,7 +110,7 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
       ...(group === "toolbar"
         ? [
             {
-              title: "Knoppen",
+              title: "e_buttons",
               icon: "mdi:gesture-tap-button",
               fields: [
                 {
@@ -131,11 +132,11 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
   }
 
   get _groupField() {
-    return { name: "group", label: "Configuration", selector: { select: { mode: "dropdown", options: [
-      { value: "connected", label: "Connected (segmented, entity-driven)" },
-      { value: "standard", label: "Standard (spaced row of buttons)" },
-      { value: "transport", label: "Media transport (prev / play / next)" },
-      { value: "toolbar", label: "Media toolbar (shuffle / repeat / volume)" },
+    return { name: "group", label: "e_configuratio", selector: { select: { mode: "dropdown", options: [
+      { value: "connected", label: "e_connec_segmen_entity" },
+      { value: "standard", label: "e_standa_spaced_row" },
+      { value: "transport", label: "e_media_transp_prev" },
+      { value: "toolbar", label: "e_media_toolba_shuffl" },
     ] } } };
   }
 
@@ -151,35 +152,35 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
         value: k,
         label: k.charAt(0).toUpperCase() + k.slice(1).replace(/-/g, " "),
       })),
-      { value: "custom", label: "Custom" },
+      { value: "custom", label: "al_mode_custom" },
     ];
 
     const setup = {
-      title: "Setup",
+      title: "e_setup",
       icon: "mdi:tune",
       fields: [
         this._groupField,
         ...(standard ? [] : [
           { name: "entity", selector: { entity: {} } },
           { name: "attribute", selector: { text: {} } },
-          { name: "preset", label: "Color preset", selector: { select: { mode: "dropdown", options: presetOptions } } },
+          { name: "preset", label: "e_color_preset", selector: { select: { mode: "dropdown", options: presetOptions } } },
         ]),
-        { name: "size", label: "Size (applies to the whole group)", selector: { select: { mode: "dropdown", options: [
+        { name: "size", label: "e_size_applie_whole", selector: { select: { mode: "dropdown", options: [
           { value: "xs", label: "XS (32dp)" },
           { value: "s", label: "S (40dp)" },
           { value: "m", label: "M (56dp)" },
           { value: "l", label: "L (96dp)" },
           { value: "xl", label: "XL (136dp)" },
         ] } } },
-        { name: "variant", label: "Style", selector: { select: { mode: "dropdown", options: [
-          { value: "filled", label: "Filled" },
-          { value: "tonal", label: "Tonal" },
+        { name: "variant", label: "e_style", selector: { select: { mode: "dropdown", options: [
+          { value: "filled", label: "e_filled" },
+          { value: "tonal", label: "e_tonal" },
         ] } } },
         ...(standard ? [
         ] : []),
-        ...(standard ? [] : [{ name: "multi_select", label: "Multi-select", selector: { boolean: {} } }]),
+        ...(standard ? [] : [{ name: "multi_select", label: "e_multi_select", selector: { boolean: {} } }]),
         ...(!standard && this._config?.multi_select
-          ? [{ name: "columns", label: "Max columns", selector: { number: { min: 1, max: 8, mode: "box" } } }]
+          ? [{ name: "columns", label: "e_max_column", selector: { number: { min: 1, max: 8, mode: "box" } } }]
           : []),
       ],
     };
@@ -187,7 +188,7 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
     const sections = [setup];
 
     sections.push({
-      title: "Disabled",
+      title: "e_disabled",
       icon: "mdi:cancel",
       expanded: false,
       fields: [DISABLED_FIELD],
@@ -195,11 +196,11 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
 
     if (this._config?.preset === "custom") {
       sections.push({
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "color_active", label: "Active color", color: true, template: true, selector: { text: {} } },
-          { name: "color_on_active", label: "Active text color", color: true, template: true, selector: { text: {} } },
+          { name: "color_active", label: "e_active_color", color: true, template: true, selector: { text: {} } },
+          { name: "color_on_active", label: "e_active_text_color", color: true, template: true, selector: { text: {} } },
         ],
       });
     }
@@ -210,11 +211,11 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
   get _optionSchema() {
     return [
       { name: "label", selector: { text: {} } },
-      { name: "entity", label: "Entity (optional — this button's own state)", selector: { entity: {} } },
-      { name: "value", label: "Value (state that = active; blank = on/truthy)", selector: { text: {} } },
-      { name: "active", label: "Active template (overrides everything, e.g. attribute logic)", template: true, selector: { text: {} } },
+      { name: "entity", label: "e_entity_option_button", selector: { entity: {} } },
+      { name: "value", label: "e_value_state_active", selector: { text: {} } },
+      { name: "active", label: "e_active_templa_overri", template: true, selector: { text: {} } },
       { name: "icon", selector: { icon: {} } },
-      { name: "tap_action", label: "Action", selector: { ui_action: { default_action: "call-service" } } },
+      { name: "tap_action", label: "sched_action", selector: { ui_action: { default_action: "call-service" } } },
     ];
   }
 
@@ -225,16 +226,16 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
     return [
       { name: "label", template: true, selector: { text: {} } },
       { name: "icon", template: true, selector: { icon: {} } },
-      { name: "entity", label: "Entity (optional — drives active state)", selector: { entity: {} } },
+      { name: "entity", label: "e_entity_option_drives", selector: { entity: {} } },
       {
         name: "variant",
         selector: { select: { mode: "dropdown", options: [
-          { value: "filled", label: "Filled" },
-          { value: "tonal", label: "Tonal" },
+          { value: "filled", label: "e_filled" },
+          { value: "tonal", label: "e_tonal" },
         ] } },
       },
-      { name: "wide", label: "Wide (stretch to share the row)", selector: { boolean: {} } },
-      { name: "tap_action", label: "Action", selector: { ui_action: { default_action: "call-service" } } },
+      { name: "wide", label: "e_wide_stretc_share", selector: { boolean: {} } },
+      { name: "tap_action", label: "sched_action", selector: { ui_action: { default_action: "call-service" } } },
     ];
   }
 
@@ -252,7 +253,7 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
     const schema = standard ? this._buttonSchema : this._optionSchema;
     return html`
       <div class="options-header">
-        <span>${standard ? "Buttons" : "Options"}</span>
+        <span>${t(standard ? "e_buttons" : "e_options", this.hass)}</span>
         <ha-icon-button @click=${this._addOption}>
           <ha-icon icon="mdi:plus"></ha-icon>
         </ha-icon-button>
@@ -265,12 +266,12 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
             <div class="option-card">
               <div class="option-header">
                 <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
-                <span>${opt.label || opt.value || `${standard ? "Button" : "Option"} ${i + 1}`}</span>
+                <span>${opt.label || opt.value || t(standard ? "e_button_n" : "e_option_n", this.hass, { n: i + 1 })}</span>
                 ${opt.type === "split" || opt.options
-                  ? html`<span class="glyph-note">split · menu in YAML</span>`
+                  ? html`<span class="glyph-note">${t("e_split_yaml", this.hass)}</span>`
                   : ""}
                 ${opt.tap_action_map
-                  ? html`<span class="glyph-note">state-mapped action (YAML)</span>`
+                  ? html`<span class="glyph-note">${t("e_mapped_yaml", this.hass)}</span>`
                   : ""}
                 <ha-icon-button @click=${() => this._toggleExpand(i)}>
                   <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
@@ -285,7 +286,7 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
                       <ha-form
                         .hass=${this.hass}
                         .data=${opt}
-                        .schema=${schema}
+                        .schema=${localize(schema, this.hass)}
                         .computeLabel=${computeLabel}
                         @value-changed=${(e) => this._updateOptionForm(i, e.detail.value)}
                       ></ha-form>

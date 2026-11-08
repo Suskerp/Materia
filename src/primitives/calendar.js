@@ -1,4 +1,5 @@
 import { LitElement, html, css, nothing } from "lit";
+import { t } from "../utils/i18n.js";
 import { motionTokens } from "../utils/motion.js";
 
 /**
@@ -250,13 +251,13 @@ class MateriaCalendar extends LitElement {
       <div class="head">
         <span class="month">${this._monthLabel}</span>
         <div class="nav">
-          <button type="button" aria-label="Previous month" @click=${() => this._shift(-1)}>
+          <button type="button" aria-label=${t("e_prev_month", this.locale)} @click=${() => this._shift(-1)}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2"
                 stroke-linecap="round" stroke-linejoin="round" />
             </svg>
           </button>
-          <button type="button" aria-label="Next month" @click=${() => this._shift(1)}>
+          <button type="button" aria-label=${t("e_next_month", this.locale)} @click=${() => this._shift(1)}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2"
                 stroke-linecap="round" stroke-linejoin="round" />

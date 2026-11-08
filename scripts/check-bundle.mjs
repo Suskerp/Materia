@@ -12,7 +12,9 @@ const gzipSize = gzipSync(source).byteLength;
 // the Material You theme, which ships the same build).
 // 0.74.0: the composable media parts (volume, switcher, toggle chip, stack, tile grid,
 // power menu, media source, panel host) bring the bundle to ~300 KB gzip.
-const limits = { size: 1_300_000, gzipSize: 310_000 };
+// 0.75: every visual-editor label, helper and option now lives in i18n.js with
+// a Dutch twin (~880 keys); the Dutch copy and the keys add ~13 KB gzip.
+const limits = { size: 1_330_000, gzipSize: 326_000 };
 
 console.log(`Bundle: ${size} bytes (${gzipSize} bytes gzip).`);
 if (size > limits.size || gzipSize > limits.gzipSize) {

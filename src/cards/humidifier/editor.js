@@ -8,21 +8,21 @@ class MateriaHumidifierEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:air-humidifier",
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: "humidifier" } } },
-          { name: "name", label: "Name (optional)", template: true, selector: { text: {} } },
-          { name: "humidity_entity", label: "External humidity sensor", selector: { entity: { domain: "sensor" } } },
+          { name: "name", label: "e_name_option", template: true, selector: { text: {} } },
+          { name: "humidity_entity", label: "e_extern_humidi_sensor", selector: { entity: { domain: "sensor" } } },
         ],
       },
       {
-        title: "Behavior",
+        title: "e_behavior",
         icon: "mdi:tune",
         fields: [
-          { name: "step", label: "Humidity step (optional)", selector: { number: { min: 1, max: 20, step: 1, mode: "box" } } },
-          { name: "show_modes", label: "Show device modes", default: true, selector: { boolean: {} } },
-          { name: "tap_action", label: "Card action", selector: { ui_action: {} } },
+          { name: "step", label: "e_humidi_step_option", selector: { number: { min: 1, max: 20, step: 1, mode: "box" } } },
+          { name: "show_modes", label: "e_show_device_modes", default: true, selector: { boolean: {} } },
+          { name: "tap_action", label: "e_card_action", selector: { ui_action: {} } },
         ],
       },
     ];

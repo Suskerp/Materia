@@ -90,7 +90,7 @@ class MateriaWeather extends ActionMixin(LitElement) {
       humidity = stateObj.attributes.humidity;
     }
 
-    const conditionDisplay = CONDITION_LABELS[condition] || this._capitalize(condition.replace(/-|_/g, " "));
+    const conditionDisplay = (stateObj && this.hass.formatEntityState?.(stateObj)) || CONDITION_LABELS[condition] || this._capitalize(condition.replace(/-|_/g, " "));
     const nameVal = this._isTemplate(this.config.name) ? this._resolvedName : this.config.name;
     const tempStr = showTemp && temp != null ? `${temp}${tempUnit}` : null;
 

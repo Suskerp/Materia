@@ -2,6 +2,7 @@ import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
 import { loadCardHelpers } from "../../styles/shared.js";
+import { localize, t } from "../../utils/i18n.js";
 
 class MateriaTabsEditor extends SmartEditorBase {
   static properties = {
@@ -113,21 +114,21 @@ class MateriaTabsEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Tabs",
+        title: "e_tabs",
         icon: "mdi:tab",
         fields: [
           {
             name: "entity",
-            label: "Entity holding the selected tab (optional)",
-            helper: "Leave empty for per-device tabs (each screen keeps its own). Set an input_select only when the selection must be shared or drive conditional cards elsewhere.",
+            label: "e_entity_holdin_select3",
+            helper: "e_leave_empty_for",
             selector: { entity: { domain: ["input_select", "select", "input_text"] } },
           },
-          { name: "attribute", label: "Attribute (instead of the state)", selector: { text: {} } },
-          { name: "vertical", label: "Vertical rail (off = horizontal tab bar)", selector: { boolean: {} } },
+          { name: "attribute", label: "e_attrib_instea_state", selector: { text: {} } },
+          { name: "vertical", label: "e_vertic_rail_off", selector: { boolean: {} } },
         ],
       },
       {
-        title: "Disabled",
+        title: "e_disabled",
         icon: "mdi:cancel",
         expanded: false,
         fields: [DISABLED_FIELD],
@@ -138,9 +139,9 @@ class MateriaTabsEditor extends SmartEditorBase {
   get _itemSchema() {
     return [
       { name: "label", selector: { text: {} } },
-      { name: "value", label: "Value (the entity state this tab means)", selector: { text: {} } },
+      { name: "value", label: "e_value_entity_state", selector: { text: {} } },
       { name: "icon", selector: { icon: {} } },
-      { name: "tap_action", label: "Action (overrides selecting the tab)", selector: { ui_action: { default_action: "none" } } },
+      { name: "tap_action", label: "e_action_overri_select2", selector: { ui_action: { default_action: "none" } } },
     ];
   }
 
@@ -154,7 +155,7 @@ class MateriaTabsEditor extends SmartEditorBase {
     const items = this._config.items || [];
     return html`
       <div class="options-header">
-        <span>Tabs</span>
+        <span>${t("e_tabs", this.hass)}</span>
         <ha-icon-button @click=${this._addItem}>
           <ha-icon icon="mdi:plus"></ha-icon>
         </ha-icon-button>
@@ -167,7 +168,7 @@ class MateriaTabsEditor extends SmartEditorBase {
             <div class="option-card">
               <div class="option-header">
                 <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
-                <span>${item.label || item.value || `Tab ${i + 1}`}</span>
+                <span>${item.label || item.value || t("e_tab_n", this.hass, { n: i + 1 })}</span>
                 <ha-icon-button @click=${() => this._toggleExpand(i)}>
                   <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
                 </ha-icon-button>
@@ -190,12 +191,12 @@ class MateriaTabsEditor extends SmartEditorBase {
         <ha-form
           .hass=${this.hass}
           .data=${item}
-          .schema=${this._itemSchema}
+          .schema=${localize(this._itemSchema, this.hass)}
           .computeLabel=${computeLabel}
           @value-changed=${(e) => this._updateItem(i, e.detail.value)}
         ></ha-form>
 
-        <div class="cards-head">This tab's cards</div>
+        <div class="cards-head">${t("e_tab_cards", this.hass)}</div>
         ${cards.map(
           (c, j) => html`
             <div class="card-row">
@@ -219,7 +220,7 @@ class MateriaTabsEditor extends SmartEditorBase {
                 }}
               ></hui-card-picker>
             `
-          : html`<div style="font-size:12px;opacity:.6;">Loading card picker…</div>`}
+          : html`<div style="font-size:12px;opacity:.6;">${t("e_loading_picker", this.hass)}</div>`}
       </div>
     `;
   }
@@ -236,7 +237,7 @@ class MateriaTabsEditor extends SmartEditorBase {
         <ha-icon-button @click=${() => (this._editingCard = null)}>
           <ha-icon icon="mdi:arrow-left"></ha-icon>
         </ha-icon-button>
-        <span>${this._config.items[item]?.label || `Tab ${item + 1}`} · card ${card + 1}</span>
+        <span>${this._config.items[item]?.label || t("e_tab_n", this.hass, { n: item + 1 })} · ${t("e_card_n", this.hass, { n: card + 1 })}</span>
       </div>
       ${customElements.get("hui-card-element-editor")
         ? html`
@@ -249,7 +250,7 @@ class MateriaTabsEditor extends SmartEditorBase {
               }}
             ></hui-card-element-editor>
           `
-        : html`<div style="font-size:12px;opacity:.6;">Loading card editor…</div>`}
+        : html`<div style="font-size:12px;opacity:.6;">${t("e_loading_editor", this.hass)}</div>`}
     `;
   }
 

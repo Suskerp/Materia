@@ -8,22 +8,22 @@ class MateriaHeadingEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Heading",
+        title: "e_heading",
         icon: "mdi:format-title",
         fields: [
           { name: "heading", required: true, selector: { text: {} } },
           {
             name: "heading_style",
-            label: "Style",
+            label: "e_style",
             selector: { select: { mode: "dropdown", options: [
-              { value: "title", label: "Title" },
-              { value: "subtitle", label: "Subtitle" },
+              { value: "title", label: "e_title" },
+              { value: "subtitle", label: "e_subtitle" },
             ] } },
           },
           { name: "icon", selector: { icon: {} } },
           {
             name: "secondary",
-            label: "Right-aligned meta line",
+            label: "e_right_aligne_meta",
             template: true,
             selector: { text: {} },
           },

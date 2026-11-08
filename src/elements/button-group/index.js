@@ -1,4 +1,5 @@
 import { LitElement, html } from "lit";
+import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import { unavailableStyles } from "../../styles/card-styles.js";
@@ -233,7 +234,7 @@ export class MateriaButtonGroup extends MediaGroupMixin(SheetOpenerMixin(Disable
       <ha-card>
         <div class="group ${unavailable ? 'unavailable' : ''} ${multiSelect ? 'multi' : ''}"
           role="group"
-          aria-label=${this.config.aria_label || this.config.name || "Options"}
+          aria-label=${this.config.aria_label || this.config.name || t("e_options", this.hass)}
           style="--visual-height:${height}px;${!multiSelect ? `height: max(48px, ${height}px);` : `--btn-height:max(48px, ${height}px);`} ${columns ? `--btn-columns: ${columns};` : ''}">
           ${options.map((opt, i) => {
             const isActive = this._isOptionActive(opt, i);

@@ -4,12 +4,12 @@ class MateriaVolumeRingEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           {
             name: "entity",
-            label: "Speler (in een art scope: die van de scope)",
+            label: "e_player_in_art",
             selector: { entity: { domain: "media_player" } },
           },
         ],

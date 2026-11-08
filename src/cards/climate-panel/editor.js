@@ -1,5 +1,6 @@
 import { html, nothing } from "lit";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { localize, t, tr } from "../../utils/i18n.js";
 import { loadCardHelpers } from "../../styles/shared.js";
 
 const ROW =
@@ -80,7 +81,7 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
 
   _addSec() {
     const idx = this._secs.length;
-    this._setSecs([...this._secs, { title: "New section", style: "section", cards: [] }]);
+    this._setSecs([...this._secs, { title: t("e_new_sectio", this.hass), style: "section", cards: [] }]);
     this._secIdx = idx;
   }
 
@@ -109,7 +110,7 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
   _sel(label, selector, value, onChange) {
     return html`
       <div style="margin-bottom:12px;" @value-changed=${(e) => { e.stopPropagation(); onChange(e.detail.value); }}>
-        <ha-selector .hass=${this.hass} .selector=${selector} .value=${value} .label=${label}></ha-selector>
+        <ha-selector .hass=${this.hass} .selector=${localize(selector, this.hass)} .value=${value} .label=${tr(label, this.hass)}></ha-selector>
       </div>
     `;
   }
@@ -117,24 +118,24 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
   /* Sections manager appended to the normal editor. */
   _renderExtra() {
     return html`
-      <ha-expansion-panel outlined .header=${"Sections"} .secondary=${"Wallet sections and menus below the mode group"} .expanded=${true}>
+      <ha-expansion-panel outlined .header=${t("e_sections", this.hass)} .secondary=${t("e_sections_sub", this.hass)} .expanded=${true}>
         <ha-icon slot="leading-icon" icon="mdi:wallet-outline"></ha-icon>
         <div style="padding:12px;">
           ${this._secs.map((s, i) => html`
             <div style=${ROW} @click=${() => { this._secIdx = i; }}>
               <span style="opacity:.6;font-weight:600;">${i + 1}</span>
               <span style="flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                ${s.title || (s.style === "menu" ? "Menu" : "Section")}
+                ${s.title || t(s.style === "menu" ? "e_menu" : "e_section", this.hass)}
               </span>
-              <span style="opacity:.6;font-size:12px;">${s.style === "menu" ? "menu" : `${(s.cards || []).length} cards`}</span>
-              <button style=${ICON_BTN} title="Move up" @click=${(e) => { e.stopPropagation(); this._moveSec(i, -1); }}><ha-icon icon="mdi:arrow-up"></ha-icon></button>
-              <button style=${ICON_BTN} title="Move down" @click=${(e) => { e.stopPropagation(); this._moveSec(i, 1); }}><ha-icon icon="mdi:arrow-down"></ha-icon></button>
-              <button style=${ICON_BTN} title="Edit" @click=${(e) => { e.stopPropagation(); this._secIdx = i; }}><ha-icon icon="mdi:pencil"></ha-icon></button>
-              <button style=${ICON_BTN} title="Delete" @click=${(e) => { e.stopPropagation(); this._setSecs(this._secs.filter((_, j) => j !== i)); }}><ha-icon icon="mdi:delete"></ha-icon></button>
+              <span style="opacity:.6;font-size:12px;">${s.style === "menu" ? t("e_menu", this.hass).toLowerCase() : t("e_n_cards", this.hass, { n: (s.cards || []).length })}</span>
+              <button style=${ICON_BTN} title=${t("e_move_up", this.hass)} @click=${(e) => { e.stopPropagation(); this._moveSec(i, -1); }}><ha-icon icon="mdi:arrow-up"></ha-icon></button>
+              <button style=${ICON_BTN} title=${t("e_move_down", this.hass)} @click=${(e) => { e.stopPropagation(); this._moveSec(i, 1); }}><ha-icon icon="mdi:arrow-down"></ha-icon></button>
+              <button style=${ICON_BTN} title=${t("e_edit", this.hass)} @click=${(e) => { e.stopPropagation(); this._secIdx = i; }}><ha-icon icon="mdi:pencil"></ha-icon></button>
+              <button style=${ICON_BTN} title=${t("e_delete", this.hass)} @click=${(e) => { e.stopPropagation(); this._setSecs(this._secs.filter((_, j) => j !== i)); }}><ha-icon icon="mdi:delete"></ha-icon></button>
             </div>
           `)}
           <button style=${ADD_BTN} @click=${() => this._addSec()}>
-            <ha-icon icon="mdi:plus" style="--mdc-icon-size:16px;"></ha-icon>Add section
+            <ha-icon icon="mdi:plus" style="--mdc-icon-size:16px;"></ha-icon>${t("e_add_section", this.hass)}
           </button>
         </div>
       </ha-expansion-panel>
@@ -150,12 +151,12 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
     }
     const style = s.style === "menu" ? "menu" : "section";
     return html`
-      ${this._back(s.title || `Section ${i + 1}`, () => { this._secIdx = null; })}
-      ${this._sel("Title", { text: {} }, s.title, (v) => this._patchSec(i, { title: v }))}
-      ${this._sel("Icon", { icon: {} }, s.icon, (v) => this._patchSec(i, { icon: v }))}
-      ${this._sel("Style", { select: { mode: "dropdown", options: [
-        { value: "section", label: "Wallet section (nested cards)" },
-        { value: "menu", label: "Menu (tap opens options)" },
+      ${this._back(s.title || t("e_section_n", this.hass, { n: i + 1 }), () => { this._secIdx = null; })}
+      ${this._sel("e_title", { text: {} }, s.title, (v) => this._patchSec(i, { title: v }))}
+      ${this._sel("e_icon", { icon: {} }, s.icon, (v) => this._patchSec(i, { icon: v }))}
+      ${this._sel("e_style", { select: { mode: "dropdown", options: [
+        { value: "section", label: "e_wallet_sectio_nested" },
+        { value: "menu", label: "e_menu_tap_opens" },
       ] } }, style, (v) => this._patchSec(i, { style: v }))}
       ${style === "menu" ? this._renderMenuFields(i, s) : this._renderSectionCards(i, s)}
     `;
@@ -172,28 +173,28 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
       this._patchSec(i, { options: next });
     };
     return html`
-      ${this._sel("Entity (select / input_select / water_heater)", { entity: {} }, s.entity, (v) => this._patchSec(i, { entity: v }))}
-      ${this._sel("Substate (secondary line — supports templates)", { template: {} }, s.substate, (v) => this._patchSec(i, { substate: v }))}
-      <div style="font-weight:600;font-size:13px;margin:6px 0 8px;">Manual options (override the entity's)</div>
+      ${this._sel("e_cp_entity", { entity: {} }, s.entity, (v) => this._patchSec(i, { entity: v }))}
+      ${this._sel("e_cp_substate", { template: {} }, s.substate, (v) => this._patchSec(i, { substate: v }))}
+      <div style="font-weight:600;font-size:13px;margin:6px 0 8px;">${t("e_manual_opts", this.hass)}</div>
       ${opts.map((o, oi) => html`
         <div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:8px;">
           <div style="flex:1;" @value-changed=${(e) => { e.stopPropagation(); patchOpt(oi, { label: e.detail.value }); }}>
-            <ha-selector .hass=${this.hass} .selector=${{ text: {} }} .value=${o.label} .label=${"Label"}></ha-selector>
+            <ha-selector .hass=${this.hass} .selector=${{ text: {} }} .value=${o.label} .label=${t("e_label", this.hass)}></ha-selector>
           </div>
           <div style="flex:1;" @value-changed=${(e) => { e.stopPropagation(); patchOpt(oi, { value: e.detail.value }); }}>
-            <ha-selector .hass=${this.hass} .selector=${{ text: {} }} .value=${o.value} .label=${"Value"}></ha-selector>
+            <ha-selector .hass=${this.hass} .selector=${{ text: {} }} .value=${o.value} .label=${t("e_value", this.hass)}></ha-selector>
           </div>
           <div style="flex:1;" @value-changed=${(e) => { e.stopPropagation(); patchOpt(oi, { icon: e.detail.value }); }}>
-            <ha-selector .hass=${this.hass} .selector=${{ icon: {} }} .value=${o.icon} .label=${"Icon"}></ha-selector>
+            <ha-selector .hass=${this.hass} .selector=${{ icon: {} }} .value=${o.icon} .label=${t("e_icon", this.hass)}></ha-selector>
           </div>
-          <button style="${ICON_BTN}margin-top:12px;" title="Remove option"
+          <button style="${ICON_BTN}margin-top:12px;" title=${t("e_remove_option", this.hass)}
             @click=${() => this._patchSec(i, { options: opts.filter((_, j) => j !== oi) })}>
             <ha-icon icon="mdi:delete"></ha-icon>
           </button>
         </div>
       `)}
       <button style=${ADD_BTN} @click=${() => this._patchSec(i, { options: [...opts, { label: "", value: "" }] })}>
-        <ha-icon icon="mdi:plus" style="--mdc-icon-size:16px;"></ha-icon>Add option
+        <ha-icon icon="mdi:plus" style="--mdc-icon-size:16px;"></ha-icon>${t("e_add_option", this.hass)}
       </button>
     `;
   }
@@ -209,28 +210,28 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
       this._patchSec(i, { actions: next });
     };
     return html`
-      <div style="font-weight:600;font-size:13px;margin:6px 0 8px;">Bar actions (chips in the open bar)</div>
+      <div style="font-weight:600;font-size:13px;margin:6px 0 8px;">${t("e_bar_actions", this.hass)}</div>
       ${acts.map((a, ai) => html`
         <div style="border:1px solid var(--md-sys-color-outline-variant, rgba(0,0,0,.15));border-radius:12px;padding:10px;margin-bottom:8px;">
           <div style="display:flex;gap:6px;align-items:flex-start;">
             <div style="flex:1;" @value-changed=${(e) => { e.stopPropagation(); patchAct(ai, { label: e.detail.value }); }}>
-              <ha-selector .hass=${this.hass} .selector=${{ text: {} }} .value=${a.label} .label=${"Label"}></ha-selector>
+              <ha-selector .hass=${this.hass} .selector=${{ text: {} }} .value=${a.label} .label=${t("e_label", this.hass)}></ha-selector>
             </div>
             <div style="flex:1;" @value-changed=${(e) => { e.stopPropagation(); patchAct(ai, { icon: e.detail.value }); }}>
-              <ha-selector .hass=${this.hass} .selector=${{ icon: {} }} .value=${a.icon} .label=${"Icon"}></ha-selector>
+              <ha-selector .hass=${this.hass} .selector=${{ icon: {} }} .value=${a.icon} .label=${t("e_icon", this.hass)}></ha-selector>
             </div>
-            <button style="${ICON_BTN}margin-top:12px;" title="Remove action"
+            <button style="${ICON_BTN}margin-top:12px;" title=${t("e_remove_action", this.hass)}
               @click=${() => this._patchSec(i, { actions: acts.filter((_, j) => j !== ai) })}>
               <ha-icon icon="mdi:delete"></ha-icon>
             </button>
           </div>
           <div style="margin-top:8px;" @value-changed=${(e) => { e.stopPropagation(); patchAct(ai, { tap_action: e.detail.value }); }}>
-            <ha-selector .hass=${this.hass} .selector=${{ ui_action: {} }} .value=${a.tap_action} .label=${"Action"}></ha-selector>
+            <ha-selector .hass=${this.hass} .selector=${{ ui_action: {} }} .value=${a.tap_action} .label=${t("sched_action", this.hass)}></ha-selector>
           </div>
         </div>
       `)}
       <button style="${ADD_BTN}margin-bottom:12px;" @click=${() => this._patchSec(i, { actions: [...acts, { label: "" }] })}>
-        <ha-icon icon="mdi:plus" style="--mdc-icon-size:16px;"></ha-icon>Add action
+        <ha-icon icon="mdi:plus" style="--mdc-icon-size:16px;"></ha-icon>${t("e_add_action", this.hass)}
       </button>
     `;
   }
@@ -246,18 +247,18 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
       this._patchCards(i, next);
     };
     return html`
-      ${this._sel("Info (closed-bar text — supports templates)", { template: {} }, s.info, (v) => this._patchSec(i, { info: v }))}
-      ${this._sel("…or info from an entity's state", { entity: {} }, s.info_entity, (v) => this._patchSec(i, { info_entity: v }))}
+      ${this._sel("e_cp_info", { template: {} }, s.info, (v) => this._patchSec(i, { info: v }))}
+      ${this._sel("e_cp_info_entity", { entity: {} }, s.info_entity, (v) => this._patchSec(i, { info_entity: v }))}
       ${this._renderActions(i, s)}
-      <div style="font-weight:600;font-size:13px;margin:6px 0 8px;">Cards</div>
+      <div style="font-weight:600;font-size:13px;margin:6px 0 8px;">${t("e_cards", this.hass)}</div>
       ${cards.map((c, ci) => html`
         <div style=${ROW} @click=${() => { this._cardIdx = ci; }}>
           <span style="opacity:.6;font-weight:600;">${ci + 1}</span>
-          <span style="flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.type || "card"}</span>
-          <button style=${ICON_BTN} title="Move up" @click=${(e) => { e.stopPropagation(); move(ci, -1); }}><ha-icon icon="mdi:arrow-up"></ha-icon></button>
-          <button style=${ICON_BTN} title="Move down" @click=${(e) => { e.stopPropagation(); move(ci, 1); }}><ha-icon icon="mdi:arrow-down"></ha-icon></button>
-          <button style=${ICON_BTN} title="Edit" @click=${(e) => { e.stopPropagation(); this._cardIdx = ci; }}><ha-icon icon="mdi:pencil"></ha-icon></button>
-          <button style=${ICON_BTN} title="Delete" @click=${(e) => { e.stopPropagation(); this._patchCards(i, cards.filter((_, j) => j !== ci)); }}><ha-icon icon="mdi:delete"></ha-icon></button>
+          <span style="flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.type || t("e_card", this.hass)}</span>
+          <button style=${ICON_BTN} title=${t("e_move_up", this.hass)} @click=${(e) => { e.stopPropagation(); move(ci, -1); }}><ha-icon icon="mdi:arrow-up"></ha-icon></button>
+          <button style=${ICON_BTN} title=${t("e_move_down", this.hass)} @click=${(e) => { e.stopPropagation(); move(ci, 1); }}><ha-icon icon="mdi:arrow-down"></ha-icon></button>
+          <button style=${ICON_BTN} title=${t("e_edit", this.hass)} @click=${(e) => { e.stopPropagation(); this._cardIdx = ci; }}><ha-icon icon="mdi:pencil"></ha-icon></button>
+          <button style=${ICON_BTN} title=${t("e_delete", this.hass)} @click=${(e) => { e.stopPropagation(); this._patchCards(i, cards.filter((_, j) => j !== ci)); }}><ha-icon icon="mdi:delete"></ha-icon></button>
         </div>
       `)}
       ${this._huiReady
@@ -266,7 +267,7 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
             .lovelace=${this.lovelace}
             @config-changed=${(e) => { e.stopPropagation(); this._patchCards(i, [...cards, e.detail.config]); }}
           ></hui-card-picker>`
-        : html`<div style="opacity:.7;font-size:12px;margin-top:8px;">Card picker unavailable — add cards via the YAML editor.</div>`}
+        : html`<div style="opacity:.7;font-size:12px;margin-top:8px;">${t("e_picker_na", this.hass)}</div>`}
     `;
   }
 
@@ -279,7 +280,7 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
       return html``;
     }
     return html`
-      ${this._back(card.type || "Card", () => { this._cardIdx = null; })}
+      ${this._back(card.type || t("e_card", this.hass), () => { this._cardIdx = null; })}
       ${customElements.get("hui-card-element-editor")
         ? html`<hui-card-element-editor
             .hass=${this.hass}
@@ -301,32 +302,32 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: ["climate", "humidifier"] } } },
-          { name: "reserve_height", label: "Keep the height of the tallest section (no reflow when cycling)", selector: { boolean: {} } },
+          { name: "reserve_height", label: "e_keep_height_talles", selector: { boolean: {} } },
         ],
       },
       {
-        title: "Dial",
+        title: "e_dial",
         icon: "mdi:thermostat",
         fields: [
-          { name: "temperature_entity", label: "Current temperature sensor (optional)", selector: { entity: { domain: "sensor", device_class: "temperature" } } },
-          { name: "humidity_entity", label: "Current humidity sensor (optional)", selector: { entity: { domain: "sensor", device_class: "humidity" } } },
-          { name: "step", label: "Target step", helper: "Default: the step reported by the selected entity.", selector: { number: { min: 0.1, max: 20, step: 0.1, mode: "box" } } },
-          { name: "min_temp", label: "Dial min (default: entity)", selector: { number: { min: -30, max: 40, step: 0.5, mode: "box" } } },
-          { name: "max_temp", label: "Dial max (default: entity)", selector: { number: { min: 0, max: 60, step: 0.5, mode: "box" } } },
-          { name: "min_humidity", label: "Humidity dial min (default: entity)", selector: { number: { min: 0, max: 100, step: 1, mode: "box", unit_of_measurement: "%" } } },
-          { name: "max_humidity", label: "Humidity dial max (default: entity)", selector: { number: { min: 0, max: 100, step: 1, mode: "box", unit_of_measurement: "%" } } },
-          { name: "steppers", label: "Stepper placement", selector: { select: { mode: "dropdown", options: [
-            { value: "side", label: "Vertical, beside the dial" },
-            { value: "below", label: "Below the dial" },
+          { name: "temperature_entity", label: "e_curren_temper_sensor", selector: { entity: { domain: "sensor", device_class: "temperature" } } },
+          { name: "humidity_entity", label: "e_curren_humidi_sensor", selector: { entity: { domain: "sensor", device_class: "humidity" } } },
+          { name: "step", label: "e_target_step", helper: "e_defaul_step_report", selector: { number: { min: 0.1, max: 20, step: 0.1, mode: "box" } } },
+          { name: "min_temp", label: "e_dial_min_defaul", selector: { number: { min: -30, max: 40, step: 0.5, mode: "box" } } },
+          { name: "max_temp", label: "e_dial_max_defaul", selector: { number: { min: 0, max: 60, step: 0.5, mode: "box" } } },
+          { name: "min_humidity", label: "e_humidi_dial_min", selector: { number: { min: 0, max: 100, step: 1, mode: "box", unit_of_measurement: "%" } } },
+          { name: "max_humidity", label: "e_humidi_dial_max", selector: { number: { min: 0, max: 100, step: 1, mode: "box", unit_of_measurement: "%" } } },
+          { name: "steppers", label: "e_steppe_placem", selector: { select: { mode: "dropdown", options: [
+            { value: "side", label: "e_vertic_beside_dial" },
+            { value: "below", label: "e_below_dial" },
           ] } } },
-          { name: "wave", label: "Wave animation", selector: { select: { mode: "dropdown", options: [
-            { value: "auto", label: "Auto (hvac_action, or inferred from temps)" },
-            { value: "always", label: "Always (whenever the mode is on)" },
-            { value: "never", label: "Never" },
+          { name: "wave", label: "e_wave_animat", selector: { select: { mode: "dropdown", options: [
+            { value: "auto", label: "e_auto_hvac_action" },
+            { value: "always", label: "e_always_whenev_mode" },
+            { value: "never", label: "e_never" },
           ] } } },
         ],
       },

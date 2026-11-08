@@ -1,6 +1,7 @@
 import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, isTemplate, DISABLED_FIELD } from "../../utils/smart-editor.js";
+import { localize, t } from "../../utils/i18n.js";
 
 class MateriaSplitButtonEditor extends SmartEditorBase {
   static properties = {
@@ -64,53 +65,53 @@ class MateriaSplitButtonEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Leading button",
+        title: "e_leadin_button",
         icon: "mdi:card-text-outline",
         fields: [
           { name: "icon", template: true, selector: { icon: {} } },
           { name: "label", template: true, selector: { text: {} } },
-          { name: "tap_action", label: "Action", selector: { ui_action: { default_action: "more-info" } } },
+          { name: "tap_action", label: "sched_action", selector: { ui_action: { default_action: "more-info" } } },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
           {
             name: "variant",
             selector: { select: { mode: "dropdown", options: [
-              { value: "filled", label: "Filled" },
-              { value: "tonal", label: "Tonal" },
-              { value: "elevated", label: "Elevated" },
-              { value: "outlined", label: "Outlined" },
+              { value: "filled", label: "e_filled" },
+              { value: "tonal", label: "e_tonal" },
+              { value: "elevated", label: "e_elevated" },
+              { value: "outlined", label: "e_outlined" },
             ] } },
           },
           {
             name: "size",
             selector: { select: { mode: "dropdown", options: [
-              { value: "xs", label: "Extra small" },
-              { value: "s", label: "Small" },
-              { value: "m", label: "Medium" },
-              { value: "l", label: "Large" },
-              { value: "xl", label: "Extra large" },
+              { value: "xs", label: "e_extra_small" },
+              { value: "s", label: "e_small" },
+              { value: "m", label: "e_medium" },
+              { value: "l", label: "e_large" },
+              { value: "xl", label: "e_extra_large" },
             ] } },
           },
           {
             name: "menu_position",
-            label: "Menu alignment",
+            label: "e_menu_alignm",
             selector: { select: { mode: "dropdown", options: [
-              { value: "bottom-right", label: "Below · right-aligned" },
-              { value: "bottom-left", label: "Below · left-aligned" },
-              { value: "top-right", label: "Above · right-aligned" },
-              { value: "top-left", label: "Above · left-aligned" },
+              { value: "bottom-right", label: "e_below_right_aligne" },
+              { value: "bottom-left", label: "e_below_left_aligne" },
+              { value: "top-right", label: "e_above_right_aligne" },
+              { value: "top-left", label: "e_above_left_aligne" },
             ] } },
           },
-          { name: "color", label: "Background", color: true, template: true, selector: { text: {} } },
-          { name: "color_on", label: "Text / icon", color: true, template: true, selector: { text: {} } },
+          { name: "color", label: "e_background", color: true, template: true, selector: { text: {} } },
+          { name: "color_on", label: "e_text_icon", color: true, template: true, selector: { text: {} } },
         ],
       },
       {
-        title: "Disabled",
+        title: "e_disabled",
         icon: "mdi:cancel",
         expanded: false,
         fields: [DISABLED_FIELD],
@@ -124,7 +125,7 @@ class MateriaSplitButtonEditor extends SmartEditorBase {
         ? { name: "icon", selector: { template: {} } }
         : { name: "icon", selector: { icon: {} } },
       { name: "label", selector: { text: {} } },
-      { name: "tap_action", label: "Action", selector: { ui_action: {} } },
+      { name: "tap_action", label: "sched_action", selector: { ui_action: {} } },
     ];
   }
 
@@ -132,7 +133,7 @@ class MateriaSplitButtonEditor extends SmartEditorBase {
     const options = Array.isArray(this._config.options) ? this._config.options : [];
     return html`
       <div class="opt-header">
-        <span>Menu options</span>
+        <span>${t("e_menu_options", this.hass)}</span>
         <ha-icon-button @click=${this._addOption}>
           <ha-icon icon="mdi:plus"></ha-icon>
         </ha-icon-button>
@@ -145,7 +146,7 @@ class MateriaSplitButtonEditor extends SmartEditorBase {
             <div class="opt-card">
               <div class="opt-row">
                 <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
-                <span>${opt.label || (opt.icon && !isTemplate(opt.icon) ? opt.icon : `Option ${i + 1}`)}</span>
+                <span>${opt.label || (opt.icon && !isTemplate(opt.icon) ? opt.icon : t("e_option_n", this.hass, { n: i + 1 }))}</span>
                 <ha-icon-button @click=${() => this._toggleOption(i)}>
                   <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
                 </ha-icon-button>
@@ -159,7 +160,7 @@ class MateriaSplitButtonEditor extends SmartEditorBase {
                       <ha-form
                         .hass=${this.hass}
                         .data=${opt}
-                        .schema=${this._optionSchema(opt)}
+                        .schema=${localize(this._optionSchema(opt), this.hass)}
                         .computeLabel=${computeLabel}
                         @value-changed=${(e) => this._optionChanged(i, e.detail.value)}
                       ></ha-form>

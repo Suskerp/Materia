@@ -4,7 +4,7 @@ class MateriaCheckboxEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: {} } },
@@ -14,12 +14,12 @@ class MateriaCheckboxEditor extends SmartEditorBase {
         ],
       },
       {
-        title: "Actions",
+        title: "e_actions",
         icon: "mdi:gesture-tap",
         fields: [
           { name: "tap_action", selector: { ui_action: { default_action: "toggle" } } },
-          { name: "tap_action_checked", label: "Action (checked)", selector: { ui_action: {} } },
-          { name: "tap_action_unchecked", label: "Action (unchecked)", selector: { ui_action: {} } },
+          { name: "tap_action_checked", label: "e_action_checke", selector: { ui_action: {} } },
+          { name: "tap_action_unchecked", label: "e_action_unchec", selector: { ui_action: {} } },
         ],
       },
     ];

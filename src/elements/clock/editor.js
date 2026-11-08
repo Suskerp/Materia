@@ -8,36 +8,36 @@ class MateriaClockEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Clock",
+        title: "e_clock",
         icon: "mdi:clock-outline",
         fields: [
           {
             name: "numbers",
             selector: { select: { mode: "dropdown", options: [
-              { value: "cardinal", label: "Cardinal (12 · 3 · 6 · 9)" },
-              { value: "all", label: "All (1–12)" },
-              { value: "dots", label: "Hour dots" },
-              { value: "none", label: "None" },
+              { value: "cardinal", label: "e_cardin_12_3" },
+              { value: "all", label: "e_all_1_12" },
+              { value: "dots", label: "e_hour_dots" },
+              { value: "none", label: "level_none" },
             ] } },
           },
           { name: "show_seconds", selector: { boolean: {} } },
-          { name: "second_dot", label: "Second hand as rim dot", selector: { boolean: {} } },
-          { name: "smooth", label: "Smooth second hand", selector: { boolean: {} } },
-          { name: "cookie", label: "Cookie face (12-sided)", selector: { boolean: {} } },
-          { name: "digital", label: "Digital readout (HH/MM behind hands)", selector: { boolean: {} } },
-          { name: "date", label: "Show date", selector: { boolean: {} } },
-          { name: "hand_width", label: "Hand thickness", selector: { number: { min: 1, max: 12, step: 0.5, mode: "slider" } } },
-          { name: "size", label: "Size (10 = fill)", selector: { number: { min: 1, max: 10, step: 1, mode: "slider" } } },
+          { name: "second_dot", label: "e_second_hand_as", selector: { boolean: {} } },
+          { name: "smooth", label: "e_smooth_second_hand", selector: { boolean: {} } },
+          { name: "cookie", label: "e_cookie_face_12", selector: { boolean: {} } },
+          { name: "digital", label: "e_digita_readou_hh", selector: { boolean: {} } },
+          { name: "date", label: "e_show_date", selector: { boolean: {} } },
+          { name: "hand_width", label: "e_hand_thickn", selector: { number: { min: 1, max: 12, step: 0.5, mode: "slider" } } },
+          { name: "size", label: "e_size_10_fill", selector: { number: { min: 1, max: 10, step: 1, mode: "slider" } } },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "face_color", label: "Face", color: true, template: true, selector: { text: {} } },
-          { name: "number_color", label: "Numbers", color: true, template: true, selector: { text: {} } },
-          { name: "hand_color", label: "Hands", color: true, template: true, selector: { text: {} } },
-          { name: "second_color", label: "Second hand", color: true, template: true, selector: { text: {} } },
+          { name: "face_color", label: "e_face", color: true, template: true, selector: { text: {} } },
+          { name: "number_color", label: "e_numbers", color: true, template: true, selector: { text: {} } },
+          { name: "hand_color", label: "e_hands", color: true, template: true, selector: { text: {} } },
+          { name: "second_color", label: "e_second_hand", color: true, template: true, selector: { text: {} } },
         ],
       },
     ];

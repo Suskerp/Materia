@@ -1,18 +1,18 @@
 import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
-import { t } from "../../utils/i18n.js";
+import { localize, t } from "../../utils/i18n.js";
 import { hasLegacyAlarmCode, sanitizeAlarmConfig } from "./config-policy.js";
 
 /** Every arm mode the card knows how to offer, for the mode-order picker.
  *  The CARD derives what a panel actually supports from supported_features;
  *  this list only exists so a config can narrow or reorder that. */
 const MODE_OPTIONS = [
-  { value: "home", label: "Home" },
-  { value: "away", label: "Away" },
-  { value: "night", label: "Night" },
-  { value: "vacation", label: "Vacation" },
-  { value: "custom", label: "Custom bypass" },
+  { value: "home", label: "al_mode_home" },
+  { value: "away", label: "al_mode_away" },
+  { value: "night", label: "al_mode_night" },
+  { value: "vacation", label: "al_mode_vacation" },
+  { value: "custom", label: "e_custom_bypass" },
 ];
 
 class MateriaAlarmEditor extends SmartEditorBase {
@@ -168,203 +168,203 @@ class MateriaAlarmEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Setup",
+        title: "e_setup",
         icon: "mdi:tune",
         fields: [
           {
             name: "entity",
-            label: "Alarm panel",
+            label: "e_alarm_panel",
             selector: { entity: { domain: ["alarm_control_panel"] } },
             required: true,
           },
           {
             name: "modes",
-            label: "Modes to offer (optional)",
+            label: "e_modes_offer_option",
             helper:
-              "Leave empty to offer exactly what the panel reports it supports. Set this only to narrow the row or to change its order.",
+              "e_leave_empty_offer",
             selector: { select: { multiple: true, mode: "list", options: MODE_OPTIONS } },
           },
         ],
       },
       {
-        title: "Gesture",
+        title: "e_gesture",
         icon: "mdi:gesture-tap-hold",
         fields: [
           {
             name: "hold_ms",
-            label: "Hold for (ms, default 800)",
+            label: "e_hold_for_ms",
             helper:
-              "Keep this above 500ms — the platform long-press timeout — or an ordinary long-press on the dashboard commits by accident.",
+              "e_keep_above_500ms",
             selector: { number: { min: 300, max: 5000, step: 50, mode: "box" } },
           },
           {
             name: "direct_switch",
-            label: "Allow switching between armed modes",
+            label: "e_allow_switch_betwee",
             helper:
-              "Off by default: while armed, the other modes are inert and must be disarmed through first. Leaving a house armed in the wrong shape is the mistake that gating prevents.",
+              "e_off_by_defaul",
             selector: { boolean: {} },
           },
           {
             name: "arming_duration_ms",
-            label: "Exit delay (ms)",
+            label: "e_exit_delay_ms",
             helper:
-              "How long this panel takes to arm. Set it and the shape fills across the delay, showing how far through you are. Leave EMPTY and it breathes instead — the honest answer for a wait of unknown length, and better than a progress bar that finishes at the wrong moment. This is not the timeout below: that one is about silence, this one is about how the panel is programmed.",
+              "e_how_long_panel",
             selector: { number: { min: 1000, max: 600000, step: 1000, mode: "box" } },
           },
           {
             name: "pending_duration_ms",
-            label: "Entry delay (ms)",
-            helper: "Same, for the countdown after someone comes in. Leave empty to breathe.",
+            label: "e_entry_delay_ms",
+            helper: "e_same_for_countd",
             selector: { number: { min: 1000, max: 600000, step: 1000, mode: "box" } },
           },
           {
             name: "pending_timeout_ms",
-            label: "Give up waiting for the panel after (ms, default 20000)",
+            label: "e_give_up_waitin",
             helper:
-              "How long the card keeps showing the state you asked for before admitting the panel never answered. Counts SILENCE only — every arming or entry-delay read restarts it, so a long exit delay does not need a long timeout here.",
+              "e_how_long_card",
             selector: { number: { min: 1000, max: 60000, step: 500, mode: "box" } },
           },
           {
             name: "hint_ms",
-            label: "How long a refusal hint stays up (ms, default 2000)",
+            label: "e_how_long_refusa",
             selector: { number: { min: 500, max: 8000, step: 100, mode: "box" } },
           },
         ],
       },
       {
-        title: "Zones",
+        title: "e_zones",
         icon: "mdi:door-closed-lock",
         expanded: false,
         fields: [
           {
             name: "zone_filter",
-            label: "Find zones automatically",
+            label: "e_find_zones_automa",
             helper:
-              "An entity_id prefix (sensor.ultrasync_zone) or a regex. Leave empty and add zones by hand below instead. A hand-written list always wins over this.",
+              "e_entity_id_prefix",
             selector: { text: {} },
           },
           {
             name: "zone_pattern",
-            label: "Zone number pattern (default zone(\\d+)state$)",
+            label: "e_zone_number_patter",
             helper:
-              "How to read the panel's zone NUMBER out of an entity_id — the bypass services take a number, not an entity. A zone this does not match offers no Bypass button rather than firing a call with no zone.",
+              "e_how_read_panel",
             selector: { text: {} },
           },
           {
             name: "zone_settle_ms",
-            label: "Settle before a zone counts as ready again (ms, default 8000)",
+            label: "e_settle_before_zone",
             helper:
-              "Going NOT ready is always immediate — that is the warning, and it must never be late. This only delays a zone leaving the not-ready list, so a door being closed does not make the card jump while a contact bounces.",
+              "e_going_not_ready",
             selector: { number: { min: 0, max: 60000, step: 500, mode: "box" } },
           },
           {
             name: "zone_flap_detect",
-            label: "Treat zones that flap as movement detectors",
+            label: "e_treat_zones_flap",
             helper:
-              "Last-resort fallback, for zones with nothing else to go on. A zone that changes repeatedly is behaving like a PIR, not a door: it keeps its place in the list and just recolours, instead of joining the not-ready group and turning the arm gesture amber. Zones are classified from device_class first, then from the integration's own icon, and a per-zone override always wins. Smoke, heat, gas and water zones are never reached by this.",
+              "e_last_resort_fallba",
             selector: { boolean: {} },
           },
           {
             name: "zone_flap_count",
-            label: "Changes before a zone counts as flapping (default 6)",
+            label: "e_change_before_zone",
             selector: { number: { min: 2, max: 50, step: 1, mode: "box" } },
           },
           {
             name: "zone_flap_window_ms",
-            label: "Window those changes are counted over (ms, default 60000)",
+            label: "e_window_those_change",
             selector: { number: { min: 1000, max: 600000, step: 1000, mode: "box" } },
           },
           {
             name: "bypass_from_can_bypass",
-            label: "Read can_bypass as the bypass indicator",
+            label: "e_read_can_bypass",
             helper:
-              "On by default. Some panels never mark a zone's state as bypassed and instead stop allowing further bypass on it, so a can_bypass of false on an otherwise-ready zone means it is already skipped. Turn this off if your panel uses can_bypass to mean a zone can never be bypassed at all, or every such zone will be reported as skipped.",
+              "e_on_by_defaul",
             selector: { boolean: {} },
           },
           {
             name: "bypass_from_can_bypass_when_not_ready",
-            label: "Trust can_bypass even when not ready",
+            label: "e_trust_can_bypass",
             helper:
-              "Off by default. Enable only when your panel uses can_bypass: false as the authoritative already-bypassed signal even while the zone state says Not Ready.",
+              "e_off_by_defaul2",
             selector: { boolean: {} },
           },
           {
             name: "allow_safety_bypass",
-            label: "Allow bypassing smoke and heat detectors",
+            label: "e_allow_bypass_smoke",
             helper:
-              "Off by default. The panel permits it, but skipping a 24-hour zone arms the house with fire detection deliberately excluded, and it does not fix the fault it hides. Turn this on only if you mean it.",
+              "e_off_by_defaul3",
             selector: { boolean: {} },
           },
           {
             name: "bypass_action",
-            label: "Bypass action",
+            label: "e_bypass_action",
             helper:
-              'Fired by the Bypass button. Write {zone} anywhere in the data and the zone number is substituted in — e.g. ultrasync.bypass with data zone: {zone}. Leave empty to hide the button everywhere.',
+              "e_fired_by_bypass",
             selector: { ui_action: { default_action: "none" } },
           },
           {
             name: "unbypass_action",
-            label: "Un-bypass action",
-            helper: "Fired by tapping a bypassed chip. Same {zone} substitution.",
+            label: "e_un_bypass_action",
+            helper: "e_fired_by_tappin",
             selector: { ui_action: { default_action: "none" } },
           },
         ],
       },
       {
-        title: "Layout",
+        title: "e_layout",
         icon: "mdi:view-agenda-outline",
         fields: [
-          { name: "hero", label: "Show the shape, state and sub-line", selector: { boolean: {} } },
-          { name: "footnote", label: "Show the explanation line under the buttons", selector: { boolean: {} } },
+          { name: "hero", label: "e_show_shape_state", selector: { boolean: {} } },
+          { name: "footnote", label: "e_show_explan_line", selector: { boolean: {} } },
           {
             name: "zones_start_expanded",
-            label: "Start with the ready zones expanded",
+            label: "e_start_with_ready",
             selector: { boolean: {} },
           },
           {
             name: "show_unavailable",
-            label: "List zones the panel cannot see",
+            label: "e_list_zones_panel",
             selector: { boolean: {} },
           },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
           {
             name: "armed_color",
-            label: "Accent while armed (default primary)",
-            helper: "Worn by the shape and by the active mode button, so the two read as one object.",
+            label: "e_accent_while_armed",
+            helper: "e_worn_by_shape",
             color: true,
             selector: { text: {} },
           },
-          { name: "armed_color_on", label: "Ink on that accent", color: true, selector: { text: {} } },
-          { name: "background", label: "Card background", color: true, selector: { text: {} } },
-          { name: "background_on", label: "Card text", color: true, selector: { text: {} } },
+          { name: "armed_color_on", label: "e_ink_on_accent", color: true, selector: { text: {} } },
+          { name: "background", label: "e_card_backgr", color: true, selector: { text: {} } },
+          { name: "background_on", label: "e_card_text", color: true, selector: { text: {} } },
           {
             name: "disarmed_icon",
-            label: 'Shape glyph while disarmed (default "shield")',
+            label: "e_shape_glyph_while",
             selector: { icon: {} },
           },
           {
             name: "triggered_icon",
-            label: 'Shape glyph while triggered (default "crisis-alert")',
+            label: "e_shape_glyph_while2",
             selector: { icon: {} },
           },
         ],
       },
       {
-        title: "Mode labels and icons",
+        title: "e_mode_labels_icons",
         icon: "mdi:text-short",
         expanded: false,
         fields: MODE_OPTIONS.flatMap((m) => [
-          { name: `label_${m.value}`, label: `${m.label} — label`, selector: { text: {} } },
-          { name: `icon_${m.value}`, label: `${m.label} — icon`, selector: { icon: {} } },
+          { name: `label_${m.value}`, label: `${t(m.label, this.hass)} — ${t("e_label", this.hass)}`, selector: { text: {} } },
+          { name: `icon_${m.value}`, label: `${t(m.label, this.hass)} — ${t("e_icon", this.hass)}`, selector: { icon: {} } },
         ]),
       },
       {
-        title: "Actions",
+        title: "e_actions",
         icon: "mdi:gesture-tap",
         // Only the SHAPE takes a tap. The mode buttons deliberately have no tap
         // path at all — an alarm that can be armed by a stray tap while
@@ -372,13 +372,13 @@ class MateriaAlarmEditor extends SmartEditorBase {
         fields: [
           {
             name: "tap_action",
-            label: "Tapping the shape",
+            label: "e_tappin_shape",
             selector: { ui_action: { default_action: "more-info" } },
           },
         ],
       },
       {
-        title: "Disabled",
+        title: "e_disabled",
         icon: "mdi:cancel",
         expanded: false,
         fields: [DISABLED_FIELD],
@@ -392,25 +392,25 @@ class MateriaAlarmEditor extends SmartEditorBase {
     return [
       {
         name: "entity",
-        label: "Zone sensor",
+        label: "e_zone_sensor",
         helper:
-          'A door, window or contact. Not ready means on / open / unlocked, or the panel\'s own "Not Ready"; a state starting with "Bypass" counts as bypassed. Whether a Bypass button appears is the panel\'s call, via its can_bypass attribute.',
+          "e_door_window_contac",
         selector: { entity: { domain: ["binary_sensor", "sensor", "lock", "cover", "input_boolean", "switch"] } },
       },
-      { name: "name", label: "Name (optional — defaults to the entity name)", selector: { text: {} } },
-      { name: "icon", label: "Icon (optional)", selector: { icon: {} } },
+      { name: "name", label: "e_name_option_defaul", selector: { text: {} } },
+      { name: "icon", label: "e_icon_option", selector: { icon: {} } },
       {
         name: "safety",
-        label: "24-hour zone (smoke, heat, gas, water)",
+        label: "e_24_hour_zone",
         helper:
-          "Normally detected from device_class or the integration's icon, and remembered if the zone goes offline. Pin it here for a zone that is already unavailable when the dashboard loads, since there is nothing to read then. A 24-hour zone always blocks arming, never counts as a movement detector, and is not offered a Bypass button.",
+          "e_normal_detect_from",
         selector: { boolean: {} },
       },
       {
         name: "transient",
-        label: "Movement detector",
+        label: "e_moveme_detect",
         helper:
-          "Overrides the automatic guess. On: this zone never blocks arming and never turns the gesture amber — it keeps its row and recolours. Off: it always blocks. Leave unset to classify from device_class, falling back to whether it flaps.",
+          "e_overri_automa_guess",
         selector: { boolean: {} },
       },
     ];
@@ -462,25 +462,19 @@ class MateriaAlarmEditor extends SmartEditorBase {
   _zoneTitle(zone, i) {
     if (zone.name) return zone.name;
     const st = zone.entity ? this.hass?.states[zone.entity] : null;
-    return st?.attributes?.friendly_name || zone.entity || `Zone ${i + 1}`;
+    return st?.attributes?.friendly_name || zone.entity || t("e_zone_n", this.hass, { n: i + 1 });
   }
 
   _renderExtra() {
     const zones = this._zones();
     return html`
       <div class="options-header">
-        <span>Zones</span>
+        <span>${t("e_zones", this.hass)}</span>
         <ha-icon-button @click=${this._addZone}>
           <ha-icon icon="mdi:plus"></ha-icon>
         </ha-icon-button>
       </div>
-      <div class="options-note">
-        Only needed when you are NOT using "Find zones automatically" above, or
-        when you want a curated subset. The card sorts these itself — whatever
-        needs a decision floats to the top, unavailable zones next, and
-        anything bypassed drops to the bottom — so this order only matters as a
-        tie-break inside a group.
-      </div>
+      <div class="options-note">${t("e_zones_note", this.hass)}</div>
 
       ${sortableList(
         (from, to) => this._moveZone(from, to),
@@ -503,7 +497,7 @@ class MateriaAlarmEditor extends SmartEditorBase {
                       <ha-form
                         .hass=${this.hass}
                         .data=${zone}
-                        .schema=${this._zoneSchema}
+                        .schema=${localize(this._zoneSchema, this.hass)}
                         .computeLabel=${computeLabel}
                         @value-changed=${(e) => this._updateZone(i, e.detail.value)}
                       ></ha-form>

@@ -1,6 +1,7 @@
 import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
+import { localize, t } from "../../utils/i18n.js";
 
 class MateriaCarouselEditor extends SmartEditorBase {
   static properties = {
@@ -71,7 +72,7 @@ class MateriaCarouselEditor extends SmartEditorBase {
     const hasItemEntities = (this._config?.items || []).some((i) => i.entity);
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           ...(hasItemEntities
@@ -79,34 +80,34 @@ class MateriaCarouselEditor extends SmartEditorBase {
             : [
                 {
                   name: "entity",
-                  label: "Entity holding the selection (optional)",
-                  helper: "Only needed when items don't carry their own entity — a room queue's text, an input_select.",
+                  label: "e_entity_holdin_select",
+                  helper: "e_only_needed_when",
                   selector: { entity: {} },
                 },
-                { name: "attribute", label: "Attribute (instead of the state)", selector: { text: {} } },
-                { name: "multi_select", label: "Multi-select (state is a comma-separated list)", selector: { boolean: {} } },
+                { name: "attribute", label: "e_attrib_instea_state", selector: { text: {} } },
+                { name: "multi_select", label: "e_multi_select_state", selector: { boolean: {} } },
               ]),
           {
             name: "carousel",
-            label: "Carousel (horizontal scroll instead of a wrapped grid)",
+            label: "e_carous_horizo_scroll",
             selector: { boolean: {} },
           },
         ],
       },
       {
-        title: "Auto-sort",
+        title: "e_auto_sort",
         icon: "mdi:sort-variant",
         fields: [
           {
             name: "sort_by_history",
-            label: "Sort by pick frequency on load",
-            helper: "Reads the tracked entity's recent history once when the card loads and puts the most-often-picked values first — the tiles you actually use float to the front instead of always sitting in configured order.",
+            label: "e_sort_by_pick",
+            helper: "e_reads_tracke_entity",
             selector: { boolean: {} },
           },
           ...(sortable
             ? [{
                 name: "sort_history_days",
-                label: "History window, in days (default 30)",
+                label: "e_histor_window_in",
                 default: 30,
                 selector: { number: { min: 1, max: 365, mode: "box" } },
               }]
@@ -114,15 +115,15 @@ class MateriaCarouselEditor extends SmartEditorBase {
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "color", label: "Selected tile color", color: true, template: true, selector: { text: {} } },
-          { name: "color_on", label: "Selected tile text", color: true, template: true, selector: { text: {} } },
+          { name: "color", label: "e_select_tile_color", color: true, template: true, selector: { text: {} } },
+          { name: "color_on", label: "e_select_tile_text", color: true, template: true, selector: { text: {} } },
         ],
       },
       {
-        title: "Disabled",
+        title: "e_disabled",
         icon: "mdi:cancel",
         expanded: false,
         fields: [DISABLED_FIELD],
@@ -134,17 +135,17 @@ class MateriaCarouselEditor extends SmartEditorBase {
     return [
       { name: "label", template: true, selector: { text: {} } },
       { name: "icon", template: true, selector: { icon: {} } },
-      { name: "secondary", label: "Secondary line (optional)", selector: { text: {} } },
+      { name: "secondary", label: "e_second_line_option", selector: { text: {} } },
       {
         name: "entity",
-        label: "Entity (optional — this tile's own state)",
-        helper: "A room's own input_boolean, say — drives the tile's highlight independent of the card's tracked entity.",
+        label: "e_entity_option_tile",
+        helper: "e_room_s_own",
         selector: { entity: {} },
       },
-      { name: "value", label: "Value (when there's no per-item entity)", selector: { text: {} } },
+      { name: "value", label: "e_value_when_there", selector: { text: {} } },
       {
         name: "tap_action",
-        label: "Action (overrides the default toggle/select)",
+        label: "e_action_overri_defaul",
         selector: { ui_action: { default_action: "none" } },
       },
     ];
@@ -154,7 +155,7 @@ class MateriaCarouselEditor extends SmartEditorBase {
     const items = this._config?.items || [];
     return html`
       <div class="options-header">
-        <span>Items</span>
+        <span>${t("e_items", this.hass)}</span>
         <ha-icon-button @click=${this._addItem}>
           <ha-icon icon="mdi:plus"></ha-icon>
         </ha-icon-button>
@@ -167,7 +168,7 @@ class MateriaCarouselEditor extends SmartEditorBase {
             <div class="option-card">
               <div class="option-header">
                 <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
-                <span>${item.label || item.value || `Item ${i + 1}`}</span>
+                <span>${item.label || item.value || t("e_item_n", this.hass, { n: i + 1 })}</span>
                 <ha-icon-button @click=${() => this._toggleExpand(i)}>
                   <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
                 </ha-icon-button>
@@ -181,7 +182,7 @@ class MateriaCarouselEditor extends SmartEditorBase {
                       <ha-form
                         .hass=${this.hass}
                         .data=${item}
-                        .schema=${this._itemSchema}
+                        .schema=${localize(this._itemSchema, this.hass)}
                         .computeLabel=${computeLabel}
                         @value-changed=${(e) => this._updateItem(i, e.detail.value)}
                       ></ha-form>

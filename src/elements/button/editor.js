@@ -1,6 +1,7 @@
 import { html, css } from "lit";
 import { computeLabel } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
+import { localize, t } from "../../utils/i18n.js";
 
 class MateriaButtonEditor extends SmartEditorBase {
   static properties = {
@@ -70,7 +71,7 @@ class MateriaButtonEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Button",
+        title: "e_button",
         icon: "mdi:gesture-tap-button",
         fields: [
           { name: "icon", template: true, selector: { icon: {} }, context: { icon_entity: "entity" } },
@@ -78,22 +79,22 @@ class MateriaButtonEditor extends SmartEditorBase {
           {
             name: "variant",
             selector: { select: { mode: "dropdown", options: [
-              { value: "elevated", label: "Elevated" },
-              { value: "filled", label: "Filled" },
-              { value: "tonal", label: "Tonal" },
-              { value: "outlined", label: "Outlined" },
-              { value: "text", label: "Text" },
+              { value: "elevated", label: "e_elevated" },
+              { value: "filled", label: "e_filled" },
+              { value: "tonal", label: "e_tonal" },
+              { value: "outlined", label: "e_outlined" },
+              { value: "text", label: "e_text" },
             ] } },
           },
           {
             name: "role",
-            label: "Color role",
-            helper: "Unset = each variant's spec default (filled → primary, tonal → secondary).",
+            label: "e_color_role",
+            helper: "e_unset_each_varian",
             selector: { select: { mode: "dropdown", options: [
-              { value: "primary", label: "Primary" },
-              { value: "secondary", label: "Secondary" },
-              { value: "tertiary", label: "Tertiary" },
-              { value: "error", label: "Error" },
+              { value: "primary", label: "e_primary" },
+              { value: "secondary", label: "e_secondary" },
+              { value: "tertiary", label: "e_tertiary" },
+              { value: "error", label: "gt_state_error" },
             ] } },
           },
           {
@@ -109,8 +110,8 @@ class MateriaButtonEditor extends SmartEditorBase {
           {
             name: "shape",
             selector: { select: { mode: "dropdown", options: [
-              { value: "round", label: "Round (pill)" },
-              { value: "square", label: "Square" },
+              { value: "round", label: "e_round_pill" },
+              { value: "square", label: "e_square" },
             ] } },
           },
           { name: "wide", selector: { boolean: {} } },
@@ -119,14 +120,14 @@ class MateriaButtonEditor extends SmartEditorBase {
         ],
       },
       {
-        title: "Behavior",
+        title: "e_behavior",
         icon: "mdi:tune",
         fields: [
-          { name: "active_state", label: "Active state", helper: "State(s) considered active (defaults by domain)", selector: { text: {} } },
-          { name: "morph_on_active", label: "Morph shape when active", selector: { boolean: {} } },
+          { name: "active_state", label: "e_active_state", helper: "e_state_s_consid", selector: { text: {} } },
+          { name: "morph_on_active", label: "e_morph_shape_when", selector: { boolean: {} } },
           {
             name: "active_variant",
-            label: "Variant when active",
+            label: "e_varian_when_active",
             selector: {
               select: {
                 mode: "dropdown",
@@ -137,10 +138,10 @@ class MateriaButtonEditor extends SmartEditorBase {
         ],
       },
       {
-        title: "Actions",
+        title: "e_actions",
         icon: "mdi:gesture-tap",
         fields: [
-          { name: "tap_action", label: "Default action", selector: { ui_action: {} } },
+          { name: "tap_action", label: "e_defaul_action", selector: { ui_action: {} } },
         ],
       },
     ];
@@ -150,7 +151,7 @@ class MateriaButtonEditor extends SmartEditorBase {
     const rows = this._actionRows || [];
     return html`
       <div class="section-header">
-        <span>Action mappings</span>
+        <span>${t("e_action_mappings", this.hass)}</span>
         <ha-icon-button @click=${this._addMapping}>
           <ha-icon icon="mdi:plus"></ha-icon>
         </ha-icon-button>
@@ -160,7 +161,7 @@ class MateriaButtonEditor extends SmartEditorBase {
         (row, i) => html`
           <div class="mapping-card">
             <div class="mapping-header">
-              <span>${row.state || `Mapping ${i + 1}`}</span>
+              <span>${row.state || t("e_mapping_n", this.hass, { n: i + 1 })}</span>
               <ha-icon-button @click=${() => this._toggleExpand(i)}>
                 <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
               </ha-icon-button>
@@ -174,7 +175,7 @@ class MateriaButtonEditor extends SmartEditorBase {
                     <ha-form
                       .hass=${this.hass}
                       .data=${row}
-                      .schema=${this._mappingSchema}
+                      .schema=${localize(this._mappingSchema, this.hass)}
                       .computeLabel=${computeLabel}
                       @value-changed=${(e) => this._updateMapping(i, e.detail.value)}
                     ></ha-form>
@@ -189,8 +190,8 @@ class MateriaButtonEditor extends SmartEditorBase {
 
   get _mappingSchema() {
     return [
-      { name: "state", required: true, helper: "Use 'default' for the fallback", selector: { text: {} } },
-      { name: "tap_action", label: "Action", selector: { ui_action: {} } },
+      { name: "state", required: true, helper: "e_use_defaul_for", selector: { text: {} } },
+      { name: "tap_action", label: "sched_action", selector: { ui_action: {} } },
     ];
   }
 

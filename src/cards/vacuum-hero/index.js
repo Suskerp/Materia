@@ -315,15 +315,15 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
       this._stateOf(id) === "on" ? { icon, text, severity, entity: id } : null;
 
     const list = [
-      err(c.error, "mdi:robot-vacuum-alert", this.config.error_label ?? "Vacuum error"),
-      err(c.dock_error, "mdi:home-alert-outline", this.config.dock_error_label ?? "Dock error"),
-      flag(c.water_shortage, "mdi:water-alert-outline", "Water shortage - cannot mop", "error"),
-      flag(c.clean_water, "mdi:water-outline", "Clean water tank needs refilling", "warning"),
-      flag(c.dirty_water, "mdi:water-off-outline", "Dirty water tank needs emptying", "warning"),
+      err(c.error, "mdi:robot-vacuum-alert", this.config.error_label ?? t("vh_vacuum_error", this.hass)),
+      err(c.dock_error, "mdi:home-alert-outline", this.config.dock_error_label ?? t("vh_dock_error", this.hass)),
+      flag(c.water_shortage, "mdi:water-alert-outline", t("vh_water_shortage", this.hass), "error"),
+      flag(c.clean_water, "mdi:water-outline", t("vh_clean_water_refill", this.hass), "warning"),
+      flag(c.dirty_water, "mdi:water-off-outline", t("vh_dirty_water_empty", this.hass), "warning"),
       ...this._lowConsumables().map((id) => ({
         icon: "mdi:wrench-outline",
         text: explainConsumable(id, this.hass.locale?.language)
-          ?? `${this.hass.states[id]?.attributes?.friendly_name ?? id} needs attention`,
+          ?? t("vh_needs_attention", this.hass, { name: this.hass.states[id]?.attributes?.friendly_name ?? id }),
         severity: "warning",
         entity: id,
         // Once you've done the chore, clearing the counter is the next thing
@@ -396,7 +396,7 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
           </ha-card>`;
       }
       return html`<ha-card><div class="stack"><div class="hero">
-        <div class="content"><div class="title">Entity not found</div></div>
+        <div class="content"><div class="title">${t("entity_not_found", this.hass)}</div></div>
       </div></div></ha-card>`;
     }
     const unavailable = this._isUnavailable(st);
@@ -534,7 +534,7 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
                 ${alert.reset
                   ? html`<button
                       class="alert-action"
-                      title="Reset"
+                      title=${t("reset", this.hass)}
                       @click=${(e) => {
                         // The strip itself opens more-info; the button must not.
                         e.stopPropagation();

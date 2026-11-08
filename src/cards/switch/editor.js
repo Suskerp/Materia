@@ -8,32 +8,32 @@ class MateriaSwitchEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: {} } },
-          { name: "name", label: "Name", selector: { text: {} } },
+          { name: "name", label: "e_name", selector: { text: {} } },
           { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
-          { name: "secondary", label: "Secondary text / template", template: true, selector: { text: {} } },
+          { name: "secondary", label: "e_second_text_templa", template: true, selector: { text: {} } },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "color", label: "Row color (e.g. escalate from state)", color: true, template: true, selector: { text: {} } },
-          { name: "color_on", label: "Text / icon color", color: true, template: true, selector: { text: {} } },
-          { name: "switch_color", label: "Switch track color when on", color: true, template: true, selector: { text: {} } },
-          { name: "switch_color_on", label: "Switch thumb color when on", color: true, template: true, selector: { text: {} } },
+          { name: "color", label: "e_row_color_escala", color: true, template: true, selector: { text: {} } },
+          { name: "color_on", label: "e_text_icon_color", color: true, template: true, selector: { text: {} } },
+          { name: "switch_color", label: "e_switch_track_color", color: true, template: true, selector: { text: {} } },
+          { name: "switch_color_on", label: "e_switch_thumb_color", color: true, template: true, selector: { text: {} } },
         ],
       },
       {
-        title: "Actions",
+        title: "e_actions",
         icon: "mdi:gesture-tap",
         fields: [{ name: "tap_action", selector: { ui_action: { default_action: "toggle" } } }],
       },
       {
-        title: "Disabled",
+        title: "e_disabled",
         icon: "mdi:cancel",
         expanded: false,
         fields: [DISABLED_FIELD],

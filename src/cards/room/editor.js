@@ -2,6 +2,7 @@ import { html, css } from "lit";
 import { computeLabel } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, isTemplate } from "../../utils/smart-editor.js";
 import { applyCardFormDefaults } from "../card/editor.js";
+import { localize, t } from "../../utils/i18n.js";
 
 class MateriaRoomEditor extends SmartEditorBase {
   static properties = {
@@ -107,7 +108,7 @@ class MateriaRoomEditor extends SmartEditorBase {
 
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: {} } },
@@ -122,23 +123,23 @@ class MateriaRoomEditor extends SmartEditorBase {
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
           { name: "columns", selector: { number: { min: 1, max: 6, mode: "slider" } } },
-          { name: "color", label: "Active background", color: true, template: true, selector: { text: {} } },
-          { name: "color_on", label: "Active text / icon", color: true, template: true, selector: { text: {} } },
+          { name: "color", label: "e_active_backgr", color: true, template: true, selector: { text: {} } },
+          { name: "color_on", label: "e_active_text_icon", color: true, template: true, selector: { text: {} } },
           { name: "show_state", selector: { boolean: {} } },
-          { name: "show_last_changed", label: "Show last changed", selector: { boolean: {} } },
-          { name: "subtitle_inline", label: "Subtitle inline with state", selector: { boolean: {} } },
+          { name: "show_last_changed", label: "e_show_last_change", selector: { boolean: {} } },
+          { name: "subtitle_inline", label: "e_subtit_inline_with", selector: { boolean: {} } },
           ...(hasSlider ? [{ name: "show_slider", selector: { boolean: {} } }] : []),
-          ...(isLight ? [{ name: "slider_turn_off", label: "Slider can turn off", selector: { boolean: {} } }] : []),
+          ...(isLight ? [{ name: "slider_turn_off", label: "e_slider_can_turn", selector: { boolean: {} } }] : []),
           { name: "show_sub_buttons", selector: { boolean: {} } },
-          ...(isCover ? [{ name: "show_stop", label: "Show stop", selector: { boolean: {} } }] : []),
+          ...(isCover ? [{ name: "show_stop", label: "e_show_stop", selector: { boolean: {} } }] : []),
         ],
       },
       {
-        title: "Actions",
+        title: "e_actions",
         icon: "mdi:gesture-tap",
         fields: [
           { name: "tap_action", selector: { ui_action: { default_action: "toggle" } } },
@@ -155,8 +156,8 @@ class MateriaRoomEditor extends SmartEditorBase {
       iconIsTemplate
         ? { name: "icon", required: true, selector: { template: {} } }
         : { name: "icon", required: true, selector: { icon: {} } },
-      { name: "name", label: "Label (optional)", selector: { text: {} } },
-      { name: "tap_action", label: "Action", selector: { ui_action: {} } },
+      { name: "name", label: "e_label_option", selector: { text: {} } },
+      { name: "tap_action", label: "sched_action", selector: { ui_action: {} } },
     ];
   }
 
@@ -170,7 +171,7 @@ class MateriaRoomEditor extends SmartEditorBase {
 
     return html`
       <div class="section-header">
-        <span>Custom sub-buttons (overrides auto)</span>
+        <span>${t("e_custom_subbuttons", this.hass)}</span>
         <ha-icon-button @click=${this._addSubButton}>
           <ha-icon icon="mdi:plus"></ha-icon>
         </ha-icon-button>
@@ -180,7 +181,7 @@ class MateriaRoomEditor extends SmartEditorBase {
         (btn, i) => html`
           <div class="button-card">
             <div class="button-header" @click=${() => this._toggleSubButton(i)}>
-              <span>${btn.name || (btn.icon && !isTemplate(btn.icon) ? btn.icon : `Button ${i + 1}`)}</span>
+              <span>${btn.name || (btn.icon && !isTemplate(btn.icon) ? btn.icon : t("e_button_n", this.hass, { n: i + 1 }))}</span>
               <ha-icon-button @click=${(e) => { e.stopPropagation(); this._toggleSubButton(i); }}>
                 <ha-icon icon=${this._expandedButton === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
               </ha-icon-button>
@@ -194,7 +195,7 @@ class MateriaRoomEditor extends SmartEditorBase {
                     <ha-form
                       .hass=${this.hass}
                       .data=${btn}
-                      .schema=${this._subButtonSchema(btn)}
+                      .schema=${localize(this._subButtonSchema(btn), this.hass)}
                       .computeLabel=${computeLabel}
                       @value-changed=${(e) => this._subButtonChanged(i, e.detail.value)}
                     ></ha-form>
@@ -205,7 +206,7 @@ class MateriaRoomEditor extends SmartEditorBase {
         `
       )}
 
-      <div class="section-header"><span>Cards</span></div>
+      <div class="section-header"><span>${t("e_cards", this.hass)}</span></div>
 
       <div class="toolbar">
         <div class="tabs">

@@ -1,6 +1,7 @@
 import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
+import { localize, t } from "../../utils/i18n.js";
 
 class MateriaSelectHeroEditor extends SmartEditorBase {
   static properties = {
@@ -80,24 +81,24 @@ class MateriaSelectHeroEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Setup",
+        title: "e_setup",
         icon: "mdi:tune",
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: ["select", "input_select"] } } },
-          { name: "name", label: "Eyebrow above the option name", selector: { text: {} } },
+          { name: "name", label: "e_eyebro_above_option", selector: { text: {} } },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
           {
             name: "variant",
-            label: "Emphasis",
-            helper: "Hero is the filled statement block; sidekick is its quiet companion for pages that already have a hero.",
+            label: "e_emphasis",
+            helper: "e_hero_filled_statem",
             selector: { select: { mode: "dropdown", options: [
-              { value: "hero", label: "Hero — filled, owns the panel" },
-              { value: "sidekick", label: "Sidekick — quiet peer of the bars" },
+              { value: "hero", label: "e_hero_filled_owns" },
+              { value: "sidekick", label: "e_sideki_quiet_peer2" },
             ] } },
           },
           // The shell hides the burst on sidekicks unconditionally — the
@@ -105,29 +106,29 @@ class MateriaSelectHeroEditor extends SmartEditorBase {
           // toggle is a no-op and offering it just breaks trust in the form.
           ...(this._config?.variant === "sidekick"
             ? []
-            : [{ name: "burst", label: "Show the decorative shape", selector: { boolean: {} } }]),
-          { name: "color", label: "Block background", color: true, selector: { text: {} } },
-          { name: "color_on", label: "Block text", color: true, selector: { text: {} } },
+            : [{ name: "burst", label: "e_show_decora_shape", selector: { boolean: {} } }]),
+          { name: "color", label: "e_block_backgr", color: true, selector: { text: {} } },
+          { name: "color_on", label: "e_block_text", color: true, selector: { text: {} } },
         ],
       },
       {
         // Inherited from the hero shell, so a mode card can carry the same
         // connected strip as its hero — e.g. "Mop pad still drying".
-        title: "Alerts",
+        title: "e_alerts",
         icon: "mdi:alert-circle-outline",
         expanded: false,
         fields: [
           {
             name: "alerts",
-            label: "Alert strip",
-            helper: "List of { entity?, state?, text (template), icon?, color?, tap_action? }. First match wins. A template that renders empty means no alert.",
+            label: "e_alert_strip",
+            helper: "e_list_entity_state",
             selector: { object: {} },
           },
-          { name: "alert_tints_hero", label: "An alert recolours the whole block", selector: { boolean: {} } },
+          { name: "alert_tints_hero", label: "e_alert_recolo_whole", selector: { boolean: {} } },
         ],
       },
       {
-        title: "Disabled",
+        title: "e_disabled",
         icon: "mdi:cancel",
         expanded: false,
         fields: [DISABLED_FIELD],
@@ -142,19 +143,19 @@ class MateriaSelectHeroEditor extends SmartEditorBase {
      nobody wonders where the drawing comes from. */
   get _optionSchema() {
     return [
-      { name: "label", label: "Name (the big title when chosen)", selector: { text: {} } },
-      { name: "short", label: "Pill label (defaults to the name)", selector: { text: {} } },
-      { name: "value", label: "Select option value", selector: { text: {} } },
-      { name: "secondary", label: "One line of consequence", selector: { text: {} } },
-      { name: "icon", label: "Icon (shown when there is no route glyph)", selector: { icon: {} } },
-      { name: "tap_action", label: "Action (overrides selecting the option)", selector: { ui_action: {} } },
+      { name: "label", label: "e_name_big_title", selector: { text: {} } },
+      { name: "short", label: "e_pill_label_defaul", selector: { text: {} } },
+      { name: "value", label: "e_select_option_value", selector: { text: {} } },
+      { name: "secondary", label: "e_one_line_conseq", selector: { text: {} } },
+      { name: "icon", label: "e_icon_shown_when", selector: { icon: {} } },
+      { name: "tap_action", label: "e_action_overri_select", selector: { ui_action: {} } },
     ];
   }
 
   _renderExtra() {
     return html`
       <div class="options-header">
-        <span>Options</span>
+        <span>${t("e_options", this.hass)}</span>
         <ha-icon-button @click=${this._addOption}>
           <ha-icon icon="mdi:plus"></ha-icon>
         </ha-icon-button>
@@ -167,8 +168,8 @@ class MateriaSelectHeroEditor extends SmartEditorBase {
             <div class="option-card">
               <div class="option-header">
                 <ha-icon class="drag-handle" icon="mdi:drag"></ha-icon>
-                <span>${opt.label || opt.value || `Option ${i + 1}`}</span>
-                ${opt.glyph ? html`<span class="glyph-note">route glyph (YAML)</span>` : ""}
+                <span>${opt.label || opt.value || t("e_option_n", this.hass, { n: i + 1 })}</span>
+                ${opt.glyph ? html`<span class="glyph-note">${t("e_route_glyph_yaml", this.hass)}</span>` : ""}
                 <ha-icon-button @click=${() => this._toggleExpand(i)}>
                   <ha-icon icon=${this._expanded === i ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
                 </ha-icon-button>
@@ -182,7 +183,7 @@ class MateriaSelectHeroEditor extends SmartEditorBase {
                       <ha-form
                         .hass=${this.hass}
                         .data=${opt}
-                        .schema=${this._optionSchema}
+                        .schema=${localize(this._optionSchema, this.hass)}
                         .computeLabel=${computeLabel}
                         @value-changed=${(e) => this._updateOptionForm(i, e.detail.value)}
                       ></ha-form>

@@ -2,6 +2,7 @@ import { html, css } from "lit";
 import { sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
 import { loadCardHelpers } from "../../styles/shared.js";
+import { t, tr } from "../../utils/i18n.js";
 
 export class MateriaExpanderEditor extends SmartEditorBase {
   static properties = {
@@ -92,18 +93,18 @@ export class MateriaExpanderEditor extends SmartEditorBase {
     const hasEntity = !!this._config?.entity;
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           {
             name: "entity",
-            label: "Entity (optional)",
-            helper: "With an entity the header wears an M3 switch and its state tones the row. Leave empty for a plain drawer.",
+            label: "e_entity_option",
+            helper: "e_with_entity_header",
             selector: { entity: {} },
           },
           {
             name: "name",
-            label: hasEntity ? "Name / template (defaults to the friendly name)" : "Name / template",
+            label: hasEntity ? "e_name_tpl_default" : "e_name_tpl",
             required: !hasEntity,
             // The other half of the same inconsistency: the card resolved
             // secondary and not name, and the editor offered template mode for
@@ -112,46 +113,46 @@ export class MateriaExpanderEditor extends SmartEditorBase {
             selector: { text: {} },
           },
           { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
-          { name: "secondary", label: "Secondary text / template", template: true, selector: { text: {} } },
+          { name: "secondary", label: "e_second_text_templa", template: true, selector: { text: {} } },
         ],
       },
       {
-        title: "Behaviour",
+        title: "e_behaviour",
         icon: "mdi:arrow-expand-vertical",
         fields: [
-          { name: "expanded", label: "Open by default", selector: { boolean: {} } },
+          { name: "expanded", label: "e_open_by_defaul", selector: { boolean: {} } },
           {
             name: "show_switch",
-            label: "Show the switch in the header",
-            helper: "Only applies when an entity is set.",
+            label: "e_show_switch_in",
+            helper: "e_only_applie_when",
             selector: { boolean: {} },
           },
-          { name: "flat", label: "Flat (no card chrome — for nesting)", selector: { boolean: {} } },
+          { name: "flat", label: "e_flat_no_card", selector: { boolean: {} } },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "color", label: "Row color (e.g. escalate from state)", color: true, template: true, selector: { text: {} } },
-          { name: "color_on", label: "Text / icon color", color: true, template: true, selector: { text: {} } },
-          { name: "switch_color", label: "Switch track color when on", color: true, template: true, selector: { text: {} } },
-          { name: "switch_color_on", label: "Switch thumb color when on", color: true, template: true, selector: { text: {} } },
+          { name: "color", label: "e_row_color_escala", color: true, template: true, selector: { text: {} } },
+          { name: "color_on", label: "e_text_icon_color", color: true, template: true, selector: { text: {} } },
+          { name: "switch_color", label: "e_switch_track_color", color: true, template: true, selector: { text: {} } },
+          { name: "switch_color_on", label: "e_switch_thumb_color", color: true, template: true, selector: { text: {} } },
         ],
       },
       {
-        title: "Actions",
+        title: "e_actions",
         icon: "mdi:gesture-tap",
         fields: [
           {
             name: "tap_action",
-            label: "Switch action (overrides toggling the entity)",
+            label: "e_switch_action_overri",
             selector: { ui_action: { default_action: "toggle" } },
           },
         ],
       },
       {
-        title: "Disabled",
+        title: "e_disabled",
         icon: "mdi:cancel",
         expanded: false,
         fields: [DISABLED_FIELD],
@@ -165,19 +166,19 @@ export class MateriaExpanderEditor extends SmartEditorBase {
 
   /** Heading and hint above the card list; container editors that reuse this list override them. */
   get _cardsTitle() {
-    return "Behind the chevron";
+    return "e_behind_chevron";
   }
 
   get _cardsHint() {
-    return "These cards appear when the row is opened. The chevron only shows once there is at least one.";
+    return "e_behind_chevron_hint";
   }
 
   _renderExtra() {
     if (this._editingCard != null) return this._renderCardEditor();
     const cards = this._cards();
     return html`
-      <div class="cards-header"><span>${this._cardsTitle}</span></div>
-      <div class="cards-hint">${this._cardsHint}</div>
+      <div class="cards-header"><span>${tr(this._cardsTitle, this.hass)}</span></div>
+      <div class="cards-hint">${tr(this._cardsHint, this.hass)}</div>
 
       ${sortableList(
         (from, to) => this._moveCard(from, to),
@@ -207,7 +208,7 @@ export class MateriaExpanderEditor extends SmartEditorBase {
               }}
             ></hui-card-picker>
           `
-        : html`<div style="font-size:12px;opacity:.6;">Loading card picker…</div>`}
+        : html`<div style="font-size:12px;opacity:.6;">${t("e_loading_picker", this.hass)}</div>`}
     `;
   }
 
@@ -223,7 +224,7 @@ export class MateriaExpanderEditor extends SmartEditorBase {
         <ha-icon-button @click=${() => (this._editingCard = null)}>
           <ha-icon icon="mdi:arrow-left"></ha-icon>
         </ha-icon-button>
-        <span>Card ${i + 1} · ${cfg.type || "card"}</span>
+        <span>${t("e_card_n", this.hass, { n: i + 1 })} · ${cfg.type || "card"}</span>
       </div>
       ${customElements.get("hui-card-element-editor")
         ? html`
@@ -236,7 +237,7 @@ export class MateriaExpanderEditor extends SmartEditorBase {
               }}
             ></hui-card-element-editor>
           `
-        : html`<div style="font-size:12px;opacity:.6;">Loading card editor…</div>`}
+        : html`<div style="font-size:12px;opacity:.6;">${t("e_loading_editor", this.hass)}</div>`}
     `;
   }
 

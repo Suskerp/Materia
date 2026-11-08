@@ -5,12 +5,12 @@ class MateriaTimeInputEditor extends SmartEditorBase {
 
   _sections() {
     return [{
-      title: "Time",
+      title: "e_time",
       icon: "mdi:clock-outline",
       fields: [
         { name: "entity", required: true, selector: { entity: { domain: "input_datetime" } } },
-        { name: "name", label: "Label", selector: { text: {} } },
-        { name: "step", label: "Step in seconds", selector: { number: { min: 60, max: 3600, step: 60, mode: "box" } } },
+        { name: "name", label: "e_label", selector: { text: {} } },
+        { name: "step", label: "e_step_in_second", selector: { number: { min: 60, max: 3600, step: 60, mode: "box" } } },
       ],
     }];
   }

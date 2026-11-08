@@ -1,6 +1,7 @@
 import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
+import { localize, t } from "../../utils/i18n.js";
 
 class MateriaBarsEditor extends SmartEditorBase {
   static properties = {
@@ -83,72 +84,72 @@ class MateriaBarsEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Scale",
+        title: "e_scale",
         icon: "mdi:ruler",
         fields: [
           {
             name: "max",
-            label: "Full-scale value (optional)",
+            label: "e_full_scale_value",
             helper:
-              "All bars share one scale, or they cannot be compared. Set this when the domain has a real ceiling — an inverter's kW rating, say — so the bars stop rescaling every time the largest reading moves. Leave empty to scale to the largest current value.",
+              "e_all_bars_share",
             selector: { number: { min: 0, step: "any", mode: "box" } },
           },
           {
             name: "precision",
-            label: "Decimal places (optional)",
-            helper: "Leave empty to choose per value: whole numbers above 100, one decimal below.",
+            label: "e_decima_places_option",
+            helper: "e_leave_empty_choose",
             selector: { number: { min: 0, max: 4, step: 1, mode: "box" } },
           },
         ],
       },
       {
-        title: "Words",
+        title: "e_words",
         icon: "mdi:text-long",
         fields: [
           {
             name: "eyebrow",
-            label: "Block label (optional)",
-            helper: "Sits top-left, uppercased — what this block is. Rendered as a quiet eyebrow, not a headline.",
+            label: "e_block_label_option",
+            helper: "e_sits_top_left",
             template: true,
             selector: { text: {} },
           },
           {
             name: "meta",
-            label: "Freshness note (optional)",
+            label: "e_freshn_note_option",
             helper:
-              'Top-right, quieter still — how current the readings are ("bijgewerkt 1 min"). Templatable, so it can be a relative time.',
+              "e_top_right_quiete",
             template: true,
             selector: { text: {} },
           },
           {
             name: "status",
-            label: "Status line",
+            label: "e_status_line",
             helper:
-              "The sentence the page is opened to read. Templatable, so the install supplies its own wording in its own language — this card ships no prose.",
+              "e_senten_page_opened",
             template: true,
             selector: { text: {} },
           },
-          { name: "status_icon", label: "Status icon", template: true, selector: { icon: {} } },
-          { name: "status_color", label: "Status icon colour", color: true, template: true, selector: { text: {} } },
+          { name: "status_icon", label: "e_status_icon", template: true, selector: { icon: {} } },
+          { name: "status_color", label: "e_status_icon_colour", color: true, template: true, selector: { text: {} } },
           {
             name: "footnote",
-            label: "Footnote (optional)",
-            helper: "Quieter than the status it qualifies — a confidence note, a caveat, when the reading was taken.",
+            label: "e_footno_option",
+            helper: "e_quiete_than_status",
             template: true,
             selector: { text: {} },
           },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "background", label: "Card background", color: true, selector: { text: {} } },
-          { name: "background_on", label: "Card text", color: true, selector: { text: {} } },
+          { name: "background", label: "e_card_backgr", color: true, selector: { text: {} } },
+          { name: "background_on", label: "e_card_text", color: true, selector: { text: {} } },
         ],
       },
       {
-        title: "Disabled",
+        title: "e_disabled",
         icon: "mdi:cancel",
         expanded: false,
         fields: [DISABLED_FIELD],
@@ -158,17 +159,17 @@ class MateriaBarsEditor extends SmartEditorBase {
 
   get _rowSchema() {
     return [
-      { name: "entity", label: "Entity", selector: { entity: {} } },
+      { name: "entity", label: "e_entity", selector: { entity: {} } },
       {
         name: "attribute",
-        label: "Attribute (optional)",
-        helper: "Read an attribute instead of the state — for a sensor that carries several numbers at once.",
+        label: "e_attrib_option",
+        helper: "e_read_attrib_instea",
         selector: { attribute: {} },
         context: { filter_entity: "entity" },
       },
-      { name: "label", label: "Label (optional — defaults to the entity name)", template: true, selector: { text: {} } },
-      { name: "unit", label: "Unit (optional — defaults to the entity's own)", selector: { text: {} } },
-      { name: "color", label: "Bar colour", color: true, selector: { text: {} } },
+      { name: "label", label: "e_label_option_defaul", template: true, selector: { text: {} } },
+      { name: "unit", label: "e_unit_option_defaul", selector: { text: {} } },
+      { name: "color", label: "e_bar_colour", color: true, selector: { text: {} } },
     ];
   }
 
@@ -218,14 +219,14 @@ class MateriaBarsEditor extends SmartEditorBase {
   _rowTitle(row, i) {
     if (row.label && !String(row.label).includes("{{")) return row.label;
     const st = row.entity ? this.hass?.states[row.entity] : null;
-    return st?.attributes?.friendly_name || row.entity || `Row ${i + 1}`;
+    return st?.attributes?.friendly_name || row.entity || t("e_row_n", this.hass, { n: i + 1 });
   }
 
   _renderExtra() {
     const rows = this._rows();
     return html`
       <div class="options-header">
-        <span>Bars</span>
+        <span>${t("e_bars", this.hass)}</span>
         <ha-icon-button @click=${this._addRow}>
           <ha-icon icon="mdi:plus"></ha-icon>
         </ha-icon-button>
@@ -257,7 +258,7 @@ class MateriaBarsEditor extends SmartEditorBase {
                       <ha-form
                         .hass=${this.hass}
                         .data=${row}
-                        .schema=${this._rowSchema}
+                        .schema=${localize(this._rowSchema, this.hass)}
                         .computeLabel=${computeLabel}
                         @value-changed=${(e) => this._updateRow(i, e.detail.value)}
                       ></ha-form>

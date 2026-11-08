@@ -1,5 +1,6 @@
 import { html, css } from "lit";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { t } from "../../utils/i18n.js";
 
 class MateriaLockEditor extends SmartEditorBase {
   static styles = [
@@ -51,35 +52,35 @@ class MateriaLockEditor extends SmartEditorBase {
 
     return [
       {
-        title: "Setup",
+        title: "e_setup",
         icon: "mdi:tune",
         fields: [
           {
             name: "entity",
-            label: "Lock (optional)",
-            helper: "Leave empty to run self-contained — the card keeps its own state, with nothing to control.",
+            label: "e_lock_option",
+            helper: "e_leave_empty_run",
             selector: { entity: { domain: ["lock", "switch", "input_boolean"] } },
           },
           ...(isLock
             ? [{
                 name: "unlock_service",
-                label: "Unlatch service",
-                helper: "Open is for strikes/relays that don't stay meaningfully \"unlocked\" — the door swings rather than sitting unlatched (lock.open instead of lock.unlock). Locking always uses lock.lock.",
+                label: "e_unlatc_servic",
+                helper: "e_open_for_strike",
                 selector: { select: { mode: "dropdown", options: [
-                  { value: "unlock", label: "Unlock (lock.unlock)" },
-                  { value: "open", label: "Open (lock.open)" },
+                  { value: "unlock", label: "e_unlock_lock_unlock" },
+                  { value: "open", label: "e_open_lock_open" },
                 ] } },
               }]
             : []),
           {
             name: "gesture",
-            label: "Commit gesture",
+            label: "e_commit_gestur",
             selector: { select: { mode: "dropdown", options: [
-              { value: "slide", label: "Slide the handle across" },
-              { value: "hold", label: "Press and hold" },
+              { value: "slide", label: "e_slide_handle_across" },
+              { value: "hold", label: "e_press_hold" },
             ] } },
           },
-          { name: "shape", label: "Show the morphing lock shape", selector: { boolean: {} } },
+          { name: "shape", label: "e_show_morphi_lock", selector: { boolean: {} } },
           /* No silhouette picker for now: the cookie is the ONE shape whose
              symmetry period lets the in-flight spin land gracefully, so it is
              the shape the card ships with. shape_style stays supported in YAML
@@ -88,33 +89,33 @@ class MateriaLockEditor extends SmartEditorBase {
         ],
       },
       {
-        title: "Open button",
+        title: "e_open_button",
         icon: "mdi:door-open",
         expanded: hasOpenButton,
         fields: [
           {
             name: "open_action",
-            label: "Open action",
-            helper: "A separate, extra action available ONLY once unlocked (a relay pulse, a multi-step let-them-in sequence) — never a substitute for the gesture above, and disabled entirely while locked. Leave empty to hide the button.",
+            label: "e_open_action",
+            helper: "e_separa_extra_action",
             selector: { ui_action: { default_action: "none" } },
           },
           ...(hasOpenButton
             ? [
-                { name: "open_button_icon", label: 'Icon (default "door-open")', selector: { icon: {} } },
-                { name: "open_button_label", label: 'Label (default "Open")', selector: { text: {} } },
+                { name: "open_button_icon", label: "e_icon_defaul_door", selector: { icon: {} } },
+                { name: "open_button_label", label: "e_label_defaul_open", selector: { text: {} } },
               ]
             : []),
         ],
       },
       {
-        title: "Behaviour",
+        title: "e_behaviour",
         icon: "mdi:cog-outline",
         fields: [
           ...(hold
             ? [{
                 name: "hold_ms",
-                label: "Hold for (ms, default 800)",
-                helper: "Keep this above 500ms — the platform long-press timeout — or an ordinary long-press commits by accident.",
+                label: "e_hold_for_ms",
+                helper: "e_keep_above_500ms",
                 selector: { number: { min: 300, max: 5000, step: 50, mode: "box" } },
               }]
             : []),
@@ -122,78 +123,78 @@ class MateriaLockEditor extends SmartEditorBase {
             ? [
                 {
                   name: "locked_state",
-                  label: "State that means locked",
-                  helper: 'Defaults to "locked" for a lock and "off" for a switch — a relay strike is energised to release the door.',
+                  label: "e_state_means_locked",
+                  helper: "e_defaul_locked_for",
                   selector: { text: {} },
                 },
                 {
                   name: "pending_timeout_ms",
-                  label: "Give up waiting for the lock after (ms, default 10000)",
+                  label: "e_give_up_waitin3",
                   selector: { number: { min: 1000, max: 60000, step: 500, mode: "box" } },
                 },
               ]
             : [{
                 name: "initial_locked",
-                label: "Start out locked",
+                label: "e_start_out_locked",
                 selector: { boolean: {} },
               }]),
         ],
       },
       {
-        title: "Labels",
+        title: "e_labels",
         icon: "mdi:text-short",
         fields: [
           ...(hold
             ? [
-                { name: "unlock_hold_hint", label: 'While locked (default "Hold to unlock")', selector: { text: {} } },
-                { name: "lock_hold_hint", label: 'While unlocked (default "Hold to lock")', selector: { text: {} } },
+                { name: "unlock_hold_hint", label: "e_while_locked_defaul", selector: { text: {} } },
+                { name: "lock_hold_hint", label: "e_while_unlock_defaul", selector: { text: {} } },
               ]
             : [
-                { name: "unlock_hint", label: 'While locked (default "Slide to unlock")', selector: { text: {} } },
-                { name: "lock_hint", label: 'While unlocked (default "Slide to lock")', selector: { text: {} } },
+                { name: "unlock_hint", label: "e_while_locked_defaul2", selector: { text: {} } },
+                { name: "lock_hint", label: "e_while_unlock_defaul2", selector: { text: {} } },
               ]),
           ...(hasEntity
             ? [
-                { name: "locking_label", label: 'While locking (default "Locking…")', selector: { text: {} } },
-                { name: "unlocking_label", label: 'While unlocking (default "Unlocking…")', selector: { text: {} } },
-                { name: "jammed_label", label: 'When jammed (default "Jammed — check the door")', selector: { text: {} } },
+                { name: "locking_label", label: "e_while_lockin_defaul", selector: { text: {} } },
+                { name: "unlocking_label", label: "e_while_unlock_defaul3", selector: { text: {} } },
+                { name: "jammed_label", label: "e_when_jammed_defaul", selector: { text: {} } },
               ]
-            : [{ name: "demo_label", label: 'Self-contained note (default "Demo · no entity")', selector: { text: {} } }]),
+            : [{ name: "demo_label", label: "e_self_contai_note", selector: { text: {} } }]),
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "unlocked_color", label: "Background while unlocked", color: true, selector: { text: {} } },
-          { name: "unlocked_color_on", label: "Text while unlocked", color: true, selector: { text: {} } },
-          { name: "locked_color", label: "Background while locked", color: true, selector: { text: {} } },
-          { name: "locked_color_on", label: "Text while locked", color: true, selector: { text: {} } },
-          { name: "accent", label: "Accent (locked glyph and handle)", color: true, selector: { text: {} } },
-          { name: "accent_on", label: "Ink on the accent", color: true, selector: { text: {} } },
-          { name: "locked_icon", label: "Icon while locked", selector: { icon: {} } },
-          { name: "unlocked_icon", label: "Icon while unlocked", selector: { icon: {} } },
+          { name: "unlocked_color", label: "e_backgr_while_unlock", color: true, selector: { text: {} } },
+          { name: "unlocked_color_on", label: "e_text_while_unlock", color: true, selector: { text: {} } },
+          { name: "locked_color", label: "e_backgr_while_locked", color: true, selector: { text: {} } },
+          { name: "locked_color_on", label: "e_text_while_locked", color: true, selector: { text: {} } },
+          { name: "accent", label: "e_accent_locked_glyph", color: true, selector: { text: {} } },
+          { name: "accent_on", label: "e_ink_on_accent2", color: true, selector: { text: {} } },
+          { name: "locked_icon", label: "e_icon_while_locked", selector: { icon: {} } },
+          { name: "unlocked_icon", label: "e_icon_while_unlock", selector: { icon: {} } },
           ...(hasEntity
             ? [
                 {
                   name: "open_icon",
-                  label: 'Icon while literally open (default "door-open")',
-                  helper: "Rides on top of the unlocked colour, never its own — only the glyph changes.",
+                  label: "e_icon_while_litera",
+                  helper: "e_rides_on_top",
                   selector: { icon: {} },
                 },
-                { name: "jammed_color", label: "Background while jammed (default error container)", color: true, selector: { text: {} } },
-                { name: "jammed_color_on", label: "Text while jammed", color: true, selector: { text: {} } },
-                { name: "jammed_icon", label: 'Icon while jammed (default "warning")', selector: { icon: {} } },
+                { name: "jammed_color", label: "e_backgr_while_jammed", color: true, selector: { text: {} } },
+                { name: "jammed_color_on", label: "e_text_while_jammed", color: true, selector: { text: {} } },
+                { name: "jammed_icon", label: "e_icon_while_jammed", selector: { icon: {} } },
               ]
             : []),
         ],
       },
       {
-        title: "Actions",
+        title: "e_actions",
         icon: "mdi:gesture-tap",
         // Only the SHAPE takes a tap. The gesture track deliberately has none —
         // a lock that can be thrown by a stray tap defeats the whole control.
-        fields: [{ name: "tap_action", label: "Tapping the shape", selector: { ui_action: { default_action: "more-info" } } }],
+        fields: [{ name: "tap_action", label: "e_tappin_shape", selector: { ui_action: { default_action: "more-info" } } }],
       },
     ];
   }
@@ -243,29 +244,23 @@ class MateriaLockEditor extends SmartEditorBase {
     const entries = this._remapEntries();
     return html`
       <div class="options-header" style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;font-weight:600;font-size:14px;">
-        <span>State skips</span>
+        <span>${t("e_state_skips", this.hass)}</span>
         <ha-icon-button @click=${this._addRemap}>
           <ha-icon icon="mdi:plus"></ha-icon>
         </ha-icon-button>
       </div>
-      <div class="remap-note">
-        Treat one reported entity state as another, before anything else
-        reads it — for hardware that reports a real but misleading
-        transition (e.g. a relatch settling reported as "unlocking" seconds
-        after a door that was never locked). Example: from "unlocking" to
-        "unlocked".
-      </div>
+      <div class="remap-note">${t("e_state_skips_note", this.hass)}</div>
       ${entries.map(
         (e, i) => html`
           <div class="remap-row">
             <ha-textfield
-              label="From (raw state)"
+              .label=${t("e_from_raw", this.hass)}
               .value=${e.from}
               @change=${(ev) => this._updateRemapFrom(i, ev.target.value)}
             ></ha-textfield>
             <ha-icon class="remap-arrow" icon="mdi:arrow-right"></ha-icon>
             <ha-textfield
-              label="To"
+              .label=${t("e_to", this.hass)}
               .value=${e.to}
               @change=${(ev) => this._updateRemapTo(i, ev.target.value)}
             ></ha-textfield>

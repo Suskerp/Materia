@@ -18,47 +18,47 @@ class MateriaHeroEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
           { name: "entity", required: true, selector: { entity: {} } },
-          { name: "name", label: "Eyebrow text", selector: { text: {} } },
-          { name: "icon", label: "Eyebrow icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
-          { name: "title", label: "Big title (defaults to the state)", template: true, selector: { text: {} } },
-          { name: "value", label: "Headline number (defaults to the state)", template: true, selector: { text: {} } },
-          { name: "unit", label: "Unit after the number", selector: { text: {} } },
-          { name: "caption", label: "Caption beside the number", template: true, selector: { text: {} } },
-          { name: "secondary", label: "Sub-line", template: true, selector: { text: {} } },
+          { name: "name", label: "e_eyebro_text", selector: { text: {} } },
+          { name: "icon", label: "e_eyebro_icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
+          { name: "title", label: "e_big_title_defaul", template: true, selector: { text: {} } },
+          { name: "value", label: "e_headli_number_defaul", template: true, selector: { text: {} } },
+          { name: "unit", label: "e_unit_after_number", selector: { text: {} } },
+          { name: "caption", label: "e_captio_beside_number", template: true, selector: { text: {} } },
+          { name: "secondary", label: "e_sub_line", template: true, selector: { text: {} } },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
           {
             name: "variant",
-            label: "Emphasis",
-            helper: "Hero owns the panel; sidekick is its quiet companion — same anatomy one rung down, for pages that already have a hero.",
+            label: "e_emphasis",
+            helper: "e_hero_owns_panel",
             selector: { select: { mode: "dropdown", options: [
-              { value: "hero", label: "Hero — filled, owns the panel" },
-              { value: "sidekick", label: "Sidekick — quiet peer of the rows" },
+              { value: "hero", label: "e_hero_filled_owns" },
+              { value: "sidekick", label: "e_sideki_quiet_peer" },
             ] } },
           },
-          { name: "active_state", label: "State(s) that count as active", selector: { text: {} } },
+          { name: "active_state", label: "e_state_s_count", selector: { text: {} } },
           // The shell hides the burst on sidekicks unconditionally — the
           // decoration is the hero's statement mark — so on a sidekick this
           // toggle is a no-op and offering it just breaks trust in the form.
           ...(this._config?.variant === "sidekick"
             ? []
-            : [{ name: "burst", label: "Show the turning burst", selector: { boolean: {} } }]),
-          { name: "active_color", label: "Background while active", color: true, template: true, selector: { text: {} } },
-          { name: "active_color_on", label: "Text while active", color: true, template: true, selector: { text: {} } },
-          { name: "color", label: "Background at rest", color: true, template: true, selector: { text: {} } },
-          { name: "color_on", label: "Text at rest", color: true, template: true, selector: { text: {} } },
+            : [{ name: "burst", label: "e_show_turnin_burst", selector: { boolean: {} } }]),
+          { name: "active_color", label: "e_backgr_while_active", color: true, template: true, selector: { text: {} } },
+          { name: "active_color_on", label: "e_text_while_active", color: true, template: true, selector: { text: {} } },
+          { name: "color", label: "e_backgr_at_rest", color: true, template: true, selector: { text: {} } },
+          { name: "color_on", label: "e_text_at_rest", color: true, template: true, selector: { text: {} } },
         ],
       },
       {
-        title: "Actions",
+        title: "e_actions",
         icon: "mdi:gesture-tap",
         fields: [{ name: "tap_action", selector: { ui_action: { default_action: "more-info" } } }],
       },

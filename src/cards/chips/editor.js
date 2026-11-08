@@ -13,25 +13,25 @@ class MateriaChipsEditor extends SmartEditorBase {
   get _sections() {
     return [
       {
-        title: "Content",
+        title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
-          { name: "entity", label: "Entity holding the selection", selector: { entity: {} } },
-          { name: "attribute", label: "Attribute (instead of the state)", selector: { text: {} } },
-          { name: "multi_select", label: "Multi-select (state is a comma-separated list)", selector: { boolean: {} } },
+          { name: "entity", label: "e_entity_holdin_select2", selector: { entity: {} } },
+          { name: "attribute", label: "e_attrib_instea_state", selector: { text: {} } },
+          { name: "multi_select", label: "e_multi_select_state", selector: { boolean: {} } },
         ],
       },
       {
-        title: "Appearance",
+        title: "e_appearance",
         icon: "mdi:palette-outline",
         fields: [
-          { name: "show_check", label: "Show the check on selected chips", selector: { boolean: {} } },
-          { name: "color", label: "Selected chip color", color: true, template: true, selector: { text: {} } },
-          { name: "color_on", label: "Selected chip text", color: true, template: true, selector: { text: {} } },
+          { name: "show_check", label: "e_show_check_on", selector: { boolean: {} } },
+          { name: "color", label: "e_select_chip_color", color: true, template: true, selector: { text: {} } },
+          { name: "color_on", label: "e_select_chip_text", color: true, template: true, selector: { text: {} } },
         ],
       },
       {
-        title: "Disabled",
+        title: "e_disabled",
         icon: "mdi:cancel",
         expanded: false,
         fields: [DISABLED_FIELD],
