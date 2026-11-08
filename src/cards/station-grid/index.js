@@ -32,47 +32,18 @@ class MateriaStationGrid extends ActionMixin(LitElement) {
         color: var(--mx-on);
         padding: 16px;
       }
-      ha-card.in-sheet {
-        background: none;
-        padding: 0 4px 4px;
-      }
-      ha-card.in-panel {
-        padding: 24px;
-        border-radius: 32px;
-        height: 100%;
-        box-sizing: border-box;
-        /* A short screen: the grid scrolls inside the panel instead of growing it. */
-        overflow-y: auto;
-      }
-      /* In place of the player: the art scope's card pads and draws the surface. */
-      ha-card.in-panel.sub {
-        padding: 0;
-        border-radius: 0;
-        background: none;
-      }
       .head {
         display: flex;
         align-items: center;
         gap: 10px;
         margin-bottom: 18px;
       }
-.head .back {
-        margin-inline-start: -8px;
-      }
-            .head h3 {
+      .head h3 {
         flex: 1;
         margin: 0;
         font-size: 22px;
         line-height: 28px;
         font-weight: 400;
-      }
-      .close {
-        width: 40px;
-        height: 40px;
-        border-radius: 20px;
-        display: grid;
-        place-items: center;
-        color: var(--mx-onv);
       }
       .grid {
         display: grid;
@@ -147,8 +118,9 @@ class MateriaStationGrid extends ActionMixin(LitElement) {
   _pick(st) {
     const action = this._actionOf(st);
     if (action) this._handleAction(action);
-    // In a sheet the choice is done; a kiosk panel stays (its timer closes it).
-    if (this.config.in_sheet) {
+    // The choice is made: a panel or sheet showing this grid closes
+    // (close_on_select: false keeps it open).
+    if (this.config.close_on_select !== false) {
       this.dispatchEvent(new CustomEvent("materia-dismiss", { bubbles: true, composed: true }));
     }
   }
@@ -158,30 +130,10 @@ class MateriaStationGrid extends ActionMixin(LitElement) {
     const c = this.config;
     const stations = c.stations;
     const current = currentStationIndex(stations, c.entity ? this.hass.states[c.entity] : null);
-    const cols = c.columns ?? (c.in_panel ? 3 : null);
-    // A sheet shows its own heading; the grid adds one only in a panel or standalone.
-    const heading = c.in_sheet ? null : c.in_panel ? (c.name ?? t("media_stations", this.hass)) : c.name;
+    const cols = c.columns;
     return html`
-      <ha-card class="${c.in_sheet ? "in-sheet" : ""} ${c.in_panel ? "in-panel" : ""} ${c.panel_back ? "sub" : ""}">
-        ${heading || c.in_panel
-          ? html`<div class="head">
-              ${c.panel_back
-                ? html`<button
-                    class="close back"
-                    aria-label=${t("media_back", this.hass)}
-                    @click=${() => this.dispatchEvent(new CustomEvent("materia-dismiss", { bubbles: true, composed: true }))}
-                  ><ha-icon icon="mdi:arrow-left"></ha-icon></button>`
-                : nothing}
-              <h3>${heading ?? ""}</h3>
-              ${c.in_panel && !c.panel_back
-                ? html`<button
-                    class="close"
-                    aria-label=${t("media_close", this.hass)}
-                    @click=${() => this.dispatchEvent(new CustomEvent("materia-dismiss", { bubbles: true, composed: true }))}
-                  ><ha-icon icon="mdi:close"></ha-icon></button>`
-                : nothing}
-            </div>`
-          : nothing}
+      <ha-card>
+        ${c.name ? html`<div class="head"><h3>${c.name}</h3></div>` : nothing}
         <div class="grid ${c.logo_fill ? "fill" : ""}" style=${cols ? `--sg-cols:repeat(${Number(cols)}, minmax(0, 1fr));` : ""}>
           ${stations.map(
             (st, i) => html`<button class=${i === current ? "on" : ""} aria-pressed=${i === current ? "true" : "false"} @click=${() => this._pick(st)}>

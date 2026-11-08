@@ -1,15 +1,13 @@
 import { LitElement, html, nothing } from "lit";
 import { loadCardHelpers } from "../../styles/shared.js";
 import { artPalette, artUrl, themeSettings, ART_TOKENS, ART_HA_VARS } from "../../utils/art-palette.js";
-import { createCardContent } from "../../primitives/sheet.js";
+import { PanelHostMixin } from "../../primitives/panels.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
-import { kioskTracks, scopeGridColumns, panelCardConfig } from "./layout.js";
+import { kioskTracks, scopeGridColumns } from "./layout.js";
 import { inheritScopeEntity } from "../../utils/media-editor-model.js";
 import { availableHeight } from "../../utils/media.js";
-
-const PANEL_CLOSE_MS = 400;
 
 /**
  * materia-art-scope — a container that themes its children with the colours
@@ -20,27 +18,20 @@ const PANEL_CLOSE_MS = 400;
  *
  * layout: stack | row | grid (columns) | kiosk
  *
- * KIOSK is also a panel host: cover | player at exactly 50/50, and a side
- * panel that toolbar / header / ring buttons open (event
- * `materia-open-panel`). Open, the layout is cover 400 | player | panel 400.
- * `panels.<id>` is merged over the card config the button asks for, so the
- * kiosk can show e.g. the tap-style volume card where a phone shows the knob.
- * The panel closes after `panel_timeout` seconds without a touch inside it,
- * on a second tap of its button, on × and when cover + player + panel no
- * longer fit (layout.js kioskTracks); below 600 px the
- * kiosk stacks and the buttons fall back to bottom sheets.
- *
- * INLINE (`panel_mode: inline`, stack / row / grid): the requested card
- * replaces the scope's cards in place, at least as tall as they were, with a
- * back arrow in its header; back, × or the timeout return to the cards.
+ * KIOSK is also a panel host (primitives/panels.js): cover | player at
+ * exactly 50/50, and a side column for the panels in `panels:` that buttons
+ * open (`tap_action: { action: materia-panel, panel: <id> }`). Open, the
+ * layout is cover 400 | player | panel 400. The panel closes after
+ * `panel_timeout` seconds without a touch inside it, on a second tap of its
+ * button, on × and when cover + player + panel no longer fit (layout.js
+ * kioskTracks); then requests pass on to an outer host or a bottom sheet.
+ * Other layouts host no panels: wrap the cards in materia-panel-host.
  */
-class MateriaArtScope extends LitElement {
+class MateriaArtScope extends PanelHostMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
     _cards: { state: true },
-    _panelEl: { state: true },
-    _panelId: { state: true },
     /** Content-box width of the kiosk: the ONE measurement its layout uses. */
     _kw: { state: true },
   };
@@ -68,10 +59,9 @@ class MateriaArtScope extends LitElement {
 
   constructor() {
     super();
-    this.addEventListener("materia-open-panel", (e) => this._onOpenPanel(e));
     // Cards inside inherit the scope's volume settings (and player) unless
     // they configure their own.
-    this.addEventListener("materia-volume-context", (e) => {
+    this.addEventListener("materia-scope-context", (e) => {
       if (!this.config) return;
       e.stopPropagation();
       e.detail.volume = this.config.volume;
@@ -80,11 +70,6 @@ class MateriaArtScope extends LitElement {
       // From the config, not the measurement: a card that asks before the
       // first ResizeObserver callback must get the same answer as one after.
       e.detail.kiosk = this.config.layout === "kiosk";
-    });
-    this.addEventListener("materia-dismiss", (e) => {
-      if (!this._panelId) return;
-      e.stopPropagation();
-      this._closePanel();
     });
   }
 
@@ -98,17 +83,21 @@ class MateriaArtScope extends LitElement {
       this._cards = null;
       this._buildCards();
     }
-    if (!this._hostsPanels() && this._panelId) this._closePanel(true);
+    if (!this._panelMode() && this._panelId) this.closePanel(true);
   }
 
-  /** Inline panels: the cards are swapped for the requested card in place. */
-  get _inline() {
-    return this.config?.layout !== "kiosk" && this.config?.panel_mode === "inline";
+  /* ---- panel host (kiosk side column only) ---- */
+
+  _panelMode() {
+    return this.config?.layout === "kiosk" && this._tracks(true).canOpen ? "side" : null;
   }
 
-  /** Whether this scope shows panels at all right now (else buttons open sheets). */
-  _hostsPanels() {
-    return this._inline || (this.config?.layout === "kiosk" && this._tracks(true).canOpen);
+  _panelRegistry() {
+    return this.config?.panels ?? {};
+  }
+
+  _panelTimeout() {
+    return this.config?.panel_timeout ?? 10;
   }
 
   async _buildCards() {
@@ -145,7 +134,7 @@ class MateriaArtScope extends LitElement {
     this._observed = el;
     this._ro ??= new ResizeObserver((entries) => {
       this._kw = Math.floor(entries[0].contentRect.width);
-      if (this._panelId && !this._tracks(true).canOpen) this._closePanel(true);
+      if (this._panelId && !this._tracks(true).canOpen) this.closePanel(true);
       this._announceLayout();
       this._scheduleFill();
     });
@@ -205,12 +194,11 @@ class MateriaArtScope extends LitElement {
   /* ---------------------------------------------------------------- colours */
 
   updated(changed) {
+    super.updated(changed);
     this._observeKiosk();
     this._announceLayout();
     if (changed.has("hass") && this.hass) {
       if (this._cards) for (const el of this._cards) el.hass = this.hass;
-      const panel = this._panelEl?.real ?? this._panelEl;
-      if (panel) panel.hass = this.hass;
       this._palette();
     }
   }
@@ -236,61 +224,6 @@ class MateriaArtScope extends LitElement {
     };
     if (!url) return apply(null);
     artPalette(url, settings, dark).then(apply, () => apply(null));
-  }
-
-  /* ---------------------------------------------------------------- kiosk panel */
-
-  /** Id of the open kiosk panel (null when closed); read by the buttons. */
-  get openPanel() {
-    return this._panelId ?? null;
-  }
-
-  _onOpenPanel(e) {
-    // No panels here (or too narrow for cover + player + panel): let the button open a sheet.
-    if (!this._hostsPanels()) {
-      if (this._panelId) this._closePanel(true);
-      return;
-    }
-    e.stopPropagation();
-    e.detail.host = this;
-    const id = e.detail.id;
-    if (this._panelId === id) {
-      this._closePanel();
-      return;
-    }
-    clearTimeout(this._panelRemoveTimer);
-    if (this._inline && !this._panelId) {
-      // The subview takes the player's height, so the card does not change size.
-      this._inlineMin = this.renderRoot.querySelector(".children")?.offsetHeight ?? 0;
-    }
-    const el = createCardContent(panelCardConfig(e.detail.config, this.config.panels, id, this._inline));
-    el.hass = this.hass;
-    this._panelEl = el;
-    this._panelId = id;
-    this._touchPanel();
-    this._announce();
-  }
-
-  _closePanel(immediate = false) {
-    clearTimeout(this._panelTimer);
-    if (this._inline) immediate = true; // nothing animates shut in place
-    this._panelId = null;
-    this._announce();
-    // Keep the content while the column animates shut.
-    clearTimeout(this._panelRemoveTimer);
-    if (immediate) this._panelEl = null;
-    else this._panelRemoveTimer = setTimeout(() => (this._panelEl = null), PANEL_CLOSE_MS);
-  }
-
-  /** (Re)start the auto-close timer — on open and on every touch inside the panel. */
-  _touchPanel() {
-    clearTimeout(this._panelTimer);
-    const s = Number(this.config.panel_timeout);
-    if (this._panelId && s > 0) this._panelTimer = setTimeout(() => this._closePanel(), s * 1000);
-  }
-
-  _announce() {
-    this.dispatchEvent(new CustomEvent("materia-panel-changed", { detail: { id: this.openPanel } }));
   }
 
   /* ---------------------------------------------------------------- render */
@@ -324,20 +257,11 @@ class MateriaArtScope extends LitElement {
             >
               <div class="k-cover">${cards[0] ?? nothing}</div>
               <div class="k-player" style="gap:${Number(c.gap)}px;">${cards.slice(1)}</div>
-              <div class="k-panel" @pointerdown=${this._touchPanel} ?inert=${!open}>
-                <div class="k-panel-inner">${this._panelEl ?? nothing}</div>
+              <div class="k-panel" ?inert=${!open}>
+                <div class="k-panel-inner">${this._renderPanel(false)}</div>
               </div>
             </div>`
-          : html`<div
-                class="children ${c.layout}"
-                style="gap:${Number(c.gap)}px;${this._childStyle()}"
-                ?hidden=${!!this._panelEl}
-              >${cards}</div>
-              ${this._panelEl
-                ? html`<div class="inline-panel" style="height:${this._inlineMin ?? 0}px" @pointerdown=${this._touchPanel}>
-                    ${this._panelEl}
-                  </div>`
-                : nothing}`}
+          : html`<div class="children ${c.layout}" style="gap:${Number(c.gap)}px;${this._childStyle()}">${cards}</div>`}
       </ha-card>
     `;
   }
@@ -357,6 +281,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-art-scope",
   name: "Materia Art Scope",
-  description: "Container that colours the cards inside it from a media player's cover; kiosk layout with a side panel.",
+  description: "Container that colours the cards inside it from a media player's cover; kiosk layout with side panels.",
   preview: false,
 });

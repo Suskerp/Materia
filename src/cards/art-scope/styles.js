@@ -1,8 +1,10 @@
 import { css } from "lit";
 import { hostStyles } from "../../styles/card-styles.js";
 import { motionTokens } from "../../utils/motion.js";
+import { panelChromeStyles } from "../../primitives/panels.js";
 
 export const styles = [
+  panelChromeStyles,
   hostStyles,
   motionTokens,
   css`
@@ -23,7 +25,6 @@ export const styles = [
 
     /* Children sit on the scope's surface: give their cards the next rung. */
     .children > *,
-    .inline-panel > *,
     .k-cover > *,
     .k-player > *,
     .k-panel-inner > * {
@@ -31,33 +32,6 @@ export const styles = [
       --ha-card-background: var(--md-sys-color-surface-container, var(--card-background-color));
       --ha-card-box-shadow: none;
       --ha-card-border-width: 0;
-    }
-
-    /* !important: .children.stack/.row/.grid set display at the same specificity. */
-    .children[hidden] {
-      display: none !important;
-    }
-
-    /* In place: a subview of the same card, exactly as tall as the player was. */
-    .inline-panel {
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      animation: inline-in var(--md-sys-motion-expressive-default-spatial, 0.35s ease) both;
-    }
-
-    .inline-panel > * {
-      flex: 1;
-      min-height: 0;
-      /* Same card: no card-in-card surface or padding of its own. */
-      --ha-card-background: transparent;
-    }
-
-    @keyframes inline-in {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
-      }
     }
 
     .children.stack {
@@ -155,6 +129,14 @@ export const styles = [
     .k-panel-inner > * {
       height: var(--materia-kiosk-panel-height, 80%);
       min-height: 0;
+    }
+
+    /* The host draws the panel surface; its content cards stay flat. */
+    .k-panel-inner > .m-panel {
+      box-sizing: border-box;
+      padding: 8px 12px 16px;
+      border-radius: 28px;
+      background: var(--md-sys-color-surface-container, var(--card-background-color));
     }
 
     /* Kiosk type: headline-medium-emphasized title on two lines, a

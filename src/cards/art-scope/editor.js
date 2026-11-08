@@ -1,8 +1,5 @@
 import { html } from "lit";
 import { MateriaExpanderEditor } from "../expander/editor.js";
-import { VOLUME_STYLE_SELECTOR } from "../../utils/media-editors.js";
-
-const PANEL_STYLE_LABEL = "Volume panel style";
 
 const PANEL_TIMEOUT_FIELD = {
   name: "panel_timeout",
@@ -13,39 +10,11 @@ const PANEL_TIMEOUT_FIELD = {
 /** Reuses the expander's card list (add / edit / reorder child cards). */
 class MateriaArtScopeEditor extends MateriaExpanderEditor {
   _formData() {
-    return { layout: "stack", gap: 16, background: true, panel_timeout: 10, fill: true, panel_mode: "sheet", ...this._config };
+    return { layout: "stack", gap: 16, background: true, panel_timeout: 10, fill: true, ...this._config };
   }
 
   _sectionsSignature() {
-    return `${this._config?.layout || "stack"}|${this._config?.panel_mode || "sheet"}`;
-  }
-
-  /** panels.volume.style, edited as one select; other panel overrides are kept. */
-  _setPanelStyle(style) {
-    const panels = { ...(this._config.panels ?? {}) };
-    const volume = { ...(panels.volume ?? {}) };
-    if (style) volume.style = style;
-    else delete volume.style;
-    if (Object.keys(volume).length) panels.volume = volume;
-    else delete panels.volume;
-    this._setField("panels", Object.keys(panels).length ? panels : undefined);
-  }
-
-  /** Knob or slider in the panel: panels.volume.style, as one select. */
-  _panelStyleField() {
-    return {
-      name: "panels",
-      render: (value) => html`<ha-selector
-        .hass=${this.hass}
-        .selector=${VOLUME_STYLE_SELECTOR}
-        .label=${PANEL_STYLE_LABEL}
-        .value=${value?.volume?.style ?? this._config.volume?.style ?? "knob"}
-        @value-changed=${(e) => {
-          e.stopPropagation();
-          this._setPanelStyle(e.detail.value);
-        }}
-      ></ha-selector>`,
-    };
+    return this._config?.layout || "stack";
   }
 
   get _sections() {
@@ -101,19 +70,6 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
           { name: "gap", label: "Gap (px)", selector: { number: { min: 0, max: 64, mode: "box" } } },
           { name: "padding", label: "Padding (px)", selector: { number: { min: 0, max: 64, mode: "box" } } },
           { name: "background", label: "Draw the surface", selector: { boolean: {} } },
-          ...(layout === "kiosk"
-            ? []
-            : [
-                {
-                  name: "panel_mode",
-                  label: "Volume / stations open",
-                  selector: { select: { mode: "dropdown", options: [
-                    { value: "sheet", label: "In a bottom sheet" },
-                    { value: "inline", label: "In place of the cards (with back)" },
-                  ] } },
-                },
-                ...(this._config?.panel_mode === "inline" ? [PANEL_TIMEOUT_FIELD, this._panelStyleField()] : []),
-              ]),
         ],
       },
       ...(layout === "kiosk"
@@ -122,9 +78,8 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
               title: "Kiosk panel",
               icon: "mdi:dock-right",
               fields: [
-                { name: "fill", label: "Vul het scherm (hoogte)", selector: { boolean: {} } },
+                { name: "fill", label: "Fill the screen height", selector: { boolean: {} } },
                 { ...PANEL_TIMEOUT_FIELD, label: "Close the panel after (s without a touch, 0 = never)" },
-                this._panelStyleField(),
               ],
             },
           ]

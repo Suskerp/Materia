@@ -21,7 +21,8 @@ import {
   toolbarLayout,
   availableHeight,
 } from "../src/utils/media.js";
-import { scopeGridColumns, panelCardConfig, kioskTracks } from "../src/cards/art-scope/layout.js";
+import { scopeGridColumns, kioskTracks } from "../src/cards/art-scope/layout.js";
+import { panelSpec, panelCardConfig, hostCanShow } from "../src/primitives/panel-protocol.js";
 import { heldValue, holdSkipButtons } from "../src/utils/media.js";
 import { themeSettings, schemeKey } from "../src/utils/art-settings.js";
 
@@ -159,20 +160,33 @@ test("openers build the knob config from their volume block", () => {
   assert.equal(volumeKnobConfig({ entity: "media_player.a", volume: { entity: "media_player.b" } }).entity, "media_player.b");
 });
 
-test("kiosk panels merge the kiosk's override over the button's request", () => {
-  const requested = { type: "custom:materia-volume-knob", entity: "media_player.a", style: "knob" };
-  assert.deepEqual(panelCardConfig(requested, { volume: { style: "tap" } }, "volume"), {
-    type: "custom:materia-volume-knob",
-    entity: "media_player.a",
-    style: "tap",
-    in_panel: true,
-  });
-  assert.deepEqual(panelCardConfig(requested, undefined, "volume"), { ...requested, in_panel: true });
-  assert.deepEqual(panelCardConfig(requested, undefined, "volume", true), {
-    ...requested,
-    in_panel: true,
-    panel_back: true,
-  }, "in place: a back arrow instead of ×");
+test("panel registry entries: a card, { card }, or { cards }, with an optional heading", () => {
+  const grid = { type: "custom:materia-station-grid" };
+  assert.deepEqual(panelSpec(grid), { heading: "", cards: [grid] });
+  assert.deepEqual(panelSpec({ heading: "Zenders", card: grid }), { heading: "Zenders", cards: [grid] });
+  assert.deepEqual(panelSpec({ heading: "Volume", cards: [grid, grid] }), { heading: "Volume", cards: [grid, grid] });
+  assert.deepEqual(panelSpec(undefined, { card: grid, heading: "Own" }), { heading: "Own", cards: [grid] },
+    "no entry: the request's own card");
+  assert.deepEqual(panelSpec({ card: grid }, { heading: "Request" }), { heading: "Request", cards: [grid] },
+    "the entry's heading wins, else the request's");
+  assert.deepEqual(panelSpec(null, {}), { heading: "", cards: [] });
+  assert.deepEqual(panelSpec({ style: "tap" }, { card: grid }), { heading: "", cards: [grid] },
+    "an entry without content is ignored");
+});
+
+test("one panel card is shown as is, several in a vertical stack", () => {
+  const a = { type: "a" };
+  const b = { type: "b" };
+  assert.deepEqual(panelCardConfig({ cards: [a] }), a);
+  assert.deepEqual(panelCardConfig({ cards: [a, b] }), { type: "vertical-stack", cards: [a, b] });
+});
+
+test("a host takes a request it has a panel for, or one that brings its own card", () => {
+  assert.equal(hostCanShow({ volume: { type: "a" } }, { panel: "volume" }), true);
+  assert.equal(hostCanShow({ volume: { type: "a" } }, { panel: "stations" }), false, "an outer host may have it");
+  assert.equal(hostCanShow({}, { panel: "x", card: { type: "a" } }), true);
+  assert.equal(hostCanShow(undefined, { panel: "x" }), false);
+  assert.equal(hostCanShow({ volume: { style: "tap" } }, { panel: "volume" }), false, "no content: not this host's");
 });
 
 test("grid columns: a number is equal tracks, a string is used as written", () => {

@@ -141,5 +141,19 @@ export function inheritScopeEntity(card, entity) {
     const cards = card.cards.map((c) => inheritScopeEntity(c, entity));
     if (cards.some((c, i) => c !== card.cards[i])) out = { ...out, cards };
   }
+  // A nested card (`card:`) and the panels of a panel host inherit as well.
+  if (card.card && typeof card.card === "object") {
+    const inner = inheritScopeEntity(card.card, entity);
+    if (inner !== card.card) out = { ...out, card: inner };
+  }
+  if (card.panels && typeof card.panels === "object") {
+    let changed = false;
+    const panels = {};
+    for (const [id, p] of Object.entries(card.panels)) {
+      panels[id] = inheritScopeEntity(p, entity);
+      changed ||= panels[id] !== p;
+    }
+    if (changed) out = { ...out, panels };
+  }
   return out;
 }

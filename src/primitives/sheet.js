@@ -4,6 +4,7 @@ import { hostStyles } from "../styles/card-styles.js";
 import { ART_VARIABLES } from "../utils/art-palette.js";
 import { loadCardHelpers } from "../styles/shared.js";
 import { volumeKnobConfig } from "../utils/media.js";
+import { openPanel } from "./panel-protocol.js";
 
 /**
  * <materia-sheet> — M3 bottom sheet that hosts any card (the volume knob, the
@@ -14,7 +15,7 @@ import { volumeKnobConfig } from "../utils/media.js";
  *   sheet opened inside <materia-art-scope> keeps the cover's colours.
  * - Drag handle (drag down to close), scrim tap and Escape close it.
  * - Content can close it by firing `materia-dismiss` (bubbles, composed);
- *   the kiosk panel host listens for the same event.
+ *   panel hosts listen for the same event.
  * - Only one sheet is open at a time.
  */
 class MateriaSheet extends LitElement {
@@ -209,9 +210,9 @@ export function createCardContent(cardConfig) {
  * content live (the opener forwards its own hass updates), close() closes it,
  * and `open` reports whether it is still showing.
  */
-export function openSheet(origin, cardConfig, hass, heading) {
+export function openSheet(origin, cardConfig, hass, heading, onClose) {
   current?.close();
-  const content = createCardContent({ ...cardConfig, in_sheet: true });
+  const content = createCardContent(cardConfig);
   content.hass = hass;
   const sheet = document.createElement("materia-sheet");
   sheet.heading = heading || "";
@@ -226,6 +227,7 @@ export function openSheet(origin, cardConfig, hass, heading) {
   sheet.onclose = () => {
     controller.open = false;
     if (current === sheet) current = null;
+    onClose?.();
   };
   sheet.show(origin, content);
   current = sheet;
@@ -233,35 +235,22 @@ export function openSheet(origin, cardConfig, hass, heading) {
 }
 
 /**
- * Asks an enclosing panel host (materia-art-scope, layout: kiosk) to show
- * `cardConfig` as panel `id`. Returns the host when it took the request, or
- * null when there is none or it is too narrow — then the caller opens a sheet.
- * A host closes the panel instead when `id` is already open (a second tap on
- * the same button), and still returns itself.
+ * What an enclosing materia-art-scope offers the cards inside it: its entity,
+ * its `volume:` block and itself ({} when there is no scope, or before `el`
+ * is connected).
  */
-export function requestPanel(origin, id, cardConfig) {
-  const detail = { id, config: cardConfig, host: null };
-  origin.dispatchEvent(new CustomEvent("materia-open-panel", { detail, bubbles: true, composed: true }));
-  return detail.host;
-}
-
-/**
- * What an enclosing materia-art-scope offers its cards: its `volume:` block
- * and its entity ({} when there is no scope, or before `el` is connected).
- */
-export function volumeContext(el) {
+export function scopeContext(el) {
   const detail = { volume: undefined, entity: undefined };
   if (el.isConnected) {
-    el.dispatchEvent(new CustomEvent("materia-volume-context", { detail, bubbles: true, composed: true }));
+    el.dispatchEvent(new CustomEvent("materia-scope-context", { detail, bubbles: true, composed: true }));
   }
   return detail;
 }
 
 /**
- * Mixin for elements that open a card in a kiosk panel or a bottom sheet:
- * forwards every hass update to an open sheet, tracks which panel of its
- * host is open (for the buttons' active state) and closes its sheet when the
- * opener leaves the DOM.
+ * Mixin for elements that open panels and read the art scope's context:
+ * keeps an open sheet live, tracks which panel of its host is open (for the
+ * buttons' active state) and cleans up when the element leaves the DOM.
  */
 export const SheetOpenerMixin = (superClass) =>
   class extends superClass {
@@ -271,11 +260,10 @@ export const SheetOpenerMixin = (superClass) =>
     /**
      * The enclosing art scope's context ({ volume, entity, kiosk, scope }).
      * Subscribes to the scope's `materia-scope-changed`, so a layout change
-     * (first measurement, kiosk ↔ stacked) re-renders this element at once
-     * instead of waiting for the next hass update.
+     * re-renders this element at once instead of waiting for the next hass update.
      */
     _scopeContext() {
-      const ctx = volumeContext(this);
+      const ctx = scopeContext(this);
       if (ctx.scope !== this.__scope) {
         this.__scope?.removeEventListener("materia-scope-changed", this.__onScope);
         this.__scope = ctx.scope ?? null;
@@ -291,10 +279,14 @@ export const SheetOpenerMixin = (superClass) =>
       return volumeKnobConfig(this.config, this.config?.volume ? undefined : ctx);
     }
 
-    /** Panel `id` of an enclosing kiosk host when there is one, else a bottom sheet. */
-    _openSheet(origin, cardConfig, heading, id = null) {
-      const host = id ? requestPanel(origin, id, cardConfig) : null;
-      if (host) {
+    /**
+     * Opens panel `request.panel` (in the nearest host that offers it) or the
+     * request's `card` in a sheet. See primitives/panels.js.
+     */
+    _requestPanel(origin, request) {
+      const opened = openPanel(origin, request, this.hass);
+      if (opened.host) {
+        const host = opened.host;
         if (this.__panelHost !== host) {
           this.__panelHost?.removeEventListener("materia-panel-changed", this.__onPanel);
           this.__panelHost = host;
@@ -302,9 +294,12 @@ export const SheetOpenerMixin = (superClass) =>
           host.addEventListener("materia-panel-changed", this.__onPanel);
         }
         this._openPanel = host.openPanel;
-        return;
-      }
-      this.__sheet = openSheet(origin, cardConfig, this.hass, heading);
+      } else if (opened.sheet) this.__sheet = opened.sheet;
+    }
+
+    /** Shorthand: panel `id` from the nearest host, else `cardConfig` in a sheet. */
+    _openSheet(origin, cardConfig, heading, id = null) {
+      this._requestPanel(origin, { panel: id ?? undefined, card: cardConfig, heading });
     }
 
     updated(changed) {

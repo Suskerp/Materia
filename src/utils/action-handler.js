@@ -7,6 +7,7 @@
  *   class MyCard extends ActionMixin(LitElement) { ... }
  */
 import { t } from "./i18n.js";
+import { openPanel } from "../primitives/panel-protocol.js";
 
 /** Timestamp of the last haptic fired anywhere in the library.
  *
@@ -55,7 +56,7 @@ export const ActionMixin = (superClass) =>
     /**
      * Dispatch an action based on a tap_action / hold_action config object.
      * Supports: toggle, call-service/perform-action, navigate, url,
-     * more-info, fire-dom-event, none — plus `confirmation:`.
+     * more-info, fire-dom-event, materia-panel, none — plus `confirmation:`.
      *
      * CONFIRMATION IS HONOURED FIRST. The editors offer HA's full ui_action
      * selector, so a lock action can carry confirmation: {...} — and this
@@ -162,6 +163,18 @@ export const ActionMixin = (superClass) =>
             })
           );
           break;
+
+        case "materia-panel": {
+          // { panel: id, card?, heading? } — opened by the nearest panel host
+          // that offers `panel`, else `card` in a bottom sheet (panels.js).
+          if (this._requestPanel) {
+            this._requestPanel(this, actionConfig);
+            break;
+          }
+          const opened = openPanel(this, actionConfig, this.hass);
+          if (opened.sheet) this.__actionSheet = opened.sheet;
+          break;
+        }
 
         case "fire-dom-event": {
           // Fires a `ll-custom` DOM event with the config as detail — picked
@@ -328,8 +341,16 @@ export const ActionMixin = (superClass) =>
       this._tplSubs = {};
     }
 
+    updated(changed) {
+      super.updated?.(changed);
+      // A sheet opened by a materia-panel action follows this card's hass.
+      if (changed.has("hass") && this.__actionSheet?.open) this.__actionSheet.setHass(this.hass);
+    }
+
     disconnectedCallback() {
       super.disconnectedCallback?.();
+      if (this.__actionSheet?.open) this.__actionSheet.close();
+      this.__actionSheet = null;
       this._unsubscribeTemplates();
       clearTimeout(this._haTimer);
       this._haTimer = null;

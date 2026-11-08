@@ -402,27 +402,6 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     this._setVolume(this._volValue() + d, true);
   }
 
-  _dismiss() {
-    this.dispatchEvent(new CustomEvent("materia-dismiss", { bubbles: true, composed: true }));
-  }
-
-  /** In place of the player (art scope `panel_mode: inline`): a back arrow leads the header. */
-  _backButton() {
-    return this.config.panel_back
-      ? html`<button class="close back" aria-label=${t("media_back", this.hass)} @click=${this._dismiss}>
-          <ha-icon icon="mdi:arrow-left"></ha-icon>
-        </button>`
-      : nothing;
-  }
-
-  _closeButton() {
-    return this.config.in_panel && !this.config.panel_back
-      ? html`<button class="close" aria-label=${t("media_close", this.hass)} @click=${this._dismiss}>
-          <ha-icon icon="mdi:close"></ha-icon>
-        </button>`
-      : nothing;
-  }
-
   _linkChip(link) {
     if (!link) return nothing;
     const linked = link.state === "on";
@@ -473,11 +452,10 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
   _renderTapSide(name, link) {
     const zones = this.config.zones;
     return html`
-      <ha-card class="panel tap side ${this.config.panel_back ? "sub" : ""} ${this.config.in_sheet ? "in-sheet" : ""} ${this.config.in_panel && !this.config.panel_back ? "in-panel" : ""}">
+      <ha-card class="panel tap side ">
         <div class="phead">
-          ${this._backButton()}
           <h3>${name}</h3>
-          ${this._linkChip(link)} ${this._closeButton()}
+          ${this._linkChip(link)}
         </div>
         <div class="tcols" style="--cols:${zones.length}">
           ${zones.map(
@@ -529,11 +507,10 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
       return isMediaOff(zs) || zs?.attributes?.is_volume_muted ? t("state_off", this.hass) : volumeSteps(zs);
     };
     return html`
-      <ha-card class="panel tap ${this.config.panel_back ? "sub" : ""} ${this.config.in_sheet ? "in-sheet" : ""} ${this.config.in_panel && !this.config.panel_back ? "in-panel" : ""} ${off ? "off" : ""} ${muted ? "muted" : ""}">
+      <ha-card class="panel tap  ${off ? "off" : ""} ${muted ? "muted" : ""}">
         <div class="phead">
-          ${this._backButton()}
           <h3>${name}</h3>
-          ${this._linkChip(link)} ${this._closeButton()}
+          ${this._linkChip(link)}
         </div>
         ${zones.length > 1
           ? html`<div class="ztabs" role="radiogroup" aria-label=${name}>
@@ -594,9 +571,8 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     };
 
     return html`
-      <ha-card class="panel ${this.config.panel_back ? "sub" : ""} ${this.config.in_sheet ? "in-sheet" : ""} ${off ? "off" : ""}">
+      <ha-card class="panel  ${off ? "off" : ""}">
         <div class="phead">
-          ${this._backButton()}
           <h3>${name}</h3>
           ${link
             ? html`<button class="linklabel" @click=${this._toggleLink}>${t("media_link_zones", this.hass)}</button>
@@ -608,7 +584,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
                   @click=${this._toggleLink}
                 ><i><ha-icon icon="mdi:link-variant"></ha-icon></i></button>`
             : nothing}
-          ${this._closeButton()}
+         
         </div>
         ${zones.length > 1
           ? html`<materia-button-group

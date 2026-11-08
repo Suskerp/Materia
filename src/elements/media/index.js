@@ -11,7 +11,7 @@ import { powerTransition,
   ART_MAX,
   ART_FIT_MARGIN,
 } from "../../utils/media.js";
-import { volumeContext } from "../../primitives/sheet.js";
+import { scopeContext } from "../../primitives/sheet.js";
 import { t } from "../../utils/i18n.js";
 import "./editor.js";
 
@@ -135,7 +135,7 @@ class MateriaMedia extends ActionMixin(LitElement) {
     // art_max, or --materia-art-max from a theme / card-mod, else ART_MAX.
     const cssMax = parseFloat(getComputedStyle(art).getPropertyValue("--materia-art-max"));
     const max = Math.min(width, cssMax > 0 ? cssMax : ART_MAX);
-    const unit = volumeContext(this).scope ?? this;
+    const unit = scopeContext(this).scope ?? this;
     const current = art.getBoundingClientRect().height;
     const spare = this._spareBelow(unit);
     const size = fitArtSize({ current, max, spare: spare == null ? null : spare - ART_FIT_MARGIN });

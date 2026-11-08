@@ -20,10 +20,6 @@ export const styles = [
       color: var(--mx-on);
     }
 
-    ha-card.panel.in-sheet {
-      background: none;
-      padding: 8px 4px 0;
-    }
 
     .phead {
       display: flex;
@@ -291,20 +287,6 @@ export const styles = [
       opacity: 0.4;
     }
 
-    .close {
-      width: 40px;
-      height: 40px;
-      border-radius: 20px;
-      display: grid;
-      place-items: center;
-      flex: none;
-      color: var(--mx-onv);
-    }
-
-.close.back {
-      margin-inline-start: -8px;
-      color: var(--mx-on);
-    }
 
     /* ---- tap style: calm, finger-tap first (tablets) ---- */
     ha-card.panel.tap {
@@ -315,17 +297,7 @@ export const styles = [
       box-sizing: border-box;
     }
 
-    ha-card.panel.tap.in-sheet {
-      padding: 8px 4px 0;
-    }
 
-    /* In place of the player (a subview of the art scope's card): the scope
-       already pads and draws the surface. */
-    ha-card.panel.sub {
-      padding: 0;
-      border-radius: 0;
-      background: none;
-    }
 
 
     .linkchip {
