@@ -109,9 +109,11 @@ There is no CI. Releasing is a sequence you perform, and every step has failed a
 once.
 
 ```bash
-# 1. bump BOTH. The console banner reads src/materia.js; HACS reads package.json.
-sed -i '' 's/const VERSION = "0.63.1"/const VERSION = "0.64.0"/' src/materia.js
-sed -i '' 's/"version": "0.63.1"/"version": "0.64.0"/'          package.json
+# 1. bump the version: package.json is the only source (the build stamps it into
+#    src/materia.js's __MATERIA_VERSION__). npm keeps package-lock.json in step.
+npm version 0.64.0 --no-git-tag-version
+#    and add a "## 0.64.0 — <date>" section at the top of CHANGELOG.md, starting with
+#    "### Breaking changes" (each change and what to edit, or "None.")
 
 # 2. verify BEFORE building — a syntax error here is cheap, in the bundle it is not
 node --check src/cards/<touched>/index.js
@@ -124,11 +126,15 @@ npm run build ; echo "BUILD EXIT: $?"
 grep -c "my_new_config_key" dist/materia.js
 
 # 5. commit with EXPLICIT PATHS. Never `git add -A` while an agent holds files.
-git add src/cards/<touched>/*.js src/utils/i18n.js src/materia.js package.json dist/materia.js
+git add src/cards/<touched>/*.js src/utils/i18n.js package.json package-lock.json CHANGELOG.md dist/materia.js
 git status --porcelain          # confirm nothing unexpected is staged
 git commit -F - <<'MSG' … MSG
 git tag -f v0.64.0 -m "v0.64.0"
 git push origin main && git push -f origin v0.64.0
+#    publish the release with that changelog section as its notes: the Marketplace
+#    follows releases (not commits) and shows these notes on the update
+awk '/^## 0.64.0/{f=1;next} /^## /{f=0} f' CHANGELOG.md > /tmp/notes.md
+gh release create v0.64.0 -R Suskerp/Materia --title "v0.64.0" -F /tmp/notes.md
 
 # 6. make HACS fetch it. update_information FIRST, then download.
 ha_manage_hacs(action="update_information", repository_id="Suskerp/Materia")
@@ -138,7 +144,7 @@ ha_manage_hacs(action="download",           repository_id="Suskerp/Materia")
 curl -s -H 'Accept-Encoding: identity' http://<ha>/hacsfiles/Materia/materia.js | grep -o '0\.64\.0'
 ```
 
-Two files carry the version and they must agree. A tag was once pushed with the version
+`npm run check:version` guards that the version sources agree. A tag was once pushed with the version
 un-bumped because an `&&` chain aborted at a failed syntax check before the `sed` ran.
 Check step 1 landed before you tag.
 
