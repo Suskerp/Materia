@@ -96,6 +96,7 @@ const MEDIA_CARDS = new Set([
   "custom:materia-volume",
   "custom:materia-volume-ring",
   "custom:materia-station-grid",
+  "custom:materia-tile-grid",
 ]);
 const MEDIA_GROUPS = new Set(["transport", "toolbar"]);
 

@@ -54,6 +54,7 @@ import "./cards/panel-host/index.js";
 import "./cards/stack/index.js";
 import "./cards/media-header/index.js";
 import "./cards/volume/index.js";
+import "./cards/tile-grid/index.js";
 import "./cards/station-grid/index.js";
 import "./cards/switcher/index.js";
 import "./cards/toggle-chip/index.js";

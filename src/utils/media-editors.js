@@ -191,7 +191,7 @@ const STATION_SCHEMA = [
 ];
 
 /** Stations list control for a SmartEditor `render` field. */
-export function stationsField(editor, value) {
+export function stationsField(editor, value, key = "stations") {
   return html`<materia-item-list-editor
     .hass=${editor.hass}
     .items=${value ?? []}
@@ -200,10 +200,10 @@ export function stationsField(editor, value) {
     .toForm=${stationFormData}
     .fromForm=${stationFromForm}
     .newItem=${() => ({ name: "" })}
-    addLabel="Zenders"
+    addLabel=${key === "stations" ? "Zenders" : "Items"}
     @value-changed=${(e) => {
       e.stopPropagation();
-      editor._setField("stations", e.detail.value?.length ? e.detail.value : undefined);
+      editor._setField(key, e.detail.value?.length ? e.detail.value : undefined);
     }}
   ></materia-item-list-editor>`;
 }

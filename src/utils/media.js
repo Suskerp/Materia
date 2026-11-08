@@ -228,15 +228,7 @@ export function nextSource(stateObj) {
   return list[(i + 1) % list.length];
 }
 
-/** Index of the station that is playing now: `match`, else name vs album/title. */
-export function currentStationIndex(stations, stateObj) {
-  const a = stateObj?.attributes ?? {};
-  const playing = [a.media_album_name, a.media_title, a.media_channel].filter(Boolean);
-  return (stations ?? []).findIndex((s) => {
-    const keys = [].concat(s?.match ?? s?.name ?? []).filter(Boolean);
-    return keys.some((k) => playing.includes(k));
-  });
-}
+export { currentStationIndex } from "./tile-match.js";
 
 /**
  * The card a volume button opens when no panel host offers a `volume` panel:
