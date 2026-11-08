@@ -10,7 +10,9 @@ const gzipSize = gzipSync(source).byteLength;
 // @material/material-color-utilities alone is ~127 KB raw / ~23 KB gzip, and
 // it is the one library that must not be replaced (art colours have to match
 // the Material You theme, which ships the same build).
-const limits = { size: 1_250_000, gzipSize: 300_000 };
+// 0.74.0: the composable media parts (volume, switcher, toggle chip, stack, tile grid,
+// power menu, media source, panel host) bring the bundle to ~300 KB gzip.
+const limits = { size: 1_300_000, gzipSize: 310_000 };
 
 console.log(`Bundle: ${size} bytes (${gzipSize} bytes gzip).`);
 if (size > limits.size || gzipSize > limits.gzipSize) {
