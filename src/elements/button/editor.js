@@ -65,7 +65,43 @@ class MateriaButtonEditor extends SmartEditorBase {
   }
 
   _formData() {
-    return { variant: "filled", size: "m", shape: "round", ...this._config };
+    const c = { variant: "filled", size: "m", shape: "round", ...this._config };
+    if (this._config?.confirm_direction === "both") c.confirm_both = true;
+    if (c.confirm === true) c.confirm = "hold";
+    return c;
+  }
+
+  _sectionsSignature() {
+    return `${this._config?.confirm || ""}|${this.hass?.locale?.language ?? ""}`;
+  }
+
+  /** `confirm_direction: both` is shown as a switch. */
+  _setField(name, value) {
+    if (name === "confirm_both") return super._setField("confirm_direction", value ? "both" : undefined);
+    super._setField(name, value);
+  }
+
+  get _confirmFields() {
+    const h = this.hass;
+    const mode = this._config?.confirm === true ? "hold" : this._config?.confirm;
+    return [
+      {
+        name: "confirm",
+        label: t("ed_btn_confirm", h),
+        selector: { select: { mode: "dropdown", options: [
+          { value: "hold", label: t("ed_btn_confirm_hold", h) },
+          { value: "slide", label: t("ed_btn_confirm_slide", h) },
+        ] } },
+      },
+      ...(mode === "hold" || mode === "slide"
+        ? [
+            { name: "confirm_both", label: t("ed_btn_confirm_both", h), selector: { boolean: {} } },
+            mode === "slide"
+              ? { name: "confirm_threshold", label: t("ed_btn_confirm_threshold", h), selector: { number: { min: 0.1, max: 1, step: 0.05, mode: "slider" } } }
+              : { name: "confirm_hold_ms", label: t("ed_btn_confirm_hold_ms", h), selector: { number: { min: 200, max: 3000, step: 50, mode: "box", unit_of_measurement: "ms" } } },
+          ]
+        : []),
+    ];
   }
 
   get _sections() {
@@ -115,6 +151,7 @@ class MateriaButtonEditor extends SmartEditorBase {
             ] } },
           },
           { name: "wide", selector: { boolean: {} } },
+          { name: "flex", label: t("ed_flex", this.hass), selector: { number: { min: 0, max: 12, step: 0.5, mode: "box" } } },
           { name: "entity", selector: { entity: {} } },
           DISABLED_FIELD,
         ],
@@ -135,6 +172,7 @@ class MateriaButtonEditor extends SmartEditorBase {
               },
             },
           },
+          ...this._confirmFields,
         ],
       },
       {

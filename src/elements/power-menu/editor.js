@@ -1,4 +1,5 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { powerEntitiesField } from "../../utils/media-editors.js";
 
 class MateriaPowerMenuEditor extends SmartEditorBase {
   get _sections() {
@@ -10,8 +11,7 @@ class MateriaPowerMenuEditor extends SmartEditorBase {
           { name: "entity", label: "e_player_in_art", selector: { entity: { domain: "media_player" } } },
           {
             name: "entities",
-            label: "e_player_menu_switch",
-            selector: { entity: { domain: "media_player", multiple: true } },
+            render: (value) => powerEntitiesField(this, value, "entities", "e_player_menu_switch"),
           },
           {
             name: "variant",

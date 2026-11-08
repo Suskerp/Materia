@@ -108,6 +108,8 @@ class MateriaSplitButtonEditor extends SmartEditorBase {
           },
           { name: "color", label: "e_background", color: true, template: true, selector: { text: {} } },
           { name: "color_on", label: "e_text_icon", color: true, template: true, selector: { text: {} } },
+          { name: "wide", selector: { boolean: {} } },
+          { name: "flex", label: t("ed_flex", this.hass), selector: { number: { min: 0, max: 12, step: 0.5, mode: "box" } } },
         ],
       },
       {

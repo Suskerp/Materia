@@ -10,6 +10,12 @@ import {
   setToolbarCustoms,
   stationFormData,
   stationFromForm,
+  powerEntryForm,
+  powerEntryFromForm,
+  tileItemForm,
+  tileItemFromForm,
+  alertForm,
+  alertFromForm,
 } from "./media-editor-model.js";
 
 /**
@@ -56,6 +62,8 @@ class MateriaItemListEditor extends LitElement {
     toForm: { attribute: false },
     fromForm: { attribute: false },
     newItem: { attribute: false },
+    /** (item, update(nextItem)) -> extra controls under the form (a card slot …) */
+    itemExtra: { attribute: false },
     addLabel: { type: String },
     _expanded: { state: true },
   };
@@ -131,6 +139,12 @@ class MateriaItemListEditor extends LitElement {
     this._write(items);
   }
 
+  _replace(i, item) {
+    const items = [...this._items];
+    items[i] = item;
+    this._write(items);
+  }
+
   _update(i, value) {
     const items = [...this._items];
     const old = items[i];
@@ -170,6 +184,7 @@ class MateriaItemListEditor extends LitElement {
                       this._update(i, e.detail.value);
                     }}
                   ></ha-form>
+                  ${this.itemExtra ? this.itemExtra(item, (next) => this._replace(i, next)) : nothing}
                 </div>`
               : nothing}
           </div>`
@@ -191,15 +206,35 @@ const STATION_SCHEMA = [
   { name: "tap_action", label: "sched_action", selector: { ui_action: { default_action: "perform-action" } } },
 ];
 
-/** Stations list control for a SmartEditor `render` field. */
-export function stationsField(editor, value, key = "stations") {
+const ACTIVE_ATTRIBUTES = ["media_album_name", "media_title", "media_channel", "media_artist", "media_series_title", "source", "state"];
+
+/** Tile grid items: a station's fields plus `icon` and `match`. */
+const tileSchemas = {};
+const tileItemSchema = (hass) => (tileSchemas[hass?.locale?.language ?? ""] ??= [
+  ...STATION_SCHEMA.slice(0, 2),
+  { name: "icon", label: t("ed_tile_icon", hass), selector: { icon: {} } },
+  {
+    name: "match",
+    label: t("ed_tile_match", hass),
+    selector: { select: { multiple: true, custom_value: true, options: [] } },
+  },
+  STATION_SCHEMA[2],
+]);
+
+/** The tile grid's `active.attributes` options. */
+export const ACTIVE_ATTRIBUTES_SELECTOR = {
+  select: { multiple: true, custom_value: true, options: ACTIVE_ATTRIBUTES },
+};
+
+/** Stations list control for a SmartEditor `render` field (`tiles`: a tile grid's item form). */
+export function stationsField(editor, value, key = "stations", tiles = false) {
   return html`<materia-item-list-editor
     .hass=${editor.hass}
     .items=${value ?? []}
-    .schema=${STATION_SCHEMA}
+    .schema=${tiles ? tileItemSchema(editor.hass) : STATION_SCHEMA}
     .itemLabel=${(st) => st?.name}
-    .toForm=${stationFormData}
-    .fromForm=${stationFromForm}
+    .toForm=${tiles ? tileItemForm : stationFormData}
+    .fromForm=${tiles ? tileItemFromForm : stationFromForm}
     .newItem=${() => ({ name: "" })}
     addLabel=${key === "stations" ? "media_stations" : "e_items"}
     @value-changed=${(e) => {
@@ -208,6 +243,72 @@ export function stationsField(editor, value, key = "stations") {
     }}
   ></materia-item-list-editor>`;
 }
+
+/* ------------------------------------------------------------------ */
+/*  Power entities: { entity, name } rows                               */
+/* ------------------------------------------------------------------ */
+
+/** A power menu's player list (ids or { entity, name }) for a SmartEditor `render` field. */
+export function powerEntitiesField(editor, value, key, label) {
+  const h = editor.hass;
+  return html`<materia-item-list-editor
+    .hass=${h}
+    .items=${Array.isArray(value) ? value : []}
+    .schema=${powerSchema(h)}
+    .itemLabel=${(p) => (typeof p === "string" ? p : p?.name || p?.entity)}
+    .toForm=${powerEntryForm}
+    .fromForm=${powerEntryFromForm}
+    .newItem=${() => ({})}
+    addLabel=${label}
+    @value-changed=${(e) => {
+      e.stopPropagation();
+      editor._setField(key, e.detail.value?.length ? e.detail.value : undefined);
+    }}
+  ></materia-item-list-editor>`;
+}
+
+/** A hero's `alerts` list (first match wins) for a SmartEditor `render` field. */
+export function alertsField(editor, value) {
+  const h = editor.hass;
+  return html`<materia-item-list-editor
+    .hass=${h}
+    .items=${Array.isArray(value) ? value : value ? [value] : []}
+    .schema=${alertSchema(h)}
+    .itemLabel=${(a) => a?.text || a?.entity}
+    .toForm=${alertForm}
+    .fromForm=${alertFromForm}
+    .newItem=${() => ({ text: "" })}
+    addLabel=${t("ed_alerts", h)}
+    @value-changed=${(e) => {
+      e.stopPropagation();
+      const next = { ...editor._config };
+      delete next.alert;
+      if (e.detail.value?.length) next.alerts = e.detail.value;
+      else delete next.alerts;
+      editor._commit(next);
+    }}
+  ></materia-item-list-editor>`;
+}
+
+const alertSchemas = {};
+const alertSchema = (hass) =>
+  (alertSchemas[hass?.locale?.language ?? ""] ??= [
+    { name: "entity", label: t("ed_alert_entity", hass), selector: { entity: {} } },
+    { name: "state", label: t("ed_alert_state", hass), selector: { select: { multiple: true, custom_value: true, options: [] } } },
+    { name: "text", label: t("ed_alert_text", hass), selector: { text: {} } },
+    { name: "icon", selector: { icon: {} } },
+    { name: "color", label: t("ed_alert_color", hass), selector: { text: {} } },
+    { name: "color_on", label: t("ed_alert_color_on", hass), selector: { text: {} } },
+    { name: "tap_action", label: t("ed_alert_action", hass), selector: { ui_action: {} } },
+  ]);
+
+/** Stable per language, so ha-form keeps its controls across renders. */
+const powerSchemas = {};
+const powerSchema = (hass) =>
+  (powerSchemas[hass?.locale?.language ?? ""] ??= [
+    { name: "entity", label: t("ed_power_player", hass), selector: { entity: { domain: "media_player" } } },
+    { name: "name", label: t("ed_power_name", hass), selector: { text: {} } },
+  ]);
 
 /* ------------------------------------------------------------------ */
 /*  Toolbar buttons: built-in chips + custom list                       */

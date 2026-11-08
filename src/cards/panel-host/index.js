@@ -1,6 +1,7 @@
 import { LitElement, html, css, nothing } from "lit";
 import { loadCardHelpers } from "../../styles/shared.js";
 import { PanelHostMixin, panelChromeStyles } from "../../primitives/panels.js";
+import "./editor.js";
 
 /**
  * materia-panel-host — a stack of cards that can open named panels.
@@ -45,6 +46,10 @@ class MateriaPanelHost extends PanelHostMixin(LitElement) {
       }
     `,
   ];
+
+  static getConfigElement() {
+    return document.createElement("materia-panel-host-editor");
+  }
 
   static getStubConfig() {
     return {

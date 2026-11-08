@@ -1,4 +1,5 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { alertsField } from "../../utils/media-editors.js";
 
 class MateriaVacuumHeroEditor extends SmartEditorBase {
   /* Switches must be seeded with the card's own defaults. An option that
@@ -56,6 +57,7 @@ class MateriaVacuumHeroEditor extends SmartEditorBase {
           { name: "docked_label", label: "e_label_at_full", selector: { text: {} } },
           { name: "drying_label", label: "e_drying_sub_line", selector: { text: {} } },
           { name: "alert_tints_hero", label: "e_error_colour_whole", selector: { boolean: {} } },
+          { name: "alerts", render: (value) => alertsField(this, value) },
           // The shell hides the burst on sidekicks unconditionally — the
           // decoration is the hero's statement mark — so on a sidekick this
           // toggle is a no-op and offering it just breaks trust in the form.

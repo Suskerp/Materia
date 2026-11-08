@@ -7,20 +7,16 @@ import { STRINGS, localize, resolveLanguage, t, tr } from "../src/utils/i18n.js"
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
-/** Editors being rewritten (with i18n) on a parallel branch; drop once merged. */
-const PENDING = new Set(["switcher"]);
-
 /** Every visual editor, plus the shared editor modules. */
 function editorFiles() {
   const files = [];
   for (const dir of ["src/cards", "src/elements"]) {
     for (const name of readdirSync(join(root, dir))) {
-      if (PENDING.has(name)) continue;
       const file = join(root, dir, name, "editor.js");
       if (existsSync(file)) files.push(file);
     }
   }
-  for (const name of ["media-editors.js", "smart-editor.js", "editor-helpers.js"]) {
+  for (const name of ["media-editors.js", "smart-editor.js", "editor-helpers.js", "card-list-editor.js", "panels-editor.js"]) {
     files.push(join(root, "src/utils", name));
   }
   return files;
