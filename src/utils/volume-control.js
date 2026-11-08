@@ -44,8 +44,8 @@ export function clampVolume(steps, limit) {
  * Whether the limit label shows: the arc shows any limit below MAX_STEPS
  * (its track ends there); knob and tap only once the value reaches it.
  */
-export function showsLimit(style, value, limit) {
-  if (!(limit < MAX_STEPS)) return false;
+export function showsLimit(style, value, limit, max = MAX_STEPS) {
+  if (!(limit < max)) return false;
   return style === "arc" ? true : Math.round(value) >= limit;
 }
 

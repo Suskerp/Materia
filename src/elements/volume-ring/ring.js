@@ -8,10 +8,10 @@ import { dialArc } from "../../utils/kinetic-knob.js";
  * inside (no number), drawn in a 48 px square. Shared by materia-volume-ring
  * and the media header, so both read identically.
  */
-export function volumeRing(stateObj) {
+export function volumeRing(stateObj, map) {
   const off = isMediaOff(stateObj);
-  const v = off ? 0 : volumeSteps(stateObj);
-  const limit = volumeLimit(stateObj);
+  const v = off ? 0 : volumeSteps(stateObj, map);
+  const limit = volumeLimit(stateObj, map);
   // r 20 in a 48 box: the 3 px stroke stays inside the 48 px target.
   const muted = off || !!stateObj?.attributes?.is_volume_muted;
   return html`<span class="vring-box" aria-hidden="true"><svg class="vring" viewBox="0 0 48 48">

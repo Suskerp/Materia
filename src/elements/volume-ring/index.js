@@ -6,6 +6,7 @@ import { hostStyles, haCardReset } from "../../styles/card-styles.js";
 import { motionTokens } from "../../utils/motion.js";
 import { mediaTokens } from "../../styles/media-styles.js";
 import { volumeRing, volumeRingStyles } from "./ring.js";
+import { attributeMapOf } from "../../utils/media-attributes.js";
 import "./editor.js";
 
 /**
@@ -65,6 +66,10 @@ class MateriaVolumeRing extends SheetOpenerMixin(ActionMixin(LitElement)) {
     this.config = config;
   }
 
+  _attributeMap() {
+    return attributeMapOf(this);
+  }
+
   _open(e) {
     this._fireHaptic("light");
     this._openVolumePanel(e.currentTarget);
@@ -79,7 +84,7 @@ class MateriaVolumeRing extends SheetOpenerMixin(ActionMixin(LitElement)) {
         aria-label=${t("media_volume", this.hass)}
         aria-expanded=${this._openPanel === "volume" ? "true" : "false"}
         @click=${this._open}
-      >${volumeRing(s)}</button>
+      >${volumeRing(s, this._attributeMap())}</button>
     </ha-card>`;
   }
 
