@@ -1,7 +1,8 @@
 import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { t } from "../../utils/i18n.js";
-import { MAX_STEPS, volumeSteps, volumeLimit, isMediaOff } from "../../utils/media.js";
+import { MAX_STEPS, volumeSteps, volumeLimit, isMediaOff, maxSteps } from "../../utils/media.js";
+import { attributeMapOf } from "../../utils/media-attributes.js";
 import {
   SWEEP,
   START,
@@ -108,15 +109,15 @@ class MateriaVolume extends ActionMixin(LitElement) {
   _volValue() {
     if (this._local != null && (this._dragging || Date.now() < this._localUntil)) return this._local;
     this._local = null;
-    return volumeSteps(this._state());
+    return volumeSteps(this._state(), this._attrs);
   }
 
   _setVolume(steps, final) {
     const s = this._state();
-    const limit = volumeLimit(s);
+    const limit = volumeLimit(s, this._attrs);
     const v = clampVolume(steps, limit);
-    const prev = this._local ?? volumeSteps(s);
-    if (v !== prev) stepHaptic(this, stepHapticType(v, limit));
+    const prev = this._local ?? volumeSteps(s, this._attrs);
+    if (v !== prev) stepHaptic(this, stepHapticType(v, limit, this._max));
     else if (Math.round(steps) > limit && prev === limit && !this._atLimitBuzzed) {
       stepHaptic(this, "warning");
       this._atLimitBuzzed = true;
@@ -131,7 +132,7 @@ class MateriaVolume extends ActionMixin(LitElement) {
       this._sent = v;
       this._callService("media_player", "volume_set", {
         entity_id: this._entityId,
-        volume_level: +(v / MAX_STEPS).toFixed(4),
+        volume_level: +(v / this._max).toFixed(4),
       });
     }
   }
@@ -175,7 +176,7 @@ class MateriaVolume extends ActionMixin(LitElement) {
       this._lastMoveT = ev.timeStamp;
       return;
     }
-    this._dragVal = Math.max(0, Math.min(volumeLimit(this._state()), this._dragVal + arcStep(d)));
+    this._dragVal = Math.max(0, Math.min(volumeLimit(this._state(), this._attrs), this._dragVal + arcStep(d, this._max)));
     if (Math.round(this._dragVal) !== this._local) this._setVolume(this._dragVal, false);
   }
 
@@ -205,7 +206,7 @@ class MateriaVolume extends ActionMixin(LitElement) {
 
   /** Turns the knob by `deg` (finger or coast); the volume follows in whole steps. False at an end stop. */
   _turnKnob(deg) {
-    const limit = volumeLimit(this._state());
+    const limit = volumeLimit(this._state(), this._attrs);
     const next = this._dragVal + knobStepsFor(deg);
     this._dragVal = Math.max(0, Math.min(limit, next));
     this._knobAngle = knobAngleFor(this._dragVal);
@@ -262,7 +263,7 @@ class MateriaVolume extends ActionMixin(LitElement) {
     if (!d || d.id !== ev.pointerId) return;
     if (!d.moved && Math.abs(ev.clientY - d.y) < 6) return;
     d.moved = true;
-    const limit = volumeLimit(this._state());
+    const limit = volumeLimit(this._state(), this._attrs);
     this._setVolume(this._barFrac(ev, ev.currentTarget) * limit, false);
   }
 
@@ -273,7 +274,7 @@ class MateriaVolume extends ActionMixin(LitElement) {
     this._dragging = false;
     ev.currentTarget.classList.remove("dragging");
     if (ev.type === "pointercancel") return;
-    const limit = volumeLimit(this._state());
+    const limit = volumeLimit(this._state(), this._attrs);
     const frac = this._barFrac(ev, ev.currentTarget);
     this._setVolume(d.moved ? frac * limit : tapStep(this._volValue(), frac, limit), true);
   }
@@ -315,6 +316,23 @@ class MateriaVolume extends ActionMixin(LitElement) {
       this._local = null;
       this._entityId = id;
     }
+    this._attrs = this._attributeMap();
+  }
+
+  /** Attribute names and volume scale: own `attributes:`, else the art scope's, else the defaults. */
+  _attributeMap() {
+    return attributeMapOf(this);
+  }
+
+  /** The volume scale in steps (attributes.steps, default MAX_STEPS). */
+  get _max() {
+    return maxSteps(this._attrs);
+  }
+
+  /** A volume in steps on the dial's fixed 0 … MAX_STEPS geometry. */
+  _dial(v) {
+    const max = this._max;
+    return max === MAX_STEPS ? v : (v * MAX_STEPS) / max;
   }
 
   updated(changed) {
@@ -336,12 +354,12 @@ class MateriaVolume extends ActionMixin(LitElement) {
     const s = this._state();
     const off = isMediaOff(s);
     const v = this._volValue();
-    const limit = volumeLimit(s);
+    const limit = volumeLimit(s, this._attrs);
     const style = this._style;
     const $ = (sel) => root.querySelector(sel);
     $(".num").textContent = off ? t("state_off", this.hass) : String(Math.round(v));
     dial.setAttribute("aria-valuenow", String(Math.round(v)));
-    $(".limlabel").textContent = showsLimit(style, v, limit) ? t("media_limit", this.hass, { value: limit }) : "";
+    $(".limlabel").textContent = showsLimit(style, v, limit, this._max) ? t("media_limit", this.hass, { value: limit }) : "";
     if (style === "tap") {
       // The bar spans 0 … the limit: the range above it can't be used, so it isn't drawn.
       dial.style.setProperty("--p", String(barLevel(v, limit, off)));
@@ -352,18 +370,18 @@ class MateriaVolume extends ActionMixin(LitElement) {
       const angle = (this._dragging || this._coast) && this._knobAngle != null ? this._knobAngle : knobAngleFor(v);
       this._knobG.style.transform = `rotate(${angle}deg)`;
       // Outer thin arc = the volume the amplifier REPORTS, so it trails the knob.
-      $(".actual").style.strokeDasharray = `${reportedArc(volumeSteps(s), limit, off)} ${MAX_STEPS + 1}`;
+      $(".actual").style.strokeDasharray = `${reportedArc(volumeSteps(s, this._attrs), limit, off)} ${MAX_STEPS + 1}`;
       return;
     }
-    $(".trk").setAttribute("d", dialArc(0, limit));
-    $(".lvl").setAttribute("d", off ? "" : dialArc(0, Math.max(v, 0.01)));
-    const [cx, cy] = polar(74, START + (SWEEP * v) / MAX_STEPS);
+    $(".trk").setAttribute("d", dialArc(0, this._dial(limit)));
+    $(".lvl").setAttribute("d", off ? "" : dialArc(0, Math.max(this._dial(v), 0.01)));
+    const [cx, cy] = polar(74, START + (SWEEP * v) / this._max);
     const dot = $(".dot");
     dot.setAttribute("cx", cx.toFixed(2));
     dot.setAttribute("cy", cy.toFixed(2));
     for (const tick of root.querySelectorAll(".tick")) {
       const tv = Number(tick.dataset.v);
-      tick.classList.toggle("t-on", !off && tv <= v);
+      tick.classList.toggle("t-on", !off && tv <= this._dial(v));
     }
   }
 
@@ -438,7 +456,7 @@ class MateriaVolume extends ActionMixin(LitElement) {
           ${this.config.show_name === false ? nothing : html`<span class="zn">${name}</span>`}
           <span class="num"></span>
         </div>
-        <div class="tbody">${this._tapBar(name, volumeLimit(this._state()))}</div>
+        <div class="tbody">${this._tapBar(name, volumeLimit(this._state(), this._attrs))}</div>
         <div class="limlabel"></div>
         ${this._tapFoot(muted)}
       </ha-card>
@@ -448,7 +466,7 @@ class MateriaVolume extends ActionMixin(LitElement) {
   _tapParts(name, muted) {
     return html`
       <div class="tbody">
-        ${this._tapBar(name, volumeLimit(this._state()))}
+        ${this._tapBar(name, volumeLimit(this._state(), this._attrs))}
         <div class="treadout">
           <span class="num"></span>
           <div class="limlabel"></div>
@@ -468,7 +486,7 @@ class MateriaVolume extends ActionMixin(LitElement) {
           role="slider"
           aria-label=${name}
           aria-valuemin="0"
-          aria-valuemax=${MAX_STEPS}
+          aria-valuemax=${this._max}
           @pointerdown=${this._down}
           @pointermove=${this._move}
           @pointerup=${this._up}

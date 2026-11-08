@@ -1,9 +1,10 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { SheetOpenerMixin } from "../../primitives/sheet.js";
-import { isMediaOff, isLive, nextSource, visibleEdges, nowPlayingText, sameText, powerTransition } from "../../utils/media.js";
+import { isMediaOff, isLive, nextSource, visibleEdges, nowPlayingText, sameText, powerTransition, mediaAttr } from "../../utils/media.js";
 import { t } from "../../utils/i18n.js";
 import { volumeRing } from "../../elements/volume-ring/ring.js";
+import { attributeMapOf } from "../../utils/media-attributes.js";
 import "../../cards/station-grid/index.js";
 import { styles } from "./styles.js";
 import "./editor.js";
@@ -46,6 +47,10 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
 
   get _stateObj() {
     return this.hass?.states[this.config.entity];
+  }
+
+  _attributeMap() {
+    return attributeMapOf(this);
   }
 
   _cycleSource() {
@@ -173,7 +178,7 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
 
   _powerButton(cls = "iconbtn") {
     const anyOn = this._powerZones.some((z) => !isMediaOff(this.hass.states[z.entity]));
-    const busy = this._powerZones.some((z) => powerTransition(this.hass.states[z.entity]));
+    const busy = this._powerZones.some((z) => powerTransition(this.hass.states[z.entity], this._attributeMap()));
     return html`<button
       class="${cls} power ${anyOn ? "on" : ""} ${busy ? "busy" : ""} ${this._power ? "open" : ""}"
       aria-label=${t("media_power", this.hass)}
@@ -202,7 +207,7 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
   get _headTitle() {
     const s = this._stateObj;
     const a = s?.attributes ?? {};
-    if (!isMediaOff(s) && !powerTransition(s)) return a.source ?? a.input ?? a.friendly_name ?? "";
+    if (!isMediaOff(s) && !powerTransition(s, this._attributeMap())) return a.source ?? mediaAttr(s, "input", this._attributeMap()) ?? a.friendly_name ?? "";
     if (this.config.device_name) return this.config.device_name;
     const name = a.friendly_name ?? "";
     const zone = this._zoneName;
@@ -219,12 +224,12 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
     const zones = this._powerZones;
     const differ = zones.length > 1 && new Set(zones.map((z) => isMediaOff(this.hass.states[z.entity]))).size > 1;
     const zone = differ ? this._zoneName : null;
-    const transition = powerTransition(s);
+    const transition = powerTransition(s, this._attributeMap());
     if (transition) return t(transition === "turning_on" ? "media_turning_on" : "media_turning_off", this.hass);
     if (isMediaOff(s)) return [t("state_off", this.hass), zone].filter(Boolean).join(" · ");
     const { appChip } = nowPlayingText({
-      source: a.source ?? a.input,
-      app: isLive(s) ? t("media_radio", this.hass) : a.app_name,
+      source: a.source ?? mediaAttr(s, "input", this._attributeMap()),
+      app: isLive(s, this._attributeMap()) ? t("media_radio", this.hass) : a.app_name,
       title: a.media_title,
     });
     return [appChip, sameText(appChip, zone) ? null : zone].filter(Boolean).join(" · ");
@@ -234,8 +239,8 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
     const a = s?.attributes ?? {};
     // The source once, plus the app only when it says something new.
     const { chip } = nowPlayingText({
-      source: a.source ?? a.input,
-      app: isLive(s) ? t("media_radio", this.hass) : a.app_name,
+      source: a.source ?? mediaAttr(s, "input", this._attributeMap()),
+      app: isLive(s, this._attributeMap()) ? t("media_radio", this.hass) : a.app_name,
       title: a.media_title,
     });
     const open = this._openPanel === "stations";
@@ -290,7 +295,7 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
                     class="iconbtn ring ${edge(1)} ${this._openPanel === "volume" ? "open" : ""}"
                     aria-label=${t("media_volume", this.hass)}
                     @click=${this._openVolume}
-                  >${volumeRing(this._stateObj)}</button>`
+                  >${volumeRing(this._stateObj, this._attributeMap())}</button>`
                 : nothing}
               ${showPower ? this._powerButton(`iconbtn ${edge(2)}`) : nothing}
             </div>`

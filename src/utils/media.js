@@ -21,27 +21,66 @@ export const MEDIA_FEATURE = {
 
 const finite = (v) => (v === null || v === undefined || v === "" ? NaN : Number(v));
 
-/** Volume in steps: `volume_steps` when the player publishes it, else volume_level x 99. */
-export function volumeSteps(stateObj) {
-  const a = stateObj?.attributes ?? {};
-  const steps = finite(a.volume_steps);
-  if (Number.isFinite(steps)) return Math.max(0, Math.min(MAX_STEPS, Math.round(steps)));
-  const level = finite(a.volume_level);
-  return Number.isFinite(level) ? Math.round(Math.max(0, Math.min(1, level)) * MAX_STEPS) : 0;
+/**
+ * Where each non-standard media reading comes from: the Arcam template
+ * player's attribute names, plus `steps`, the volume scale used when the
+ * player publishes no step attribute (100 for a percent-based player). A
+ * card's `attributes:` (else its art scope's) overrides any key; a name set
+ * to false (or null) is ignored.
+ */
+export const DEFAULT_ATTRIBUTES = Object.freeze({
+  volume_steps: "volume_steps",
+  limit: "limit",
+  controls: "controls",
+  live: "live",
+  transition: "transition",
+  input: "input",
+  steps: MAX_STEPS,
+});
+
+const plainObject = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : null);
+
+/** The map in force, per key: the card's own `attributes:`, else the scope's, else the defaults. */
+export function resolveAttributes(own, scoped) {
+  const s = plainObject(scoped);
+  const o = plainObject(own);
+  return s || o ? { ...DEFAULT_ATTRIBUTES, ...s, ...o } : DEFAULT_ATTRIBUTES;
 }
 
-/** Upper volume limit in steps from the `limit` attribute; no (valid) limit = MAX_STEPS. */
-export function volumeLimit(stateObj) {
-  const l = finite(stateObj?.attributes?.limit);
-  return Number.isFinite(l) && l > 0 ? Math.min(Math.round(l), MAX_STEPS) : MAX_STEPS;
+/** Value of the attribute mapped to `key` (undefined when the map turns it off). */
+export function mediaAttr(stateObj, key, map = DEFAULT_ATTRIBUTES) {
+  const name = map && key in map ? map[key] : DEFAULT_ATTRIBUTES[key];
+  return name ? stateObj?.attributes?.[name] : undefined;
+}
+
+/** The volume scale: the map's `steps` (a positive number), else MAX_STEPS. */
+export function maxSteps(map = DEFAULT_ATTRIBUTES) {
+  const n = finite(map?.steps);
+  return Number.isFinite(n) && n > 0 ? Math.round(n) : MAX_STEPS;
+}
+
+/** Volume in steps: the `volume_steps` attribute when the player publishes it, else volume_level x steps. */
+export function volumeSteps(stateObj, map = DEFAULT_ATTRIBUTES) {
+  const max = maxSteps(map);
+  const steps = finite(mediaAttr(stateObj, "volume_steps", map));
+  if (Number.isFinite(steps)) return Math.max(0, Math.min(max, Math.round(steps)));
+  const level = finite(stateObj?.attributes?.volume_level);
+  return Number.isFinite(level) ? Math.round(Math.max(0, Math.min(1, level)) * max) : 0;
+}
+
+/** Upper volume limit in steps from the `limit` attribute; no (valid) limit = the full scale. */
+export function volumeLimit(stateObj, map = DEFAULT_ATTRIBUTES) {
+  const max = maxSteps(map);
+  const l = finite(mediaAttr(stateObj, "limit", map));
+  return Number.isFinite(l) && l > 0 ? Math.min(Math.round(l), max) : max;
 }
 
 export function isMediaOff(stateObj) {
   return !stateObj || ["off", "unavailable", "unknown"].includes(stateObj.state);
 }
 
-export function isLive(stateObj) {
-  const v = stateObj?.attributes?.live;
+export function isLive(stateObj, map = DEFAULT_ATTRIBUTES) {
+  const v = mediaAttr(stateObj, "live", map);
   return v === true || v === "true" || v === "on";
 }
 
@@ -50,9 +89,10 @@ export function isLive(stateObj) {
  * `controls` list (the Arcam template player) is taken at its word; anything
  * else is read from supported_features.
  */
-export function mediaControls(stateObj) {
+export function mediaControls(stateObj, map = DEFAULT_ATTRIBUTES) {
   const a = stateObj?.attributes ?? {};
-  if (Array.isArray(a.controls)) return a.controls.map(String);
+  const controls = mediaAttr(stateObj, "controls", map);
+  if (Array.isArray(controls)) return controls.map(String);
   const f = Number(a.supported_features) || 0;
   const out = [];
   if (f & (MEDIA_FEATURE.PAUSE | MEDIA_FEATURE.PLAY)) out.push("play_pause");
@@ -188,8 +228,8 @@ export function holdSkipButtons(hold, { prev, next }, now = Date.now(), holdMs =
  * "turning_on" / "turning_off" while a player is on its way (an Arcam waking
  * from standby takes seconds), else null. Read from the `transition` attribute.
  */
-export function powerTransition(stateObj) {
-  const v = stateObj?.attributes?.transition;
+export function powerTransition(stateObj, map = DEFAULT_ATTRIBUTES) {
+  const v = mediaAttr(stateObj, "transition", map);
   return v === "turning_on" || v === "turning_off" ? v : null;
 }
 

@@ -42,6 +42,23 @@ Every part reads the player's `controls` attribute (a list) when it has one,
 else its `supported_features`. Volume is in steps 0–99: `volume_steps` when
 present, else `volume_level` × 99; the `limit` attribute caps it.
 
+These non-standard attribute names are configurable with an optional
+`attributes:` map on any media card or on the enclosing `materia-art-scope`
+(the card's own keys win, per key). Each name can be another attribute or
+`false` to ignore it; `steps` sets the volume scale used without a step
+attribute (100 for a percent-based player). Defaults:
+
+```yaml
+attributes:
+  volume_steps: volume_steps
+  limit: limit
+  controls: controls
+  live: live
+  transition: transition   # turning_on / turning_off
+  input: input
+  steps: 99
+```
+
 | Part | Type | Role |
 |---|---|---|
 | Art scope | `materia-art-scope` | Container. Colours its children from the cover; `kiosk` layout hosts a side panel. |

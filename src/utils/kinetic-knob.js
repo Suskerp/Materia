@@ -72,13 +72,13 @@ export const knobAngleFor = (steps) => (steps * 360) / KNOB_STEPS_PER_TURN;
 export const knobStepsFor = (deg) => (deg * KNOB_STEPS_PER_TURN) / 360;
 
 /** Arc style: steps for one pointer move of `deltaDeg`, capped per event. */
-export function arcStep(deltaDeg) {
-  return Math.max(-MAX_STEP_PER_MOVE, Math.min(MAX_STEP_PER_MOVE, (deltaDeg * MAX_STEPS * GAIN) / SWEEP));
+export function arcStep(deltaDeg, max = MAX_STEPS) {
+  return Math.max(-MAX_STEP_PER_MOVE, Math.min(MAX_STEP_PER_MOVE, (deltaDeg * max * GAIN) / SWEEP));
 }
 
 /** Haptic for a volume change: heavy at a real limit, light at 0, a selection tick otherwise. */
-export function stepHapticType(value, limit) {
-  if (value === limit && limit < MAX_STEPS) return "heavy";
+export function stepHapticType(value, limit, max = MAX_STEPS) {
+  if (value === limit && limit < max) return "heavy";
   if (value === 0) return "light";
   return "selection";
 }

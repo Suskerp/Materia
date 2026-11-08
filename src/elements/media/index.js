@@ -12,6 +12,7 @@ import { powerTransition,
   ART_FIT_MARGIN,
 } from "../../utils/media.js";
 import { scopeContext } from "../../primitives/sheet.js";
+import { attributeMapOf } from "../../utils/media-attributes.js";
 import { t } from "../../utils/i18n.js";
 import "./editor.js";
 
@@ -208,6 +209,10 @@ class MateriaMedia extends ActionMixin(LitElement) {
     return this.hass?.states[this.config.entity];
   }
 
+  _attributeMap() {
+    return attributeMapOf(this);
+  }
+
   get _title() {
     if (this.config.name) {
       return this._isTemplate(this.config.name) ? this._resolvedName : this.config.name;
@@ -260,7 +265,8 @@ class MateriaMedia extends ActionMixin(LitElement) {
     const image = this._shownImage ?? this._image;
     const size = this._artSize();
     // Live radio sends a station LOGO: white ground, contained, never cropped.
-    const logo = this.config.live_logo !== false && isLive(s);
+    const attrs = this._attributeMap();
+    const logo = this.config.live_logo !== false && isLive(s, attrs);
     // Each distinct value once: a TV app that reports no title arrives as
     // title = app name, and must not be repeated as the app chip.
     const np = nowPlayingText({
@@ -270,7 +276,7 @@ class MateriaMedia extends ActionMixin(LitElement) {
       artist: a.media_artist,
       album: a.media_album_name,
     });
-    const transition = powerTransition(s);
+    const transition = powerTransition(s, attrs);
     const title = this.config.name
       ? this._title
       : transition

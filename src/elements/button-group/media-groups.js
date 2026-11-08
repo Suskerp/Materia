@@ -8,6 +8,7 @@ import {
   heldValue,
   holdSkipButtons,
 } from "../../utils/media.js";
+import { attributeMapOf } from "../../utils/media-attributes.js";
 import { SIZES } from "./styles.js";
 import { toolbarList } from "../../utils/media-editor-model.js";
 
@@ -45,7 +46,7 @@ export function toolbarItems(config) {
 export function renderTransport(el) {
   const { hass, config } = el;
   const s = hass.states[config.entity];
-  const ctrl = mediaControls(s);
+  const ctrl = mediaControls(s, el._attributeMap());
   if (isMediaOff(s) || !ctrl.includes("play_pause")) return html``;
   // Shown at once on tap; the player confirms a moment later.
   const playing = heldValue(el._pendingPlay, s.state === "playing");
@@ -89,7 +90,7 @@ export function renderToolbar(el) {
   const { hass, config } = el;
   const s = hass.states[config.entity];
   const a = s?.attributes ?? {};
-  const ctrl = mediaControls(s);
+  const ctrl = mediaControls(s, el._attributeMap());
   const items = toolbarItems(config);
   // Decided on the VISIBLE buttons (shuffle / repeat only where supported).
   const { visible, first, last, solo, mode } = toolbarLayout(items, ctrl);
@@ -155,6 +156,10 @@ export function renderToolbar(el) {
 /** Mixed into MateriaButtonGroup: the handlers the two renderers call. */
 export const MediaGroupMixin = (superClass) =>
   class extends superClass {
+    _attributeMap() {
+      return attributeMapOf(this);
+    }
+
     _mediaService(service, data = {}) {
       this._fireHaptic("light");
       this._callService("media_player", service, { entity_id: this.config.entity, ...data });

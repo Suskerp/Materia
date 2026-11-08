@@ -66,6 +66,7 @@ class MateriaArtScope extends PanelHostMixin(LitElement) {
       e.stopPropagation();
       e.detail.entity = this.config.entity;
       e.detail.scope = this;
+      e.detail.attributes = this.config.attributes;
       // From the config, not the measurement: a card that asks before the
       // first ResizeObserver callback must get the same answer as one after.
       e.detail.kiosk = this.config.layout === "kiosk";

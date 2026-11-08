@@ -1,7 +1,8 @@
 import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
-import { isLive, isMediaOff, mediaControls } from "../../utils/media.js";
+import { isLive, isMediaOff, mediaControls, mediaAttr } from "../../utils/media.js";
+import { attributeMapOf } from "../../utils/media-attributes.js";
 import { t } from "../../utils/i18n.js";
 import "./editor.js";
 
@@ -41,6 +42,10 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     if (!config.entity) throw new Error("entity is required");
     this.config = config;
     this._cid ??= `mp-clip-${++_uid}`;
+  }
+
+  _attributeMap() {
+    return attributeMapOf(this);
   }
 
   connectedCallback() {
@@ -99,9 +104,11 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     // A player that states `live` itself (the Arcam template player does) is
     // taken at its word: the rolling-end guess would otherwise latch on a
     // stale position (TV) or at a track end, hiding the track and blocking seek.
-    const stated = s.attributes.live !== undefined && s.attributes.live !== null;
+    const attrs = this._attributeMap();
+    const stated = mediaAttr(s, "live", attrs) != null;
     const live =
-      this.config.live === true || (stated ? isLive(s) : (playing && this._live) || (this._player && isLive(s)));
+      this.config.live === true ||
+      (stated ? isLive(s, attrs) : (playing && this._live) || (this._player && isLive(s, attrs)));
 
     // Optimistic seek: continue from where the drag ended until the player's own
     // position agrees (within 3 s) or 5 s have passed.
@@ -287,7 +294,7 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
     if (this.config.seekable === false) return false;
     // Kept for a moment through the gap in controls while a track changes,
     // so the bar doesn't vanish and resize the card.
-    if (mediaControls(s).includes("seek")) {
+    if (mediaControls(s, this._attributeMap()).includes("seek")) {
       this._seekSeenAt = Date.now();
       return true;
     }
