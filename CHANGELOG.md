@@ -8,6 +8,67 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.74.0 — 2026-11-08
+
+The media family becomes composable: small generic cards that build today's Arcam
+volume panels, kiosk and phone drawer without device-specific code, and work for any
+media player.
+
+### Breaking changes
+- **`materia-volume-knob` is removed.** Compose the same panel instead:
+  - **One player:** `materia-volume` (styles `knob | arc | tap`, `column`).
+  - **Zones:** `materia-switcher` (`bar: tabs | connected`, one card per tab), or a
+    `materia-stack` row of `materia-volume` columns.
+  - **Link control:** `materia-toggle-chip` (chip or `variant: switch`) in the panel's
+    `actions:`.
+- **`materia-art-scope` `volume:` block is removed.**
+  - Define a `volume` panel on the panel host instead.
+  - Give `materia-media-header` its `power_entities` list for the power menu, which no
+    longer comes from the volume zones.
+- **`materia-art-scope` `panel_mode: inline` is removed.** Wrap the cards in
+  `materia-panel-host` (`mode: inline | sheet`).
+- **Panel entries are full card definitions.** A `panels:` entry is now a card,
+  `{ heading, actions, card }` or `{ heading, actions, cards }`. It is no longer a set of
+  options merged into the card a button asks for.
+  - Before: `panels: { volume: { style: tap } }`.
+  - Now: `panels: { volume: { heading: Volume, cards: [...] } }`.
+- **Panel content no longer draws its own panel heading or close/back buttons;** the host
+  draws them. The `in_panel`, `in_sheet` and `panel_back` flags are gone.
+- **The scope context event is renamed** from `materia-volume-context` to
+  `materia-scope-context`. This only matters for custom code that listened for it.
+
+### Added
+- **Panels:**
+  - `materia-panel-host` hosts named panels inline or as a bottom sheet, with a timeout
+    and a second tap to close.
+  - The `materia-panel` tap action works on any button, chip or tile:
+    `{ action: materia-panel, panel: id }`.
+  - A panel's head row takes `actions:` cards; `head: false` hides the row.
+- **`materia-volume`:** one player's volume (knob, arc, tap) with the old card's
+  physics, haptics, limit and hold-to-repeat.
+- **`materia-switcher`:** a tab bar over one card slot. Each tab has a name, a live
+  value (template) and a card.
+- **`materia-toggle-chip`:** a chip or labelled switch for any on/off entity, with
+  templated labels.
+- **`materia-stack`:** cards in a row or column that fill the available space (mixers,
+  panels).
+- **`materia-tile-grid`:** a generic image or icon grid with actions.
+  - Options: `tile: logo | cover`, `tile_background`, and `active` matching on chosen
+    attributes.
+  - `materia-station-grid` stays as an alias.
+- **`attributes:`** maps the non-standard player attributes (`volume_steps`, `limit`,
+  `controls`, `live`, `transition`, `input`, `steps`) per card or per art scope.
+  Defaults are unchanged.
+- **Schedule:** in window mode, an existing Scheduler window shows on the strip right
+  away.
+
+### Fixed
+- **The auto-sized media cover no longer resizes on page load.** It starts at the size it
+  last had for that player on that page, and its first fit doesn't animate.
+- **Panel content fills the panel height,** so slider columns no longer collapse.
+- **A kiosk that is too narrow for its side column** opens its own panels as bottom
+  sheets.
+
 ## 0.73.0 — 2026-11-08
 
 The expressive media family: a phone player, a kiosk with side panels, volume per zone, and
