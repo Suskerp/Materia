@@ -3,7 +3,7 @@ import { SmartEditorBase } from "../../utils/smart-editor.js";
 class MateriaTimeInputEditor extends SmartEditorBase {
   _formData() { return { step: 60, ...this._config }; }
 
-  _sections() {
+  get _sections() {
     return [{
       title: "e_time",
       icon: "mdi:clock-outline",

@@ -36,7 +36,15 @@ const fire = (el, value) =>
  *  element: only the list / slot value does (fired from the host). */
 const stop = (e) => e.stopPropagation();
 
-const cardType = (c) => c?.type || "card";
+/** Readable card name: the picker name a custom card registers, else the built-in type. */
+const cardType = (c) => {
+  const type = c?.type || "card";
+  if (type.startsWith("custom:")) {
+    const id = type.slice(7);
+    return (globalThis.customCards || []).find((x) => x.type === id)?.name || id;
+  }
+  return type.charAt(0).toUpperCase() + type.slice(1).replace(/-/g, " ");
+};
 
 const styles = css`
   :host {
