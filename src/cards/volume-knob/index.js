@@ -1,58 +1,19 @@
-import { LitElement, html, svg, nothing } from "lit";
+import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { t } from "../../utils/i18n.js";
-import { MAX_STEPS, volumeSteps, volumeLimit, isMediaOff, formatOffset } from "../../utils/media.js";
-import {
-  SWEEP,
-  START,
-  unwrapDelta,
-  filterVelocity,
-  shouldCoast,
-  coastAmplitude,
-  coastOffset,
-  coastFinished,
-  knobAngleFor,
-  knobStepsFor,
-  arcStep,
-  stepHapticType,
-  dialArc,
-  stepHaptic,
-  tapStep,
-  repeatDelay,
-  REPEAT_INITIAL_MS,
-} from "../../utils/kinetic-knob.js";
+import { volumeSteps, isMediaOff, formatOffset } from "../../utils/media.js";
+import { volumeStyle, zoneLabel } from "../../utils/volume-control.js";
 import "../../elements/button-group/index.js";
+import "../volume/index.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
-const polar = (r, deg) => {
-  const a = (deg * Math.PI) / 180;
-  return [150 + r * Math.cos(a), 150 + r * Math.sin(a)];
-};
-
-/* Static dial geometry, built once. */
-const TICKS = Array.from({ length: 31 }, (_, i) => {
-  const major = i % 5 === 0;
-  const [x1, y1] = polar(158, START + (SWEEP * i) / 30);
-  const [x2, y2] = polar(major ? 172 : 167, START + (SWEEP * i) / 30);
-  return { v: (i / 30) * MAX_STEPS, major, x1, y1, x2, y2 };
-});
-const KNURL = Array.from({ length: 60 }, (_, i) => {
-  const major = i % 5 === 0;
-  const [x1, y1] = polar(major ? 108 : 111, i * 6);
-  const [x2, y2] = polar(major ? 128 : 125, i * 6);
-  return { major, x1, y1, x2, y2 };
-});
-
 /**
- * materia-volume-knob — the volume panel: a rotating dial (knob or arc
- * style), zones, zone linking, mute and −/+. Works inline (a kiosk column)
- * and as sheet content (the volume ring, the toolbar's volume button and the
- * media header open it in a materia-sheet).
- *
- * The dial is drawn by Lit once and then mutated imperatively while it turns:
- * a full Lit update per pointer event would starve the finger-following ring
- * on slow tablets (see materia-media-progress for the same rule).
+ * materia-volume-knob — the volume panel: a heading, zones, zone linking and,
+ * for the selected zone, materia-volume (knob, arc or tap dial with mute and
+ * −/+), embedded so its parts lay out in this card. Works inline (a kiosk
+ * column) and as sheet content (the volume ring, the toolbar's volume button
+ * and the media header open it in a materia-sheet).
  */
 class MateriaVolumeKnob extends ActionMixin(LitElement) {
   static properties = {
@@ -79,23 +40,10 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     if (!(this._zone < zones.length)) this._zone = Math.max(0, zones.findIndex((z) => z.entity === config.entity));
   }
 
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    cancelAnimationFrame(this._coast);
-    this._coast = null;
-    clearTimeout(this._wheel);
-    this._repeatStop();
-  }
-
   /* ---------------------------------------------------------------- state */
 
-  /** knob (default) | arc | tap */
   get _style() {
-    return ["arc", "tap"].includes(this.config.style) ? this.config.style : "knob";
-  }
-
-  get _knob() {
-    return this._style === "knob";
+    return volumeStyle(this.config.style);
   }
 
   _zoneState(i = this._zone) {
@@ -103,214 +51,12 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
   }
 
   _zoneName(i) {
-    const z = this.config.zones[i];
-    return z?.name ?? this.hass?.states[z?.entity]?.attributes?.friendly_name ?? z?.entity ?? "";
+    return zoneLabel(this.config.zones[i], this.hass);
   }
-
-  _volValue() {
-    if (this._local != null && (this._dragging || Date.now() < this._localUntil)) return this._local;
-    this._local = null;
-    return volumeSteps(this._zoneState());
-  }
-
-  _setVolume(steps, final) {
-    const s = this._zoneState();
-    const limit = volumeLimit(s);
-    const v = Math.max(0, Math.min(limit, Math.round(steps)));
-    const prev = this._local ?? volumeSteps(s);
-    if (v !== prev) stepHaptic(this, stepHapticType(v, limit));
-    else if (Math.round(steps) > limit && prev === limit && !this._atLimitBuzzed) {
-      stepHaptic(this, "warning");
-      this._atLimitBuzzed = true;
-    }
-    if (v < limit) this._atLimitBuzzed = false;
-    this._local = v;
-    this._localUntil = Date.now() + 2500;
-    this._renderDial();
-    const now = Date.now();
-    if ((final || now - (this._lastSent ?? 0) > 150) && (v !== this._sent || final)) {
-      this._lastSent = now;
-      this._sent = v;
-      this._callService("media_player", "volume_set", {
-        entity_id: this.config.zones[this._zone].entity,
-        volume_level: +(v / MAX_STEPS).toFixed(4),
-      });
-    }
-  }
-
-  /* ---------------------------------------------------------------- dial input */
-
-  _angle(ev) {
-    const r = this._dialEl.getBoundingClientRect();
-    return (Math.atan2(ev.clientY - (r.top + r.height / 2), ev.clientX - (r.left + r.width / 2)) * 180) / Math.PI;
-  }
-
-  _down(ev) {
-    cancelAnimationFrame(this._coast);
-    this._coast = null;
-    this._vel = 0;
-    this._lastMoveT = ev.timeStamp;
-    this._dragging = true;
-    this._knobAngle = knobAngleFor(this._volValue());
-    this._lastAng = this._angle(ev);
-    this._dragVal = this._volValue();
-    ev.currentTarget.setPointerCapture(ev.pointerId);
-    ev.currentTarget.classList.add("drag");
-  }
-
-  _move(ev) {
-    if (!this._dragging) return;
-    const a = this._angle(ev);
-    const d = unwrapDelta(a, this._lastAng);
-    this._lastAng = a;
-    if (this._knob) {
-      this._turnKnob(d);
-      this._vel = filterVelocity(this._vel, d, ev.timeStamp - (this._lastMoveT ?? ev.timeStamp));
-      this._lastMoveT = ev.timeStamp;
-      return;
-    }
-    this._dragVal = Math.max(0, Math.min(volumeLimit(this._zoneState()), this._dragVal + arcStep(d)));
-    if (Math.round(this._dragVal) !== this._local) this._setVolume(this._dragVal, false);
-  }
-
-  _up(ev) {
-    if (!this._dragging) return;
-    this._dragging = false;
-    ev.currentTarget.classList.remove("drag");
-    const idle = ev.timeStamp - (this._lastMoveT ?? 0);
-    if (this._knob && shouldCoast(this._vel ?? 0, idle)) this._startCoast(this._vel);
-    else this._settle();
-  }
-
-  _wheelStep(ev) {
-    ev.preventDefault();
-    this._setVolume(this._volValue() + (ev.deltaY < 0 ? 1 : -1), false);
-    clearTimeout(this._wheel);
-    this._wheel = setTimeout(() => this._setVolume(this._volValue(), true), 300);
-  }
-
-  _key(ev) {
-    const step = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 5, PageDown: -5 }[ev.key];
-    if (step) {
-      ev.preventDefault();
-      this._setVolume(this._volValue() + step, true);
-    }
-  }
-
-  /** Turns the knob by `deg` (finger or coast); the volume follows in whole steps. False at an end stop. */
-  _turnKnob(deg) {
-    const limit = volumeLimit(this._zoneState());
-    const next = this._dragVal + knobStepsFor(deg);
-    this._dragVal = Math.max(0, Math.min(limit, next));
-    this._knobAngle = knobAngleFor(this._dragVal);
-    if (Math.round(this._dragVal) !== this._local) this._setVolume(this._dragVal, false);
-    else this._renderDial();
-    return next === this._dragVal;
-  }
-
-  /** Release: snap the knob onto the step it stopped at and send the final value. */
-  _settle() {
-    this._coast = null;
-    const g = this._knobG;
-    g?.classList.add("settle");
-    this._knobAngle = null;
-    this._setVolume(this._dragVal ?? this._volValue(), true);
-    setTimeout(() => g?.classList.remove("settle"), 260);
-  }
-
-  _startCoast(speedDegPerMs) {
-    const amplitude = coastAmplitude(speedDegPerMs);
-    const t0 = performance.now();
-    let travelled = 0;
-    const frame = (now) => {
-      const elapsed = now - t0;
-      const target = coastOffset(amplitude, elapsed);
-      const moving = this._turnKnob(target - travelled);
-      travelled = target;
-      if (!moving || coastFinished(amplitude, target, elapsed)) return this._settle();
-      this._coast = requestAnimationFrame(frame);
-    };
-    this._coast = requestAnimationFrame(frame);
-  }
-
-  /* ---------------------------------------------------------------- render */
 
   willUpdate(changed) {
     super.willUpdate?.(changed);
-    // A column inside zones_view: side gets .config directly, without setConfig.
     if (this.config && !(this._zone < this.config.zones?.length)) this._zone = 0;
-  }
-
-  updated(changed) {
-    super.updated?.(changed);
-    const dial = this.renderRoot.querySelector(".dial-svg");
-    if (dial && dial !== this._dialEl) {
-      // Wheel must be non-passive to stop the page scrolling under the dial.
-      dial.addEventListener("wheel", (e) => this._wheelStep(e), { passive: false });
-    }
-    this._dialEl = dial;
-    this._renderDial();
-  }
-
-  /** Imperative dial update — called per pointer event, never via Lit. */
-  _renderDial() {
-    const root = this.renderRoot;
-    const dial = this._dialEl;
-    if (!dial || !this.hass) return;
-    const s = this._zoneState();
-    const off = isMediaOff(s);
-    const v = this._volValue();
-    const limit = volumeLimit(s);
-    const $ = (sel) => root.querySelector(sel);
-    $(".num").textContent = off ? t("state_off", this.hass) : String(Math.round(v));
-    if (this._style === "tap") {
-      dial.setAttribute("aria-valuenow", String(Math.round(v)));
-      // The bar spans 0 … the limit: the range above it can't be used, so it isn't drawn.
-      dial.style.setProperty("--p", String(off ? 0 : Math.max(0, Math.min(1, v / limit))));
-      $(".limlabel").textContent =
-        limit < MAX_STEPS && Math.round(v) >= limit ? t("media_limit", this.hass, { value: limit }) : "";
-      return;
-    }
-    const limitText = t("media_limit", this.hass, { value: limit });
-    dial.setAttribute("aria-valuenow", String(Math.round(v)));
-    if (this._knob) {
-      this._knobG = $("#knobg");
-      const angle = (this._dragging || this._coast) && this._knobAngle != null ? this._knobAngle : knobAngleFor(v);
-      this._knobG.style.transform = `rotate(${angle}deg)`;
-      // Outer thin arc = the volume the amplifier REPORTS, so it trails the knob.
-      // Scaled to the limit: the full ring is the usable range.
-      const actual = off ? 0 : Math.min(MAX_STEPS, (volumeSteps(s) / limit) * MAX_STEPS);
-      $(".actual").style.strokeDasharray = `${Math.max(actual, 0.001)} ${MAX_STEPS + 1}`;
-      $(".limlabel").textContent = limit < MAX_STEPS && Math.round(v) >= limit ? limitText : "";
-      return;
-    }
-    $(".limlabel").textContent = limit < MAX_STEPS ? limitText : "";
-    $(".trk").setAttribute("d", dialArc(0, limit));
-    $(".lvl").setAttribute("d", off ? "" : dialArc(0, Math.max(v, 0.01)));
-    const [cx, cy] = polar(74, START + (SWEEP * v) / MAX_STEPS);
-    const dot = $(".dot");
-    dot.setAttribute("cx", cx.toFixed(2));
-    dot.setAttribute("cy", cy.toFixed(2));
-    for (const tick of root.querySelectorAll(".tick")) {
-      const tv = Number(tick.dataset.v);
-      tick.classList.toggle("t-on", !off && tv <= v);
-    }
-  }
-
-  _dialContent() {
-    if (this._knob) {
-      return svg`
-        <path class="actual" pathLength=${MAX_STEPS} d=${dialArc(0, MAX_STEPS, 150)}></path>
-        <circle class="knobshadow" cx="150" cy="150" r="118"></circle>
-        <g id="knobg">
-          <circle class="bigknob" cx="150" cy="150" r="118"></circle>
-          ${KNURL.map((k) => svg`<line class="knurl ${k.major ? "major" : ""}" x1=${k.x1} y1=${k.y1} x2=${k.x2} y2=${k.y2}></line>`)}
-        </g>`;
-    }
-    return svg`
-      ${TICKS.map((k) => svg`<line data-v=${k.v} class="tick ${k.major ? "major" : ""}" x1=${k.x1} y1=${k.y1} x2=${k.x2} y2=${k.y2}></line>`)}
-      <path class="trk"></path><path class="lvl"></path>
-      <circle class="knob" cx="150" cy="150" r="96"></circle><circle class="dot" r="9"></circle>`;
   }
 
   _selectZone(e) {
@@ -318,10 +64,9 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     this._pickZone(Number(e.detail.value) || 0);
   }
 
+  /** materia-volume drops its optimistic value and any repeat when its entity changes. */
   _pickZone(i) {
-    this._repeatStop();
     this._zone = i;
-    this._local = null;
   }
 
   _toggleLink() {
@@ -329,77 +74,15 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     this._callService("homeassistant", "toggle", { entity_id: this.config.link_entity });
   }
 
-  _toggleMute() {
-    stepHaptic(this, "light");
-    this._callService("media_player", "volume_mute", {
-      entity_id: this.config.zones[this._zone].entity,
-      is_volume_muted: !this._zoneState()?.attributes?.is_volume_muted,
-    });
-  }
+  /* ---------------------------------------------------------------- render */
 
-  /* ---------------------------------------------------------------- tap style */
-
-  /* Slider: drag follows the finger over 0 … limit; a tap without moving
-     steps at most TAP_MAX_STEPS toward the spot (no accidental jumps). */
-  _barFrac(ev, bar) {
-    const r = bar.getBoundingClientRect();
-    return Math.max(0, Math.min(1, 1 - (ev.clientY - r.top) / r.height));
-  }
-
-  _barDown(ev) {
-    if (ev.button > 0) return;
-    const bar = ev.currentTarget;
-    bar.setPointerCapture?.(ev.pointerId);
-    this._bar = { id: ev.pointerId, y: ev.clientY, moved: false };
-    this._dragging = true;
-    bar.classList.add("dragging");
-  }
-
-  _barMove(ev) {
-    const d = this._bar;
-    if (!d || d.id !== ev.pointerId) return;
-    if (!d.moved && Math.abs(ev.clientY - d.y) < 6) return;
-    d.moved = true;
-    const limit = volumeLimit(this._zoneState());
-    this._setVolume(this._barFrac(ev, ev.currentTarget) * limit, false);
-  }
-
-  _barUp(ev) {
-    const d = this._bar;
-    if (!d || d.id !== ev.pointerId) return;
-    this._bar = null;
-    this._dragging = false;
-    ev.currentTarget.classList.remove("dragging");
-    if (ev.type === "pointercancel") return;
-    const limit = volumeLimit(this._zoneState());
-    const frac = this._barFrac(ev, ev.currentTarget);
-    this._setVolume(d.moved ? frac * limit : tapStep(this._volValue(), frac, limit), true);
-  }
-
-  /** Hold − / +: one step now, repeats after 380 ms, speeding from 140 to 70 ms. */
-  _repeatStart(ev, d) {
-    if (ev.button > 0) return;
-    this._repeatStop();
-    this._setVolume(this._volValue() + d, true);
-    let ticks = 0;
-    const run = () => {
-      this._setVolume(this._volValue() + d, true);
-      ticks += 1;
-      this._repeat = setTimeout(run, repeatDelay(ticks));
-    };
-    this._repeat = setTimeout(run, REPEAT_INITIAL_MS);
-  }
-
-  _repeatStop() {
-    clearTimeout(this._repeat);
-    this._repeat = null;
-  }
-
-  /** Keyboard activation of −/+ (pointer presses are handled on pointerdown). */
-  _repeatKey(ev, d) {
-    if (ev.key !== "Enter" && ev.key !== " ") return;
-    ev.preventDefault();
-    this._setVolume(this._volValue() + d, true);
+  /** The selected zone's control, laid out in this card. */
+  _control(name) {
+    return html`<materia-volume
+      embedded
+      .hass=${this.hass}
+      .config=${{ style: this._style, name, entity: this.config.zones[this._zone].entity }}
+    ></materia-volume>`;
   }
 
   _linkChip(link) {
@@ -417,37 +100,6 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     ><ha-icon icon="mdi:link-variant"></ha-icon><span>${text}</span></button>`;
   }
 
-  /** − | mute | + under a slider; hold − / + to repeat. */
-  _tapFoot(muted) {
-    return html`
-        <div class="tfoot">
-          <button
-            class="step first"
-            aria-label=${t("media_volume_down", this.hass)}
-            @pointerdown=${(e) => this._repeatStart(e, -1)}
-            @pointerup=${this._repeatStop}
-            @pointerleave=${this._repeatStop}
-            @pointercancel=${this._repeatStop}
-            @keydown=${(e) => this._repeatKey(e, -1)}
-          ><ha-icon icon="mdi:minus"></ha-icon></button>
-          <button
-            class="mute ${muted ? "on" : ""}"
-            aria-label=${t("media_mute", this.hass)}
-            aria-pressed=${muted ? "true" : "false"}
-            @click=${this._toggleMute}
-          ><ha-icon icon=${muted ? "mdi:volume-off" : "mdi:volume-high"}></ha-icon></button>
-          <button
-            class="step last"
-            aria-label=${t("media_volume_up", this.hass)}
-            @pointerdown=${(e) => this._repeatStart(e, 1)}
-            @pointerup=${this._repeatStop}
-            @pointerleave=${this._repeatStop}
-            @pointercancel=${this._repeatStop}
-            @keydown=${(e) => this._repeatKey(e, 1)}
-          ><ha-icon icon="mdi:plus"></ha-icon></button>
-        </div>`;
-  }
-
   /** zones_view: side — every zone its own column (slider and − mute +), one header. */
   _renderTapSide(name, link) {
     const zones = this.config.zones;
@@ -459,49 +111,18 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
         </div>
         <div class="tcols" style="--cols:${zones.length}">
           ${zones.map(
-            (z, i) => html`<materia-volume-knob
+            (z, i) => html`<materia-volume
               .hass=${this.hass}
-              .config=${{ type: "custom:materia-volume-knob", style: "tap", column: true, name: this._zoneName(i), zones: [z] }}
-            ></materia-volume-knob>`
+              .config=${{ type: "custom:materia-volume", style: "tap", column: true, name: this._zoneName(i), entity: z.entity }}
+            ></materia-volume>`
           )}
         </div>
       </ha-card>
     `;
   }
 
-  /** One zone as a column inside zones_view: side. */
-  _renderTapColumn(name, off, muted) {
-    const limit = volumeLimit(this._zoneState());
-    return html`
-      <ha-card class="panel tap col ${off ? "off" : ""} ${muted ? "muted" : ""}">
-        <div class="colhead">
-          <span class="zn">${name}</span>
-          <span class="num"></span>
-        </div>
-        <div class="tbody">
-          <button
-            class="tbar dial-svg"
-            role="slider"
-            aria-label=${name}
-            aria-valuemin="0"
-            aria-valuemax=${limit}
-            @pointerdown=${this._barDown}
-            @pointermove=${this._barMove}
-            @pointerup=${this._barUp}
-            @pointercancel=${this._barUp}
-            @keydown=${this._key}
-          ><span class="tin"></span><span class="thandle"></span><span class="tfill"></span></button>
-        </div>
-        <div class="limlabel"></div>
-        ${this._tapFoot(muted)}
-      </ha-card>
-    `;
-  }
-
   _renderTap(name, link, off, muted) {
     const zones = this.config.zones;
-    const s = this._zoneState();
-    const limit = volumeLimit(s);
     const zoneValue = (i) => {
       const zs = this._zoneState(i);
       return isMediaOff(zs) || zs?.attributes?.is_volume_muted ? t("state_off", this.hass) : volumeSteps(zs);
@@ -522,27 +143,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
               ><span class="zn">${this._zoneName(i)}</span><span class="zv">${zoneValue(i)}</span></button>`)}
             </div>`
           : nothing}
-        <div class="tbody">
-          <button
-            class="tbar dial-svg"
-            role="slider"
-            aria-label=${name}
-            aria-valuemin="0"
-            aria-valuemax=${limit}
-            @pointerdown=${this._barDown}
-            @pointermove=${this._barMove}
-            @pointerup=${this._barUp}
-            @pointercancel=${this._barUp}
-            @keydown=${this._key}
-          >
-            <span class="tin"></span><span class="thandle"></span><span class="tfill"></span>
-          </button>
-          <div class="treadout">
-            <span class="num"></span>
-            <div class="limlabel"></div>
-          </div>
-        </div>
-        ${this._tapFoot(muted)}
+        ${this._control(name)}
       </ha-card>
     `;
   }
@@ -557,7 +158,13 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
     const muted = !!s?.attributes?.is_volume_muted;
     const name = this.config.name ?? t("media_volume", this.hass);
     if (this._style === "tap") {
-      if (this.config.column) return this._renderTapColumn(name, off, muted);
+      if (this.config.column) {
+        // The bare column (zones_view: side builds these from materia-volume directly).
+        return html`<materia-volume
+          .hass=${this.hass}
+          .config=${{ style: "tap", column: true, name, entity: zones[this._zone].entity }}
+        ></materia-volume>`;
+      }
       if (this.config.zones_view === "side" && zones.length > 1) return this._renderTapSide(name, link);
       return this._renderTap(name, link, off, muted);
     }
@@ -584,7 +191,6 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
                   @click=${this._toggleLink}
                 ><i><ha-icon icon="mdi:link-variant"></ha-icon></i></button>`
             : nothing}
-         
         </div>
         ${zones.length > 1
           ? html`<materia-button-group
@@ -594,38 +200,7 @@ class MateriaVolumeKnob extends ActionMixin(LitElement) {
               @option-selected=${this._selectZone}
             ></materia-button-group>`
           : nothing}
-        <div class="readout"><b class="num"></b></div>
-        <div class="dial">
-          <svg
-            class="dial-svg"
-            viewBox="-20 -20 340 340"
-            tabindex="0"
-            role="slider"
-            aria-label=${name}
-            aria-valuemin="0"
-            aria-valuemax=${MAX_STEPS}
-            @pointerdown=${this._down}
-            @pointermove=${this._move}
-            @pointerup=${this._up}
-            @pointercancel=${this._up}
-            @keydown=${this._key}
-          >${this._dialContent()}</svg>
-        </div>
-        <div class="limlabel"></div>
-        <div class="pfoot">
-          <button class="round ${muted ? "on" : ""}" aria-label=${t("media_mute", this.hass)} aria-pressed=${muted ? "true" : "false"} @click=${this._toggleMute}>
-            <ha-icon icon=${muted ? "mdi:volume-off" : "mdi:volume-high"}></ha-icon>
-          </button>
-          <div class="info"></div>
-          <div class="pm">
-            <button aria-label=${t("media_volume_down", this.hass)} @click=${() => this._setVolume(this._volValue() - 1, true)}>
-              <ha-icon icon="mdi:minus"></ha-icon>
-            </button>
-            <button aria-label=${t("media_volume_up", this.hass)} @click=${() => this._setVolume(this._volValue() + 1, true)}>
-              <ha-icon icon="mdi:plus"></ha-icon>
-            </button>
-          </div>
-        </div>
+        ${this._control(name)}
       </ha-card>
     `;
   }
