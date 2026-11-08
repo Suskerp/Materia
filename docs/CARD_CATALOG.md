@@ -52,7 +52,8 @@ present, else `volume_level` × 99; the `limit` attribute caps it.
 | Header | `materia-media-header` | Source, input, app · zone, stations + volume ring. |
 | Volume | `materia-volume-knob` | Knob, arc or tap-first panel with zones and linking. |
 | Volume ring | `materia-volume-ring` | 48 px button that opens the volume panel. |
-| Stations | `materia-station-grid` | White square logos; the current one is ringed. |
+| Tiles | `materia-tile-grid` | Square image tiles (`items`, `tile: logo` or `cover`, `tile_background`); the `active` one is ringed. |
+| Stations | `materia-station-grid` | Alias of `materia-tile-grid` for `stations:`; white square logos. |
 
 **Configure once, inherit everywhere.** Inside a `materia-art-scope`:
 - media cards without an `entity` take the scope's entity, also inside stacks;
