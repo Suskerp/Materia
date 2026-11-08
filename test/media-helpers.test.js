@@ -12,7 +12,6 @@ import {
   nextSource,
   mediaByline,
   currentStationIndex,
-  volumeKnobConfig,
   isMediaOff,
   isLive,
   nowPlayingText,
@@ -142,22 +141,6 @@ test("off and live", () => {
   assert.equal(isLive(player({ live: true })), true);
   assert.equal(isLive(player({ live: "true" })), true);
   assert.equal(isLive(player({})), false);
-});
-
-test("openers build the knob config from their volume block", () => {
-  assert.deepEqual(volumeKnobConfig({ entity: "media_player.a" }), {
-    type: "custom:materia-volume-knob",
-    entity: "media_player.a",
-  });
-  const zones = [{ entity: "media_player.z1" }, { entity: "media_player.z2" }];
-  assert.deepEqual(volumeKnobConfig({ entity: "media_player.a", volume: { zones, style: "arc" } }), {
-    type: "custom:materia-volume-knob",
-    entity: "media_player.a",
-    zones,
-    style: "arc",
-  });
-  assert.equal(volumeKnobConfig({ volume: { zones } }).entity, "media_player.z1");
-  assert.equal(volumeKnobConfig({ entity: "media_player.a", volume: { entity: "media_player.b" } }).entity, "media_player.b");
 });
 
 test("panel registry entries: a card, { card }, or { cards }, with an optional heading", () => {

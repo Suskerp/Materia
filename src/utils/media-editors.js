@@ -1,10 +1,6 @@
 import { LitElement, html, css, nothing } from "lit";
 import { computeLabel, sortableList } from "./editor-helpers.js";
 import {
-  compactBlock,
-  zoneEntities,
-  zonesForEntities,
-  setZoneName,
   DEFAULT_TOOLBAR,
   toolbarList,
   toolbarType,
@@ -43,104 +39,6 @@ const shared = css`
   }
 `;
 
-/* ------------------------------------------------------------------ */
-/*  Volume: zones (multi-entity + optional names), link, style         */
-/* ------------------------------------------------------------------ */
-
-export const VOLUME_STYLE_SELECTOR = {
-  select: {
-    mode: "box",
-    options: [
-      { value: "knob", label: "Draaiknop" },
-      { value: "arc", label: "Boog" },
-      { value: "tap", label: "Tikken" },
-    ],
-  },
-};
-const ZONES_SELECTOR = { entity: { domain: "media_player", multiple: true } };
-const LINK_SELECTOR = { entity: { domain: ["switch", "input_boolean"] } };
-const TEXT_SELECTOR = { text: {} };
-
-class MateriaVolumeEditor extends LitElement {
-  static properties = {
-    hass: { attribute: false },
-    /** The volume block: { zones, link_entity, style, … }. */
-    value: { attribute: false },
-    /** Zone shown while no zones are set (the card's own entity): display only. */
-    defaultEntity: { attribute: false },
-  };
-
-  static styles = shared;
-
-  get _block() {
-    return this.value ?? {};
-  }
-
-  _emit(patch) {
-    fire(this, compactBlock({ ...this._block, ...patch }));
-  }
-
-  _zones() {
-    const zones = this._block.zones;
-    if (Array.isArray(zones) && zones.length) return zones;
-    return this.defaultEntity ? [{ entity: this.defaultEntity }] : [];
-  }
-
-  render() {
-    if (!this.hass) return nothing;
-    const zones = this._zones();
-    const b = this._block;
-    return html`<div class="stack">
-      <ha-selector
-        .hass=${this.hass}
-        .selector=${ZONES_SELECTOR}
-        .value=${zoneEntities(zones)}
-        .label=${"Zones"}
-        @value-changed=${(e) => {
-          e.stopPropagation();
-          this._emit({ zones: zonesForEntities(zones, e.detail.value ?? []) });
-        }}
-      ></ha-selector>
-      ${zones.length > 1
-        ? zones.map(
-            (z) => html`<ha-selector
-              .hass=${this.hass}
-              .selector=${TEXT_SELECTOR}
-              .value=${z.name ?? ""}
-              .label=${`Naam: ${this.hass.states[z.entity]?.attributes?.friendly_name ?? z.entity}`}
-              @value-changed=${(e) => {
-                e.stopPropagation();
-                this._emit({ zones: setZoneName(zones, z.entity, e.detail.value) });
-              }}
-            ></ha-selector>`
-          )
-        : nothing}
-      <ha-selector
-        .hass=${this.hass}
-        .selector=${LINK_SELECTOR}
-        .value=${b.link_entity ?? ""}
-        .label=${"Zones koppelen (schakelaar)"}
-        @value-changed=${(e) => {
-          e.stopPropagation();
-          this._emit({ link_entity: e.detail.value });
-        }}
-      ></ha-selector>
-      <div class="caption">Stijl</div>
-      <ha-selector
-        .hass=${this.hass}
-        .selector=${VOLUME_STYLE_SELECTOR}
-        .value=${b.style ?? "knob"}
-        @value-changed=${(e) => {
-          e.stopPropagation();
-          // knob is the default: choosing it again removes the key.
-          this._emit({ style: e.detail.value === "knob" && !b.style ? undefined : e.detail.value });
-        }}
-      ></ha-selector>
-    </div>`;
-  }
-}
-
-customElements.define("materia-volume-editor", MateriaVolumeEditor);
 
 /* ------------------------------------------------------------------ */
 /*  Sortable list of items, each edited with an ha-form schema          */
@@ -406,28 +304,3 @@ customElements.define("materia-toolbar-buttons-editor", MateriaToolbarButtonsEdi
 /*  Sections for SmartEditor-based editors                              */
 /* ------------------------------------------------------------------ */
 
-/**
- * A "Volume" section: edits the card's `volume:` block. Inside an art scope
- * the card inherits the scope's block, so this is an override.
- */
-export function volumeOverrideSection(editor, { title = "Volume (eigen instellingen)", expanded = false } = {}) {
-  return {
-    title,
-    icon: "mdi:volume-high",
-    expanded,
-    fields: [
-      {
-        name: "volume",
-        render: (value, data) => html`<materia-volume-editor
-          .hass=${editor.hass}
-          .value=${value}
-          .defaultEntity=${data.entity}
-          @value-changed=${(e) => {
-            e.stopPropagation();
-            editor._setField("volume", e.detail.value);
-          }}
-        ></materia-volume-editor>`,
-      },
-    ],
-  };
-}

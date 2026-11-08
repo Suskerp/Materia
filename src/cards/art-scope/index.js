@@ -64,7 +64,6 @@ class MateriaArtScope extends PanelHostMixin(LitElement) {
     this.addEventListener("materia-scope-context", (e) => {
       if (!this.config) return;
       e.stopPropagation();
-      e.detail.volume = this.config.volume;
       e.detail.entity = this.config.entity;
       e.detail.scope = this;
       // From the config, not the measurement: a card that asks before the

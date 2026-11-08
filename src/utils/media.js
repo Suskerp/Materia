@@ -1,7 +1,7 @@
 /**
  * Pure media-player helpers shared by the expressive media family
  * (materia-media variant player, materia-media-progress variant player,
- * materia-button-group transport/toolbar, materia-volume-knob, the volume
+ * materia-button-group transport/toolbar, materia-volume, the volume
  * ring, the media header and the station grid). No DOM, no Lit: unit-tested.
  */
 
@@ -239,18 +239,12 @@ export function currentStationIndex(stations, stateObj) {
 }
 
 /**
- * The volume-knob card config an opener (volume ring, toolbar, header) shows:
- * its own `volume:` block, else the one it inherits from an enclosing
- * materia-art-scope (`inherited` = { volume, entity }), defaulting to one zone
- * — the opener's own entity.
+ * The card a volume button opens when no panel host offers a `volume` panel:
+ * the player's own volume control. A host's `panels.volume` (zones, a link
+ * chip, columns) wins over it.
  */
-export function volumeKnobConfig(config, inherited) {
-  const v = config?.volume ?? inherited?.volume ?? {};
-  return {
-    ...v,
-    type: "custom:materia-volume-knob",
-    entity: v.entity ?? config?.entity ?? inherited?.entity ?? v.zones?.[0]?.entity,
-  };
+export function volumePanelCard(entity) {
+  return { type: "custom:materia-volume", entity };
 }
 
 export function formatMediaTime(seconds) {
