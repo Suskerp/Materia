@@ -52,6 +52,11 @@ media player.
   templated labels.
 - **`materia-stack`:** cards in a row or column that fill the available space (mixers,
   panels).
+- **`materia-power-menu`:** a power button with a menu holding a switch per player and
+  all off/on; it also fits in a toolbar or a panel header.
+- **`materia-media-source`:** a source button that cycles through the sources (or picks
+  one from a menu, `mode: menu`). `materia-media-header` is now built from these two
+  parts and looks the same.
 - **`materia-tile-grid`:** a generic image or icon grid with actions.
   - Options: `tile: logo | cover`, `tile_background`, and `active` matching on chosen
     attributes.
