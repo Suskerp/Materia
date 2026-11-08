@@ -18,7 +18,8 @@ const storage = () => {
  * tab (name, and an optional value, a template, under it) and a card; only
  * the selected item's card is built and attached, and hass flows to it.
  *
- * The bar is the volume panel's zone tabs made generic: same DOM, classes
+ * `bar: connected` draws the bar as a connected button group instead (the
+ * volume knob's zone picker). The default bar is the volume panel's zone tabs made generic: same DOM, classes
  * and styles. The selection belongs to this screen (component state);
  * `remember: true` with a `key` keeps it in localStorage across reloads.
  */
@@ -121,6 +122,28 @@ class MateriaSwitcher extends ActionMixin(LitElement) {
     const items = this._items;
     const sel = clampIndex(this._sel, items.length);
     const label = this.config.aria_label ?? this.config.name ?? nothing;
+    // bar: connected — the knob style's zone picker: a connected M3 button group.
+    if (this.config.bar === "connected") {
+      const group = {
+        size: this.config.size ?? "s",
+        aria_label: this.config.aria_label ?? this.config.name,
+        options: items.map((item, i) => ({ label: this._text(`name${i}`, item.name) ?? "", value: String(i) })),
+      };
+      return html`
+        ${items.length > 1
+          ? html`<materia-button-group
+              .hass=${this.hass}
+              .config=${group}
+              .value=${String(sel)}
+              @option-selected=${(e) => {
+                e.stopPropagation();
+                this._pick(Number(e.detail.value) || 0);
+              }}
+            ></materia-button-group>`
+          : nothing}
+        ${this._card ? html`<div class="slot">${this._card}</div>` : nothing}
+      `;
+    }
     return html`
       ${items.length > 1
         ? html`<div class="ztabs" role="radiogroup" aria-label=${label}>

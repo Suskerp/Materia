@@ -193,6 +193,8 @@ export const panelChromeStyles = css`
   .m-panel {
     display: flex;
     flex-direction: column;
+    /* The old volume card's head-to-content gap (tap style). */
+    gap: 18px;
     min-height: 0;
     height: 100%;
   }
