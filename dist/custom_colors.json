@@ -44,7 +44,25 @@
       "scale-orange": "#D9713C",
       "scale-red": "#C94D42",
       "scale-purple": "#8A4DA3",
-      "scale-maroon": "#7A4040"
+      "scale-maroon": "#7A4040",
+      "alarm-home-container": "#E2E8F6",
+      "alarm-home": "#C8D5F0",
+      "on-alarm-home": "#274187",
+      "alarm-armed-away-container": "#FFE8CC",
+      "alarm-armed-away": "#FB8C00",
+      "on-alarm-armed-away": "#4E2600",
+      "alarm-armed-home-container": "#D4EED8",
+      "alarm-armed-home": "#43A047",
+      "on-alarm-armed-home": "#0C3B17",
+      "christmas-orange-container": "#FFE6CC",
+      "christmas-orange": "#FF8F1F",
+      "on-christmas-orange": "#5A2A00",
+      "christmas-red-container": "#F7B2BE",
+      "christmas-red": "#E23A32",
+      "on-christmas-red": "#4A0808",
+      "christmas-green-container": "#B8F0D0",
+      "christmas-green": "#00C04B",
+      "on-christmas-green": "#052E18"
     }
   },
   "dark": {
@@ -92,7 +110,25 @@
       "scale-orange": "#F58B4C",
       "scale-red": "#E4574C",
       "scale-purple": "#9E5BB7",
-      "scale-maroon": "#8A4B4B"
+      "scale-maroon": "#8A4B4B",
+      "alarm-home-container": "#2A2F3D",
+      "alarm-home": "#3E4A63",
+      "on-alarm-home": "#B3C5F9",
+      "alarm-armed-away-container": "#4A3526",
+      "alarm-armed-away": "#EF6C00",
+      "on-alarm-armed-away": "#FFD8A8",
+      "alarm-armed-home-container": "#1E2C21",
+      "alarm-armed-home": "#2E7D32",
+      "on-alarm-armed-home": "#B9F6CA",
+      "christmas-orange-container": "#4A321F",
+      "christmas-orange": "#FF8F1F",
+      "on-christmas-orange": "#FFD7B0",
+      "christmas-red-container": "#4A1E23",
+      "christmas-red": "#E53935",
+      "on-christmas-red": "#FFD1D1",
+      "christmas-green-container": "#1E3A2A",
+      "christmas-green": "#2ECC71",
+      "on-christmas-green": "#B9F6CA"
     }
   }
 }
