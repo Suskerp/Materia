@@ -582,6 +582,15 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     // An empty/missing weekdays attribute leaves _days untouched — nothing to
     // seed from is not the same as "every day", and guessing either way is
     // worse than keeping whatever was already on screen.
+
+    // A window that already exists is scheduled: show it on the strip instead
+    // of "not scheduled" until someone happens to save it here. A disabled
+    // Scheduler switch reads as nothing scheduled.
+    if (!this._isManager && !onceDate && slots.length) {
+      this._armed = st.state === "off"
+        ? null
+        : { head: this._windowLabel, sub: this._windowSub, repeating: true, mode: "window" };
+    }
   }
 
   /** True once anything is wired, so the card stops advertising itself as a mock

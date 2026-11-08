@@ -180,7 +180,9 @@ export const panelChromeStyles = css`
   .m-panel-head h3 {
     flex: 1;
     margin: 0 4px;
-    font: 400 22px/28px var(--md-ref-typeface-brand, inherit);
+    font-size: 22px;
+    line-height: 28px;
+    font-weight: 400;
     color: var(--md-sys-color-on-surface, var(--primary-text-color));
   }
   .m-panel-btn {
@@ -207,8 +209,15 @@ export const panelChromeStyles = css`
     min-height: 0;
     overflow: auto;
     overscroll-behavior: contain;
+    /* The content fills the panel (a slider column stretches to it); taller
+       content still scrolls. */
+    display: flex;
+    flex-direction: column;
     --ha-card-background: transparent;
     --ha-card-box-shadow: none;
     --ha-card-border-width: 0;
+  }
+  .m-panel-body > * {
+    flex: 1 0 auto;
   }
 `;

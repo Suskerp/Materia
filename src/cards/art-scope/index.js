@@ -24,7 +24,7 @@ import { availableHeight } from "../../utils/media.js";
  * layout is cover 400 | player | panel 400. The panel closes after
  * `panel_timeout` seconds without a touch inside it, on a second tap of its
  * button, on × and when cover + player + panel no longer fit (layout.js
- * kioskTracks); then requests pass on to an outer host or a bottom sheet.
+ * kioskTracks); then the same panels open as bottom sheets.
  * Other layouts host no panels: wrap the cards in materia-panel-host.
  */
 class MateriaArtScope extends PanelHostMixin(LitElement) {
@@ -83,13 +83,15 @@ class MateriaArtScope extends PanelHostMixin(LitElement) {
       this._cards = null;
       this._buildCards();
     }
-    if (!this._panelMode() && this._panelId) this.closePanel(true);
+    if (this._panelMode() !== "side" && this._panelEl) this.closePanel(true);
   }
 
   /* ---- panel host (kiosk side column only) ---- */
 
+  /** Kiosk: a side column while cover + player + panel fit, else its panels open as sheets. */
   _panelMode() {
-    return this.config?.layout === "kiosk" && this._tracks(true).canOpen ? "side" : null;
+    if (this.config?.layout !== "kiosk") return null;
+    return this._tracks(true).canOpen ? "side" : "sheet";
   }
 
   _panelRegistry() {
@@ -134,7 +136,7 @@ class MateriaArtScope extends PanelHostMixin(LitElement) {
     this._observed = el;
     this._ro ??= new ResizeObserver((entries) => {
       this._kw = Math.floor(entries[0].contentRect.width);
-      if (this._panelId && !this._tracks(true).canOpen) this.closePanel(true);
+      if (this._panelEl && !this._tracks(true).canOpen) this.closePanel(true);
       this._announceLayout();
       this._scheduleFill();
     });
