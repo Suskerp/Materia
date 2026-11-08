@@ -126,3 +126,64 @@ export function inheritScopeEntity(card, entity) {
   }
   return out;
 }
+
+/* ---- power entities ----------------------------------------------------- */
+
+/** A power list row (an entity id or { entity, name }) as the row form shows it. */
+export function powerEntryForm(entry) {
+  return typeof entry === "string" ? { entity: entry } : { ...(entry ?? {}) };
+}
+
+/**
+ * Applies a row form result. A row written as a bare id stays a bare id until
+ * it gains a name; an empty name is dropped; other keys are kept.
+ */
+export function powerEntryFromForm(old, value) {
+  const next = { ...powerEntryForm(old), ...value };
+  if (next.name === "" || next.name == null) delete next.name;
+  if (!next.entity) delete next.entity;
+  const keys = Object.keys(next);
+  if (typeof old === "string" && keys.length === 1 && keys[0] === "entity") return next.entity;
+  return next;
+}
+
+/* ---- tile grid items ---------------------------------------------------- */
+
+/** `key` (a value or a list) as a multi-value form field shows it. */
+const listForm = (item, key) => (item?.[key] == null ? item : { ...item, [key]: [].concat(item[key]) });
+
+/** A multi-value form result back: one value is written as it was (plain unless it was a list). */
+function listFromForm(old, next, key) {
+  if (Array.isArray(next[key])) {
+    const m = next[key].filter((v) => v !== "" && v != null);
+    if (!m.length) delete next[key];
+    else next[key] = m.length === 1 && !Array.isArray(old?.[key]) ? m[0] : m;
+  }
+  return next;
+}
+
+const dropEmpty = (next, keys) => {
+  for (const k of keys) if (next[k] === "" || next[k] == null) delete next[k];
+  return next;
+};
+
+/** `match` (a string or a list) as the multi-value form field shows it. */
+export function tileItemForm(item) {
+  return listForm(stationFormData(item), "match");
+}
+
+/** Applies a tile form result: `match` with one value is written as a string. */
+export function tileItemFromForm(item, value) {
+  return dropEmpty(listFromForm(item, stationFromForm(item, value), "match"), ["icon"]);
+}
+
+/* ---- hero alerts -------------------------------------------------------- */
+
+/** A hero alert ({ entity?, state?, text, icon?, color?, tap_action? }) as its form shows it. */
+export function alertForm(alert) {
+  return listForm(alert ?? {}, "state");
+}
+
+export function alertFromForm(alert, value) {
+  return dropEmpty(listFromForm(alert, { ...alert, ...value }, "state"), ["entity", "text", "icon", "color", "color_on", "tap_action"]);
+}

@@ -1,5 +1,5 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
-import { stationsField } from "../../utils/media-editors.js";
+import { stationsField, powerEntitiesField } from "../../utils/media-editors.js";
 
 class MateriaMediaHeaderEditor extends SmartEditorBase {
   _formData() {
@@ -45,8 +45,7 @@ class MateriaMediaHeaderEditor extends SmartEditorBase {
         fields: [
           {
             name: "power_entities",
-            label: "Players the power menu switches (empty: this player)",
-            selector: { entity: { domain: "media_player", multiple: true } },
+            render: (value) => powerEntitiesField(this, value, "power_entities", "Players the power menu switches (empty: this player)"),
           },
         ],
       },

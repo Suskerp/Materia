@@ -1,4 +1,6 @@
+import { html } from "lit";
 import { MateriaExpanderEditor } from "../expander/editor.js";
+import "../../utils/panels-editor.js";
 
 const PANEL_TIMEOUT_FIELD = {
   name: "panel_timeout",
@@ -73,6 +75,21 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
 
   get _cardsHint() {
     return "Kiosk: the first card is the cover, the rest form the player column.";
+  }
+
+  /** Kiosk is a panel host: its `panels:` registry under the card list. */
+  _renderExtra() {
+    if (this._config?.layout !== "kiosk") return super._renderExtra();
+    return html`${super._renderExtra()}
+      <materia-panels-editor
+        .hass=${this.hass}
+        .lovelace=${this.lovelace}
+        .panels=${this._config.panels}
+        @value-changed=${(e) => {
+          e.stopPropagation();
+          this._setField("panels", e.detail.value);
+        }}
+      ></materia-panels-editor>`;
   }
 }
 

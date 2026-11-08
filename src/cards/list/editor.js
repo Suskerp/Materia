@@ -1,31 +1,30 @@
-import { html, css } from "lit";
+import { html } from "lit";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { t } from "../../utils/i18n.js";
+import "../../utils/media-editors.js";
+
+const ROW_KEYS = ["text", "entity", "name", "icon", "attribute", "unit", "tap_action"];
+
+/** A row form result; empty keys are dropped, others kept. */
+const rowFromForm = (old, value) => {
+  const next = { ...old, ...value };
+  for (const k of ROW_KEYS) if (next[k] === "" || next[k] == null) delete next[k];
+  return next;
+};
+
+const rowSchemas = {};
+const rowSchema = (hass) =>
+  (rowSchemas[hass?.locale?.language ?? ""] ??= [
+    { name: "text", label: t("ed_row_text", hass), selector: { text: {} } },
+    { name: "entity", label: t("ed_row_entity", hass), selector: { entity: {} } },
+    { name: "name", label: t("ed_row_name", hass), selector: { text: {} } },
+    { name: "icon", selector: { icon: {} } },
+    { name: "attribute", label: t("ed_row_attribute", hass), selector: { text: {} } },
+    { name: "unit", label: t("ed_row_unit", hass), selector: { text: {} } },
+    { name: "tap_action", label: t("ed_alert_action", hass), selector: { ui_action: {} } },
+  ]);
 
 class MateriaListEditor extends SmartEditorBase {
-  static styles = [
-    SmartEditorBase.styles,
-    css`
-      .yaml-note {
-        margin-top: 14px;
-        padding: 10px 12px;
-        border-radius: 12px;
-        background: var(--secondary-background-color, rgba(0, 0, 0, 0.04));
-        font-size: 12px;
-        line-height: 1.5;
-        color: var(--secondary-text-color);
-      }
-      .yaml-note code {
-        font-family: var(--code-font-family, monospace);
-        font-size: 11px;
-      }
-      .yaml-note pre {
-        margin: 6px 0 0;
-        white-space: pre-wrap;
-        font-size: 11px;
-      }
-    `,
-  ];
-
   /* Only `variant` has a real card-side default worth seeding. `color` and
      `color_on` deliberately do NOT: absent means "use the container pair for
      the chosen variant", so seeding them would freeze today's tokens into the
@@ -53,8 +52,7 @@ class MateriaListEditor extends SmartEditorBase {
           {
             name: "entities",
             label: "Entities (rows)",
-            helper:
-              "For a list of readings. Mixed lists — text lines alongside entities — use the rows: key in YAML instead; see the note below.",
+            helper: t("ed_list_entities_helper", this.hass),
             selector: { entity: { multiple: true } },
           },
         ],
@@ -90,30 +88,23 @@ class MateriaListEditor extends SmartEditorBase {
     ];
   }
 
-  /* Rows are YAML-only, on purpose. A row is a union — an entity reading or a
-     line of text, each with its own keys — and ha-form has no way to offer
-     "one of these two shapes" in a repeatable list. A managed list could be
-     built, but it would have to guess which kind the author meant on every
-     add, so a short honest note beats a field that fights you. */
+  /* `rows` (text lines and readings, mixed) as a list: a row with text is a
+     line, one without a reading; it wins over `entities` when both exist. */
   _renderExtra() {
-    return html`
-      <div class="yaml-note">
-        <strong>Text lines and mixed lists are YAML-only.</strong>
-        Use <code>rows:</code> instead of <code>entities:</code> — it takes both
-        kinds and wins when both are present. A row with <code>text</code> is a
-        line; a row with <code>entity</code> is a reading. <code>text</code>, <code>icon</code> and
-        <code>name</code> all accept templates.
-        <pre>
-rows:
-  - icon: mdi:leaf
-    text: Charges only on surplus solar
-  - icon: mdi:clock-outline
-    text: "{{ states('sensor.laadstatus') }}"
-  - entity: sensor.over_kw
-    name: Over
-    unit: kW</pre>
-      </div>
-    `;
+    const h = this.hass;
+    return html`<materia-item-list-editor
+      .hass=${h}
+      .items=${Array.isArray(this._config.rows) ? this._config.rows : []}
+      .schema=${rowSchema(h)}
+      .itemLabel=${(r) => r?.text || r?.name || r?.entity}
+      .fromForm=${rowFromForm}
+      .newItem=${() => ({ text: "" })}
+      addLabel=${t("ed_list_rows", h)}
+      @value-changed=${(e) => {
+        e.stopPropagation();
+        this._setField("rows", e.detail.value?.length ? e.detail.value : undefined);
+      }}
+    ></materia-item-list-editor>`;
   }
 }
 

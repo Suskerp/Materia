@@ -1,6 +1,7 @@
 import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
+import { alertsField } from "../../utils/media-editors.js";
 
 class MateriaSelectHeroEditor extends SmartEditorBase {
   static properties = {
@@ -117,12 +118,7 @@ class MateriaSelectHeroEditor extends SmartEditorBase {
         icon: "mdi:alert-circle-outline",
         expanded: false,
         fields: [
-          {
-            name: "alerts",
-            label: "Alert strip",
-            helper: "List of { entity?, state?, text (template), icon?, color?, tap_action? }. First match wins. A template that renders empty means no alert.",
-            selector: { object: {} },
-          },
+          { name: "alerts", render: (value) => alertsField(this, value ?? this._config?.alert) },
           { name: "alert_tints_hero", label: "An alert recolours the whole block", selector: { boolean: {} } },
         ],
       },

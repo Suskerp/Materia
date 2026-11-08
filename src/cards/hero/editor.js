@@ -1,4 +1,6 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
+import { alertsField } from "../../utils/media-editors.js";
+import { t } from "../../utils/i18n.js";
 
 class MateriaHeroEditor extends SmartEditorBase {
   /* Switches must be seeded with the card's own defaults. An option that
@@ -61,6 +63,15 @@ class MateriaHeroEditor extends SmartEditorBase {
         title: "Actions",
         icon: "mdi:gesture-tap",
         fields: [{ name: "tap_action", selector: { ui_action: { default_action: "more-info" } } }],
+      },
+      {
+        title: t("ed_alerts_title", this.hass),
+        icon: "mdi:alert-circle-outline",
+        expanded: false,
+        fields: [
+          { name: "alerts", render: (value) => alertsField(this, value ?? this._config?.alert) },
+          { name: "alert_tints_hero", label: t("ed_alert_tints", this.hass), selector: { boolean: {} } },
+        ],
       },
     ];
   }
