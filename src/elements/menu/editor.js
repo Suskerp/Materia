@@ -2,6 +2,7 @@ import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 import { localize, t } from "../../utils/i18n.js";
+import { menuItemsField } from "../../utils/media-editors.js";
 
 class MateriaMenuEditor extends SmartEditorBase {
   static properties = {
@@ -58,16 +59,70 @@ class MateriaMenuEditor extends SmartEditorBase {
     this._expanded ??= null;
   }
 
+  /** List mode: `mode: list`, or `items` without a mode (same rule as the card). */
+  get _isList() {
+    return this._config?.mode === "list" || (this._config?.mode == null && Array.isArray(this._config?.items));
+  }
+
   _formData() {
-    return { position: "auto", menu_variant: "surface", ...this._config };
+    return { position: "auto", menu_variant: "surface", ...this._config, mode: this._isList ? "list" : "select" };
+  }
+
+  _sectionsSignature() {
+    return this._isList ? "list" : "select";
+  }
+
+  /** Switching mode keeps the shared keys; "select" is the default and isn't written. */
+  _setField(name, value) {
+    if (name !== "mode") return super._setField(name, value);
+    const next = { ...this._config };
+    if (value === "list") {
+      next.mode = "list";
+      next.items ??= next.entity ? [next.entity] : [];
+    } else {
+      delete next.mode;
+      delete next.items;
+    }
+    this._commit(next);
+  }
+
+  get _modeField() {
+    return {
+      name: "mode",
+      label: "ed_menu_mode",
+      selector: { select: { mode: "dropdown", options: [
+        { value: "select", label: "ed_menu_mode_select" },
+        { value: "list", label: "ed_menu_mode_list" },
+      ] } },
+    };
   }
 
   get _sections() {
+    if (this._isList)
+      return [
+        {
+          title: "e_content",
+          icon: "mdi:card-text-outline",
+          fields: [
+            this._modeField,
+            { name: "icon", selector: { icon: {} } },
+            { name: "name", label: "ed_menu_button_label", selector: { text: {} } },
+            { name: "color", label: "ed_menu_icon_color", selector: { select: { mode: "dropdown", custom_value: true, options: [
+              { value: "error", label: "ed_menu_color_error" },
+            ] } } },
+            { name: "variant", selector: { select: { mode: "dropdown", options: [
+              { value: "default", label: "e_defaul_48_px" },
+              { value: "kiosk", label: "e_kiosk_44_px" },
+            ] } } },
+          ],
+        },
+      ];
     return [
       {
         title: "e_content",
         icon: "mdi:card-text-outline",
         fields: [
+          this._modeField,
           { name: "entity", selector: { entity: {} } },
           { name: "name", template: true, selector: { text: {} } },
           {
@@ -126,6 +181,10 @@ class MateriaMenuEditor extends SmartEditorBase {
   }
 
   _renderExtra() {
+    if (this._isList)
+      return html`<div class="options-header"></div>${menuItemsField(this, this._config.items, (items) =>
+        this._commit({ ...this._config, items: items ?? [] })
+      )}`;
     return html`
       <div class="options-header">
         <span>${t("e_options", this.hass)}</span>

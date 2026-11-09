@@ -71,7 +71,7 @@ import "./elements/media-progress/index.js";
 import "./elements/media/index.js";
 import "./elements/clock/index.js";
 import "./elements/volume-ring/index.js";
-import "./elements/power-menu/index.js";
+import "./elements/menu-list/index.js";
 import "./elements/media-source/index.js";
 
 // Inject Figtree font globally

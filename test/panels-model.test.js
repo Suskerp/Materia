@@ -11,7 +11,7 @@ import {
   setPanel,
   freePanelId,
 } from "../src/utils/panels-model.js";
-import { powerEntryForm, powerEntryFromForm, tileItemForm, tileItemFromForm, alertForm, alertFromForm } from "../src/utils/media-editor-model.js";
+import { menuItemForm, menuItemFromForm, tileItemForm, tileItemFromForm, alertForm, alertFromForm } from "../src/utils/media-editor-model.js";
 
 const CHIP = { type: "custom:materia-toggle-chip", entity: "input_boolean.link", variant: "switch" };
 const SWITCHER = { type: "custom:materia-switcher", bar: "connected", items: [{ name: "Living" }] };
@@ -75,10 +75,13 @@ test("add, remove and set", () => {
 });
 
 test("power rows round-trip ids and { entity, name }", () => {
-  assert.deepEqual(powerEntryForm("media_player.a"), { entity: "media_player.a" });
-  assert.equal(powerEntryFromForm("media_player.a", { entity: "media_player.b" }), "media_player.b");
-  assert.deepEqual(powerEntryFromForm("media_player.a", { name: "Living" }), { entity: "media_player.a", name: "Living" });
-  assert.deepEqual(powerEntryFromForm({ entity: "media_player.a", name: "L" }, { name: "" }), { entity: "media_player.a" });
+  assert.deepEqual(menuItemForm("media_player.a"), { type: "entity", entity: "media_player.a", in_all: true });
+  assert.equal(menuItemFromForm("media_player.a", { entity: "media_player.b" }), "media_player.b");
+  assert.deepEqual(menuItemFromForm("media_player.a", { name: "Living" }), { entity: "media_player.a", name: "Living" });
+  assert.deepEqual(menuItemFromForm({ entity: "media_player.a", name: "L" }, { name: "" }), { entity: "media_player.a" });
+  assert.deepEqual(menuItemFromForm("input_boolean.link", { in_all: false }), { entity: "input_boolean.link", in_all: false });
+  assert.deepEqual(menuItemFromForm({ entity: "x.y", name: "N" }, { type: "divider" }), { type: "divider" });
+  assert.deepEqual(menuItemForm({ type: "all" }), { type: "all" });
 });
 
 test("hero alerts: state shows as a list and writes back as it was", () => {

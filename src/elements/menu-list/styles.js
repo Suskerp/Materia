@@ -5,7 +5,7 @@ import { mediaTokens } from "../../styles/media-styles.js";
 
 /**
  * The media header's buttons and its popover menu, shared by
- * materia-media-header, materia-power-menu and materia-media-source so the
+ * materia-media-header, materia-menu and materia-media-source so the
  * header and the standalone parts render alike. Rule order matters (equal
  * specificity): keep it.
  */
@@ -82,12 +82,12 @@ export const mediaButtonStyles = css`
 
     /* Power: red icon so it doesn't read as another media control; the
        kiosk pill is a round icon button. */
-    .power {
+    .danger {
       color: var(--mx-err);
     }
 
     /* Starting up / switching off: a slow pulse until the player confirms. */
-    .power.busy ha-icon {
+    .busy ha-icon {
       animation: power-busy 1.2s ease-in-out infinite;
     }
 
@@ -98,17 +98,17 @@ export const mediaButtonStyles = css`
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .power.busy ha-icon {
+      .busy ha-icon {
         animation: none;
         opacity: 0.6;
       }
     }
 
-    .power.open {
+    .danger.open {
       background: var(--mx-sc);
     }
 
-    .pill.power {
+    .pill.round {
       width: 44px;
       padding: 0;
       justify-content: center;

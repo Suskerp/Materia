@@ -10,8 +10,8 @@ import {
   setToolbarCustoms,
   stationFormData,
   stationFromForm,
-  powerEntryForm,
-  powerEntryFromForm,
+  menuItemForm,
+  menuItemFromForm,
   tileItemForm,
   tileItemFromForm,
   alertForm,
@@ -55,6 +55,7 @@ class MateriaItemListEditor extends LitElement {
   static properties = {
     hass: { attribute: false },
     items: { attribute: false },
+    /** an ha-form schema, or item -> schema when items differ in kind */
     schema: { attribute: false },
     /** item -> header text */
     itemLabel: { attribute: false },
@@ -177,7 +178,7 @@ class MateriaItemListEditor extends LitElement {
                   <ha-form
                     .hass=${this.hass}
                     .data=${this.toForm ? this.toForm(item) : item}
-                    .schema=${localize(this.schema, this.hass)}
+                    .schema=${localize(typeof this.schema === "function" ? this.schema(item) : this.schema, this.hass)}
                     .computeLabel=${computeLabel}
                     @value-changed=${(e) => {
                       e.stopPropagation();
@@ -248,24 +249,52 @@ export function stationsField(editor, value, key = "stations", tiles = false) {
 /*  Power entities: { entity, name } rows                               */
 /* ------------------------------------------------------------------ */
 
-/** A power menu's player list (ids or { entity, name }) for a SmartEditor `render` field. */
-export function powerEntitiesField(editor, value, key, label) {
+/**
+ * A list menu's `items` (materia-menu list mode, a media header's power menu)
+ * for a SmartEditor `render` field; `write(items|undefined)` stores them.
+ */
+export function menuItemsField(editor, value, write, label = "ed_menu_items") {
   const h = editor.hass;
   return html`<materia-item-list-editor
     .hass=${h}
     .items=${Array.isArray(value) ? value : []}
-    .schema=${powerSchema(h)}
-    .itemLabel=${(p) => (typeof p === "string" ? p : p?.name || p?.entity)}
-    .toForm=${powerEntryForm}
-    .fromForm=${powerEntryFromForm}
+    .schema=${(item) => menuItemSchema(h, menuItemForm(item).type)}
+    .itemLabel=${(p) => menuItemLabel(p, h)}
+    .toForm=${menuItemForm}
+    .fromForm=${menuItemFromForm}
     .newItem=${() => ({})}
     addLabel=${label}
     @value-changed=${(e) => {
       e.stopPropagation();
-      editor._setField(key, e.detail.value?.length ? e.detail.value : undefined);
+      write(e.detail.value?.length ? e.detail.value : undefined);
     }}
   ></materia-item-list-editor>`;
 }
+
+const menuItemLabel = (p, h) => {
+  const f = menuItemForm(p);
+  if (f.type === "divider") return t("ed_menu_divider", h);
+  if (f.type === "all") return t("ed_menu_all", h);
+  return f.name || h?.states?.[f.entity]?.attributes?.friendly_name || f.entity || t("ed_menu_switch", h);
+};
+
+const menuItemSchemas = {};
+const menuItemSchema = (hass, type) =>
+  (menuItemSchemas[`${hass?.locale?.language ?? ""}|${type}`] ??= [
+    { name: "type", label: t("ed_menu_item_type", hass), selector: { select: { mode: "dropdown", options: [
+      { value: "entity", label: t("ed_menu_switch", hass) },
+      { value: "divider", label: t("ed_menu_divider", hass) },
+      { value: "all", label: t("ed_menu_all", hass) },
+    ] } } },
+    ...(type === "entity"
+      ? [
+          { name: "entity", label: t("ed_menu_entity", hass),
+            selector: { entity: { domain: ["media_player", "input_boolean", "switch", "light", "fan"] } } },
+          { name: "name", label: t("ed_power_name", hass), selector: { text: {} } },
+          { name: "in_all", label: t("ed_menu_in_all", hass), selector: { boolean: {} } },
+        ]
+      : []),
+  ]);
 
 /** A hero's `alerts` list (first match wins) for a SmartEditor `render` field. */
 export function alertsField(editor, value) {
@@ -303,13 +332,6 @@ const alertSchema = (hass) =>
   ]);
 
 /** Stable per language, so ha-form keeps its controls across renders. */
-const powerSchemas = {};
-const powerSchema = (hass) =>
-  (powerSchemas[hass?.locale?.language ?? ""] ??= [
-    { name: "entity", label: t("ed_power_player", hass), selector: { entity: { domain: "media_player" } } },
-    { name: "name", label: t("ed_power_name", hass), selector: { text: {} } },
-  ]);
-
 /* ------------------------------------------------------------------ */
 /*  Toolbar buttons: built-in chips + custom list                       */
 /* ------------------------------------------------------------------ */

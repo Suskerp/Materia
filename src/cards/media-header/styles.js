@@ -3,7 +3,7 @@ import { hostStyles, haCardReset } from "../../styles/card-styles.js";
 import { motionTokens } from "../../utils/motion.js";
 import { mediaTokens } from "../../styles/media-styles.js";
 import { volumeRingStyles } from "../../elements/volume-ring/ring.js";
-import { mediaButtonStyles } from "../../elements/power-menu/styles.js";
+import { mediaButtonStyles } from "../../elements/menu-list/styles.js";
 
 export const styles = [
   hostStyles,

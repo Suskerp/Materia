@@ -1,5 +1,5 @@
 import { SmartEditorBase } from "../../utils/smart-editor.js";
-import { stationsField, powerEntitiesField } from "../../utils/media-editors.js";
+import { stationsField, menuItemsField } from "../../utils/media-editors.js";
 
 class MateriaMediaHeaderEditor extends SmartEditorBase {
   _formData() {
@@ -44,8 +44,14 @@ class MateriaMediaHeaderEditor extends SmartEditorBase {
         expanded: false,
         fields: [
           {
-            name: "power_entities",
-            render: (value) => powerEntitiesField(this, value, "power_entities", "e_player_power_menu"),
+            name: "power_menu",
+            render: (value) =>
+              menuItemsField(this, value?.items, (items) => {
+                const next = { ...(value ?? {}) };
+                if (items) next.items = items;
+                else delete next.items;
+                this._setField("power_menu", Object.keys(next).length ? next : undefined);
+              }, "ed_power_menu_items"),
           },
         ],
       },

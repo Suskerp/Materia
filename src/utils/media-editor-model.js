@@ -129,19 +129,28 @@ export function inheritScopeEntity(card, entity) {
 
 /* ---- power entities ----------------------------------------------------- */
 
-/** A power list row (an entity id or { entity, name }) as the row form shows it. */
-export function powerEntryForm(entry) {
-  return typeof entry === "string" ? { entity: entry } : { ...(entry ?? {}) };
+/* ---- list menu items ---------------------------------------------------- */
+
+/** A menu item as form data: { type, entity, name, in_all }. */
+export function menuItemForm(item) {
+  if (typeof item === "string") return { type: "entity", entity: item, in_all: true };
+  if (item?.type === "divider" || item?.type === "all") return { type: item.type };
+  return { type: "entity", ...(item ?? {}), in_all: item?.in_all !== false };
 }
 
 /**
- * Applies a row form result. A row written as a bare id stays a bare id until
- * it gains a name; an empty name is dropped; other keys are kept.
+ * Applies a menu item form result: a divider / all row is just its type; a
+ * switch row keeps a bare id until it gains a name or leaves "All".
  */
-export function powerEntryFromForm(old, value) {
-  const next = { ...powerEntryForm(old), ...value };
-  if (next.name === "" || next.name == null) delete next.name;
-  if (!next.entity) delete next.entity;
+export function menuItemFromForm(old, value) {
+  const f = { ...menuItemForm(old), ...value };
+  if (f.type === "divider" || f.type === "all") return { type: f.type };
+  const next = {};
+  if (f.entity) next.entity = f.entity;
+  if (f.name) next.name = f.name;
+  if (f.in_all === false) next.in_all = false;
+  for (const [k, v] of Object.entries(typeof old === "object" && old ? old : {}))
+    if (!["type", "entity", "name", "in_all"].includes(k)) next[k] = v;
   const keys = Object.keys(next);
   if (typeof old === "string" && keys.length === 1 && keys[0] === "entity") return next.entity;
   return next;

@@ -6,9 +6,9 @@ import { t } from "../../utils/i18n.js";
 import { volumeRing } from "../../elements/volume-ring/ring.js";
 import { attributeMapOf } from "../../utils/media-attributes.js";
 import "../../cards/station-grid/index.js";
-import "../../elements/power-menu/index.js";
+import "../../elements/menu/index.js";
 import "../../elements/media-source/index.js";
-import { powerZones } from "../../elements/power-menu/model.js";
+import { menuRows, entityRows } from "../../elements/menu-list/model.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -22,7 +22,9 @@ import "./editor.js";
  *            the volume ring lives in the toolbar there.
  *
  * The source button is a materia-media-source and the power button a
- * materia-power-menu, so the header and the standalone parts render alike.
+ * materia-menu in list mode (`power_menu`: its items, a switch per player
+ * plus anything else, e.g. a zone link), so the header and the standalone
+ * parts render alike.
  *
  * Stations and volume open in the kiosk side panel when the header sits in a
  * materia-art-scope with layout: kiosk, and in a bottom sheet otherwise.
@@ -73,20 +75,30 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
     this._openVolumePanel(e.currentTarget);
   }
 
-  /** The zones the power menu switches: the volume zones, else this player alone. */
+  /** The players in the power menu (its media player rows), else this player alone. */
   get _powerZones() {
-    return powerZones(this.config.power_entities, this.config.entity);
+    const rows = entityRows(menuRows(this.config.power_menu?.items, this.config.entity));
+    const players = rows.filter((r) => r.entity.startsWith("media_player."));
+    return players.length ? players : this.config.entity ? [{ entity: this.config.entity }] : [];
   }
 
-  /** materia-power-menu, composed: `kiosk` is the 44 px button, `seg` its place in the pair. */
+  /** The power button: a materia-menu list, red power icon; `kiosk` is the 44 px button, `seg` its place in the pair. */
   _powerMenu(kiosk, seg) {
     const c = this.config;
-    return html`<materia-power-menu
+    return html`<materia-menu
       .hass=${this.hass}
-      .config=${{ entity: c.entity, entities: c.power_entities, ...(kiosk ? { variant: "kiosk" } : {}) }}
+      .config=${{
+        icon: "mdi:power",
+        color: "error",
+        name: t("media_power", this.hass),
+        entity: c.entity,
+        ...c.power_menu,
+        mode: "list",
+        ...(kiosk ? { variant: "kiosk" } : {}),
+      }}
       .seg=${seg}
       .owner=${this}
-    ></materia-power-menu>`;
+    ></materia-menu>`;
   }
 
   /** `stations_label`, else the translated "Stations". */

@@ -1,8 +1,8 @@
 import { html, nothing } from "lit";
 import { nextSource } from "../../utils/media.js";
 import { t } from "../../utils/i18n.js";
-import { MenuButton } from "../power-menu/index.js";
-import { sourceList, sourceMode } from "../power-menu/model.js";
+import { MenuButton } from "../menu-list/index.js";
+import { sourceList, sourceMode } from "../menu-list/model.js";
 import "./editor.js";
 
 /**

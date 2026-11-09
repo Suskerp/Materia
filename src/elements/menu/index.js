@@ -2,11 +2,23 @@ import { LitElement, html, render } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
 import "./editor.js";
+import "../menu-list/index.js";
 
+/**
+ * materia-menu — two kinds of menu:
+ *   select (default): a field showing the entity's value; the menu picks one
+ *     of its options (input_select, select, water_heater, or `options`).
+ *   list (`mode: list`, or when it has `items`): an icon button whose menu
+ *     holds rows: a switch per entity, dividers and "All off / All on"
+ *     (rendered by materia-menu-list). A media header's power button is one.
+ */
 class MateriaMenu extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
+    /** Set by a media header: its place in a connected button pair, and the element a click may land in. */
+    seg: { attribute: false },
+    owner: { attribute: false },
     _open: { state: true },
     _optimisticValue: { state: true },
     _resolvedIcon: { state: true },
@@ -384,8 +396,15 @@ class MateriaMenu extends ActionMixin(LitElement) {
     `;
   }
 
+  /** List mode: `mode: list`, or `items` without a mode. */
+  get _isList() {
+    return this.config?.mode === "list" || (this.config?.mode == null && Array.isArray(this.config?.items));
+  }
+
   render() {
     if (!this.hass || !this.config) return html``;
+    if (this._isList)
+      return html`<materia-menu-list .hass=${this.hass} .config=${this.config} .seg=${this.seg} .owner=${this.owner ?? this}></materia-menu-list>`;
     const stateObj = this.hass.states[this.config.entity];
     const unavailable = this._isUnavailable(stateObj);
     const currentValue = this._currentValue;
@@ -443,6 +462,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-menu",
   name: "Materia Menu",
-  description: "M3 vertical dropdown menu for select entities.",
+  description: "M3 menu: pick a value of a select entity, or a button with a list of switches (power menu).",
   preview: true,
 });
