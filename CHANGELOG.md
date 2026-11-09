@@ -8,6 +8,34 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.75.0 — 2026-11-09
+
+The power menu becomes a regular menu: `materia-menu` gets a list mode, a button whose
+menu holds a switch per entity, so a power menu can also carry other switches, such as a
+zone link.
+
+### Breaking changes
+- **`materia-power-menu` is removed.** Use `materia-menu` in list mode (`mode: list`, or
+  just `items:`) with `icon: mdi:power` and `color: error`.
+- **`materia-media-header` `power_entities` is replaced by `power_menu`,** a
+  `materia-menu` list config: `power_menu: { items: [...] }`.
+  - Before: `power_entities: [media_player.a, media_player.b]`.
+  - Now: `power_menu: { items: [media_player.a, media_player.b, { type: divider }, { type: all }] }`.
+  - "All off / All on" is no longer added on its own: add a `{ type: all }` row.
+
+### Added
+- **`materia-menu` list mode:** an icon button (`icon`, `color`, `variant: kiosk`) whose
+  menu has rows:
+  - a switch per entity: players, switches, input booleans, lights, fans;
+  - `{ type: divider }`;
+  - `{ type: all }`: "All off" while a row is on, else "All on". Rows with
+    `in_all: false` are left out.
+- **Visual editor:** a choice between the two menu kinds, and a row list for list mode and
+  for the media header's power menu, in English and Dutch.
+
+### Fixed
+- **Editor rows** in the power list show the entity's name instead of its id.
+
 ## 0.74.1 — 2026-11-08
 
 Every card and option can now be set up in the visual editor, nested cards included,
