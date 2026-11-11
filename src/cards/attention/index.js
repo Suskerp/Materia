@@ -14,6 +14,10 @@ const SYNC = "materia-attention-sync";
 /** Rules by card name, so a copy elsewhere on the page can use them (`rules_from`). */
 export const RULES = new Map();
 
+/** The person's put-off list, once loaded on this page: later cards (and a
+ *  return to the view) start from it instead of from "nothing put off". */
+let laterCache = null;
+
 /**
  * materia-attention — "needs attention": a list of rules, shown only while
  * they hold, most urgent first. Hidden when nothing needs attention.
@@ -84,6 +88,9 @@ class MateriaAttention extends ActionMixin(LitElement) {
    *  still active. Everything put off: the main card hides and the later copy
    *  shows them instead. */
   get _items() {
+    // Until the put-off list is known, a card that uses it shows nothing,
+    // or everything would flash up for a moment on every page load.
+    if (this._usesLater && !this._later) return [];
     const later = this._later ?? {};
     const now = Date.now();
     const all = activeItems(this._rules, this.hass, (entity, brand) => vacuumAlerts(this.hass, entity, brand));
@@ -102,14 +109,19 @@ class MateriaAttention extends ActionMixin(LitElement) {
     return String(item.key[0] === "r" ? this._rules[item.index]?.name ?? item.key : item.name);
   }
 
+  get _usesLater() {
+    return this._laterMode || this._rules.some((i) => i?.later);
+  }
+
   async _loadLater() {
     if (this._laterLoaded || !this.hass?.connection) return;
     this._laterLoaded = true;
+    if (laterCache) this._later = laterCache;
     try {
       const r = await this.hass.connection.sendMessagePromise({ type: "frontend/get_user_data", key: LATER_KEY });
-      this._later = r?.value ?? {};
+      this._later = laterCache = r?.value ?? {};
     } catch (_) {
-      this._later = {};
+      this._later ??= {};
     }
     this._wakeLater();
   }
@@ -122,7 +134,7 @@ class MateriaAttention extends ActionMixin(LitElement) {
     const later = Object.fromEntries(Object.entries(this._later ?? {}).filter(([, until]) => until > now));
     if (back) delete later[this._laterKey(item)];
     else later[this._laterKey(item)] = now + (Number(item.later_hours) || Number(this.config.later_hours) || 24) * 3600e3;
-    this._later = later;
+    this._later = laterCache = later;
     this.hass.connection.sendMessagePromise({ type: "frontend/set_user_data", key: LATER_KEY, value: later }).catch(() => {});
     window.dispatchEvent(new CustomEvent(SYNC, { detail: later }));
     this._wakeLater();
@@ -162,7 +174,7 @@ class MateriaAttention extends ActionMixin(LitElement) {
     super.updated?.(changed);
     if (!this.hass || !this.config) return;
     const rules = this._rules;
-    if (this._laterMode || rules.some((i) => i?.later)) this._loadLater();
+    if (this._usesLater) this._loadLater();
     // "For at least N minutes" turns true with time, not with a state change: look again every 30 s.
     clearTimeout(this._forTimer);
     if (rules.some((i) => i?.for_minutes > 0)) this._forTimer = setTimeout(() => this.requestUpdate(), 30000);
