@@ -17,6 +17,8 @@ const itemSchema = (hass, kind) =>
             { value: "roborock", label: "Roborock" },
             { value: "ecovacs", label: "Ecovacs" },
           ] } } },
+          { name: "later", label: t("ed_att_later", hass), selector: { boolean: {} } },
+          { name: "later_hours", label: t("ed_att_later_hours_item", hass), selector: { number: { min: 1, max: 48, step: 1, mode: "box" } } },
         ]
       : [
           { name: "name", label: t("ed_att_name", hass), selector: { text: {} } },
@@ -30,6 +32,8 @@ const itemSchema = (hass, kind) =>
           { name: "entity", label: t("ed_att_entity", hass), selector: { entity: {} } },
           { name: "action_label", label: t("ed_att_action_label", hass), selector: { text: {} } },
           { name: "action", label: t("ed_att_action", hass), selector: { ui_action: { default_action: "none" } } },
+          { name: "later", label: t("ed_att_later", hass), selector: { boolean: {} } },
+          { name: "later_hours", label: t("ed_att_later_hours_item", hass), selector: { number: { min: 1, max: 48, step: 1, mode: "box" } } },
         ]),
   ]);
 
@@ -51,6 +55,12 @@ class MateriaAttentionEditor extends SmartEditorBase {
         icon: "mdi:bell-badge-outline",
         fields: [
           { name: "title", label: "ed_att_title", selector: { text: {} } },
+          { name: "layout", label: "ed_att_layout", selector: { select: { mode: "dropdown", options: [
+            { value: "summary", label: "ed_att_layout_summary" },
+            { value: "stack", label: "ed_att_layout_stack" },
+            { value: "carousel", label: "ed_att_layout_carousel" },
+          ] } } },
+          { name: "later_hours", label: "ed_att_later_hours", selector: { number: { min: 1, max: 48, step: 1, mode: "box" } } },
           { name: "open", label: "ed_att_open", selector: { select: { mode: "dropdown", options: [
             { value: "sheet", label: "ed_att_open_sheet" },
             { value: "inline", label: "ed_att_open_inline" },

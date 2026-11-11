@@ -306,6 +306,7 @@ export const STRINGS = {
   attention_count: { en: "{n} things need attention", nl: "{n} dingen vragen aandacht" },
   attention_heading: { en: "Needs attention", nl: "Vraagt aandacht" },
   attention_none: { en: "Nothing needs attention", nl: "Niets vraagt aandacht" },
+  attention_later: { en: "Later", nl: "Later" },
   attention_do: { en: "Do it", nl: "Doen" },
 
   /* ---- materia-weather-hero --------------------------------------------- */

@@ -7,6 +7,8 @@ import { activeItems } from "./model.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
 
+const LATER_KEY = "materia_attention_later";
+
 /**
  * materia-attention — "needs attention": a list of rules, shown only while
  * they hold, most urgent first. Hidden when nothing needs attention.
@@ -32,6 +34,8 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
     config: { state: true },
     preview: { type: Boolean },
     _open: { state: true },
+    _later: { state: true },
+    _page: { state: true },
   };
 
   static styles = styles;
@@ -54,12 +58,60 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
   }
 
   get _items() {
-    return activeItems(this.config.items, this.hass, (entity, brand) => vacuumAlerts(this.hass, entity, brand));
+    const later = this._later ?? {};
+    const now = Date.now();
+    return activeItems(this.config.items, this.hass, (entity, brand) => vacuumAlerts(this.hass, entity, brand)).filter(
+      (i) => !(later[this._laterKey(i)] > now)
+    );
+  }
+
+  /* ---- "Later": hidden for a while, per person, without helpers. Kept in
+     Home Assistant's own per-user frontend store (frontend/set_user_data),
+     so it follows the person across their devices and clears itself. ---- */
+
+  _laterKey(item) {
+    return String(item.key[0] === "r" ? this.config.items[item.index]?.name ?? item.key : item.name);
+  }
+
+  async _loadLater() {
+    if (this._laterLoaded || !this.hass?.connection) return;
+    this._laterLoaded = true;
+    try {
+      const r = await this.hass.connection.sendMessagePromise({ type: "frontend/get_user_data", key: LATER_KEY });
+      this._later = r?.value ?? {};
+    } catch (_) {
+      this._later = {};
+    }
+    this._wakeLater();
+  }
+
+  _snooze(e, item) {
+    e.stopPropagation();
+    this._fireHaptic("light");
+    const now = Date.now();
+    const later = Object.fromEntries(Object.entries(this._later ?? {}).filter(([, until]) => until > now));
+    later[this._laterKey(item)] = now + (Number(item.later_hours) || Number(this.config.later_hours) || 4) * 3600e3;
+    this._later = later;
+    this.hass.connection.sendMessagePromise({ type: "frontend/set_user_data", key: LATER_KEY, value: later }).catch(() => {});
+    this._wakeLater();
+  }
+
+  /** Re-render when the first hidden item is due back. */
+  _wakeLater() {
+    clearTimeout(this._laterTimer);
+    const next = Math.min(...Object.values(this._later ?? {}).filter((u) => u > Date.now()));
+    if (Number.isFinite(next)) this._laterTimer = setTimeout(() => this.requestUpdate(), Math.min(next - Date.now() + 500, 2 ** 31 - 1));
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    clearTimeout(this._laterTimer);
   }
 
   updated(changed) {
     super.updated?.(changed);
     if (!this.hass || !this.config) return;
+    if ((this.config.items || []).some((i) => i?.later)) this._loadLater();
     (this.config.items || []).forEach((item, i) => {
       this._resolveTemplateValue(`n${i}`, item?.name);
       this._resolveTemplateValue(`s${i}`, item?.secondary);
@@ -97,10 +149,64 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
     } else this._handleAction(item.action);
   }
 
+  _laterBtn(item) {
+    return html`<button class="act later" @click=${(e) => this._snooze(e, item)}>${t("attention_later", this.hass)}</button>`;
+  }
+
+  _label(item) {
+    return item.reset ? t("reset", this.hass) : item.action ? item.action_label || t("attention_do", this.hass) : null;
+  }
+
+  /** B: the most urgent item on top with room for its action and "Later"; the rest peek out below. */
+  _stack(items) {
+    const top = items[0];
+    const label = this._label(top);
+    const secondary = this._text(top, "s");
+    return html`<ha-card><div class="pile">
+      ${items.slice(1, 3).map((i, n) => html`<div class="peek ${i.level}" style="--n:${n + 1}"></div>`)}
+      <div class="item top ${top.level}">
+        <button class="main" @click=${() => this._tap(top)}>
+          <span class="badge"><ha-icon .icon=${top.icon || "mdi:alert-circle-outline"}></ha-icon></span>
+          <span class="body"><span class="name">${this._text(top, "n")}</span>${secondary ? html`<span class="detail">${secondary}</span>` : nothing}</span>
+          ${items.length > 1 ? html`<span class="count">1 / ${items.length}</span>` : nothing}
+        </button>
+        <div class="acts" ?hidden=${!label && !top.later}>
+          ${label ? html`<button class="act" @click=${(e) => this._quick(e, top)}>${label}</button>` : nothing}
+          ${top.later ? this._laterBtn(top) : nothing}
+        </div>
+      </div>
+    </div></ha-card>`;
+  }
+
+  /** C: one roomy card per item, swiped sideways; the dots carry the levels. */
+  _carousel(items) {
+    const page = Math.min(this._page ?? 0, items.length - 1);
+    return html`<ha-card>
+      <div class="pages" @scroll=${(e) => {
+        const el = e.currentTarget;
+        const p = Math.round(el.scrollLeft / (el.firstElementChild?.offsetWidth + 8 || 1));
+        if (p !== this._page) this._page = p;
+      }}>
+        ${items.map((i) => {
+          const label = this._label(i);
+          const secondary = this._text(i, "s");
+          return html`<div class="page item ${i.level}" @click=${() => this._tap(i)}>
+            <span class="badge round"><ha-icon .icon=${i.icon || "mdi:alert-circle-outline"}></ha-icon></span>
+            <span class="body"><span class="name big">${this._text(i, "n")}</span>${secondary ? html`<span class="detail">${secondary}</span>` : nothing}</span>
+            <div class="acts">${label ? html`<button class="act" @click=${(e) => this._quick(e, i)}>${label}</button>` : nothing}${i.later ? this._laterBtn(i) : nothing}</div>
+          </div>`;
+        })}
+      </div>
+      ${items.length > 1
+        ? html`<div class="dots" aria-hidden="true">${items.map((i, n) => html`<span class="pip ${i.level} ${n === page ? "on" : ""}"></span>`)}</div>`
+        : nothing}
+    </ha-card>`;
+  }
+
   _row(item) {
     const name = this._text(item, "n");
     const secondary = this._text(item, "s");
-    const label = item.reset ? t("reset", this.hass) : item.action ? item.action_label || t("attention_do", this.hass) : null;
+    const label = this._label(item);
     return html`<div class="item ${item.level}">
       <button class="main" @click=${() => this._tap(item)}>
         <span class="badge"><ha-icon .icon=${item.icon || "mdi:alert-circle-outline"}></ha-icon></span>
@@ -109,6 +215,7 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
           ${secondary ? html`<span class="detail">${secondary}</span>` : nothing}
         </span>
       </button>
+      ${item.later ? this._laterBtn(item) : nothing}
       ${label ? html`<button class="act" @click=${(e) => this._quick(e, item)}>${label}</button>` : nothing}
     </div>`;
   }
@@ -128,6 +235,8 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
       return this.preview
         ? html`<ha-card><div class="empty"><ha-icon icon="mdi:check-circle-outline"></ha-icon>${t("attention_none", this.hass)}</div></ha-card>`
         : nothing;
+    if (this.config.layout === "stack") return this._stack(items);
+    if (this.config.layout === "carousel") return this._carousel(items);
     if (items.length === 1) return html`<ha-card>${this._row(items[0])}</ha-card>`;
 
     const title = this.config.title

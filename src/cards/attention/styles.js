@@ -191,6 +191,93 @@ export const styles = [
       color: var(--md-sys-color-on-surface, var(--primary-text-color));
     }
 
+    .pile {
+      position: relative;
+      padding-bottom: 14px;
+    }
+    .peek {
+      position: absolute;
+      left: calc(var(--n) * 10px);
+      right: calc(var(--n) * 10px);
+      bottom: calc(14px - var(--n) * 7px);
+      height: 40px;
+      border-radius: 0 0 24px 24px;
+      background: color-mix(in srgb, var(--c) 35%, var(--at-surface));
+      z-index: calc(3 - var(--n));
+    }
+    .item.top {
+      position: relative;
+      z-index: 3;
+      flex-wrap: wrap;
+      padding: 14px;
+    }
+    .count {
+      flex: none;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--md-sys-color-on-surface, #fff) 10%, transparent);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .acts {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+    .acts .act {
+      flex: 1;
+      height: 44px;
+    }
+    .act.later {
+      background: color-mix(in srgb, var(--md-sys-color-on-surface, #fff) 10%, transparent);
+      color: inherit;
+    }
+    .pages {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+    .pages::-webkit-scrollbar {
+      display: none;
+    }
+    .page {
+      flex: none;
+      width: 86%;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px;
+      scroll-snap-align: start;
+      cursor: pointer;
+    }
+    .badge.round {
+      border-radius: 50%;
+    }
+    .name.big {
+      font-size: 18px;
+      line-height: 24px;
+    }
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      padding-top: 10px;
+    }
+    .pip {
+      width: 6px;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--b);
+      opacity: 0.6;
+      transition: width var(--md-sys-motion-expressive-fast-spatial, 200ms);
+    }
+    .pip.on {
+      width: 18px;
+      opacity: 1;
+    }
+
     .empty {
       display: flex;
       align-items: center;

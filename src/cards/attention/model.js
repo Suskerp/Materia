@@ -36,6 +36,8 @@ export function activeItems(items, hass, vacuumAlerts = () => []) {
           entity: a.entity,
           tap_action: { action: "more-info", entity: item.entity },
           reset: a.reset,
+          later: item.later,
+          later_hours: item.later_hours,
         });
       });
       return;
