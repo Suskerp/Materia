@@ -3966,12 +3966,12 @@ class extends Re{constructor(t,e,i,s=Re.DEFAULT_SPEC_VERSION,a=Re.DEFAULT_PLATFO
     }
     .off {
       --mix: 100%;
-      --c: var(--md-sys-color-surface-container, rgba(127, 127, 127, 0.12));
-      --b: var(--md-sys-color-surface-container-highest, rgba(127, 127, 127, 0.3));
-      --on-b: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
+      --c: color-mix(in srgb, var(--md-sys-color-on-surface, #888) 6%, var(--at-surface));
+      --b: color-mix(in srgb, var(--md-sys-color-on-surface, #888) 12%, transparent);
+      --on-b: color-mix(in srgb, var(--md-sys-color-on-surface, #888) 38%, transparent);
     }
-    .item.off .name {
-      opacity: 0.75;
+    .item.off .body {
+      opacity: 0.38;
     }
     .info {
       --c: var(--md-sys-color-surface-container-high, rgba(127, 127, 127, 0.16));
