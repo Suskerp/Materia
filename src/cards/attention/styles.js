@@ -142,7 +142,6 @@ export const styles = [
       border-radius: 50%;
       background: var(--b);
       color: var(--on-b);
-      /* ring in the summary's own container colour, so overlaps read as cut-outs */
       box-shadow: 0 0 0 2px var(--ring);
       --mdc-icon-size: 20px;
     }
@@ -152,18 +151,8 @@ export const styles = [
     .dot + .dot {
       margin-inline-start: -10px;
     }
-    /* The most urgent icon comes first and must stay on top of the overlap. */
     .dot {
       position: relative;
-    }
-    .dot:nth-child(1) {
-      z-index: 3;
-    }
-    .dot:nth-child(2) {
-      z-index: 2;
-    }
-    .dot:nth-child(3) {
-      z-index: 1;
     }
     .chev {
       flex: none;

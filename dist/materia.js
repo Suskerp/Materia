@@ -4083,7 +4083,6 @@ class extends Re{constructor(t,e,i,s=Re.DEFAULT_SPEC_VERSION,a=Re.DEFAULT_PLATFO
       border-radius: 50%;
       background: var(--b);
       color: var(--on-b);
-      /* ring in the summary's own container colour, so overlaps read as cut-outs */
       box-shadow: 0 0 0 2px var(--ring);
       --mdc-icon-size: 20px;
     }
@@ -4093,18 +4092,8 @@ class extends Re{constructor(t,e,i,s=Re.DEFAULT_SPEC_VERSION,a=Re.DEFAULT_PLATFO
     .dot + .dot {
       margin-inline-start: -10px;
     }
-    /* The most urgent icon comes first and must stay on top of the overlap. */
     .dot {
       position: relative;
-    }
-    .dot:nth-child(1) {
-      z-index: 3;
-    }
-    .dot:nth-child(2) {
-      z-index: 2;
-    }
-    .dot:nth-child(3) {
-      z-index: 1;
     }
     .chev {
       flex: none;
@@ -4133,7 +4122,7 @@ class extends Re{constructor(t,e,i,s=Re.DEFAULT_SPEC_VERSION,a=Re.DEFAULT_PLATFO
     </div>`}_openList(){this._fireHaptic("light"),this._openSheet(this,{...this.config,type:"custom:materia-attention",display:"list"},$t("attention_heading",this.hass))}render(){if(!this.hass||!this.config)return W;const t=this._items;if(this._list)return U`<div class="list">${t.map(t=>this._row(t))}</div>`;if(!t.length)return this.preview?U`<ha-card><div class="empty"><ha-icon icon="mdi:check-circle-outline"></ha-icon>${$t("attention_none",this.hass)}</div></ha-card>`:W;if(1===t.length)return U`<ha-card>${this._row(t[0])}</ha-card>`;const e=this.config.title?String(this.config.title).replace("{n}",t.length):$t("attention_count",this.hass,{n:t.length});return U`<ha-card>
       <button class="summary ${t[0].level}" aria-haspopup="dialog" @click=${this._openList}>
         <span class="stack">
-          ${t.slice(0,3).map(t=>U`<span class="dot ${t.level}"><ha-icon .icon=${t.icon||"mdi:alert-circle-outline"}></ha-icon></span>`)}
+          ${t.slice(0,3).map((t,e)=>U`<span class="dot ${t.level}" style="z-index:${3-e}"><ha-icon .icon=${t.icon||"mdi:alert-circle-outline"}></ha-icon></span>`)}
         </span>
         <span class="body">
           <span class="name">${e}</span>

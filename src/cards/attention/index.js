@@ -133,7 +133,7 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
     return html`<ha-card>
       <button class="summary ${items[0].level}" aria-haspopup="dialog" @click=${this._openList}>
         <span class="stack">
-          ${items.slice(0, 3).map((i) => html`<span class="dot ${i.level}"><ha-icon .icon=${i.icon || "mdi:alert-circle-outline"}></ha-icon></span>`)}
+          ${items.slice(0, 3).map((i, n) => html`<span class="dot ${i.level}" style="z-index:${3 - n}"><ha-icon .icon=${i.icon || "mdi:alert-circle-outline"}></ha-icon></span>`)}
         </span>
         <span class="body">
           <span class="name">${title}</span>
