@@ -31,7 +31,7 @@ export const RULES = new Map();
  *            it), action + action_label (a quick-action button), tap_action
  *            later + later_hours (a "Later" button: hidden for a while, per
  *            person), or { type: vacuum, entity, brand }
- *   later_hours: the card's default for Later (4)
+ *   later_hours: the card's default for Later (24, a day)
  *   id:          a name, so a second copy can use these rules
  *   Put-off items stay at the end of the carousel, in neutral colours with
  *   "Show now", as long as anything is still active.
@@ -117,7 +117,7 @@ class MateriaAttention extends ActionMixin(LitElement) {
     const now = Date.now();
     const later = Object.fromEntries(Object.entries(this._later ?? {}).filter(([, until]) => until > now));
     if (back) delete later[this._laterKey(item)];
-    else later[this._laterKey(item)] = now + (Number(item.later_hours) || Number(this.config.later_hours) || 4) * 3600e3;
+    else later[this._laterKey(item)] = now + (Number(item.later_hours) || Number(this.config.later_hours) || 24) * 3600e3;
     this._later = later;
     this.hass.connection.sendMessagePromise({ type: "frontend/set_user_data", key: LATER_KEY, value: later }).catch(() => {});
     window.dispatchEvent(new CustomEvent(SYNC, { detail: later }));

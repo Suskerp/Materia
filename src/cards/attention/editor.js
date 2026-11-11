@@ -22,7 +22,7 @@ const itemSchema = (hass, kind, when, entity = "", later = false) =>
             { value: "ecovacs", label: "Ecovacs" },
           ] } } },
           { name: "later", label: t("ed_att_later", hass), selector: { boolean: {} } },
-          ...(later ? [{ name: "later_hours", label: t("ed_att_later_hours_item", hass), selector: { number: { min: 1, max: 48, step: 1, mode: "box" } } }] : []),
+          ...(later ? [{ name: "later_hours", label: t("ed_att_later_hours_item", hass), selector: { number: { min: 1, max: 168, step: 1, mode: "box" } } }] : []),
         ]
       : [
           { name: "entity", label: t("ed_att_entity", hass), selector: { entity: {} } },
@@ -41,7 +41,7 @@ const itemSchema = (hass, kind, when, entity = "", later = false) =>
           { name: "action_label", label: t("ed_att_action_label", hass), selector: { text: {} } },
           { name: "action", label: t("ed_att_action", hass), selector: { ui_action: { default_action: "none" } } },
           { name: "later", label: t("ed_att_later", hass), selector: { boolean: {} } },
-          ...(later ? [{ name: "later_hours", label: t("ed_att_later_hours_item", hass), selector: { number: { min: 1, max: 48, step: 1, mode: "box" } } }] : []),
+          ...(later ? [{ name: "later_hours", label: t("ed_att_later_hours_item", hass), selector: { number: { min: 1, max: 168, step: 1, mode: "box" } } }] : []),
         ]),
   ]);
 
@@ -84,7 +84,7 @@ class MateriaAttentionEditor extends SmartEditorBase {
             ? [{ name: "rules_from", label: "ed_att_rules_from", helper: "ed_att_rules_from_help", selector: { select: { mode: "dropdown", custom_value: true, options: [...RULES.keys()] } } }]
             : [
                 { name: "id", label: "ed_att_id", helper: "ed_att_id_help", selector: { text: {} } },
-                { name: "later_hours", label: "ed_att_later_hours", selector: { number: { min: 1, max: 48, step: 1, mode: "box" } } },
+                { name: "later_hours", label: "ed_att_later_hours", selector: { number: { min: 1, max: 168, step: 1, mode: "box" } } },
               ]),
         ],
       },
