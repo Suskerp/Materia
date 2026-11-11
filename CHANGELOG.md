@@ -8,6 +8,19 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.14 — 2026-11-11
+
+Needs attention explains itself without templates.
+
+### Breaking changes
+None.
+
+### Changed
+- **An empty detail line says what triggered the rule:** for a rule on several entities, the
+  ones that match now, with their value ("Spots remote 18 % · Lamps remote 12 %"); for one
+  entity, its value ("12 %"). Templates still work, now in Home Assistant's multi-line
+  template editor.
+
 ## 0.76.13 — 2026-11-11
 
 Card editors open reliably again.
