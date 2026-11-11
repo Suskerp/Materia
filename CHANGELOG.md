@@ -8,6 +8,22 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.5 — 2026-11-11
+
+### Breaking changes
+None.
+
+### Added
+- **`materia-time-input` clear button:** a date-and-time row that holds a moment gets a ×
+  that clears it (sets the helper to now). `clearable: false` hides it.
+
+### Fixed
+- **Nested card editors stuck on "Loading card editor…"** (expander, panel host, stack,
+  switcher, tabs, climate panel): Home Assistant can hand back its stack card before its code
+  has loaded; Materia now waits for it and retries instead of hanging.
+- **`materia-time-input`:** a date-and-time in the past shows "Not set" instead of the old
+  moment.
+
 ## 0.76.4 — 2026-11-11
 
 ### Breaking changes
