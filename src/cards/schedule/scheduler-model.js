@@ -108,6 +108,84 @@ export const isSpentOneShot = (tags = [], now = Date.now(), graceMs = 5 * 60_000
 
 export const phaseOffsetMinutes = (phase) => Number(phase?.offset_minutes ?? phase?.offset ?? 0) || 0;
 
+/** "set_hvac_mode" -> "Set hvac mode", for a service HA has no name for. */
+export const humanizeService = (service) => {
+  const words = String(service || "").split(".").pop().replace(/_/g, " ").trim();
+  return words ? words[0].toUpperCase() + words.slice(1) : "";
+};
+
+/** A service's display name: HA's translation, then its services.yaml
+ *  name, then the humanised id. Never the raw "domain.service". */
+export const serviceLabel = (hass, service) => {
+  const [domain, name] = String(service || "").split(".");
+  const translated = name ? hass?.localize?.(`component.${domain}.services.${name}.name`) : "";
+  return translated || hass?.services?.[domain]?.[name]?.name || humanizeService(service);
+};
+
+const friendlyName = (hass, entity) => hass?.states?.[entity]?.attributes?.friendly_name || entity;
+
+/** "Living room · Set HVAC mode" (or "Hall +1 · Turn on") for an action
+ *  in either shape; "" when there is no service. */
+export const actionSummary = (hass, action) => {
+  const actions = toSchedulerActions(action ?? []);
+  if (!actions.length) return "";
+  const entities = actions.map((item) => item.entity_id).filter(Boolean);
+  const who = entities.length
+    ? `${friendlyName(hass, entities[0])}${entities.length > 1 ? ` +${entities.length - 1}` : ""}`
+    : "";
+  return [who, serviceLabel(hass, actions[0].service)].filter(Boolean).join(" · ");
+};
+
+/* ---- input_datetime helpers ----------------------------------------- */
+
+const pad2 = (n) => String(n).padStart(2, "0");
+
+/** What an input_datetime holds: which parts it has, and the moment (a
+ *  time-only helper's time lands on today, for display). Null for a missing
+ *  entity; `when` is null while the helper is unknown. */
+export const helperMoment = (stateObj, now = new Date()) => {
+  if (!stateObj) return null;
+  const attrs = stateObj.attributes || {};
+  const raw = String(stateObj.state ?? "");
+  const date = /^(\d{4})-(\d{2})-(\d{2})/.exec(raw);
+  const time = /(?:^|[ T])(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(raw);
+  const hasDate = attrs.has_date ?? !!date;
+  const hasTime = attrs.has_time ?? !!time;
+  let when = null;
+  if (hasDate && date) {
+    when = new Date(Number(date[1]), Number(date[2]) - 1, Number(date[3]),
+      hasTime && time ? Number(time[1]) : 0, hasTime && time ? Number(time[2]) : 0);
+  } else if (!hasDate && hasTime && time) {
+    when = new Date(now.getFullYear(), now.getMonth(), now.getDate(), Number(time[1]), Number(time[2]));
+  }
+  return { hasDate: !!hasDate, hasTime: !!hasTime, when: when && !Number.isNaN(when.getTime()) ? when : null };
+};
+
+/** Whether the helper reads as "set": a date and time still ahead, a date
+ *  that is today or later, or any time at all (a time has no past). */
+export const helperIsSet = (moment, now = new Date()) => {
+  if (!moment?.when) return false;
+  if (moment.hasDate && moment.hasTime) return moment.when.getTime() > now.getTime();
+  if (moment.hasDate) return moment.when >= new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return moment.hasTime;
+};
+
+/** input_datetime.set_datetime data for a moment, local wall clock. */
+export const setDatetimeData = (when, { hasDate = true, hasTime = true } = {}) => {
+  const date = `${when.getFullYear()}-${pad2(when.getMonth() + 1)}-${pad2(when.getDate())}`;
+  const time = `${pad2(when.getHours())}:${pad2(when.getMinutes())}:00`;
+  if (hasDate && hasTime) return { datetime: `${date} ${time}` };
+  return hasDate ? { date } : { time };
+};
+
+/** Clearing writes a moment that already passed (now, or yesterday for a
+ *  date-only helper). A time-only helper cannot read as passed: null. */
+export const clearDatetimeData = ({ hasDate = true, hasTime = true } = {}, now = new Date()) => {
+  if (!hasDate) return null;
+  if (hasTime) return setDatetimeData(now, { hasDate, hasTime });
+  return setDatetimeData(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1), { hasDate, hasTime });
+};
+
 export const oneShotPayload = ({ name, when, actions, tags = [] }) => {
   if (!(when instanceof Date) || Number.isNaN(when.getTime())) throw new TypeError("A valid execution date is required");
   const normalized = toSchedulerActions(actions || []);

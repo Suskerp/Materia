@@ -10,6 +10,8 @@ import {
   schedulePurpose,
   stepForm,
   stepFromForm,
+  stepLabel,
+  offsetText,
   targetActionForm,
   targetActionFromForm,
   triggerForm,
@@ -118,4 +120,23 @@ test("window actions keep their stored shape until edited", () => {
   const stored = { service: "switch.turn_on", entity_id: "switch.pump" };
   assert.equal(actionItemFromForm(stored, actionItemForm(stored)), stored);
   assert.equal(actionItemFromForm(stored, { action: heat }), heat);
+});
+
+test("the date & time purpose is its own choice and never the default", () => {
+  assert.equal(schedulePurpose({ presentation: "datetime" }), "datetime");
+  const next = withPurpose({ targets: ["switch.a"] }, "datetime", () => "tag");
+  assert.deepEqual(next, { presentation: "datetime" });
+});
+
+test("step headers read timing first, then friendly names, never raw ids", () => {
+  const hass = {
+    locale: { language: "en" },
+    states: { "climate.living": { attributes: { friendly_name: "Heating" } } },
+    services: { climate: { set_hvac_mode: { name: "Set HVAC mode" } } },
+  };
+  assert.equal(offsetText(-180, "en"), "3 h before");
+  assert.equal(offsetText(90, "nl"), "1 u 30 min erna");
+  assert.equal(offsetText(0, "en"), "At the moment");
+  assert.equal(stepLabel({ offset_minutes: -180, action: heat }, hass), "3 h before · Heating · Set HVAC mode");
+  assert.equal(stepLabel({ offset_minutes: 0, name: "Lights", action: heat }, hass), "At the moment · Lights");
 });

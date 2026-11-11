@@ -1,5 +1,26 @@
 # One-time schedules and plans
 
+## Set a date & time (no automation)
+
+"Set a date & time" only stores the chosen moment in an `input_datetime`
+helper. It makes no Scheduler calls. Automations can trigger on the helper.
+
+```yaml
+type: custom:materia-schedule
+presentation: datetime
+datetime_entity: input_datetime.arrival_home
+name: I'm arriving home
+icon: mdi:home-clock        # optional, default mdi:calendar-clock
+```
+
+The strip shows the helper's moment while it is still ahead, and "Not set"
+once it has passed or is unknown. Confirm calls `input_datetime.set_datetime`
+with `datetime: "YYYY-MM-DD HH:MM:SS"` (local time). Clear (two taps) sets the
+helper to the current minute, so it reads as passed. A date-only helper gets a
+date picker and is cleared to yesterday. A time-only helper gets a time picker
+and has no Clear, because a time cannot be in the past. Quick picks are
+optional, as on the one-moment card.
+
 ## One moment (the simple path)
 
 Pick "One moment" as what the card is for in the visual editor, give it a

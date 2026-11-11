@@ -6,9 +6,12 @@
  * ha-form shows. Keys a form does not know are kept.
  */
 
+import { t } from "../../utils/i18n.js";
+import { actionSummary } from "./scheduler-model.js";
+
 /** The editor's purpose choice, as the card reads its config. */
 export const schedulePurpose = (config = {}) => {
-  if (config.presentation === "moment") return "moment";
+  if (config.presentation === "moment" || config.presentation === "datetime") return config.presentation;
   if (config.presentation === "manager" || config.manage_schedules === true || Array.isArray(config.targets)) return "manager";
   return config.presentation === "sheet" ? "sheet" : "inline";
 };
@@ -48,6 +51,24 @@ export const uiAction = (action) => {
 const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
 /* ---- steps: { name?, offset_minutes, action } ------------------------- */
+
+/** "3 h before", "1 h 30 min after", "At the moment". */
+export const offsetText = (minutes, hassOrLang) => {
+  const total = Math.round(Number(minutes) || 0);
+  if (!total) return t("sched_at_moment", hassOrLang);
+  const { hours, minutes: rest } = durationFromMinutes(total);
+  const d = [
+    hours ? t("sched_unit_h", hassOrLang, { n: hours }) : "",
+    rest ? t("sched_unit_min", hassOrLang, { n: rest }) : "",
+  ].filter(Boolean).join(" ");
+  return t(total < 0 ? "sched_before" : "sched_after", hassOrLang, { d });
+};
+
+/** A step's list header: its timing, then its name or what it does. */
+export const stepLabel = (step, hass) => {
+  const what = step?.name || step?.label || actionSummary(hass, step?.action ?? step?.actions ?? []);
+  return [offsetText(step?.offset_minutes ?? step?.offset, hass), what].filter(Boolean).join(" · ");
+};
 
 export const durationFromMinutes = (minutes) => {
   const m = Math.abs(Math.round(Number(minutes) || 0));

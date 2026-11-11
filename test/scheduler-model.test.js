@@ -1,7 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  actionSummary,
   addPresetOffset,
+  clearDatetimeData,
+  helperIsSet,
+  helperMoment,
+  humanizeService,
+  serviceLabel,
+  setDatetimeData,
   isSpentOneShot,
   oneShotMarker,
   oneShotPayload,
@@ -122,4 +129,53 @@ test("a one-shot that missed its moment no longer counts as scheduled", () => {
   assert.equal(isSpentOneShot([oneShotMarker(new Date(2026, 10, 14, 17, 58))], now), false);
   assert.equal(isSpentOneShot([oneShotMarker(new Date(2026, 10, 14, 19, 0))], now), false);
   assert.equal(isSpentOneShot(["materia_window_0900_1000"], now), false);
+});
+
+test("services and entities read by name, falling back to a humanised id", () => {
+  assert.equal(humanizeService("climate.set_hvac_mode"), "Set hvac mode");
+  const hass = {
+    localize: (key) => (key === "component.light.services.turn_on.name" ? "Turn on" : ""),
+    services: { climate: { set_hvac_mode: { name: "Set HVAC mode" } } },
+    states: { "light.hall": { attributes: { friendly_name: "Hall" } } },
+  };
+  assert.equal(serviceLabel(hass, "light.turn_on"), "Turn on");
+  assert.equal(serviceLabel(hass, "climate.set_hvac_mode"), "Set HVAC mode");
+  assert.equal(serviceLabel(undefined, "vacuum.return_to_base"), "Return to base");
+  assert.equal(actionSummary(hass, {
+    action: "perform-action",
+    perform_action: "light.turn_on",
+    target: { entity_id: ["light.hall", "light.porch"] },
+  }), "Hall +1 · Turn on");
+  assert.equal(actionSummary(hass, null), "");
+});
+
+test("a date & time helper reads as set only while its moment is ahead", () => {
+  const now = new Date(2026, 10, 14, 12, 0);
+  const both = helperMoment({ state: "2026-11-14 18:00:00", attributes: { has_date: true, has_time: true } }, now);
+  assert.equal(both.when.getHours(), 18);
+  assert.equal(helperIsSet(both, now), true);
+  assert.equal(helperIsSet(helperMoment({ state: "2026-11-14 11:59:00", attributes: { has_date: true, has_time: true } }, now), now), false);
+  assert.equal(helperIsSet(helperMoment({ state: "unknown", attributes: { has_date: true, has_time: true } }, now), now), false);
+  const dateOnly = helperMoment({ state: "2026-11-14", attributes: { has_date: true, has_time: false } }, now);
+  assert.equal(helperIsSet(dateOnly, now), true);
+  const timeOnly = helperMoment({ state: "07:30:00", attributes: { has_date: false, has_time: true } }, now);
+  assert.equal(timeOnly.when.getHours(), 7);
+  assert.equal(helperIsSet(timeOnly, now), true);
+  assert.equal(helperMoment(undefined), null);
+});
+
+test("set_datetime data is local wall clock, shaped by the helper's parts", () => {
+  const when = new Date(2026, 10, 14, 18, 5);
+  assert.deepEqual(setDatetimeData(when), { datetime: "2026-11-14 18:05:00" });
+  assert.deepEqual(setDatetimeData(when, { hasDate: true, hasTime: false }), { date: "2026-11-14" });
+  assert.deepEqual(setDatetimeData(when, { hasDate: false, hasTime: true }), { time: "18:05:00" });
+});
+
+test("clearing writes a moment that has already passed", () => {
+  const now = new Date(2026, 10, 14, 12, 0, 30);
+  const both = clearDatetimeData({ hasDate: true, hasTime: true }, now);
+  assert.deepEqual(both, { datetime: "2026-11-14 12:00:00" });
+  assert.equal(helperIsSet(helperMoment({ state: both.datetime, attributes: { has_date: true, has_time: true } }, now), now), false);
+  assert.deepEqual(clearDatetimeData({ hasDate: true, hasTime: false }, now), { date: "2026-11-13" });
+  assert.equal(clearDatetimeData({ hasDate: false, hasTime: true }, now), null);
 });

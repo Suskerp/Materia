@@ -17,7 +17,9 @@ import {
   triggerForm,
   triggerFromForm,
   withPurpose,
+  stepLabel,
 } from "./editor-model.js";
+import { actionSummary, serviceLabel } from "./scheduler-model.js";
 
 /* Every list here is a materia-item-list-editor over HA selectors: no field
    asks for YAML. Schemas are module constants (or memoised) so ha-form keeps
@@ -104,12 +106,8 @@ const presetSchema = (hass, item, own) => {
 
 const friendly = (hass, entity) => hass?.states?.[entity]?.attributes?.friendly_name || entity;
 
-/** "Kitchen light · light.turn_on" style header for an action-only item. */
-const actionLabel = (hass, action) => {
-  const service = action?.perform_action ?? action?.service;
-  const entity = [action?.target?.entity_id ?? action?.entity_id].flat()[0];
-  return [entity && friendly(hass, entity), service].filter(Boolean).join(" · ");
-};
+/** "Kitchen light · Turn on" header for an action-only item. */
+const actionLabel = (hass, action) => actionSummary(hass, action);
 
 /** A list control that stops its value-changed at its own boundary, so a list
  *  nested in a list item never reaches the outer list's handler. */
@@ -135,7 +133,7 @@ const listEditor = (hass, { items, schema, itemLabel, toForm, fromForm, newItem,
 const stepsEditor = (hass, items, write, addLabel) => listEditor(hass, {
   items,
   schema: (item) => (stepForm(item).when === "at" ? STEP_SCHEMA_AT : STEP_SCHEMA_OFFSET),
-  itemLabel: (step) => step?.name || step?.label || actionLabel(hass, step?.action ?? step?.actions?.[0]),
+  itemLabel: (step) => stepLabel(step, hass),
   toForm: stepForm,
   // Choosing before/after with no duration yet starts at one hour, so the
   // choice sticks instead of collapsing back to "at the moment".
@@ -178,7 +176,7 @@ class MateriaScheduleEditor extends SmartEditorBase {
   }
 
   get _presetsField() {
-    const own = schedulePurpose(this._config) !== "moment";
+    const own = !["moment", "datetime"].includes(schedulePurpose(this._config));
     return this._list("presets", (value, write) => listEditor(this.hass, {
       items: value,
       schema: (item) => presetSchema(this.hass, item, own),
@@ -233,7 +231,7 @@ class MateriaScheduleEditor extends SmartEditorBase {
       itemExtra: (target, update) => listEditor(h, {
         items: targetForm(target).actions,
         schema: TARGET_ACTION_SCHEMA,
-        itemLabel: (action) => (typeof action === "string" ? action : action?.label || action?.service),
+        itemLabel: (action) => (typeof action === "string" ? serviceLabel(h, action) : action?.label || (action?.service ? serviceLabel(h, action.service) : "")),
         toForm: targetActionForm,
         fromForm: targetActionFromForm,
         newItem: () => ({}),
@@ -270,6 +268,7 @@ class MateriaScheduleEditor extends SmartEditorBase {
       helper: "e_card_purpose_helper",
       selector: { select: { mode: "dropdown", options: [
         { value: "moment", label: "e_purpose_moment" },
+        { value: "datetime", label: "e_purpose_datetime" },
         { value: "manager", label: "e_manage_list_add" },
         { value: "inline", label: "e_inline_collap_strip" },
         { value: "sheet", label: "e_sheet_always_open" },
@@ -281,6 +280,33 @@ class MateriaScheduleEditor extends SmartEditorBase {
     ];
     const triggersSection = (secondary, fields) => ({ title: "e_triggers", secondary, icon: "mdi:sensors", expanded: false, fields });
 
+    const titleFields = [
+      { name: "name", label: "e_title", helper: "e_moment_name_helper", selector: { text: {} } },
+      { name: "icon", label: "e_icon", selector: { icon: { placeholder: "mdi:calendar-clock" } } },
+    ];
+
+    if (purpose === "datetime") {
+      return [
+        {
+          title: "e_setup",
+          icon: "mdi:tune",
+          expanded: true,
+          fields: [
+            purposeField,
+            {
+              name: "datetime_entity",
+              label: "e_datetime_entity",
+              helper: "e_datetime_entity_helper",
+              selector: { entity: { domain: "input_datetime" } },
+            },
+            ...titleFields,
+          ],
+        },
+        { title: "e_labels", icon: "mdi:label-outline", expanded: false, fields: emptyLabels },
+        { title: "e_quick_picks", secondary: "e_optional", icon: "mdi:clock-fast", expanded: false, fields: [this._presetsField] },
+      ];
+    }
+
     if (purpose === "moment") {
       return [
         {
@@ -289,7 +315,7 @@ class MateriaScheduleEditor extends SmartEditorBase {
           expanded: true,
           fields: [
             purposeField,
-            { name: "name", label: "e_title", helper: "e_moment_name_helper", selector: { text: {} } },
+            ...titleFields,
             this._list("steps", (value, write) => stepsEditor(this.hass, value, write, "e_moment_steps")),
           ],
         },

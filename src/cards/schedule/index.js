@@ -3,7 +3,7 @@ import { keyed } from "lit/directives/keyed.js";
 import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
-import { addPresetOffset, isSpentOneShot, oneShotPayload, parseOneShotMarker, parsePlanArrivalMarker, phaseOffsetMinutes, planPayloads, slug, toSchedulerActions } from "./scheduler-model.js";
+import { actionSummary, addPresetOffset, clearDatetimeData, helperIsSet, helperMoment, isSpentOneShot, oneShotPayload, parseOneShotMarker, parsePlanArrivalMarker, phaseOffsetMinutes, planPayloads, setDatetimeData, slug, toSchedulerActions } from "./scheduler-model.js";
 import "../../elements/button-group/index.js";
 import "./editor.js";
 
@@ -446,6 +446,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  as_timestamp('', 0) is 0 — which sails through the backend's "is this
    *  effectively now" check and STARTS THE VACUUM. */
   get _hasSelection() {
+    if (this._isDatetime) return this._datetimeReady;
     if (this._isSingle) return !this._commitBusy
       && this._resolvedWhen instanceof Date
       && this._resolvedWhen.getTime() > Date.now()
@@ -621,7 +622,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   /** True once anything is wired, so the card stops advertising itself as a mock
    *  the moment it can actually do something. */
   get _isWired() {
-    return !!(this.config.confirm_action || this.config.trigger_action || this._scheduleEntity || this._isManager
+    return !!(this.config.confirm_action || this.config.datetime_entity || this.config.trigger_action || this._scheduleEntity || this._isManager
       || (this.config.presets ?? []).some((p) => p.tap_action)
       || (this.config.triggers ?? []).some((t) => t.tap_action));
   }
@@ -648,6 +649,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  a segmented control with a single segment is just a label. */
   get _modes() {
     // A moment card offers the trigger tab only when triggers are configured.
+    if (this._isDatetime) return ["clock"];
     if (this._isMoment) {
       return this.config.show_triggers !== false && this.config.triggers?.length ? ["clock", "event"] : ["clock"];
     }
@@ -817,6 +819,12 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       return e
         ? { head: e.name, sub: `${e.sub} · trigger` }
         : { head: t("sched_pick_trigger", this.hass), sub: t("sched_runs_whenever", this.hass) };
+    }
+    if (this._isDatetime) {
+      const when = this._resolvedWhen;
+      return when
+        ? { head: this._formatMoment(when, this._helper), sub: this.config.name ?? "" }
+        : { head: t("sched_when_question", this.hass), sub: t("sched_pick_moment", this.hass) };
     }
     if (this._isSingle) {
       const when = this._resolvedWhen;
@@ -1027,6 +1035,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
   async _commit() {
     if (!this._hasSelection) return;
+    if (this._isDatetime) return this._commitDatetime();
     if (this._isSingle) return this._commitSingle();
     if (this._isWindow) return this._commitWindow();
 
@@ -1279,14 +1288,9 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     }
   }
 
-  /** "Living room · Turn on" for a step without a name of its own. */
+  /** "Living room · Set HVAC mode" for a step without a name of its own. */
   _stepSummary(phase) {
-    const [first] = toSchedulerActions(phase?.action ?? phase?.actions ?? []);
-    if (!first) return "";
-    const [domain, service] = first.service.split(".");
-    const serviceName = this.hass?.services?.[domain]?.[service]?.name || first.service;
-    const entity = first.entity_id && (this.hass?.states?.[first.entity_id]?.attributes?.friendly_name || first.entity_id);
-    return [entity, serviceName].filter(Boolean).join(" · ");
+    return actionSummary(this.hass, phase?.action ?? phase?.actions ?? []);
   }
 
   /** This moment card's live Scheduler group (spent entries already left
@@ -1300,33 +1304,201 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     return null;
   }
 
-  /** The moment card's face: what is set (from Scheduler itself, so it is
-   *  right on every device and empties once the last step has run), or the
-   *  empty prompt. Clear asks for a second tap: it cancels real actions. */
+  /* ---- "Set a date & time": an input_datetime helper, nothing scheduled ---
+     The card only stores a moment in the helper (input_datetime.set_datetime)
+     and reads it back, so every device shows the same thing. Whatever should
+     happen at that moment is up to automations triggering on the helper. A
+     date-only or time-only helper works too: the picker offers only its
+     parts. */
+
+  get _isDatetime() {
+    return this.config.presentation === "datetime";
+  }
+
+  get _helper() {
+    const moment = helperMoment(this.hass?.states?.[this.config.datetime_entity]);
+    return moment || { hasDate: true, hasTime: true, when: null };
+  }
+
+  _formatMoment(when, { hasDate = true, hasTime = true } = {}) {
+    return new Intl.DateTimeFormat(this._lang, {
+      ...(hasDate ? { weekday: "short", day: "numeric", month: "short" } : {}),
+      ...(hasTime ? { hour: "2-digit", minute: "2-digit" } : {}),
+    }).format(when);
+  }
+
+  _openDatetime() {
+    const helper = this._helper;
+    let seed = helperIsSet(helper) ? helper.when : null;
+    if (!seed) {
+      seed = new Date(Date.now() + 60 * 60 * 1000);
+      seed.setMinutes(0, 0, 0);
+    }
+    this._viewY = seed.getFullYear();
+    this._viewM = seed.getMonth();
+    this._date = seed.getDate();
+    this._hour = seed.getHours();
+    this._minute = seed.getMinutes();
+    this._pick = "custom";
+    this._commitError = null;
+    this._removeArmed = false;
+    this._open = true;
+  }
+
+  get _datetimeReady() {
+    const when = this._resolvedWhen;
+    const helper = this._helper;
+    if (!this.config.datetime_entity || this._commitBusy || !(when instanceof Date) || Number.isNaN(when.getTime())) return false;
+    return !helper.hasDate || helperIsSet({ ...helper, when });
+  }
+
+  async _commitDatetime() {
+    if (!this._datetimeReady) return;
+    this._commitBusy = true;
+    this._commitError = null;
+    const result = await this._callService("input_datetime", "set_datetime", {
+      entity_id: this.config.datetime_entity,
+      ...setDatetimeData(this._resolvedWhen, this._helper),
+    });
+    this._commitBusy = false;
+    if (!result.ok) {
+      this._commitError = result.error?.message || t("sched_save_failed", this.hass);
+      return;
+    }
+    this._fireHaptic("success");
+    this._dirty = false;
+    this._open = false;
+  }
+
+  async _clearDatetime() {
+    const data = clearDatetimeData(this._helper);
+    if (!data) return;
+    if (!this._removeArmed) {
+      this._removeArmed = true;
+      this._fireHaptic("warning");
+      return;
+    }
+    this._removeArmed = false;
+    this._commitBusy = true;
+    const result = await this._callService("input_datetime", "set_datetime", {
+      entity_id: this.config.datetime_entity,
+      ...data,
+    });
+    this._commitBusy = false;
+    this._commitError = result.ok ? null : (result.error?.message || t("sched_delete_failed", this.hass));
+  }
+
+  _renderDatetime() {
+    const helper = this._helper;
+    const when = this._resolvedWhen;
+    const type = helper.hasDate && helper.hasTime ? "datetime-local" : helper.hasDate ? "date" : "time";
+    const value = this._localDateTimeValue(when || new Date(Date.now() + 3600000));
+    const [datePart, timePart] = value.split("T");
+    const now = this._localDateTimeValue(new Date());
+    return html`<div class="single-schedule">
+      ${this._renderQuickChips()}
+      <div class="single-time native-datetime" @click=${this._showNativeTimePicker}>
+        <div class="single-time-copy">
+          <span>${t("sched_moment", this.hass)}</span>
+          <b>${when ? this._formatMoment(when, helper) : t("sched_pick_date_time", this.hass)}</b>
+        </div>
+        <input
+          class="single-datetime-input"
+          type=${type}
+          required
+          step="60"
+          aria-label=${t("sched_pick_date_time", this.hass)}
+          min=${type === "time" ? nothing : type === "date" ? now.split("T")[0] : now}
+          .value=${type === "datetime-local" ? value : type === "date" ? datePart : timePart}
+          @input=${(event) => {
+            const raw = String(event.currentTarget.value || "");
+            const d = /^(\d{4})-(\d{2})-(\d{2})/.exec(raw);
+            const tm = /(\d{2}):(\d{2})$/.exec(raw);
+            if (!d && !tm) return;
+            if (d) {
+              this._viewY = Number(d[1]);
+              this._viewM = Number(d[2]) - 1;
+              this._date = Number(d[3]);
+            }
+            if (tm) {
+              this._hour = Number(tm[1]);
+              this._minute = Number(tm[2]);
+            } else {
+              this._hour = 0;
+              this._minute = 0;
+            }
+            this._pick = "custom";
+            this._dirty = true;
+            this._commitError = null;
+          }}
+        />
+      </div>
+      ${this.config.datetime_entity ? nothing : html`<div class="setup-note">${t("sched_choose_helper", this.hass)}</div>`}
+      ${this._commitError ? html`<div class="commit-error" role="alert">${this._commitError}</div>` : nothing}
+    </div>`;
+  }
+
+  /** Quick picks on a moment or date-time card: an optional extra, shown
+   *  only when configured — the date-time field alone is the whole picker. */
+  _renderQuickChips() {
+    const chips = this.config.presets?.length ? this._quick : [];
+    if (!chips.length) return nothing;
+    return html`<div class="chips-wrap"><div class="chips">
+      ${chips.map((q) => html`<button
+        class="quick ${this._pick === q.key ? "on" : ""}"
+        style="flex-grow:${q.grow}"
+        @click=${() => {
+          this._pick = q.key;
+          this._dirty = true;
+          this._commitError = null;
+        }}
+      ><span class="n">${q.name}</span><span class="t">${q.at}</span></button>`)}
+    </div></div>`;
+  }
+
+  /** The face of a moment or date-time card: what is set (read back from
+   *  Scheduler or the helper, so it is right on every device and empties by
+   *  itself once the moment has passed), or the idle prompt. The title is
+   *  the sub-line in both states. Clear asks for a second tap. */
   _renderMomentStrip() {
-    const row = this._momentRow;
-    const event = !row && this._armed?.mode === "event" ? this._armed : null;
-    const head = row
-      ? new Intl.DateTimeFormat(this._lang, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(row.when)
-      : event?.head ?? this.config.empty_label ?? t("sched_not_scheduled", this.hass);
-    const sub = row || event
-      ? (this.config.name ?? t("sched_scheduled", this.hass))
-      : (this.config.empty_sub ?? t("sched_pick_moment", this.hass));
-    const open = () => {
-      if (row) this._openSchedule(row.entries[0]);
-      else this._openNewSchedule();
-    };
-    const clear = (e) => {
-      e.stopPropagation();
-      if (event) {
-        this._armed = null;
-        this._fireHaptic("light");
-        return;
+    let head = null;
+    let open;
+    let clear = null;
+    if (this._isDatetime) {
+      const helper = this._helper;
+      if (helperIsSet(helper)) {
+        head = this._formatMoment(helper.when, helper);
+        if (clearDatetimeData(helper)) clear = () => this._clearDatetime();
       }
-      this._activeScheduleEntity = row.entries[0].entity_id;
-      this._entityTags = row.entries[0].attributes.tags || [];
-      this._removeSchedule();
-    };
+      open = () => this._openDatetime();
+    } else {
+      const row = this._momentRow;
+      const event = !row && this._armed?.mode === "event" ? this._armed : null;
+      if (row) {
+        head = this._formatMoment(row.when);
+        clear = () => {
+          this._activeScheduleEntity = row.entries[0].entity_id;
+          this._entityTags = row.entries[0].attributes.tags || [];
+          this._removeSchedule();
+        };
+      } else if (event) {
+        head = event.head;
+        clear = () => {
+          this._armed = null;
+          this._fireHaptic("light");
+        };
+      }
+      open = () => (row ? this._openSchedule(row.entries[0]) : this._openNewSchedule());
+    }
+    const idle = head == null;
+    const title = this.config.name
+      ?? (this._isDatetime ? this.hass?.states?.[this.config.datetime_entity]?.attributes?.friendly_name : null);
+    const shownHead = idle
+      ? (this.config.empty_label ?? t(this._isDatetime ? "sched_not_set" : "sched_not_scheduled", this.hass))
+      : head;
+    const sub = idle
+      ? (title ?? this.config.empty_sub ?? t("sched_pick_moment", this.hass))
+      : (title ?? t("sched_scheduled", this.hass));
     return html`<ha-card><div class="sheet">
       <div
         class="strip"
@@ -1339,13 +1511,16 @@ class MateriaSchedule extends ActionMixin(LitElement) {
           open();
         }}
       >
-        <div class="glyph"><ha-icon .icon=${row ? "m3o:alarm" : event ? "m3o:sensors" : "m3o:add"}></ha-icon></div>
+        <div class="glyph"><ha-icon .icon=${this.config.icon ?? "mdi:calendar-clock"}></ha-icon></div>
         <div class="text">
-          <span class="head">${head}</span>
+          <span class="head">${shownHead}</span>
           <span class="sub">${sub}</span>
         </div>
-        ${row || event
-          ? html`<button class="strip-cancel" ?disabled=${this._commitBusy} @click=${clear}>${this._removeArmed
+        ${clear
+          ? html`<button class="strip-cancel" ?disabled=${this._commitBusy} @click=${(e) => {
+              e.stopPropagation();
+              clear();
+            }}>${this._removeArmed
               ? t("sched_delete_confirm", this.hass)
               : (this.config.clear_label ?? t("sched_clear", this.hass))}</button>`
           : nothing}
@@ -1651,6 +1826,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     if (!this.config) return html``;
 
     if (this._isManager && !this._open && !this._isManagerEditor) return this._isMoment ? this._renderMomentStrip() : this._renderManager();
+    if (this._isDatetime && !this._open) return this._renderMomentStrip();
     if (this._isSummary) return this._renderSummary();
 
     if (!this._open && !this._isSheet) {
@@ -1735,13 +1911,13 @@ class MateriaSchedule extends ActionMixin(LitElement) {
             : nothing}
 
           ${isClock
-            ? (this._isSingle ? this._renderSingle() : (this._isWindow ? this._renderWindow() : this._renderClock()))
+            ? (this._isDatetime ? this._renderDatetime() : this._isSingle ? this._renderSingle() : (this._isWindow ? this._renderWindow() : this._renderClock()))
             : this._renderTriggers()}
 
           <!-- A window is always recurring — it carries its own weekday chips
                inside _renderWindow() — so the generic once/weekly switch below
                is for the classic single-moment picker and the trigger tab only. -->
-          ${this._isWindow || this._isSingle || this._isMoment
+          ${this._isWindow || this._isSingle || this._isMoment || this._isDatetime
             ? nothing
             : html`
                 <div class="repeat">
@@ -1784,7 +1960,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
                   : nothing}
               `}
 
-          ${this._commitError && !this._isSingle
+          ${this._commitError && !this._isSingle && !this._isDatetime
             ? html`<div class="commit-error" role="alert">${this._commitError}</div>`
             : nothing}
 
@@ -1805,7 +1981,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
               <ha-icon icon="m3o:alarm-on"></ha-icon>
               <span>${this._commitBusy
                 ? t("sched_saving", this.hass)
-                : (this._isWindow || this._isSingle || this._repeating
+                : (this._isWindow || this._isSingle || this._isDatetime || this._repeating
                   ? t("sched_save_schedule", this.hass)
                   : t("sched_set_timer", this.hass))}</span>
             </button>
@@ -1959,22 +2135,8 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       minute: "2-digit",
     }).format(value);
 
-    // Quick picks are an optional extra on a moment card: none configured,
-    // none shown — the date-time field alone is the whole picker.
-    const chips = this._isMoment && this.config.presets?.length ? this._quick : [];
-
     return html`<div class="single-schedule">
-      ${chips.length ? html`<div class="chips-wrap"><div class="chips">
-        ${chips.map((q) => html`<button
-          class="quick ${this._pick === q.key ? "on" : ""}"
-          style="flex-grow:${q.grow}"
-          @click=${() => {
-            this._pick = q.key;
-            this._dirty = true;
-            this._commitError = null;
-          }}
-        ><span class="n">${q.name}</span><span class="t">${q.at}</span></button>`)}
-      </div></div>` : nothing}
+      ${this._isMoment ? this._renderQuickChips() : nothing}
 
       <div class="single-time native-datetime" @click=${this._showNativeTimePicker}>
         <div class="single-time-copy">
