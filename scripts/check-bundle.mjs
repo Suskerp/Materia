@@ -21,8 +21,8 @@ const limits = {
   // and +1 KB for its rules' "for at least N minutes".
   // 0.76.12: +1 KB for the attention heading and the vacuum's "due now / 3 h left".
   // 0.76.14: +1 KB for the attention detail that names what triggered a rule.
-  // 0.76.17: +1 KB for the attention editor previewing the open rule.
-  main: { size: 1_071_000, gzipSize: 267_000 },
+  // 0.76.17: +1.5 KB for the attention editor previewing the open rule (and its vacuum sample).
+  main: { size: 1_071_500, gzipSize: 267_000 },
   editors: { size: 320_000, gzipSize: 76_000 },
 };
 
