@@ -196,6 +196,9 @@ export const styles = [
       padding-bottom: 14px;
     }
     .peek {
+      border: 0;
+      padding: 0;
+      cursor: pointer;
       position: absolute;
       left: calc(var(--n) * 10px);
       right: calc(var(--n) * 10px);
@@ -213,6 +216,10 @@ export const styles = [
     }
     .count {
       flex: none;
+      border: 0;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
       padding: 4px 10px;
       border-radius: 12px;
       background: color-mix(in srgb, var(--md-sys-color-on-surface, #fff) 10%, transparent);
@@ -234,6 +241,7 @@ export const styles = [
     }
     .pages {
       display: flex;
+      cursor: grab;
       gap: 8px;
       overflow-x: auto;
       scroll-snap-type: x mandatory;

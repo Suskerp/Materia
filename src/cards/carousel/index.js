@@ -4,6 +4,7 @@ import { DisabledMixin } from "../../utils/conditions.js";
 import { MOTION } from "../../utils/motion.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { DragScroll } from "../../utils/drag-scroll.js";
 
 /**
  * Selectable tile cards (materia-cards): rows of tiles — icon top-left,
@@ -228,88 +229,15 @@ class MateriaCards extends DisabledMixin(ActionMixin(LitElement)) {
     });
   }
 
-  /* Mouse drag-to-scroll with a kinetic release — touch pans natively. Built
-     on materia-forecast-hourly's construction (nothing captured until the
-     pointer passes a small threshold, so plain clicks still reach the tile),
-     plus flick momentum so one gesture can cross the whole rail instead of
-     stopping dead where the mouse stopped. */
-  _onPointerDown(e) {
-    this._stopMomentum();
-    if (e.pointerType !== "mouse") return;
-    this._dragStartX = e.clientX;
-    this._dragStartScroll = e.currentTarget.scrollLeft;
-    this._captured = false;
-    this._didDrag = false;
-    this._dragPointerId = e.pointerId;
-    this._lastX = e.clientX;
-    this._lastT = performance.now();
-    this._velocity = 0;
-  }
-
-  _onPointerMove(e) {
-    if (this._dragStartX == null) return;
-    const dx = e.clientX - this._dragStartX;
-    if (!this._captured && Math.abs(dx) > 4) {
-      this._captured = true;
-      this._didDrag = true;
-      e.currentTarget.setPointerCapture(this._dragPointerId);
-    }
-    if (!this._captured) return;
-    e.currentTarget.scrollLeft = this._dragStartScroll - dx;
-
-    // Velocity in px/ms, smoothed so a single jittery frame can't dominate
-    // the throw.
-    const now = performance.now();
-    const dt = now - this._lastT;
-    if (dt > 0) {
-      const v = (this._lastX - e.clientX) / dt;
-      this._velocity = this._velocity * 0.7 + v * 0.3;
-      this._lastX = e.clientX;
-      this._lastT = now;
-    }
-  }
-
-  _onPointerUp(e) {
-    if (this._dragStartX == null) return;
-    const rail = e.currentTarget;
-    rail.releasePointerCapture?.(e.pointerId);
-    this._dragStartX = null;
-    this._captured = false;
-    if (Math.abs(this._velocity) > 0.05) this._startMomentum(rail);
-  }
-
-  /** Exponential decay, stepped by elapsed time so the glide is identical on
-   *  a 60Hz and a 120Hz display. */
-  _startMomentum(rail) {
-    let v = this._velocity;
-    let last = performance.now();
-    const step = () => {
-      const now = performance.now();
-      const dt = Math.min(32, now - last);
-      last = now;
-      const before = rail.scrollLeft;
-      rail.scrollLeft += v * dt;
-      // Hit an end — no point coasting against it.
-      if (rail.scrollLeft === before) {
-        this._raf = null;
-        return;
-      }
-      v *= Math.pow(0.95, dt / 16);
-      this._raf = Math.abs(v) > 0.02 ? requestAnimationFrame(step) : null;
-    };
-    this._raf = requestAnimationFrame(step);
-  }
-
-  _stopMomentum() {
-    if (this._raf) {
-      cancelAnimationFrame(this._raf);
-      this._raf = null;
-    }
+  /* Mouse drag-to-scroll with a kinetic release (utils/drag-scroll.js,
+     shared with the attention card's carousel); touch pans natively. */
+  get _drag() {
+    return (this.__drag ??= new DragScroll());
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    this._stopMomentum();
+    this.__drag?.stop();
   }
 
   /** Mirrors button-group's _entityOptionActive: with a value, the entity's
@@ -326,10 +254,7 @@ class MateriaCards extends DisabledMixin(ActionMixin(LitElement)) {
 
   _tap(item) {
     // A drag that happens to end on a tile must not toggle it.
-    if (this._didDrag) {
-      this._didDrag = false;
-      return;
-    }
+    if (this.__drag?.didDrag()) return;
     this._fireHaptic?.("selection");
     if (item.tap_action) {
       this._handleAction(item.tap_action);
@@ -363,10 +288,10 @@ class MateriaCards extends DisabledMixin(ActionMixin(LitElement)) {
       <ha-card style="--mcar-bg:${bg};--mcar-fg:${fg};">
         <div
           class="rail"
-          @pointerdown=${this._onPointerDown}
-          @pointermove=${this._onPointerMove}
-          @pointerup=${this._onPointerUp}
-          @pointercancel=${this._onPointerUp}
+          @pointerdown=${this._drag.down}
+          @pointermove=${this._drag.move}
+          @pointerup=${this._drag.up}
+          @pointercancel=${this._drag.up}
         >
           ${this._items().map((item) => {
             const value = item.value ?? item.label;

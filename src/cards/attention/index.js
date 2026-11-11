@@ -6,6 +6,7 @@ import { vacuumAlerts } from "../../utils/vacuum-status.js";
 import { activeItems } from "./model.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { DragScroll } from "../../utils/drag-scroll.js";
 
 const LATER_KEY = "materia_attention_later";
 
@@ -36,6 +37,7 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
     _open: { state: true },
     _later: { state: true },
     _page: { state: true },
+    _top: { state: true },
   };
 
   static styles = styles;
@@ -158,18 +160,26 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
   }
 
   /** B: the most urgent item on top with room for its action and "Later"; the rest peek out below. */
-  _stack(items) {
+  _stack(all) {
+    // Tapping the cards underneath (or the count) brings the next one up.
+    const k = (this._top ?? 0) % all.length;
+    const items = [...all.slice(k), ...all.slice(0, k)];
+    const next = (e) => {
+      e.stopPropagation();
+      this._fireHaptic("light");
+      this._top = (k + 1) % all.length;
+    };
     const top = items[0];
     const label = this._label(top);
     const secondary = this._text(top, "s");
     return html`<ha-card><div class="pile">
-      ${items.slice(1, 3).map((i, n) => html`<div class="peek ${i.level}" style="--n:${n + 1}"></div>`)}
+      ${items.slice(1, 3).map((i, n) => html`<button class="peek ${i.level}" style="--n:${n + 1}" aria-label=${t("attention_next", this.hass)} @click=${next}></button>`)}
       <div class="item top ${top.level}">
         <button class="main" @click=${() => this._tap(top)}>
           <span class="badge"><ha-icon .icon=${top.icon || "mdi:alert-circle-outline"}></ha-icon></span>
           <span class="body"><span class="name">${this._text(top, "n")}</span>${secondary ? html`<span class="detail">${secondary}</span>` : nothing}</span>
-          ${items.length > 1 ? html`<span class="count">1 / ${items.length}</span>` : nothing}
         </button>
+        ${all.length > 1 ? html`<button class="count" aria-label=${t("attention_next", this.hass)} @click=${next}>${k + 1} / ${all.length}</button>` : nothing}
         <div class="acts" ?hidden=${!label && !top.later}>
           ${label ? html`<button class="act" @click=${(e) => this._quick(e, top)}>${label}</button>` : nothing}
           ${top.later ? this._laterBtn(top) : nothing}
@@ -178,11 +188,15 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
     </div></ha-card>`;
   }
 
+  get _dragger() {
+    return (this.__drag ??= new DragScroll({ snap: true }));
+  }
+
   /** C: one roomy card per item, swiped sideways; the dots carry the levels. */
   _carousel(items) {
     const page = Math.min(this._page ?? 0, items.length - 1);
     return html`<ha-card>
-      <div class="pages" @scroll=${(e) => {
+      <div class="pages" @pointerdown=${this._dragger.down} @pointermove=${this._dragger.move} @pointerup=${this._dragger.up} @pointercancel=${this._dragger.up} @scroll=${(e) => {
         const el = e.currentTarget;
         const p = Math.round(el.scrollLeft / (el.firstElementChild?.offsetWidth + 8 || 1));
         if (p !== this._page) this._page = p;
@@ -190,7 +204,7 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
         ${items.map((i) => {
           const label = this._label(i);
           const secondary = this._text(i, "s");
-          return html`<div class="page item ${i.level}" @click=${() => this._tap(i)}>
+          return html`<div class="page item ${i.level}" @click=${() => !this._dragger.didDrag() && this._tap(i)}>
             <span class="badge round"><ha-icon .icon=${i.icon || "mdi:alert-circle-outline"}></ha-icon></span>
             <span class="body"><span class="name big">${this._text(i, "n")}</span>${secondary ? html`<span class="detail">${secondary}</span>` : nothing}</span>
             <div class="acts">${label ? html`<button class="act" @click=${(e) => this._quick(e, i)}>${label}</button>` : nothing}${i.later ? this._laterBtn(i) : nothing}</div>
