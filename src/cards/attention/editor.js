@@ -44,6 +44,8 @@ const itemSchema = (hass, kind, when, entity = "", later = false) =>
           { name: "icon", selector: { icon: {} } },
           { name: "action_label", label: t("ed_att_action_label", hass), selector: { text: {} } },
           { name: "action", label: t("ed_att_action", hass), selector: { ui_action: { default_action: "none" } } },
+          { name: "action2_label", label: t("ed_att_action2_label", hass), selector: { text: {} } },
+          { name: "action2", label: t("ed_att_action2", hass), selector: { ui_action: { default_action: "none" } } },
           { name: "later", label: t("ed_att_later", hass), selector: { boolean: {} } },
           ...(later ? [{ name: "later_hours", label: t("ed_att_later_hours_item", hass), selector: { number: { min: 1, max: 168, step: 1, mode: "box" } } }] : []),
         ]),
@@ -65,6 +67,7 @@ const fromForm = (item, value) => {
   }
   for (const k of Object.keys(next)) if (next[k] === "" || next[k] == null) delete next[k];
   if (next.action?.action === "none") delete next.action;
+  if (next.action2?.action === "none") delete next.action2;
   return next;
 };
 

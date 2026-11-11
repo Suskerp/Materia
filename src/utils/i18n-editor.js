@@ -938,6 +938,8 @@ export const EDITOR_STRINGS = {
   e_source_menu: { en: "Inputs as a menu (instead of stepping through them)", nl: "Ingangen als menu (in plaats van erdoor te stappen)" },
   ed_att_later_hours: { en: "Later hides an item for (hours, default 24 = a day; a rule can override)", nl: "Later verbergt een item voor (uren, standaard 24 = een dag; een regel kan afwijken)" },
   ed_att_errors_only: { en: "Only errors (worn parts and water tanks stay on the vacuum's page)", nl: "Enkel fouten (onderdelen en watertanks blijven op de pagina van de stofzuiger)" },
+  ed_att_action2_label: { en: "Second button label", nl: "Label tweede knop" },
+  ed_att_action2: { en: "Second button (optional)", nl: "Tweede knop (optioneel)" },
   ed_att_later: { en: "Can be put off (a Later button)", nl: "Kan uitgesteld worden (knop Later)" },
   ed_att_later_hours_item: { en: "Later hides it for (hours; empty = the card's setting)", nl: "Later verbergt het voor (uren; leeg = instelling van de kaart)" },
   ed_att_when: { en: "Shows when it", nl: "Toont wanneer het" },

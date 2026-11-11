@@ -30,6 +30,7 @@ export const RULES = new Map();
  *   items[]: name, secondary (both may be templates), icon,
  *            level (urgent | warning | info), conditions, entity (tap opens
  *            it), action + action_label (a quick-action button), tap_action
+ *            action2 + action2_label (a second button, e.g. "Cameras"),
  *            later + later_hours (a "Later" button: hidden for a while, per
  *            person), or { type: vacuum, entity, brand }
  *   later_hours: the card's default for Later (24, a day)
@@ -252,7 +253,7 @@ class MateriaAttention extends ActionMixin(LitElement) {
           return html`<div class="page item ${i.off ? "off" : i.level} ${items.length === 1 ? "only" : ""}" @click=${() => !this._dragger.didDrag() && this._tap(i)}>
             <span class="badge"><ha-icon .icon=${i.icon || this.hass.states[i.entity]?.attributes?.icon || "mdi:alert-circle-outline"}></ha-icon></span>
             <span class="body"><span class="name">${this._text(i, "n")}</span>${secondary ? html`<span class="detail">${secondary}</span>` : nothing}</span>
-            <div class="acts">${label ? html`<button class="act" @click=${(e) => this._quick(e, i)}>${label}</button>` : nothing}${i.later || i.off ? this._laterBtn(i) : nothing}</div>
+            <div class="acts">${label ? html`<button class="act" @click=${(e) => this._quick(e, i)}>${label}</button>` : nothing}${i.action2 ? html`<button class="act second" @click=${(e) => { e.stopPropagation(); this._handleAction(i.action2); }}>${i.action2_label || t("attention_do", this.hass)}</button>` : nothing}${i.later || i.off ? this._laterBtn(i) : nothing}</div>
           </div>`;
         })}
       </div>

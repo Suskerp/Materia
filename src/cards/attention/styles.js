@@ -135,6 +135,11 @@ export const styles = [
     .act:active {
       border-radius: 12px;
     }
+    .act.second {
+      background: transparent;
+      box-shadow: inset 0 0 0 1px var(--md-sys-color-outline, rgba(127, 127, 127, 0.6));
+      color: var(--md-sys-color-on-surface, var(--primary-text-color));
+    }
     .act.later {
       background: color-mix(in srgb, var(--md-sys-color-on-surface, #fff) 10%, transparent);
       color: inherit;
