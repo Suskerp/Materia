@@ -345,6 +345,9 @@ export const STRINGS = {
   vh_battery_caption: { en: "battery", nl: "batterij" },
   vh_about_min_left: { en: "about {mins} min left", nl: "nog {mins} min" },
   vh_last_cleaned_ago: { en: "Last cleaned {rel} ago", nl: "Laatst gestofzuigd {rel} geleden" },
+  vh_due_now: { en: "due now", nl: "nu nodig" },
+  vh_hours_left: { en: "{n} h left", nl: "nog {n} u" },
+  vh_pct_left: { en: "{n} % left", nl: "nog {n} %" },
   vh_needs_attention: { en: "{name} needs attention", nl: "{name} heeft aandacht nodig" },
 
   /* ---- materia-alarm ------------------------------------------------------

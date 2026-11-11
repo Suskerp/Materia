@@ -282,6 +282,17 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
    *  "<= 0" rule left a strainer sitting at 60s silent when it was plainly due.
    *  Everything is normalised to hours and compared against one window.
    *  Percentage lifespans (Ecovacs) use their own threshold. */
+  /** "Due now", "3 h left" or "4 % left" for a consumable counter. */
+  _leftText(id) {
+    const v = this._numOf(id);
+    if (v == null) return null;
+    const unit = String(this.hass.states[id]?.attributes?.unit_of_measurement ?? "").toLowerCase();
+    if (unit === "%") return v <= 0 ? t("vh_due_now", this.hass) : t("vh_pct_left", this.hass, { n: Math.round(v) });
+    const TO_HOURS = { s: 1 / 3600, sec: 1 / 3600, seconds: 1 / 3600, min: 1 / 60, minutes: 1 / 60, h: 1, hours: 1, d: 24 };
+    const h = v * (TO_HOURS[unit] ?? 1);
+    return h < 0.5 ? t("vh_due_now", this.hass) : t("vh_hours_left", this.hass, { n: Math.round(h) });
+  }
+
   _lowConsumables() {
     const hoursLimit = this.config.consumable_hours ?? 1;
     const pctLimit = this.config.consumable_percent ?? 5;
@@ -379,6 +390,7 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
           ?? t("vh_needs_attention", this.hass, { name: this.hass.states[id]?.attributes?.friendly_name ?? id }),
         severity: "warning",
         entity: id,
+        detail: this._leftText(id),
         // Once you've done the chore, clearing the counter is the next thing
         // you want — so offer it inline rather than sending you to the device.
         reset: this._resetButtonFor(id),

@@ -36,6 +36,8 @@ export function activeItems(items, hass, vacuumAlerts = () => [], now = Date.now
           index,
           level: levelOfSeverity(a.severity),
           name: a.text,
+          // Which machine, and how pressing ("Qrevo Pro · due now").
+          secondary: [hass?.states?.[item.entity]?.attributes?.friendly_name, a.detail].filter(Boolean).join(" · "),
           icon: a.icon,
           entity: a.entity,
           tap_action: { action: "more-info", entity: item.entity },

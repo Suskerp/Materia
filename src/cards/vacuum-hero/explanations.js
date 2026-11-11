@@ -21,7 +21,7 @@ import { pickLocalized } from "../../utils/i18n.js";
 
 /** Consumable chores, keyed by a fragment of the entity id. */
 const CONSUMABLES = [
-  { match: ["sensor_time_left", "sensor_lifespan"], en: "Clean the sensors", nl: "Maak de sensoren schoon" },
+  { match: ["sensor_time_left", "sensor_lifespan"], en: "Clean the robot's sensors (cliff and wall sensors)", nl: "Maak de sensoren van de robot schoon (val- en muursensoren)" },
   { match: ["main_brush"], en: "Replace the main brush", nl: "Vervang de hoofdborstel" },
   { match: ["side_brush"], en: "Replace the side brush", nl: "Vervang de zijborstel" },
   { match: ["filter"], en: "Replace the filter", nl: "Vervang het filter" },
