@@ -8,6 +8,30 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.9 — 2026-11-11
+
+A new "needs attention" card, and every vacuum card now reads the vacuum the way the hero does.
+
+### Breaking changes
+None. A materia-card or glance tile showing a vacuum now shows the hero's status line
+(e.g. "Docked · Last cleaned 3 hours ago") instead of the bare state.
+
+### Added
+- **materia-attention (Needs attention):** a list of rules, each shown only while its
+  conditions hold (HA's own condition editor), most urgent first. One item shows in full
+  with an optional quick action; several collapse into one summary row (overlapping icons,
+  a count, the names) that opens every item in a bottom sheet. Items clear themselves when
+  their conditions stop holding, and the card hides itself when nothing needs attention.
+  A "Robot vacuum" item brings in that vacuum's own alerts from the vacuum hero (errors,
+  water tanks, worn parts with their reset button). Fully editable in the visual editor.
+
+### Changed
+- **One reading of a vacuum, shared:** materia-card rows and the glance tile's vacuum
+  variant use the vacuum hero's logic (working state, status, room, last clean, errors)
+  instead of their own.
+- **Weather warnings are sorted:** current before upcoming, then the most severe, so a red
+  warning is never listed under an orange one.
+
 ## 0.76.8 — 2026-11-11
 
 Arrival times can be set from a computer again, and switchless expanders match their neighbours.

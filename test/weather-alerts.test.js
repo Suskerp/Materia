@@ -39,3 +39,12 @@ test("alertTone maps KMI levels", () => {
   assert.equal(alertTone(4), "red");
   assert.equal(alertTone(null), "yellow");
 });
+
+test("visibleAlerts: current first, then most severe", () => {
+  const list = [
+    { tone: "yellow", active: false, start: 3 },
+    { tone: "orange", active: true, start: 1 },
+    { tone: "red", active: true, start: 2 },
+  ];
+  assert.deepEqual(visibleAlerts(list).map((a) => a.tone), ["red", "orange", "yellow"]);
+});

@@ -62,7 +62,12 @@ export function readAlerts(stateObj, now = Date.now()) {
 
 /** Which alerts a card shows: `active` only, or `all` (active and upcoming; the default). */
 export function visibleAlerts(alerts, show = "all", max = Infinity) {
-  const list = show === "active" ? alerts.filter((a) => a.active) : alerts;
+  // Current before upcoming, then the most severe, then the earliest: the
+  // weather service's own order put an orange warning above a red one.
+  const rank = { yellow: 1, orange: 2, red: 3 };
+  const list = (show === "active" ? alerts.filter((a) => a.active) : [...alerts]).sort(
+    (a, b) => (b.active ? 1 : 0) - (a.active ? 1 : 0) || (rank[b.tone] ?? 0) - (rank[a.tone] ?? 0) || (a.start ?? 0) - (b.start ?? 0)
+  );
   return list.slice(0, Math.max(0, max));
 }
 
