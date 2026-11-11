@@ -8,6 +8,29 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.0 — 2026-11-11
+
+Weather warnings on the dashboard, and a weather glance that leaves out values with
+nothing to say.
+
+### Breaking changes
+None.
+
+### Added
+- **`materia-alerts`:** weather warnings from an entity's `warnings` attribute, such as the
+  IRM KMI warning sensor.
+  - One row per warning, coloured by level (yellow, orange, red), with when it applies.
+  - A tap shows the full text; `expanded: true` shows it right away.
+  - `show: active` hides upcoming warnings; `max` caps the number of rows.
+  - With nothing to show the card hides itself and leaves no gap, so it can sit on a home
+    screen.
+- **Weather glance `alerts_entity`:** while a warning is active, its first line shows it
+  ("Code oranje · Wind") with the warning icon in its level colour.
+
+### Changed
+- **The weather glance hides values that say nothing:** no pollen, no rain (0 mm) and
+  UV 0. Turn `hide_quiet` off to show them again.
+
 ## 0.75.0 — 2026-11-09
 
 The power menu becomes a regular menu: `materia-menu` gets a list mode, a button whose
