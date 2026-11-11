@@ -3,7 +3,7 @@ import { keyed } from "lit/directives/keyed.js";
 import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
-import { addPresetOffset, oneShotPayload, parseOneShotMarker, parsePlanArrivalMarker, planPayloads, slug } from "./scheduler-model.js";
+import { addPresetOffset, isSpentOneShot, oneShotPayload, parseOneShotMarker, parsePlanArrivalMarker, phaseOffsetMinutes, planPayloads, slug, toSchedulerActions } from "./scheduler-model.js";
 import "../../elements/button-group/index.js";
 import "./editor.js";
 
@@ -153,15 +153,35 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  are declared once in card config; the runtime only exposes friendly
    *  devices, actions and schedules. */
   get _isManager() {
-    return this.config.presentation === "manager"
+    return this._isMoment
+      || this.config.presentation === "manager"
       || this.config.manage_schedules === true
       || Array.isArray(this.config.targets);
+  }
+
+  /** THE SIMPLE PATH: one moment ("I'm home on Friday at 18:00") that runs the
+   *  configured `steps` — each optionally some time before or after it — and
+   *  then clears itself. It is the manager's plan machinery with exactly one
+   *  plan and no list: every step is a Scheduler entry with
+   *  `repeat_type: single`, which Scheduler deletes once it has run, so the
+   *  strip falls back to "not scheduled" by itself. Quick picks and triggers
+   *  are shown only when configured. */
+  get _isMoment() {
+    return this.config.presentation === "moment";
+  }
+
+  /** The Scheduler tag that finds this card's entries again. A moment card
+   *  without one (hand-written YAML) derives it from its name. */
+  get _managerTag() {
+    return this.config.manager_tag
+      || (this._isMoment ? `materia_moment_${slug(this.config.name, "moment")}` : undefined);
   }
 
   /** Manager modes are opt-in so existing recurring cards keep their exact
    *  behaviour. `once` is a single Scheduler entry; `plan` expands one chosen
    *  arrival moment into several restart-safe entries with configured offsets. */
   get _managerScheduleKinds() {
+    if (this._isMoment) return ["plan"];
     const requested = this.config.schedule_types || this.config.schedule_modes;
     const supported = new Set(["window", "once", "plan"]);
     const kinds = (Array.isArray(requested) ? requested : [requested || "window"])
@@ -172,7 +192,10 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   }
 
   get _plans() {
-    return (this.config.plans || []).filter((plan) => plan && Array.isArray(plan.phases) && plan.phases.length);
+    const plans = this._isMoment
+      ? [{ key: "moment", name: this.config.name, phases: this.config.steps }]
+      : this.config.plans || [];
+    return plans.filter((plan) => plan && Array.isArray(plan.phases) && plan.phases.length);
   }
 
   get _selectedPlan() {
@@ -192,7 +215,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   get _managedSchedules() {
     const explicit = new Set(this.config.schedule_entities || []);
     const targets = new Set(this._managerTargets.map((item) => item.entity));
-    const managerTag = this.config.manager_tag;
+    const managerTag = this._managerTag;
     return Object.values(this.hass?.states || {})
       .filter((stateObj) => stateObj.entity_id.startsWith("switch.schedule_"))
       .filter((stateObj) => explicit.has(stateObj.entity_id)
@@ -203,7 +226,9 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
   get _managedScheduleRows() {
     const groups = new Map();
+    const now = Date.now();
     for (const stateObj of this._managedSchedules) {
+      if (isSpentOneShot(stateObj.attributes.tags || [], now)) continue;
       const groupTag = (stateObj.attributes.tags || []).find((tag) => String(tag).startsWith("materia_plan_"));
       const key = groupTag || stateObj.entity_id;
       if (!groups.has(key)) groups.set(key, { key, groupTag, entries: [] });
@@ -426,7 +451,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       && this._resolvedWhen.getTime() > Date.now()
       && (this._scheduleKind === "plan"
         ? !!this._selectedPlan && this._selectedPlan.phases.every((phase) =>
-            this._resolvedWhen.getTime() + Number(phase.offset_minutes ?? phase.offset ?? 0) * 60_000 > Date.now())
+            this._resolvedWhen.getTime() + phaseOffsetMinutes(phase) * 60_000 > Date.now())
         : (this._selectedTargets.length > 0 && !!this._targetAction));
     if (this._isWindow) return !this._windowBlocked
       && !this._windowSameTime
@@ -622,6 +647,10 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  dropped entirely, and with only one left the tab row is not rendered at all:
    *  a segmented control with a single segment is just a label. */
   get _modes() {
+    // A moment card offers the trigger tab only when triggers are configured.
+    if (this._isMoment) {
+      return this.config.show_triggers !== false && this.config.triggers?.length ? ["clock", "event"] : ["clock"];
+    }
     if (this._isManager) return ["clock"];
     const wanted = [];
     if (this.config.show_time !== false) wanted.push("clock");
@@ -769,7 +798,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
    *  and `sub` are accepted as aliases so a config written against the earlier
    *  shape keeps working. */
   get _events() {
-    const list = this.config.triggers ?? this._defaultTriggers;
+    const list = this.config.triggers ?? (this._isMoment ? [] : this._defaultTriggers);
     // NOT named `t`: that is the imported translate function, and shadowing it
     // inside this callback would silently break any t() added here later.
     return list.map((trig, i) => ({
@@ -793,7 +822,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       const when = this._resolvedWhen;
       if (!when) return { head: t("sched_when_question", this.hass), sub: t("sched_pick_moment", this.hass) };
       const date = new Intl.DateTimeFormat(this._lang, { weekday: "short", day: "numeric", month: "short" }).format(when);
-      const plan = this._scheduleKind === "plan" ? this._selectedPlan : null;
+      const plan = this._scheduleKind === "plan" && !this._isMoment ? this._selectedPlan : null;
       return {
         head: `${this._pad(when.getHours())}:${this._pad(when.getMinutes())}`,
         sub: plan?.name || plan?.label || date,
@@ -1044,12 +1073,14 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     // Config wins when given (authoring a NEW schedule with nothing to read
     // yet); otherwise whatever was read off schedule_entity survives
     // untouched — losing it would turn the pump's schedule into a no-op.
+    // Configured actions may be written by HA's action picker; Scheduler wants
+    // its own { service, entity_id, service_data } shape.
     const actions = this._isManager
       ? this._scheduledActions(this._targetAction)
-      : (this.config.actions ?? this._entityActions ?? []);
+      : (this.config.actions ? toSchedulerActions(this.config.actions) : (this._entityActions ?? []));
     const endActions = this._isManager
       ? this._scheduledActions(this._targetEndAction)
-      : (this.config.end_actions ?? this._inverseScheduledActions(actions));
+      : (this.config.end_actions ? toSchedulerActions(this.config.end_actions) : this._inverseScheduledActions(actions));
     const tags = [
       ...(this._entityTags || []).filter((tag) => !String(tag).startsWith("materia_window_")),
       `materia_window_${start.replace(":", "")}_${stop.replace(":", "")}`,
@@ -1142,7 +1173,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   _singleTags() {
     return [...new Set([
       ...(this._entityTags || []).filter((tag) => !String(tag).startsWith("materia_once_")),
-      this.config.manager_tag,
+      this._managerTag,
     ].filter(Boolean))];
   }
 
@@ -1183,7 +1214,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
         const payloads = planPayloads({
           plan,
           arrival: when,
-          managerTag: this.config.manager_tag,
+          managerTag: this._managerTag,
           instanceId: `${when.getTime()}_${Math.random().toString(36).slice(2, 7)}`,
         });
         for (const payload of payloads) {
@@ -1248,6 +1279,81 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     }
   }
 
+  /** "Living room · Turn on" for a step without a name of its own. */
+  _stepSummary(phase) {
+    const [first] = toSchedulerActions(phase?.action ?? phase?.actions ?? []);
+    if (!first) return "";
+    const [domain, service] = first.service.split(".");
+    const serviceName = this.hass?.services?.[domain]?.[service]?.name || first.service;
+    const entity = first.entity_id && (this.hass?.states?.[first.entity_id]?.attributes?.friendly_name || first.entity_id);
+    return [entity, serviceName].filter(Boolean).join(" · ");
+  }
+
+  /** This moment card's live Scheduler group (spent entries already left
+   *  out by _managedScheduleRows), with the moment its steps hang off. */
+  get _momentRow() {
+    for (const row of this._managedScheduleRows) {
+      const tags = row.entries[0].attributes.tags || [];
+      const when = parsePlanArrivalMarker(tags) || parseOneShotMarker(tags);
+      if (when) return { ...row, when };
+    }
+    return null;
+  }
+
+  /** The moment card's face: what is set (from Scheduler itself, so it is
+   *  right on every device and empties once the last step has run), or the
+   *  empty prompt. Clear asks for a second tap: it cancels real actions. */
+  _renderMomentStrip() {
+    const row = this._momentRow;
+    const event = !row && this._armed?.mode === "event" ? this._armed : null;
+    const head = row
+      ? new Intl.DateTimeFormat(this._lang, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(row.when)
+      : event?.head ?? this.config.empty_label ?? t("sched_not_scheduled", this.hass);
+    const sub = row || event
+      ? (this.config.name ?? t("sched_scheduled", this.hass))
+      : (this.config.empty_sub ?? t("sched_pick_moment", this.hass));
+    const open = () => {
+      if (row) this._openSchedule(row.entries[0]);
+      else this._openNewSchedule();
+    };
+    const clear = (e) => {
+      e.stopPropagation();
+      if (event) {
+        this._armed = null;
+        this._fireHaptic("light");
+        return;
+      }
+      this._activeScheduleEntity = row.entries[0].entity_id;
+      this._entityTags = row.entries[0].attributes.tags || [];
+      this._removeSchedule();
+    };
+    return html`<ha-card><div class="sheet">
+      <div
+        class="strip"
+        role="button"
+        tabindex="0"
+        @click=${open}
+        @keydown=${(e) => {
+          if (e.key !== "Enter" && e.key !== " ") return;
+          e.preventDefault();
+          open();
+        }}
+      >
+        <div class="glyph"><ha-icon .icon=${row ? "m3o:alarm" : event ? "m3o:sensors" : "m3o:add"}></ha-icon></div>
+        <div class="text">
+          <span class="head">${head}</span>
+          <span class="sub">${sub}</span>
+        </div>
+        ${row || event
+          ? html`<button class="strip-cancel" ?disabled=${this._commitBusy} @click=${clear}>${this._removeArmed
+              ? t("sched_delete_confirm", this.hass)
+              : (this.config.clear_label ?? t("sched_clear", this.hass))}</button>`
+          : nothing}
+      </div>
+      ${this._commitError ? html`<div class="commit-error" role="alert">${this._commitError}</div>` : nothing}
+    </div></ha-card>`;
+  }
+
   _renderStrip() {
     const a = this._armed;
     const head = a ? a.head : (this.config.empty_label ?? t("sched_not_scheduled", this.hass));
@@ -1286,7 +1392,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   }
 
   _openNewSchedule() {
-    if (this.config.editor_presentation === "popup") {
+    if (this.config.editor_presentation === "popup" && !this._isMoment) {
       this._openManagerPopup();
       return;
     }
@@ -1312,7 +1418,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   }
 
   _openSchedule(stateObj) {
-    if (this.config.editor_presentation === "popup") {
+    if (this.config.editor_presentation === "popup" && !this._isMoment) {
       this._openManagerPopup(stateObj.entity_id);
       return;
     }
@@ -1544,7 +1650,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
   render() {
     if (!this.config) return html``;
 
-    if (this._isManager && !this._open && !this._isManagerEditor) return this._renderManager();
+    if (this._isManager && !this._open && !this._isManagerEditor) return this._isMoment ? this._renderMomentStrip() : this._renderManager();
     if (this._isSummary) return this._renderSummary();
 
     if (!this._open && !this._isSheet) {
@@ -1559,7 +1665,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       <ha-card>
         <div class="sheet ${this._isManagerEditor ? "manager-editor" : ""}">
           <div class="echo">
-            <span class="eyebrow">${this._isManager
+            <span class="eyebrow">${this._isManager && !this._isMoment
               ? (this._scheduleEntity ? t("sched_edit", this.hass) : t("sched_new", this.hass))
               : (this.config.name ?? t("sched_name_default", this.hass))}</span>
             ${(() => {
@@ -1593,7 +1699,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
               ></materia-button-group>`
             : nothing}
 
-          ${this._isManager ? this._renderManagerFields() : nothing}
+          ${this._isManager && !this._isMoment ? this._renderManagerFields() : nothing}
 
           ${this._modes.length > 1
             ? html`<materia-button-group
@@ -1635,7 +1741,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
           <!-- A window is always recurring — it carries its own weekday chips
                inside _renderWindow() — so the generic once/weekly switch below
                is for the classic single-moment picker and the trigger tab only. -->
-          ${this._isWindow || this._isSingle
+          ${this._isWindow || this._isSingle || this._isMoment
             ? nothing
             : html`
                 <div class="repeat">
@@ -1839,7 +1945,7 @@ class MateriaSchedule extends ActionMixin(LitElement) {
     const when = this._resolvedWhen;
     const hasPastPhase = this._scheduleKind === "plan" && this._selectedPlan && when
       ? this._selectedPlan.phases.some((phase) =>
-          when.getTime() + Number(phase.offset_minutes ?? phase.offset ?? 0) * 60_000 <= Date.now())
+          when.getTime() + phaseOffsetMinutes(phase) * 60_000 <= Date.now())
       : false;
     const actionOptions = this._commonTargetActions().map((item) => ({
       value: this._actionKey(item),
@@ -1853,10 +1959,28 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       minute: "2-digit",
     }).format(value);
 
+    // Quick picks are an optional extra on a moment card: none configured,
+    // none shown — the date-time field alone is the whole picker.
+    const chips = this._isMoment && this.config.presets?.length ? this._quick : [];
+
     return html`<div class="single-schedule">
+      ${chips.length ? html`<div class="chips-wrap"><div class="chips">
+        ${chips.map((q) => html`<button
+          class="quick ${this._pick === q.key ? "on" : ""}"
+          style="flex-grow:${q.grow}"
+          @click=${() => {
+            this._pick = q.key;
+            this._dirty = true;
+            this._commitError = null;
+          }}
+        ><span class="n">${q.name}</span><span class="t">${q.at}</span></button>`)}
+      </div></div>` : nothing}
+
       <div class="single-time native-datetime" @click=${this._showNativeTimePicker}>
         <div class="single-time-copy">
-          <span>${this._scheduleKind === "plan" ? t("sched_arrival", this.hass) : t("sched_run_at", this.hass)}</span>
+          <span>${this._isMoment
+            ? t("sched_moment", this.hass)
+            : this._scheduleKind === "plan" ? t("sched_arrival", this.hass) : t("sched_run_at", this.hass)}</span>
           <b>${when ? dateTime(when) : t("sched_pick_date_time", this.hass)}</b>
         </div>
         <input
@@ -1890,12 +2014,16 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       </div>
       ${!actionOptions.length ? html`<div class="setup-note">${t("sched_configure_actions", this.hass)}</div>` : nothing}` : nothing}
 
-      ${this._scheduleKind === "plan" && this._selectedPlan ? html`<div class="plan-phases">
+      ${this._isMoment && !this._selectedPlan
+        ? html`<div class="setup-note">${t("sched_moment_no_steps", this.hass)}</div>`
+        : nothing}
+
+      ${this._scheduleKind === "plan" && this._selectedPlan && when ? html`<div class="plan-phases">
         ${this._selectedPlan.phases.map((phase, index) => {
-          const phaseWhen = new Date(when.getTime() + Number(phase.offset_minutes ?? phase.offset ?? 0) * 60_000);
+          const phaseWhen = new Date(when.getTime() + phaseOffsetMinutes(phase) * 60_000);
           return html`<div class="plan-phase">
             <span class="plan-phase-index">${index + 1}</span>
-            <span><b>${phase.name || phase.label || `${t("sched_phase", this.hass)} ${index + 1}`}</b><small>${dateTime(phaseWhen)}</small></span>
+            <span><b>${phase.name || phase.label || this._stepSummary(phase) || `${t("sched_phase", this.hass)} ${index + 1}`}</b><small>${dateTime(phaseWhen)}</small></span>
           </div>`;
         })}
       </div>` : nothing}

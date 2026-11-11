@@ -15,7 +15,10 @@ const gzipSize = gzipSync(source).byteLength;
 // 0.75: every visual-editor label, helper and option lives in i18n.js with a
 // Dutch twin, plus the new visual editors (card list, panels, power rows):
 // ~329 KB gzip after the merge; the limit keeps ~5 KB headroom.
-const limits = { size: 1_360_000, gzipSize: 334_000 };
+// Schedule editor without YAML (one-moment card, list editors for steps,
+// quick picks, triggers, devices and plans, en + nl): ~336 KB gzip; the
+// limit keeps ~4 KB headroom.
+const limits = { size: 1_360_000, gzipSize: 340_000 };
 
 console.log(`Bundle: ${size} bytes (${gzipSize} bytes gzip).`);
 if (size > limits.size || gzipSize > limits.gzipSize) {

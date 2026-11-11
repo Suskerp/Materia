@@ -1,5 +1,41 @@
 # One-time schedules and plans
 
+## One moment (the simple path)
+
+Pick "One moment" as what the card is for in the visual editor, give it a
+title and add what should happen. Each step is an action from Home
+Assistant's own action picker, at the moment itself or some time before or
+after it. The editor writes:
+
+```yaml
+type: custom:materia-schedule
+presentation: moment
+name: I'm arriving home
+manager_tag: materia_moment_k3x9qa   # generated, keeps this card's entries together
+steps:
+  - offset_minutes: -180
+    action:
+      action: perform-action
+      perform_action: climate.set_hvac_mode
+      target: { entity_id: climate.living_room }
+      data: { hvac_mode: heat }
+  - offset_minutes: 0
+    action:
+      action: perform-action
+      perform_action: light.turn_on
+      target: { entity_id: light.hallway }
+```
+
+The card shows "Not scheduled" until someone picks a date and time. Saving
+creates one Scheduler entry per step (`repeat_type: single`, start-only
+timeslot, `start_date` = `end_date`). Scheduler deletes each entry after it has
+run, so once the last step has run the card is back to "Not scheduled" without
+any clean-up action. An entry that missed its moment (Home Assistant was down)
+is not shown as scheduled. Quick-pick chips (`presets`) and the "When…" tab
+(`triggers`) are optional and appear only when configured.
+
+## Manager
+
 This feature is local-only until it is deliberately added to a dashboard and
 deployed. Existing `materia-schedule` cards remain recurring-window cards,
 because the new modes are opt-in through `schedule_types`.
