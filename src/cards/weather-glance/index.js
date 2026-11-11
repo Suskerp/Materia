@@ -2,6 +2,7 @@ import { LitElement, html, svg } from "lit";
 import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
+import { readAlerts, worstActive } from "../../utils/weather-alerts.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 
@@ -133,6 +134,8 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
     };
     let text = null;
     let sev = 0;
+    /** Says only that there's nothing (no pollen, no rain, UV 0): left out under hide_quiet. */
+    let quiet = false;
     switch (entry.type) {
       case "condition": {
         const c = stateObj?.state ?? "";
@@ -170,6 +173,7 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
         if (u == null) return null;
         text = `UV ${u}`;
         sev = u >= 11 ? 4 : u >= 8 ? 3 : u >= 6 ? 2 : u >= 3 ? 1 : 0;
+        quiet = u === 0;
         break;
       }
       case "precipitation": {
@@ -179,6 +183,7 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
         // Labeled — a bare "2 mm" in a metric line reads as nothing in particular.
         text = `${entry.label ?? t("wg_rain", this.hass)} ${n} ${a.precipitation_unit ?? "mm"}`;
         sev = n >= 10 ? 3 : n >= 2 ? 2 : n > 0 ? 1 : 0;
+        quiet = n === 0;
         break;
       }
       case "pressure": {
@@ -224,6 +229,7 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
           ? (this.config.no_pollen_label ?? `${prefix} ${t("wg_pollen_none", this.hass)}`)
           : `${prefix} ${worst.label} ${LABELS[worst.v + 1] ?? worst.v}`;
         sev = worst.v;
+        quiet = worst.v === 0;
         break;
       }
       case "aqi": {
@@ -249,7 +255,7 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
     if (entry.severity != null) sev = Number(entry.severity) || 0;
     const icon = entry.icon
       ?? (this.config.show_metric_icons ? DEFAULT_ICONS[entry.type] : null);
-    return { text, sev, icon, type: entry.type };
+    return { text, sev, icon, type: entry.type, quiet };
   }
 
   /** Subtitle metrics: everything configured EXCEPT condition (which always
@@ -264,7 +270,10 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
     const entries = (this.config.metrics || [])
       .map((e) => (typeof e === "string" ? { type: e } : e))
       .filter((e) => e.type !== "condition"); // condition is the title, always
-    const items = entries.map((e) => this._metricData(e, stateObj)).filter(Boolean);
+    const hideQuiet = this.config.hide_quiet !== false;
+    const items = entries
+      .map((e) => this._metricData(e, stateObj))
+      .filter((i) => i && !(hideQuiet && i.quiet));
     if (this.config.sort_by_severity) {
       items.sort((x, y) => (y.sev + weight(y.type)) - (x.sev + weight(x.type)));
     }
@@ -285,7 +294,12 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
     const tempNum = this._num(temp);
 
     // Alert template (e.g. a warning sensor) takes over line 1 when non-empty.
-    const alert = this._isTemplate(this.config.alert) ? this._resolvedAlert : this.config.alert;
+    const warning = this.config.alerts_entity
+      ? worstActive(readAlerts(this.hass.states[this.config.alerts_entity]))
+      : null;
+    const alert = warning
+      ? `${t(`alerts_level_${warning.tone}`, this.hass)} · ${warning.title}`
+      : this._isTemplate(this.config.alert) ? this._resolvedAlert : this.config.alert;
     // Title is ALWAYS the condition (alert overrides); everything else is
     // secondary and lives on the subtitle line.
     const first = alert ? null : this._metricData({ type: "condition" }, stateObj);
@@ -314,7 +328,7 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
           <div class="mid">
             ${alert || first
               ? html`<div class="line1">
-                  ${alert ? html`<ha-icon icon="mdi:alert-outline"></ha-icon>` : ""}
+                  ${alert ? html`<ha-icon class=${warning ? `warn ${warning.tone}` : ""} icon=${warning?.icon ?? "mdi:alert-outline"}></ha-icon>` : ""}
                   ${alert ? html`<span>${alert}</span>` : metricSpan(first)}
                 </div>`
               : ""}

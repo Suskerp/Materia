@@ -1171,6 +1171,22 @@ export const STRINGS = {
   /* ---- materia-weather-glance ----------------------------------------- */
   wg_rain: { en: "Rain", nl: "Regen" },
   wg_pollen_none: { en: "none", nl: "geen" },
+  ed_glance_hide_quiet: { en: "Hide values that say nothing (no pollen, no rain, UV 0)", nl: "Verberg waarden zonder nieuws (geen pollen, geen regen, UV 0)" },
+  ed_glance_alerts_entity: { en: "Weather warnings (shown on the first line while active)", nl: "Weerwaarschuwingen (op de eerste regel zolang actief)" },
+  alerts_level_yellow: { en: "Yellow warning", nl: "Code geel" },
+  alerts_level_orange: { en: "Orange warning", nl: "Code oranje" },
+  alerts_level_red: { en: "Red warning", nl: "Code rood" },
+  alerts_upcoming: { en: "upcoming", nl: "verwacht" },
+  alerts_until: { en: "Until {time}", nl: "Tot {time}" },
+  alerts_from: { en: "From {time}", nl: "Vanaf {time}" },
+  alerts_now: { en: "Now", nl: "Nu" },
+  alerts_none: { en: "No weather warnings", nl: "Geen weerwaarschuwingen" },
+  ed_alerts_entity: { en: "Warnings entity (e.g. the KMI warning sensor)", nl: "Waarschuwingsentiteit (bv. de KMI-waarschuwingssensor)" },
+  ed_alerts_show: { en: "Show", nl: "Tonen" },
+  ed_alerts_show_all: { en: "Active and upcoming", nl: "Actief en verwacht" },
+  ed_alerts_show_active: { en: "Active only", nl: "Enkel actief" },
+  ed_alerts_max: { en: "At most this many", nl: "Maximaal zoveel" },
+  ed_alerts_expanded: { en: "Show the full text", nl: "Volledige tekst tonen" },
 
   /* ---- materia-weather-hero --------------------------------------------- */
   wh_night: { en: "Night", nl: "Nacht" },

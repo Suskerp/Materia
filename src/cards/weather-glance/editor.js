@@ -16,7 +16,7 @@ const METRIC_OPTIONS = [
 
 class MateriaWeatherGlanceEditor extends SmartEditorBase {
   _formData() {
-    return { metrics: ["minmax"], ...this._config };
+    return { metrics: ["minmax"], hide_quiet: true, ...this._config };
   }
 
   get _sections() {
@@ -34,6 +34,8 @@ class MateriaWeatherGlanceEditor extends SmartEditorBase {
           { name: "show_metric_icons", label: "e_show_metric_icons", selector: { boolean: {} } },
           { name: "pollen_entities", label: "e_pollen_sensor_for", selector: { entity: { domain: "sensor", multiple: true } } },
           { name: "aqi_entity", label: "e_aqi_sensor_for", selector: { entity: { domain: "sensor" } } },
+          { name: "hide_quiet", label: "ed_glance_hide_quiet", selector: { boolean: {} } },
+          { name: "alerts_entity", label: "ed_glance_alerts_entity", selector: { entity: { domain: ["binary_sensor", "sensor"] } } },
           { name: "alert", label: "e_alert_text_templa", template: true, selector: { text: {} } },
         ],
       },

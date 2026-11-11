@@ -120,5 +120,16 @@ export const styles = [
       flex-shrink: 0;
       margin: 0 -4px 0 0;
     }
+  
+    /* An active weather warning (alerts_entity): the icon in its level colour. */
+    .line1 ha-icon.warn {
+      color: var(--materia-alert-yellow, #f2c94c);
+    }
+    .line1 ha-icon.warn.orange {
+      color: var(--materia-alert-orange, #f2994a);
+    }
+    .line1 ha-icon.warn.red {
+      color: var(--materia-alert-red, var(--md-sys-color-error, #e5484d));
+    }
   `,
 ];
