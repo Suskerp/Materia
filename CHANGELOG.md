@@ -8,6 +8,25 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.10 — 2026-11-11
+
+The needs-attention card gets its designed look, and single-zone players get simpler header buttons.
+
+### Breaking changes
+None.
+
+### Changed
+- **Needs attention uses Materia's colour roles:** soft tinted rows, full-strength badges and
+  quick-action buttons (error for urgent, the warning role for soon, neutral for info) and
+  normal-coloured text, so it reads well in light and dark. Urgent rows are tinted more
+  strongly than "soon".
+- **A power menu with one player is a plain on/off button:** no dropdown with a single switch
+  in it (single-zone players such as a Cambridge streamer).
+
+### Added
+- **Media header: inputs as a menu.** New option "Inputs as a menu" opens the player's inputs as
+  a dropdown (like the power menu) instead of stepping through them on each tap.
+
 ## 0.76.9 — 2026-11-11
 
 A new "needs attention" card, and every vacuum card now reads the vacuum the way the hero does.
