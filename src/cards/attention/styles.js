@@ -33,7 +33,8 @@ export const styles = [
       opacity: 0.38;
     }
     .item.off .act {
-      background: color-mix(in srgb, var(--md-sys-color-on-surface, #888) 10%, transparent);
+      background: transparent;
+      box-shadow: inset 0 0 0 1px var(--md-sys-color-outline, rgba(127, 127, 127, 0.6));
       color: var(--md-sys-color-on-surface, var(--primary-text-color));
     }
     .info {
