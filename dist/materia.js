@@ -13092,7 +13092,9 @@ const Nr=xr(class extends kr{constructor(){super(...arguments),this.key=W}render
       flex: none;
       width: 1px;
       height: 28px;
-      margin-inline-start: 4px;
+      /* Breathing room both sides: 10px + the 2px inside the switch's 48px
+         target reads as an even gap to the switch, matching the chevron side. */
+      margin-inline: 8px 10px;
       background: var(--md-sys-color-outline-variant, var(--divider-color, rgba(127, 127, 127, 0.4)));
     }
 
