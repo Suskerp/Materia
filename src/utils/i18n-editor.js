@@ -935,6 +935,7 @@ export const EDITOR_STRINGS = {
   ed_alerts_show_all: { en: "Active and upcoming", nl: "Actief en verwacht" },
   ed_alerts_show_active: { en: "Active only", nl: "Enkel actief" },
   ed_alerts_max: { en: "At most this many", nl: "Maximaal zoveel" },
+  e_source_menu: { en: "Inputs as a menu (instead of stepping through them)", nl: "Ingangen als menu (in plaats van erdoor te stappen)" },
   ed_att_title: { en: "Summary text (optional, {n} = count)", nl: "Samenvatting (optioneel, {n} = aantal)" },
   ed_att_items: { en: "Rules", nl: "Regels" },
   ed_att_kind: { en: "Kind", nl: "Soort" },

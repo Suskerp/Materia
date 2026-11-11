@@ -171,15 +171,17 @@ class MateriaMenuList extends MenuButton {
     const color = this.config?.color;
     const danger = color === "error";
     const base = this.config?.variant === "kiosk" ? "pill round" : segClass("iconbtn", this.seg);
+    // One switch and nothing else (a single-zone player): no menu, the button is the switch.
+    const single = rows.length === 1 && switches.length === 1 ? switches[0].entity : null;
     return html`<button
         class="${base} ${danger ? "danger" : ""} ${someOn ? "on" : ""} ${busy ? "busy" : ""} ${this._menu ? "open" : ""}"
         style=${color && !danger ? `color:${color}` : ""}
         aria-label=${this.config?.name || t("menu_more", this.hass)}
-        aria-haspopup="menu"
-        aria-expanded=${this._menu ? "true" : "false"}
-        @click=${this._toggleMenu}
+        aria-haspopup=${single ? nothing : "menu"}
+        aria-expanded=${single ? nothing : this._menu ? "true" : "false"}
+        @click=${single ? () => this._switch(single, !someOn) : this._toggleMenu}
       ><ha-icon icon=${this.config?.icon || "mdi:dots-vertical"}></ha-icon></button
-      >${this._popover(this._menu ? rows.map((r) => this._row(r, someOn)) : nothing)}`;
+      >${single ? nothing : this._popover(this._menu ? rows.map((r) => this._row(r, someOn)) : nothing)}`;
   }
 }
 

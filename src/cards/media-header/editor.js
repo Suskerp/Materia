@@ -27,6 +27,7 @@ class MateriaMediaHeaderEditor extends SmartEditorBase {
           { name: "zone_name", label: "e_zone_name_defaul", selector: { text: {} } },
           { name: "stations_label", label: "e_stations_label", selector: { text: {} } },
           { name: "show_source", label: "e_source_button", selector: { boolean: {} } },
+          { name: "source_menu", label: "e_source_menu", selector: { boolean: {} } },
           { name: "show_volume", label: "e_volume_ring", selector: { boolean: {} } },
           { name: "show_power", label: "e_power_menu_per", selector: { boolean: {} } },
           { name: "logo_fill", label: "e_statio_logos_fill", selector: { boolean: {} } },

@@ -184,7 +184,7 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
     return html`<ha-card>
       <div class="top">
         ${this.config.show_source !== false
-          ? html`<materia-media-source .hass=${this.hass} .config=${{ entity: this.config.entity }}></materia-media-source>`
+          ? html`<materia-media-source .hass=${this.hass} .config=${{ entity: this.config.entity, mode: this.config.source_menu ? "menu" : "cycle" }}></materia-media-source>`
           : nothing}
         <div class="where">
           <b>${this._headTitle}</b>
