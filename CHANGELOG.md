@@ -8,6 +8,18 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.2 — 2026-11-11
+
+The compact time row can now hold a date and a date-time as well.
+
+### Breaking changes
+None.
+
+### Added
+- **`materia-time-input` follows its helper:** an `input_datetime` with date and time gets a
+  date-time picker, a date-only helper a date picker, and a time-only helper the time picker
+  as before. A compact way to set, for example, an arrival moment in a row.
+
 ## 0.76.1 — 2026-11-11
 
 A schedule card you can set up without YAML, a climate panel that shows only the modes you
