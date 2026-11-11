@@ -105,7 +105,12 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
 
   _modeGroup() {
     if (this._isHumidifier) return this._humidifierModeGroup();
-    const modes = (this._entity?.attributes?.hvac_modes || []).filter((m) => ["heat", "auto", "off", "cool", "heat_cool"].includes(m));
+    if (this.config.show_modes === false) return nothing;
+    // `hvac_modes` narrows the bar to the modes you want (in the entity's order).
+    const wanted = Array.isArray(this.config.hvac_modes) && this.config.hvac_modes.length ? this.config.hvac_modes : null;
+    const modes = (this._entity?.attributes?.hvac_modes || [])
+      .filter((m) => ["heat", "auto", "off", "cool", "heat_cool"].includes(m))
+      .filter((m) => !wanted || wanted.includes(m));
     if (!modes.length) return nothing;
     const [act, on] = MODE_COLORS[this._entity?.state] ?? MODE_COLORS.off;
     return html`

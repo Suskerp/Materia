@@ -45,7 +45,7 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
   }
 
   _formData() {
-    return { steppers: "side", wave: "auto", ...this._config };
+    return { steppers: "side", wave: "auto", show_modes: true, ...this._config };
   }
 
   /* ---- sections plumbing --------------------------------------------------- */
@@ -307,6 +307,19 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
         fields: [
           { name: "entity", required: true, selector: { entity: { domain: ["climate", "humidifier"] } } },
           { name: "reserve_height", label: "e_keep_height_talles", selector: { boolean: {} } },
+          { name: "show_modes", label: "ed_climate_show_modes", selector: { boolean: {} } },
+          {
+            name: "hvac_modes",
+            label: "ed_climate_hvac_modes",
+            helper: "ed_climate_hvac_modes_help",
+            selector: { select: { multiple: true, mode: "list", options: [
+              { value: "off", label: "ed_mode_off" },
+              { value: "heat", label: "ed_mode_heat" },
+              { value: "cool", label: "ed_mode_cool" },
+              { value: "heat_cool", label: "ed_mode_heat_cool" },
+              { value: "auto", label: "ed_mode_auto" },
+            ] } },
+          },
         ],
       },
       {
