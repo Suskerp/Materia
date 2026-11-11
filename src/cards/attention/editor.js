@@ -7,8 +7,8 @@ import { WHEN, needsValue, readWhen, writeWhen } from "./when.js";
    A rule reads top to bottom as a sentence: watch this entity, show when it
    is …, how urgent, what it says, what the button does. */
 const schemas = {};
-const itemSchema = (hass, kind, when) =>
-  (schemas[`${hass?.locale?.language ?? ""}|${kind}|${when}`] ??= [
+const itemSchema = (hass, kind, when, entity = "") =>
+  (schemas[`${hass?.locale?.language ?? ""}|${kind}|${when}|${needsValue(when) ? entity : ""}`] ??= [
     { name: "type", label: t("ed_att_kind", hass), selector: { select: { mode: "dropdown", options: [
       { value: "rule", label: t("ed_att_kind_rule", hass) },
       { value: "vacuum", label: t("ed_att_kind_vacuum", hass) },
@@ -27,7 +27,7 @@ const itemSchema = (hass, kind, when) =>
           { name: "entity", label: t("ed_att_entity", hass), selector: { entity: {} } },
           { name: "when", label: t("ed_att_when", hass), selector: { select: { mode: "dropdown", options: WHEN.map((w) => ({ value: w, label: t(`ed_att_when_${w}`, hass) })) } } },
           ...(needsValue(when)
-            ? [{ name: "value", label: t("ed_att_value", hass), selector: when === "below" || when === "above" ? { number: { mode: "box", step: "any" } } : { text: {} } }]
+            ? [{ name: "value", label: t("ed_att_value", hass), selector: when === "below" || when === "above" ? { number: { mode: "box", step: "any" } } : { state: { entity_id: entity } } }]
             : []),
           { name: "level", label: t("ed_att_level", hass), selector: { select: { mode: "dropdown", options: [
             { value: "urgent", label: t("ed_att_level_urgent", hass) },
@@ -86,7 +86,7 @@ class MateriaAttentionEditor extends SmartEditorBase {
     return html`<materia-item-list-editor
       .hass=${h}
       .items=${Array.isArray(value) ? value : []}
-      .schema=${(item) => itemSchema(h, kindOf(item), kindOf(item) === "rule" ? readWhen(item).when : "")}
+      .schema=${(item) => itemSchema(h, kindOf(item), kindOf(item) === "rule" ? readWhen(item).when : "", item?.entity)}
       .itemLabel=${(item) =>
         kindOf(item) === "vacuum"
           ? h?.states?.[item.entity]?.attributes?.friendly_name || t("ed_att_kind_vacuum", h)
