@@ -5,7 +5,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
 import "./editor.js";
-import { inputValue, serviceData } from "./model.js";
+import { inputValue, serviceData, CLEARED_DATETIME } from "./model.js";
 
 
 class MateriaTimeInput extends ActionMixin(LitElement) {
@@ -96,17 +96,19 @@ class MateriaTimeInput extends ActionMixin(LitElement) {
     }
   }
 
-  /** Clear a date-time: set it to now, so it reads as passed ("Not set"). */
+  /**
+   * Clear a date-time. An input_datetime can't be empty, so it goes to a fixed
+   * moment far in the past (2000-01-01 00:00): it reads as "Not set", and no
+   * automation that triggers on the helper, with any offset, can fire from it.
+   */
   async _clear(event) {
     event.preventDefault();
     event.stopPropagation();
     this._fireHaptic?.("light");
-    const d = new Date();
-    const p = (n) => String(n).padStart(2, "0");
     await this._callService(
       "input_datetime",
       "set_datetime",
-      { datetime: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:00` },
+      { datetime: CLEARED_DATETIME },
       { entity_id: this.config.entity }
     );
   }

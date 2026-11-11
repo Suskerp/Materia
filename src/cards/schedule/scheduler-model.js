@@ -178,12 +178,13 @@ export const setDatetimeData = (when, { hasDate = true, hasTime = true } = {}) =
   return hasDate ? { date } : { time };
 };
 
-/** Clearing writes a moment that already passed (now, or yesterday for a
- *  date-only helper). A time-only helper cannot read as passed: null. */
-export const clearDatetimeData = ({ hasDate = true, hasTime = true } = {}, now = new Date()) => {
+/** Clearing writes a fixed moment far in the past (2000-01-01 00:00): an
+ *  input_datetime can't be empty, this reads as passed, and no automation that
+ *  triggers on the helper (with any offset) fires from it. A time-only helper
+ *  cannot read as passed: null. */
+export const clearDatetimeData = ({ hasDate = true, hasTime = true } = {}) => {
   if (!hasDate) return null;
-  if (hasTime) return setDatetimeData(now, { hasDate, hasTime });
-  return setDatetimeData(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1), { hasDate, hasTime });
+  return setDatetimeData(new Date(2000, 0, 1, 0, 0, 0), { hasDate, hasTime });
 };
 
 export const oneShotPayload = ({ name, when, actions, tags = [] }) => {

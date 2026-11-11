@@ -171,11 +171,11 @@ test("set_datetime data is local wall clock, shaped by the helper's parts", () =
   assert.deepEqual(setDatetimeData(when, { hasDate: false, hasTime: true }), { time: "18:05:00" });
 });
 
-test("clearing writes a moment that has already passed", () => {
+test("clearing writes a fixed moment far in the past", () => {
   const now = new Date(2026, 10, 14, 12, 0, 30);
   const both = clearDatetimeData({ hasDate: true, hasTime: true }, now);
-  assert.deepEqual(both, { datetime: "2026-11-14 12:00:00" });
+  assert.deepEqual(both, { datetime: "2000-01-01 00:00:00" });
   assert.equal(helperIsSet(helperMoment({ state: both.datetime, attributes: { has_date: true, has_time: true } }, now), now), false);
-  assert.deepEqual(clearDatetimeData({ hasDate: true, hasTime: false }, now), { date: "2026-11-13" });
+  assert.deepEqual(clearDatetimeData({ hasDate: true, hasTime: false }, now), { date: "2000-01-01" });
   assert.equal(clearDatetimeData({ hasDate: false, hasTime: true }, now), null);
 });

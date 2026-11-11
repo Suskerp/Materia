@@ -18,3 +18,6 @@ export function serviceData(value, kind) {
   if (kind === "date") return /^\d{4}-\d{2}-\d{2}$/.test(value || "") ? { date: value } : null;
   return /^\d{2}:\d{2}$/.test(value || "") ? { time: `${value}:00` } : null;
 }
+
+/** What "clear" writes: an input_datetime can't be empty, so a fixed moment far in the past. */
+export const CLEARED_DATETIME = "2000-01-01 00:00:00";
