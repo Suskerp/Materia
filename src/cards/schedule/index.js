@@ -1981,7 +1981,9 @@ class MateriaSchedule extends ActionMixin(LitElement) {
               <ha-icon icon="m3o:alarm-on"></ha-icon>
               <span>${this._commitBusy
                 ? t("sched_saving", this.hass)
-                : (this._isWindow || this._isSingle || this._isDatetime || this._repeating
+                : this._isDatetime
+                  ? (this.config.save_label ?? t("sched_save_moment", this.hass))
+                  : (this._isWindow || this._isSingle || this._repeating
                   ? t("sched_save_schedule", this.hass)
                   : t("sched_set_timer", this.hass))}</span>
             </button>

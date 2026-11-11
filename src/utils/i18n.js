@@ -1040,6 +1040,7 @@ export const STRINGS = {
   sched_repeat_sub_on: { en: "Runs on the days below", nl: "Loopt op de dagen hieronder" },
   sched_repeat_sub_off: { en: "One run only", nl: "Eén keer, niet herhalen" },
   sched_save_schedule: { en: "Save schedule", nl: "Planning opslaan" },
+  sched_save_moment: { en: "Save", nl: "Opslaan" },
   sched_set_timer: { en: "Set timer", nl: "Timer instellen" },
   sched_pick_date_time: { en: "Pick a date & time", nl: "Kies een datum en tijdstip" },
   sched_mocked_note: { en: "Mocked · nothing is scheduled", nl: "Demo · er is niets ingepland" },

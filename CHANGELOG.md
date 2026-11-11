@@ -8,6 +8,45 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.1 — 2026-11-11
+
+A schedule card you can set up without YAML, a climate panel that shows only the modes you
+use, and the weather warning moved to the glance's second line.
+
+### Breaking changes
+None. Existing schedule, climate and weather cards keep working as they are.
+
+### Added
+- **Schedule card: "What is this card for?"** The editor starts by asking, then shows only
+  the fields for that choice:
+  - **Set a date & time** (`presentation: datetime`, `datetime_entity`): stores the chosen
+    moment in an `input_datetime` helper and runs nothing. Automations can trigger on the
+    helper, also hours before it. The card shows the moment while it is ahead and
+    "Not set" once it has passed; Clear sets the helper to now.
+  - **One moment** (`presentation: moment`, `steps`): pick a date and time, and the steps
+    run then (each optionally before or after it); it clears itself after the last one.
+  - **Manager** and **picker for your own action**: as before.
+- **Schedule card: visual editors for everything** that used to be YAML: steps, plans,
+  quick picks, triggers, devices and their actions, and window start/end actions.
+- **Climate panel: `hvac_modes`** limits the mode bar to the modes you choose (none
+  chosen: every mode the thermostat offers); `show_modes: false` hides the bar.
+
+### Changed
+- **Weather glance:** an active weather warning (`alerts_entity`) now leads the second
+  line as a coloured pill ("Oranje · Wind"); the condition keeps the first line.
+- **Schedule card:**
+  - The idle card shows its title and icon (`icon`, default a calendar clock).
+  - Steps show the service's and entity's names, and when they run ("3 h before").
+  - Quick picks and triggers only appear when configured on the new purposes.
+
+### Fixed
+- **Schedule card:** a one-time Scheduler entry left behind because Home Assistant was down
+  at its moment no longer reads as "scheduled".
+
+### Known issue
+- In a schedule step's action editor, Home Assistant's service field can look empty even
+  though the service is set; the row above it shows the chosen service, and saving works.
+
 ## 0.76.0 — 2026-11-11
 
 Weather warnings on the dashboard, and a weather glance that leaves out values with
