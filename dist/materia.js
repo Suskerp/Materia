@@ -3973,6 +3973,10 @@ class extends Re{constructor(t,e,i,s=Re.DEFAULT_SPEC_VERSION,a=Re.DEFAULT_PLATFO
     .item.off .body {
       opacity: 0.38;
     }
+    .item.off .act {
+      background: color-mix(in srgb, var(--md-sys-color-on-surface, #888) 10%, transparent);
+      color: var(--md-sys-color-on-surface, var(--primary-text-color));
+    }
     .info {
       --c: var(--md-sys-color-surface-container-high, rgba(127, 127, 127, 0.16));
       --on-c: var(--md-sys-color-on-surface, var(--primary-text-color));
@@ -4101,7 +4105,7 @@ class extends Re{constructor(t,e,i,s=Re.DEFAULT_SPEC_VERSION,a=Re.DEFAULT_PLATFO
         ${t.map(e=>{const i=this._label(e),s=e.off?this._until(e):this._text(e,"s");return U`<div class="page item ${e.off?"off":e.level} ${1===t.length?"only":""}" @click=${()=>!this._dragger.didDrag()&&this._tap(e)}>
             <span class="badge"><ha-icon .icon=${e.icon||this.hass.states[e.entity]?.attributes?.icon||"mdi:alert-circle-outline"}></ha-icon></span>
             <span class="body"><span class="name">${this._text(e,"n")}</span>${s?U`<span class="detail">${s}</span>`:W}</span>
-            <div class="acts">${i&&!e.off?U`<button class="act" @click=${t=>this._quick(t,e)}>${i}</button>`:W}${e.later||e.off?this._laterBtn(e):W}</div>
+            <div class="acts">${i?U`<button class="act" @click=${t=>this._quick(t,e)}>${i}</button>`:W}${e.later||e.off?this._laterBtn(e):W}</div>
           </div>`})}
       </div>
       ${t.length>1?U`<div class="dots" aria-hidden="true">${t.map((t,i)=>U`<span class="pip ${t.off?"off":t.level} ${i===e?"on":""}"></span>`)}</div>`:W}

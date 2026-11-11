@@ -32,6 +32,10 @@ export const styles = [
     .item.off .body {
       opacity: 0.38;
     }
+    .item.off .act {
+      background: color-mix(in srgb, var(--md-sys-color-on-surface, #888) 10%, transparent);
+      color: var(--md-sys-color-on-surface, var(--primary-text-color));
+    }
     .info {
       --c: var(--md-sys-color-surface-container-high, rgba(127, 127, 127, 0.16));
       --on-c: var(--md-sys-color-on-surface, var(--primary-text-color));
