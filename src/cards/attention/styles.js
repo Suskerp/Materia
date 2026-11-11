@@ -46,6 +46,7 @@ export const styles = [
       align-items: center;
       gap: 8px;
       width: 100%;
+      min-height: 64px;
       box-sizing: border-box;
       padding: 10px 12px 10px 10px;
       border: 0;

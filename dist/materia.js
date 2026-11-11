@@ -3987,6 +3987,7 @@ class extends Re{constructor(t,e,i,s=Re.DEFAULT_SPEC_VERSION,a=Re.DEFAULT_PLATFO
       align-items: center;
       gap: 8px;
       width: 100%;
+      min-height: 64px;
       box-sizing: border-box;
       padding: 10px 12px 10px 10px;
       border: 0;
