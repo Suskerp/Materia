@@ -10378,7 +10378,8 @@ const Mr={CHILD:2},Er=t=>(...e)=>({_$litDirective$:t,values:e});let Pr=class{con
           required
           step=${String(this.config.step??60)}
           aria-label=${e}
-          .value=${this._value}
+          .value=${this._passed?"":this._value}
+          min=${"datetime"===this._kind?(()=>{const t=new Date,e=t=>String(t).padStart(2,"0");return`${t.getFullYear()}-${e(t.getMonth()+1)}-${e(t.getDate())}T${e(t.getHours())}:${e(t.getMinutes())}`})():""}
           ?disabled=${i}
           @change=${this._setTime}
         />

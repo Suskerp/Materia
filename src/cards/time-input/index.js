@@ -7,6 +7,13 @@ import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
 import { inputValue, serviceData, CLEARED_DATETIME } from "./model.js";
 
+/** Now as a datetime-local value (YYYY-MM-DDTHH:MM): the earliest pickable moment. */
+const nowLocalInput = () => {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+
 
 class MateriaTimeInput extends ActionMixin(LitElement) {
   static properties = {
@@ -138,7 +145,8 @@ class MateriaTimeInput extends ActionMixin(LitElement) {
           required
           step=${String(this.config.step ?? 60)}
           aria-label=${name}
-          .value=${this._value}
+          .value=${this._passed ? "" : this._value}
+          min=${this._kind === "datetime" ? nowLocalInput() : ""}
           ?disabled=${unavailable}
           @change=${this._setTime}
         />
