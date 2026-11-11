@@ -4,7 +4,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
 import { hourlyItems } from "../forecast-hourly/row.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * Pixel-style daily forecast: a horizontally scrollable row of stadium pills,
@@ -24,7 +24,8 @@ class MateriaForecastDaily extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-forecast-daily-editor");
   }
 

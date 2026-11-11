@@ -2,7 +2,7 @@ import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { unavailableStyles } from "../../styles/card-styles.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 class MateriaCheckbox extends ActionMixin(LitElement) {
   static properties = {
@@ -11,7 +11,8 @@ class MateriaCheckbox extends ActionMixin(LitElement) {
     _resolvedName: { state: true },
   };
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-checkbox-editor");
   }
 

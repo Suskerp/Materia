@@ -1,6 +1,6 @@
 import { LitElement, html, svg } from "lit";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 class MateriaClock extends LitElement {
   static properties = {
@@ -10,7 +10,8 @@ class MateriaClock extends LitElement {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-clock-editor");
   }
 

@@ -3,7 +3,7 @@ import { loadCardHelpers } from "../../styles/shared.js";
 import { artPalette, artUrl, themeSettings, ART_TOKENS, ART_HA_VARS } from "../../utils/art-palette.js";
 import { PanelHostMixin } from "../../primitives/panels.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 import { kioskTracks, scopeGridColumns } from "./layout.js";
 
@@ -56,7 +56,8 @@ class MateriaArtScope extends PanelHostMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-art-scope-editor");
   }
 

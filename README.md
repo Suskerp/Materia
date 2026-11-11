@@ -39,8 +39,9 @@ Key capabilities:
 
 ### Manual
 
-1. Download `dist/materia.js` from this repository.
-2. Copy it to `config/www/community/materia/materia.js`.
+1. Download every `.js` file in `dist/` from this repository: `materia.js` and
+   `materia-editors-<hash>.js` (the visual editors, loaded only when you edit a card).
+2. Copy them side by side into `config/www/community/materia/`.
 3. Add the resource in **Settings > Dashboards > Resources**:
 
 ```yaml

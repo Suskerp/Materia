@@ -9,7 +9,7 @@ import {
 } from "../../styles/card-styles.js";
 import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /* ------------------------------------------------------------------ */
 /*  Domain configuration map                                          */
@@ -103,7 +103,8 @@ export class MateriaCard extends ActionMixin(LitElement) {
 
   /* ---- Editor plumbing ------------------------------------------ */
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-card-editor");
   }
 

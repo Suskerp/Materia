@@ -4,7 +4,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin } from "../../utils/conditions.js";
 import { loadCardHelpers } from "../../styles/shared.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /** M3 tab row height (48dp) and its stadium/seam radii — the SAME formula
  *  materia-button-group's connected mode uses, ported rather than shared
@@ -60,7 +60,8 @@ class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
     this.__tabUid = `materia-tabs-${++tabInstance}`;
   }
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-tabs-editor");
   }
 

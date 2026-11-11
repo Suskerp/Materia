@@ -3,7 +3,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import { OptimisticMixin } from "../../utils/optimistic.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * Ascending-bar level picker (materia-bar-select): a label, the current value,
@@ -30,7 +30,8 @@ class MateriaBarSelect extends OptimisticMixin(DisabledMixin(ActionMixin(LitElem
 
   static styles = [styles, disabledConditionStyles];
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-bar-select-editor");
   }
 

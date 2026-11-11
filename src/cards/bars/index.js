@@ -3,7 +3,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin } from "../../utils/conditions.js";
 import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /* DEFAULT BAR COLOURS, one per row, cycling.
    A single role for every row was a real defect and not a cosmetic one: this
@@ -84,7 +84,8 @@ class MateriaBars extends DisabledMixin(ActionMixin(LitElement)) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-bars-editor");
   }
 

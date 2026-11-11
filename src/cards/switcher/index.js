@@ -3,7 +3,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { loadCardHelpers } from "../../styles/shared.js";
 import { switcherItems, clampIndex, storageKey, readIndex, writeIndex, tabClass } from "./model.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 const storage = () => {
   try {
@@ -33,7 +33,8 @@ class MateriaSwitcher extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-switcher-editor");
   }
 

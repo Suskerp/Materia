@@ -14,7 +14,7 @@ import { powerTransition,
 import { scopeContext } from "../../primitives/sheet.js";
 import { attributeMapOf } from "../../utils/media-attributes.js";
 import { t } from "../../utils/i18n.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /** Remembered auto cover sizes (best effort: storage can be unavailable). */
 function readArtCache(key) {
@@ -44,7 +44,8 @@ class MateriaMedia extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-media-editor");
   }
 

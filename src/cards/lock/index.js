@@ -6,7 +6,7 @@ import { OptimismBus } from "../../utils/optimism-bus.js";
 import { settledLockState, isLockBusy } from "../../utils/lock-state.js";
 import { styles } from "./styles.js";
 import "../../primitives/drag-confirm.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /** Silhouettes the shape can take, drawn in a 180x180 box.
  *
@@ -107,7 +107,8 @@ class MateriaLock extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-lock-editor");
   }
 

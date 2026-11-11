@@ -1,5 +1,5 @@
 import { MateriaButtonGroup } from "../../elements/button-group/index.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * DEPRECATED — `materia-icon-row` is now the `standard` configuration of
@@ -23,7 +23,8 @@ class MateriaIconRow extends MateriaButtonGroup {
      never reads (it reads `buttons:`). The tailored editor below was sitting
      in this directory unimported, so users got the wrong form and the right
      one was dead code. */
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-icon-row-editor");
   }
 

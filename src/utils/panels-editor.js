@@ -1,5 +1,6 @@
 import { LitElement, html, css, nothing } from "lit";
 import { t } from "./i18n.js";
+import "./i18n-editor.js";
 import { panelList, panelView, patchPanel, renamePanel, addPanel, removePanel, setPanel } from "./panels-model.js";
 import "./card-list-editor.js";
 

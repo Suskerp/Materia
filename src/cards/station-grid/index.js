@@ -1,11 +1,13 @@
 import { MateriaTileGrid } from "../tile-grid/index.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * materia-station-grid — the radio name of materia-tile-grid, kept so
  * existing configs (`stations:`, `logo_fill`, `entity`) render as before.
  */
 class MateriaStationGrid extends MateriaTileGrid {
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-station-grid-editor");
   }
 

@@ -6,7 +6,8 @@ change. It is the operating manual, and its traps fail silently.
 
 ## Stack
 
-- Lit 3 web components, bundled by Rollup into one file, `dist/materia.js`.
+- Lit 3 web components, bundled by Rollup into `dist/materia.js` plus one lazy,
+  content-hashed chunk for the visual editors, `dist/materia-editors-<hash>.js`.
 - Distributed through HACS from `Suskerp/Materia`. The committed bundle is what
   users receive, so source that is not built and committed does not exist.
 - Layout: `src/cards/<name>/` (index, styles, editor), `src/elements/`,

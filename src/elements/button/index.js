@@ -5,7 +5,7 @@ import { CommitGesture } from "../../utils/commit-gesture.js";
 import { conditionsMet } from "../../utils/conditions.js";
 import { MOTION } from "../../utils/motion.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /** Legacy materia-icon-button variant names → M3 button variants. */
 const VARIANT_ALIAS = {
@@ -38,7 +38,8 @@ class MateriaButton extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-button-editor");
   }
 

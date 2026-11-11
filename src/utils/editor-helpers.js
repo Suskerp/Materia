@@ -1,5 +1,6 @@
 import { html } from "lit";
 import { STRINGS, t, tr } from "./i18n.js";
+import "./i18n-editor.js";
 
 /**
  * Field label: the schema's own label (an i18n key or literal text), else the

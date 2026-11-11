@@ -3,7 +3,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { hostStyles, haCardReset, unavailableStyles } from "../../styles/card-styles.js";
 import { motionTokens } from "../../utils/motion.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 class MateriaClimate extends ActionMixin(LitElement) {
   static get properties() {
@@ -17,7 +17,8 @@ class MateriaClimate extends ActionMixin(LitElement) {
 
   static styles = [hostStyles, unavailableStyles, motionTokens, styles];
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-climate-editor");
   }
 

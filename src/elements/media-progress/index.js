@@ -4,7 +4,7 @@ import { styles } from "./styles.js";
 import { isLive, isMediaOff, mediaControls, mediaAttr } from "../../utils/media.js";
 import { attributeMapOf } from "../../utils/media-attributes.js";
 import { t } from "../../utils/i18n.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 const H = 28;
 const MID = 14;
@@ -29,7 +29,8 @@ class MateriaMediaProgress extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-media-progress-editor");
   }
 

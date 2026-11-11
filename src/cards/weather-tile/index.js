@@ -2,7 +2,7 @@ import { LitElement, html, svg } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { coloredWeatherIcon, moonPhaseFrac } from "./icons.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 class MateriaWeatherTile extends ActionMixin(LitElement) {
   static properties = {
@@ -16,7 +16,8 @@ class MateriaWeatherTile extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-weather-tile-editor");
   }
 

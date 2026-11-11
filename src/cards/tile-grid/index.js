@@ -4,7 +4,7 @@ import { activeItemIndex } from "../../utils/tile-match.js";
 import { hostStyles } from "../../styles/card-styles.js";
 import { motionTokens } from "../../utils/motion.js";
 import { mediaTokens } from "../../styles/media-styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * materia-tile-grid — a grid of square image tiles with a name under each;
@@ -107,7 +107,8 @@ export class MateriaTileGrid extends ActionMixin(LitElement) {
     `,
   ];
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-tile-grid-editor");
   }
 

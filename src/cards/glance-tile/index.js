@@ -4,7 +4,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { roundedPolygonPath } from "../../utils/shapes.js";
 import { fetchNumericHistory, resample, segments, bucketDays, delta, withLiveSample, lastDistinctChange } from "../../utils/history.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 // Severity/temperature scale — same harmonizable tokens as the weather metrics.
 const SCALE = {
@@ -117,7 +117,8 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-glance-tile-editor");
   }
 

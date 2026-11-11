@@ -5,7 +5,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
 import { actionSummary, addPresetOffset, clearDatetimeData, helperIsSet, helperMoment, isSpentOneShot, oneShotPayload, parseOneShotMarker, parsePlanArrivalMarker, phaseOffsetMinutes, planPayloads, setDatetimeData, slug, toSchedulerActions } from "./scheduler-model.js";
 import "../../elements/button-group/index.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * Schedule picker (materia-schedule) — design doc 7a and 7b as ONE card.
@@ -80,7 +80,8 @@ class MateriaSchedule extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-schedule-editor");
   }
 

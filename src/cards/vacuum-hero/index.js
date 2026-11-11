@@ -5,7 +5,7 @@ import { HeroShellMixin, heroShellStyles as styles } from "../hero/shell.js";
 import { CAPABILITY_KEYS, CONSUMABLE_KEYS, profileFor } from "./profiles.js";
 import { explainConsumable, explainError } from "./explanations.js";
 import { t } from "../../utils/i18n.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /* Constant geometry, once at module load — see the same note in hero/shell.js. */
 const BURST_CALM = softBurstPath(90, 90, 86);
@@ -65,7 +65,8 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
     `,
   ];
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-vacuum-hero-editor");
   }
 

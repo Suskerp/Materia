@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from "lit";
 import { sortableList } from "./editor-helpers.js";
 import { loadCardHelpers } from "../styles/shared.js";
 import { t, tr } from "./i18n.js";
+import "./i18n-editor.js";
 
 /**
  * Editor controls for nested cards, in HA's own UI: hui-card-picker to add,

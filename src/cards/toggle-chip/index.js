@@ -2,7 +2,7 @@ import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { chipVariant, chipIsOn, chipLabel } from "./model.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * materia-toggle-chip — an on/off entity as a small header control: the
@@ -20,7 +20,8 @@ class MateriaToggleChip extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-toggle-chip-editor");
   }
 

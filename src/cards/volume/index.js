@@ -37,7 +37,7 @@ import {
 } from "../../utils/volume-control.js";
 import { scopeContext } from "../../primitives/sheet.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * materia-volume — one media player's volume: a kinetic rotary knob, an arc
@@ -64,7 +64,8 @@ class MateriaVolume extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-volume-card-editor");
   }
 

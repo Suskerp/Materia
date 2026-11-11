@@ -4,6 +4,7 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { STRINGS, localize, resolveLanguage, t, tr } from "../src/utils/i18n.js";
+import { EDITOR_STRINGS } from "../src/utils/i18n-editor.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
@@ -129,4 +130,45 @@ test("a field without its own label has a shared f_<name> translation", () => {
   }
   const missing = [...unlabeled].filter((name) => !STRINGS[`f_${name}`]);
   assert.deepEqual(missing, []);
+});
+
+/** Every module reachable through static imports from `entry` (relative ones). */
+function staticGraph(entry) {
+  const seen = new Set();
+  const visit = (file) => {
+    if (seen.has(file)) return;
+    seen.add(file);
+    const src = readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    for (const m of src.matchAll(/^\s*(?:import|export)\s+(?:[^"'`;]*?\sfrom\s+)?["'](\.{1,2}\/[^"']+)["']/gm)) {
+      visit(join(file, "..", m[1]));
+    }
+  };
+  visit(join(root, entry));
+  return seen;
+}
+
+test("the editor-only table and the runtime table share no key", () => {
+  const runtime = Object.keys(STRINGS).filter((k) => !(k in EDITOR_STRINGS));
+  assert.ok(runtime.length > 100, "i18n.js keeps the runtime strings");
+  // i18n-editor.js merges into STRINGS; a key defined in both files would
+  // silently overwrite the runtime copy (trap 09, across two files).
+  const runtimeSource = readFileSync(join(root, "src/utils/i18n.js"), "utf8");
+  const dup = Object.keys(EDITOR_STRINGS).filter((k) => new RegExp(`^  ${k}:`, "m").test(runtimeSource));
+  assert.deepEqual(dup, []);
+});
+
+test("the main bundle never reads a key that only the lazy editors chunk carries", () => {
+  const main = staticGraph("src/materia.js");
+  assert.ok(main.size > 100, "main graph resolved");
+  for (const file of main) {
+    assert.ok(!/\/editor\.js$|i18n-editor\.js$|\/editors\.js$/.test(file), `${relative(root, file)} is editor code in the main bundle`);
+  }
+  const hits = [];
+  for (const file of main) {
+    const src = readFileSync(file, "utf8");
+    for (const m of src.matchAll(/["'`]((?:e|ed|f)_[a-z0-9_]*)/g)) {
+      if (m[1] in EDITOR_STRINGS || /_$/.test(m[1])) hits.push(`${relative(root, file)}: ${m[1]}`);
+    }
+  }
+  assert.deepEqual(hits, []);
 });

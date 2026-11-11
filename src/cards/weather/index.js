@@ -1,7 +1,7 @@
 import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 const CONDITION_ICONS = {
   sunny: "m3o:sunny",
@@ -37,7 +37,8 @@ class MateriaWeather extends ActionMixin(LitElement) {
     _resolvedName: { state: true },
   };
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-weather-editor");
   }
 
