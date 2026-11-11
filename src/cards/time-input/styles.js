@@ -40,6 +40,13 @@ export const styles = css`
     cursor: pointer;
   }
 
+  /* A date (+ time) is longer than 22:00: a smaller numeral keeps it on one line. */
+  input.datetime,
+  input.date {
+    font-size: 17px;
+    min-width: 0;
+  }
+
   input:focus-visible {
     outline: 2px solid var(--md-sys-color-primary, var(--primary-color));
     outline-offset: 4px;

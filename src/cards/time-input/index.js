@@ -4,6 +4,8 @@ import { motionTokens } from "../../utils/motion.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
 import "./editor.js";
+import { inputValue, serviceData } from "./model.js";
+
 
 class MateriaTimeInput extends ActionMixin(LitElement) {
   static properties = {
@@ -40,10 +42,17 @@ class MateriaTimeInput extends ActionMixin(LitElement) {
     return this.hass?.states?.[this.config.entity];
   }
 
+  /** What the helper holds: "datetime" (date + time), "date" or "time" (the default). */
+  get _kind() {
+    const a = this._stateObj?.attributes || {};
+    if (a.has_date && a.has_time) return "datetime";
+    if (a.has_date) return "date";
+    return "time";
+  }
+
+  /** The helper's value in the native input's format for its kind. */
   get _liveValue() {
-    const state = String(this._stateObj?.state || "");
-    const match = state.match(/(?:^|\s)(\d{2}:\d{2})(?::\d{2})?$/);
-    return match?.[1] || "";
+    return inputValue(String(this._stateObj?.state || ""), this._kind);
   }
 
   get _value() {
@@ -51,7 +60,7 @@ class MateriaTimeInput extends ActionMixin(LitElement) {
   }
 
   _showPicker(event) {
-    const input = event.currentTarget.querySelector("input[type='time']");
+    const input = event.currentTarget.querySelector("input");
     if (!input || event.composedPath().includes(input)) return;
     input.focus();
     try { input.showPicker?.(); } catch (_) { /* focus is the fallback */ }
@@ -59,7 +68,8 @@ class MateriaTimeInput extends ActionMixin(LitElement) {
 
   async _setTime(event) {
     const value = event.currentTarget.value;
-    if (!/^\d{2}:\d{2}$/.test(value)) return;
+    const data = serviceData(value, this._kind);
+    if (!data) return;
     this._pending = value;
     clearTimeout(this._pendingTimer);
     // A successful service call can still be followed by a refused/normalized
@@ -69,7 +79,7 @@ class MateriaTimeInput extends ActionMixin(LitElement) {
     const result = await this._callService(
       "input_datetime",
       "set_datetime",
-      { time: `${value}:00` },
+      data,
       { entity_id: this.config.entity }
     );
     if (!result.ok) {
@@ -92,7 +102,8 @@ class MateriaTimeInput extends ActionMixin(LitElement) {
       <label class="field ${unavailable ? "unavailable" : ""}" @click=${this._showPicker}>
         <span>${name}</span>
         <input
-          type="time"
+          class=${this._kind}
+          type=${{ datetime: "datetime-local", date: "date", time: "time" }[this._kind]}
           required
           step=${String(this.config.step ?? 60)}
           aria-label=${name}
@@ -117,5 +128,5 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-time-input",
   name: "Materia Time Input",
-  description: "Compact native platform time picker bound to an input_datetime helper.",
+  description: "Compact native time, date or date-and-time picker bound to an input_datetime helper.",
 });

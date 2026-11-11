@@ -11627,6 +11627,13 @@ const Nr=xr(class extends kr{constructor(){super(...arguments),this.key=W}render
     cursor: pointer;
   }
 
+  /* A date (+ time) is longer than 22:00: a smaller numeral keeps it on one line. */
+  input.datetime,
+  input.date {
+    font-size: 17px;
+    min-width: 0;
+  }
+
   input:focus-visible {
     outline: 2px solid var(--md-sys-color-primary, var(--primary-color));
     outline-offset: 4px;
@@ -11649,11 +11656,12 @@ const Nr=xr(class extends kr{constructor(){super(...arguments),this.key=W}render
     opacity: 0.38;
     cursor: default;
   }
-`;customElements.define("materia-time-input-editor",class extends yn{_formData(){return{step:60,...this._config}}get _sections(){return[{title:"e_time",icon:"mdi:clock-outline",fields:[{name:"entity",required:!0,selector:{entity:{domain:"input_datetime"}}},{name:"name",label:"e_label",selector:{text:{}}},{name:"step",label:"e_step_in_second",selector:{number:{min:60,max:3600,step:60,mode:"box"}}}]}]}});class Hl extends(on(ce)){static properties={hass:{attribute:!1},config:{state:!0},_pending:{state:!0}};static styles=[De,Me,_e,jl];static getConfigElement(){return document.createElement("materia-time-input-editor")}static getStubConfig(e){return{entity:Object.keys(e?.states||{}).find(e=>e.startsWith("input_datetime."))||""}}setConfig(e){if(!e.entity)throw new Error("Materia Time Input: entity is required");this.config={...e}}updated(e){e.has("hass")&&this._pending&&this._liveValue===this._pending&&(this._pending=null,clearTimeout(this._pendingTimer))}get _stateObj(){return this.hass?.states?.[this.config.entity]}get _liveValue(){const e=String(this._stateObj?.state||"").match(/(?:^|\s)(\d{2}:\d{2})(?::\d{2})?$/);return e?.[1]||""}get _value(){return this._pending||this._liveValue}_showPicker(e){const t=e.currentTarget.querySelector("input[type='time']");if(t&&!e.composedPath().includes(t)){t.focus();try{t.showPicker?.()}catch(e){}}}async _setTime(e){const t=e.currentTarget.value;if(!/^\d{2}:\d{2}$/.test(t))return;this._pending=t,clearTimeout(this._pendingTimer),this._pendingTimer=setTimeout(()=>{this._pending=null},1e4);(await this._callService("input_datetime","set_datetime",{time:`${t}:00`},{entity_id:this.config.entity})).ok||(clearTimeout(this._pendingTimer),this._pending=null)}disconnectedCallback(){super.disconnectedCallback(),clearTimeout(this._pendingTimer)}render(){if(!this.hass||!this.config)return q``;const e=this._stateObj,t=this.config.name||e?.attributes?.friendly_name||this.config.entity,i=!e||"unavailable"===e.state||"unknown"===e.state;return q`<ha-card>
+`;customElements.define("materia-time-input-editor",class extends yn{_formData(){return{step:60,...this._config}}get _sections(){return[{title:"e_time",icon:"mdi:clock-outline",fields:[{name:"entity",required:!0,selector:{entity:{domain:"input_datetime"}}},{name:"name",label:"e_label",selector:{text:{}}},{name:"step",label:"e_step_in_second",selector:{number:{min:60,max:3600,step:60,mode:"box"}}}]}]}});class Hl extends(on(ce)){static properties={hass:{attribute:!1},config:{state:!0},_pending:{state:!0}};static styles=[De,Me,_e,jl];static getConfigElement(){return document.createElement("materia-time-input-editor")}static getStubConfig(e){return{entity:Object.keys(e?.states||{}).find(e=>e.startsWith("input_datetime."))||""}}setConfig(e){if(!e.entity)throw new Error("Materia Time Input: entity is required");this.config={...e}}updated(e){e.has("hass")&&this._pending&&this._liveValue===this._pending&&(this._pending=null,clearTimeout(this._pendingTimer))}get _stateObj(){return this.hass?.states?.[this.config.entity]}get _kind(){const e=this._stateObj?.attributes||{};return e.has_date&&e.has_time?"datetime":e.has_date?"date":"time"}get _liveValue(){return function(e,t){const i=e.match(/^(\d{4}-\d{2}-\d{2})/)?.[1],n=e.match(/(?:^|\s)(\d{2}:\d{2})(?::\d{2})?$/)?.[1];return"datetime"===t?i&&n?`${i}T${n}`:"":"date"===t?i||"":n||""}(String(this._stateObj?.state||""),this._kind)}get _value(){return this._pending||this._liveValue}_showPicker(e){const t=e.currentTarget.querySelector("input");if(t&&!e.composedPath().includes(t)){t.focus();try{t.showPicker?.()}catch(e){}}}async _setTime(e){const t=e.currentTarget.value,i=function(e,t){if("datetime"===t){const t=/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(e||"");return t?{datetime:`${t[1]} ${t[2]}:00`}:null}return"date"===t?/^\d{4}-\d{2}-\d{2}$/.test(e||"")?{date:e}:null:/^\d{2}:\d{2}$/.test(e||"")?{time:`${e}:00`}:null}(t,this._kind);if(!i)return;this._pending=t,clearTimeout(this._pendingTimer),this._pendingTimer=setTimeout(()=>{this._pending=null},1e4);(await this._callService("input_datetime","set_datetime",i,{entity_id:this.config.entity})).ok||(clearTimeout(this._pendingTimer),this._pending=null)}disconnectedCallback(){super.disconnectedCallback(),clearTimeout(this._pendingTimer)}render(){if(!this.hass||!this.config)return q``;const e=this._stateObj,t=this.config.name||e?.attributes?.friendly_name||this.config.entity,i=!e||"unavailable"===e.state||"unknown"===e.state;return q`<ha-card>
       <label class="field ${i?"unavailable":""}" @click=${this._showPicker}>
         <span>${t}</span>
         <input
-          type="time"
+          class=${this._kind}
+          type=${{datetime:"datetime-local",date:"date",time:"time"}[this._kind]}
           required
           step=${String(this.config.step??60)}
           aria-label=${t}
@@ -11662,7 +11670,7 @@ const Nr=xr(class extends kr{constructor(){super(...arguments),this.key=W}render
           @change=${this._setTime}
         />
       </label>
-    </ha-card>`}getGridOptions(){return{columns:12,rows:"auto",min_columns:4}}getCardSize(){return 1}}customElements.define("materia-time-input",Hl),window.customCards=window.customCards||[],window.customCards.push({type:"materia-time-input",name:"Materia Time Input",description:"Compact native platform time picker bound to an input_datetime helper."});const ql=[co,s`
+    </ha-card>`}getGridOptions(){return{columns:12,rows:"auto",min_columns:4}}getCardSize(){return 1}}customElements.define("materia-time-input",Hl),window.customCards=window.customCards||[],window.customCards.push({type:"materia-time-input",name:"Materia Time Input",description:"Compact native time, date or date-and-time picker bound to an input_datetime helper."});const ql=[co,s`
     /* The head row: the glyph and the decision, side by side. */
     .head {
       display: flex;
