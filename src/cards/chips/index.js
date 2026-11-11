@@ -2,7 +2,7 @@ import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * M3 filter chips (materia-chips): a wrapping row of selectable chips. The
@@ -30,7 +30,8 @@ class MateriaChips extends DisabledMixin(ActionMixin(LitElement)) {
 
   static styles = [styles, disabledConditionStyles];
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-chips-editor");
   }
 

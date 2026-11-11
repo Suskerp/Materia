@@ -3,7 +3,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { t, resolveLanguage } from "../../utils/i18n.js";
 import { readAlerts, visibleAlerts } from "../../utils/weather-alerts.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * materia-alerts — weather warnings, read from an entity's `warnings`
@@ -29,7 +29,8 @@ class MateriaAlerts extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-alerts-editor");
   }
 

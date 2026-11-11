@@ -5,7 +5,7 @@ import { HeroShellMixin } from "../hero/shell.js";
 import { OptimisticMixin } from "../../utils/optimistic.js";
 import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * Select hero (materia-select-hero) — design 9c, "mode owns the panel", made
@@ -45,7 +45,8 @@ class MateriaSelectHero extends OptimisticMixin(DisabledMixin(HeroShellMixin(Act
 
   static styles = [styles, disabledConditionStyles];
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-select-hero-editor");
   }
 

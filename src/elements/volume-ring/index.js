@@ -7,7 +7,7 @@ import { motionTokens } from "../../utils/motion.js";
 import { mediaTokens } from "../../styles/media-styles.js";
 import { volumeRing, volumeRingStyles } from "./ring.js";
 import { attributeMapOf } from "../../utils/media-attributes.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * materia-volume-ring — a 48 px button showing the volume as a thin 270° arc
@@ -52,7 +52,8 @@ class MateriaVolumeRing extends SheetOpenerMixin(ActionMixin(LitElement)) {
     `,
   ];
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-volume-ring-editor");
   }
 

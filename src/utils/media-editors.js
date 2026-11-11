@@ -1,6 +1,7 @@
 import { LitElement, html, css, nothing } from "lit";
 import { computeLabel, sortableList } from "./editor-helpers.js";
 import { localize, t, tr } from "./i18n.js";
+import "./i18n-editor.js";
 import {
   DEFAULT_TOOLBAR,
   toolbarList,

@@ -4,7 +4,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import "../button/index.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /** Container heights / inner-corner / trailing-icon per size — matched to materia-button. */
 const HEIGHTS = { xs: 32, s: 40, m: 56, l: 96, xl: 136, default: 48, large: 56 };
@@ -20,7 +20,8 @@ class MateriaSplitButton extends DisabledMixin(ActionMixin(LitElement)) {
 
   static styles = [styles, disabledConditionStyles];
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-split-button-editor");
   }
 

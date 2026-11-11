@@ -4,7 +4,7 @@ import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.j
 import { OptimisticMixin } from "../../utils/optimistic.js";
 import { styles } from "./styles.js";
 import "../../primitives/slider.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * Generic level row (materia-level): a label, the current reading, and an M3
@@ -84,7 +84,8 @@ class MateriaLevel extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement)
 
   static styles = [styles, disabledConditionStyles];
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-level-editor");
   }
 

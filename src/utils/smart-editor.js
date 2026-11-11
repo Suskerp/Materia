@@ -2,6 +2,7 @@ import { LitElement, html, css } from "lit";
 import { effectiveEditorValue, isImplicitDefaultEvent } from "./editor-defaults.js";
 import { computeLabel } from "./editor-helpers.js";
 import { localize, resolveLanguage, t } from "./i18n.js";
+import "./i18n-editor.js";
 import { COLOR_GROUPS, COLOR_VALUES } from "./palette.js";
 
 /** Jinja2 template detection — mirrors the cards' own _isTemplate(). */

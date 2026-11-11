@@ -1,7 +1,7 @@
 import { LitElement, html, render } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 import "../menu-list/index.js";
 
 /**
@@ -30,7 +30,8 @@ class MateriaMenu extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-menu-editor");
   }
 

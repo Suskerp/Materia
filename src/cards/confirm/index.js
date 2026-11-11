@@ -5,7 +5,7 @@ import { t } from "../../utils/i18n.js";
 import { OptimismBus } from "../../utils/optimism-bus.js";
 import { styles } from "./styles.js";
 import "../../primitives/drag-confirm.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /** States that read as active for the common switch-ish domains. Same
  *  vocabulary materia-doorbell uses for its own truthiness, so two cards
@@ -63,7 +63,8 @@ class MateriaConfirm extends DisabledMixin(ActionMixin(LitElement)) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-confirm-editor");
   }
 

@@ -3,7 +3,7 @@ import { nextSource } from "../../utils/media.js";
 import { t } from "../../utils/i18n.js";
 import { MenuButton } from "../menu-list/index.js";
 import { sourceList, sourceMode } from "../menu-list/model.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * materia-media-source — the media header's source button. `mode: cycle`
@@ -13,7 +13,8 @@ import "./editor.js";
  * player has no source_list.
  */
 class MateriaMediaSource extends MenuButton {
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-media-source-editor");
   }
 

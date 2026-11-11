@@ -4,7 +4,7 @@ import { HeroShellMixin, heroShellStyles } from "./shell.js";
 import { OptimismBus } from "../../utils/optimism-bus.js";
 import { settledLockState, isLockBusy } from "../../utils/lock-state.js";
 import { t } from "../../utils/i18n.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /** Default "active" state per domain — the state that flips the hero to its
  *  accent pair and starts the burst turning. */
@@ -59,7 +59,8 @@ class MateriaHero extends HeroShellMixin(ActionMixin(LitElement)) {
 
   static styles = heroShellStyles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-hero-editor");
   }
 

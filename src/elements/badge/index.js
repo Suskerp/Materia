@@ -3,7 +3,7 @@ import { ActionMixin, HOLD_MS } from "../../utils/action-handler.js";
 import { unavailableStyles } from "../../styles/card-styles.js";
 import { t } from "../../utils/i18n.js";
 import { styles, VARIANT_COLORS } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /** Default "active" state(s) per entity domain. Mirrors materia-card DOMAIN_CONFIG. */
 const DOMAIN_ACTIVE_STATE = {
@@ -31,7 +31,8 @@ class MateriaBadge extends ActionMixin(LitElement) {
     _resolvedSecondary: { state: true },
   };
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-badge-editor");
   }
 

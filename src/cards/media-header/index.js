@@ -10,7 +10,7 @@ import "../../elements/menu/index.js";
 import "../../elements/media-source/index.js";
 import { menuRows, entityRows } from "../../elements/menu-list/model.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * materia-media-header — the top row of a player.
@@ -37,7 +37,8 @@ class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-media-header-editor");
   }
 

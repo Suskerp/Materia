@@ -3,7 +3,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin } from "../../utils/conditions.js";
 import { MOTION } from "../../utils/motion.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * Selectable tile cards (materia-cards): rows of tiles — icon top-left,
@@ -31,7 +31,8 @@ class MateriaCards extends DisabledMixin(ActionMixin(LitElement)) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-carousel-editor");
   }
 

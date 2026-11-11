@@ -15,7 +15,7 @@ import {
 } from "./media-groups.js";
 import "../button/index.js";
 import "../split-button/index.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /** A button entry that should render as a split button rather than a plain one. */
 const SPLIT_TYPES = new Set(["split", "split-button", "materia-split-button"]);
@@ -59,7 +59,8 @@ export class MateriaButtonGroup extends MediaGroupMixin(SheetOpenerMixin(Disable
     _resolvedColorOnActive: { state: true },
   };
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-button-group-editor");
   }
 

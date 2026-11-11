@@ -3,7 +3,7 @@ import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * Current-conditions hero: condition text, a huge temperature with a unit
@@ -20,7 +20,8 @@ class MateriaWeatherHero extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-weather-hero-editor");
   }
 

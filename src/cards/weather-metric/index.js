@@ -4,7 +4,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { cookiePath, arrowPath, moonPath, materialCookiePath, arcPath } from "../../utils/shapes.js";
 import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /** Compass point from bearing degrees (16-wind). */
 function compass(deg, hass) {
@@ -62,7 +62,8 @@ class MateriaWeatherMetric extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-weather-metric-editor");
   }
 

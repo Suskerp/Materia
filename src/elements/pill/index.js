@@ -2,7 +2,7 @@ import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { unavailableStyles } from "../../styles/card-styles.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 class MateriaPill extends ActionMixin(LitElement) {
   static properties = {
@@ -15,7 +15,8 @@ class MateriaPill extends ActionMixin(LitElement) {
     _resolvedStateDisplay: { state: true },
   };
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-pill-editor");
   }
 

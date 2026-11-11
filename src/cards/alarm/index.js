@@ -5,7 +5,7 @@ import { t } from "../../utils/i18n.js";
 import { OptimismBus } from "../../utils/optimism-bus.js";
 import { MOTION } from "../../utils/motion.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /** AlarmControlPanelEntityFeature, from HA core
  *  (homeassistant/components/alarm_control_panel/const.py). The modes a panel
@@ -182,7 +182,8 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-alarm-editor");
   }
 

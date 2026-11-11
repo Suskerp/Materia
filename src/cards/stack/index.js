@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing } from "lit";
 import { loadCardHelpers } from "../../styles/shared.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * materia-stack — cards in a row or a column that FILL the space they get.
@@ -46,7 +46,8 @@ class MateriaStack extends LitElement {
     }
   `;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-stack-editor");
   }
 

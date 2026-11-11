@@ -4,7 +4,7 @@ import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.j
 import { loadCardHelpers } from "../../styles/shared.js";
 import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * Disclosure container (materia-expander): a materia-switch row that opens.
@@ -47,7 +47,8 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
 
   static styles = [styles, disabledConditionStyles];
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-expander-editor");
   }
 

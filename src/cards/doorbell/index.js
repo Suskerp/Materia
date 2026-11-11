@@ -3,7 +3,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { materialCookiePath } from "../../utils/shapes.js";
 import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /* NOT the design's literal 12-scallop blob: the buzz shape is Materia's own
  * 9-lobe cookie — the exact silhouette materia-lock wears — so the two door
@@ -34,7 +34,8 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-doorbell-editor");
   }
 

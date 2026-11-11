@@ -7,7 +7,7 @@ fail silently.
 
 | | |
 |---|---|
-| Stack | Lit 3 + Rollup → one bundle, `dist/materia.js` |
+| Stack | Lit 3 + Rollup → `dist/materia.js` + a lazy editors chunk |
 | Distribution | HACS, from the GitHub repo `Suskerp/Materia` |
 | Size | 31 cards · 10 elements · 3 primitives · 14 utils · 92 registered elements |
 | Strings | 249 i18n keys (EN + Flemish `nl`) |
@@ -32,8 +32,9 @@ fail silently.
 
 ## 1. What Materia is
 
-A single-bundle collection of custom Lovelace cards, built with Lit 3 and bundled by
-Rollup into `dist/materia.js`, distributed through HACS.
+A collection of custom Lovelace cards, built with Lit 3 and bundled by Rollup into
+`dist/materia.js`, distributed through HACS. The visual editors ship apart, in
+`dist/materia-editors-<hash>.js`, loaded the first time a card editor opens.
 
 Its purpose is a coherent Material Design 3 Expressive dashboard. Before it, the
 dashboard was an accretion of third-party cards — `button-card`, `bubble-card`,
@@ -76,7 +77,9 @@ src/
   primitives/         slider.js · drag-confirm.js · calendar.js  (not cards; used by cards)
   utils/              14 shared modules — see below
   styles/             shared.js (font injection) · card-styles.js (shared fragments)
-dist/materia.js       the built bundle. THIS is what HACS ships.
+src/editors.js        the lazy entry: every editor.js plus utils/i18n-editor.js
+dist/materia.js       the built bundle. THIS is what HACS ships, with
+dist/materia-editors-<hash>.js   the editors chunk next to it (one, hashed)
 docs/                 this document
 ```
 
@@ -123,10 +126,13 @@ python3 scratchpad/csscheck.py src/cards/<touched>/styles.js
 npm run build ; echo "BUILD EXIT: $?"
 
 # 4. grep the bundle for the thing you just added. If it is not there, stop.
-grep -c "my_new_config_key" dist/materia.js
+#    Editor code and editor labels live in the hashed editors chunk, not materia.js.
+grep -c "my_new_config_key" dist/*.js
 
 # 5. commit with EXPLICIT PATHS. Never `git add -A` while an agent holds files.
-git add src/cards/<touched>/*.js src/utils/i18n.js package.json package-lock.json CHANGELOG.md dist/materia.js
+#    Stage the dist/ DIRECTORY: each build deletes the old materia-editors-<hash>.js
+#    and writes a new one, and `git add dist` stages both (a glob misses the delete).
+git add src/cards/<touched>/*.js src/utils/i18n.js package.json package-lock.json CHANGELOG.md dist
 git status --porcelain          # confirm nothing unexpected is staged
 git commit -F - <<'MSG' … MSG
 git tag -f v0.64.0 -m "v0.64.0"
@@ -142,7 +148,13 @@ ha_manage_hacs(action="download",           repository_id="Suskerp/Materia")
 
 # 7. verify what is actually SERVED, with gzip disabled
 curl -s -H 'Accept-Encoding: identity' http://<ha>/hacsfiles/Materia/materia.js | grep -o '0\.64\.0'
+#    and that the editors chunk it names is served too (a 404 here = no visual editor)
+curl -s -o /dev/null -w '%{http_code}\n' http://<ha>/hacsfiles/Materia/$(ls dist | grep materia-editors-)
 ```
+
+Do not attach release assets: when a release carries them, the Marketplace can install
+those instead of `dist/`, and an asset list without the editors chunk leaves every card
+without its visual editor.
 
 `npm run check:version` guards that the version sources agree. A tag was once pushed with the version
 un-bumped because an `&&` chain aborted at a failed syntax check before the `sed` ran.
@@ -294,7 +306,10 @@ class MateriaThing extends ActionMixin(LitElement) {
                         _resolvedLabel:{state:true} };   // one per templated field
   static styles = [unavailableStyles, styles];
 
-  static getConfigElement() { return document.createElement("materia-thing-editor"); }
+  static async getConfigElement() {           // editors are a lazy chunk: load it first
+    await loadEditors();                       // utils/load-editors.js; HA awaits this
+    return document.createElement("materia-thing-editor");
+  }
   static getStubConfig(hass) { /* what the picker drops in — be careful, see trap 12 */ }
 
   setConfig(config) { if (!config.entity) throw new Error("…"); this.config = {...defaults, ...config}; }
@@ -357,7 +372,12 @@ const label = this._isTemplate(this.config.label) ? this._resolvedLabel : this.c
 ## 6. Templates, i18n and copy
 
 Materia ships English and Flemish Dutch from one table in `src/utils/i18n.js`, read as
-`t(key, hass, vars)` using `hass.locale.language`.
+`t(key, hass, vars)` using `hass.locale.language`. Editor-only keys (`e_`, `ed_`, `f_`)
+live in `src/utils/i18n-editor.js`, which ships in the lazy editors chunk and merges into
+the same table when it loads. A key a card renders must stay in `i18n.js`: on a viewed
+dashboard the editor table never loads and `t()` prints the bare key.
+`test/i18n-editors.test.js` fails the build-check when a main-bundle module names a key
+that only the editor table has.
 
 > **The boundary, in the owner's words:** *"i18n is only for states and such. Text content
 > Home Assistant is not that great in."*
@@ -399,7 +419,7 @@ grep -rnE 't\([^)]*(\?|`|\+)' src --include=*.js | grep -v i18n.js
 - **Fix** — every release:
 
 ```bash
-grep -oE '^  [a-z][a-zA-Z0-9_]*:' src/utils/i18n.js | tr -d ' :' | sort | uniq -d
+grep -ohE '^  [a-z][a-zA-Z0-9_]*:' src/utils/i18n.js src/utils/i18n-editor.js | tr -d ' :' | sort | uniq -d
 ```
 
 #### Trap 10 — English states on a Dutch system
@@ -466,7 +486,7 @@ no error and cost the most time.
 git worktree add --detach /tmp/wt HEAD
 cp src/cards/mine/*.js /tmp/wt/src/cards/mine/
 cd /tmp/wt && ln -s /path/to/node_modules . && npm run build
-cp /tmp/wt/dist/materia.js ./dist/materia.js
+rm -f ./dist/materia-*.js && cp /tmp/wt/dist/*.js ./dist/
 git worktree remove --force /tmp/wt
 ```
 

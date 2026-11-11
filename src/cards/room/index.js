@@ -12,7 +12,7 @@ import { styles as cardStyles } from "../card/styles.js";
 import { styles as roomStyles } from "./styles.js";
 import { t } from "../../utils/i18n.js";
 import { motionTokens } from "../../utils/motion.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 class MateriaRoom extends MateriaCard {
   static properties = {
@@ -32,7 +32,8 @@ class MateriaRoom extends MateriaCard {
     roomStyles,
   ];
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-room-editor");
   }
 

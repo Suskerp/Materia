@@ -1,31 +1,56 @@
-import { readFile, stat } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
 
-const path = new URL("../dist/materia.js", import.meta.url);
-const source = await readFile(path);
+const dist = new URL("../dist/", import.meta.url);
 const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
-const { size } = await stat(path);
-const gzipSize = gzipSync(source).byteLength;
-// Raised from 1_050_000 / 260_000 for the expressive media family (0.72.0):
-// @material/material-color-utilities alone is ~127 KB raw / ~23 KB gzip, and
-// it is the one library that must not be replaced (art colours have to match
-// the Material You theme, which ships the same build).
-// 0.74.0: the composable media parts (volume, switcher, toggle chip, stack, tile grid,
-// power menu, media source, panel host) bring the bundle to ~300 KB gzip.
-// 0.75: every visual-editor label, helper and option lives in i18n.js with a
-// Dutch twin, plus the new visual editors (card list, panels, power rows):
-// ~329 KB gzip after the merge; the limit keeps ~5 KB headroom.
-// Schedule editor without YAML (one-moment card, list editors for steps,
-// quick picks, triggers, devices and plans, en + nl): ~336 KB gzip; the
-// limit keeps ~4 KB headroom.
-const limits = { size: 1_380_000, gzipSize: 345_000 };
 
-console.log(`Bundle: ${size} bytes (${gzipSize} bytes gzip).`);
-if (size > limits.size || gzipSize > limits.gzipSize) {
-  console.error(`Bundle exceeds budget (${limits.size} raw / ${limits.gzipSize} gzip).`);
-  process.exit(1);
+// History of the single-file budget, kept for context: 1_050_000 / 260_000,
+// raised for the expressive media family (0.72.0; material-color-utilities
+// alone is ~127 KB raw / ~23 KB gzip and must not be replaced), the composable
+// media parts (0.74.0, ~300 KB gzip), editor i18n with a Dutch twin plus the
+// card list / panels / power-row editors (0.75, ~329 KB gzip), and the schedule
+// editor without YAML (~336 KB gzip): last 1_380_000 / 345_000.
+//
+// The visual editors (and their editor-only strings) now load lazily from
+// materia-editors-<hash>.js, so a dashboard that is only viewed downloads the
+// main bundle alone. The main budget is what every page load pays; it sits
+// just above the main bundle at the split (~1.05 MB raw / ~261 KB gzip).
+const limits = {
+  main: { size: 1_065_000, gzipSize: 264_000 },
+  editors: { size: 320_000, gzipSize: 76_000 },
+};
+
+const files = (await readdir(dist)).filter((name) => /^materia(-.+)?\.js$/.test(name)).sort();
+const editorChunks = files.filter((name) => /^materia-editors-[\w-]+\.js$/.test(name));
+const unknown = files.filter((name) => name !== "materia.js" && !editorChunks.includes(name));
+let failed = false;
+const fail = (message) => {
+  console.error(message);
+  failed = true;
+};
+
+if (!files.includes("materia.js")) fail("dist/materia.js is missing.");
+if (editorChunks.length !== 1) fail(`Expected one dist/materia-editors-<hash>.js, found ${editorChunks.length}: ${editorChunks.join(", ") || "none"}.`);
+if (unknown.length) fail(`Unexpected bundle files in dist/ (stale or a new chunk): ${unknown.join(", ")}.`);
+
+async function measure(label, name, limit) {
+  const source = await readFile(new URL(name, dist));
+  const size = source.byteLength;
+  const gzipSize = gzipSync(source).byteLength;
+  console.log(`${label}: ${name} ${size} bytes (${gzipSize} bytes gzip); budget ${limit.size} / ${limit.gzipSize}.`);
+  if (size > limit.size || gzipSize > limit.gzipSize) fail(`${label} exceeds its budget.`);
+  return source;
 }
-if (!source.includes(Buffer.from(`v${packageJson.version}`))) {
-  console.error(`Built bundle does not contain package version ${packageJson.version}.`);
-  process.exit(1);
+
+if (files.includes("materia.js")) {
+  const main = await measure("Main bundle", "materia.js", limits.main);
+  if (!main.includes(Buffer.from(`v${packageJson.version}`))) {
+    fail(`Built bundle does not contain package version ${packageJson.version}.`);
+  }
+  for (const chunk of editorChunks) {
+    if (!main.includes(Buffer.from(`"./${chunk}"`))) fail(`materia.js does not import ./${chunk} (stale chunk?).`);
+  }
 }
+for (const chunk of editorChunks) await measure("Editors chunk", chunk, limits.editors);
+
+if (failed) process.exit(1);

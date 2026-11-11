@@ -4,7 +4,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
 import { readAlerts, worstActive } from "../../utils/weather-alerts.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 function compass(deg, hass) {
   const nl = hass?.locale?.language?.toLowerCase().startsWith("nl");
@@ -31,7 +31,8 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-weather-glance-editor");
   }
 

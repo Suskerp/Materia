@@ -2,7 +2,7 @@ import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * Generic toggle row (materia-switch): icon + name + secondary line + a spec
@@ -28,7 +28,8 @@ class MateriaSwitch extends DisabledMixin(ActionMixin(LitElement)) {
 
   static styles = [styles, disabledConditionStyles];
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-switch-editor");
   }
 

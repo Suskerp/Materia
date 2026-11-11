@@ -11,7 +11,7 @@ import {
   humidifierTarget,
 } from "./model.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 const KNOWN_MODE_KEYS = new Set(["auto", "away", "baby", "boost", "comfort", "eco", "home", "laundry", "normal", "sleep"]);
 
@@ -27,7 +27,8 @@ class MateriaHumidifier extends ActionMixin(LitElement) {
 
   static styles = [hostStyles, unavailableStyles, motionTokens, styles];
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-humidifier-editor");
   }
 

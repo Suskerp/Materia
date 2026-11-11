@@ -4,7 +4,7 @@ import { motionTokens } from "../../utils/motion.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 import { inputValue, serviceData } from "./model.js";
 
 
@@ -17,7 +17,8 @@ class MateriaTimeInput extends ActionMixin(LitElement) {
 
   static styles = [hostStyles, haCardReset, motionTokens, styles];
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-time-input-editor");
   }
 

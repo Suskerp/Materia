@@ -4,7 +4,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { hourlyItems } from "./row.js";
 import { moonPhaseFrac } from "../weather-tile/icons.js";
 import { styles } from "./styles.js";
-import "./editor.js";
+import { loadEditors } from "../../utils/load-editors.js";
 
 /**
  * Pixel-style hourly forecast strip: temp, colored glyph, precipitation
@@ -20,7 +20,8 @@ class MateriaForecastHourly extends ActionMixin(LitElement) {
 
   static styles = styles;
 
-  static getConfigElement() {
+  static async getConfigElement() {
+    await loadEditors();
     return document.createElement("materia-forecast-hourly-editor");
   }
 
