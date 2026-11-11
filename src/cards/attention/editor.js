@@ -40,7 +40,7 @@ const itemSchema = (hass, kind, when, entity = "", later = false) =>
             { value: "info", label: t("ed_att_level_info", hass) },
           ] } } },
           { name: "name", label: t("ed_att_name", hass), selector: { text: {} } },
-          { name: "secondary", label: t("ed_att_secondary", hass), selector: { text: {} } },
+          { name: "secondary", label: t("ed_att_secondary", hass), selector: { template: {} } },
           { name: "icon", selector: { icon: {} } },
           { name: "action_label", label: t("ed_att_action_label", hass), selector: { text: {} } },
           { name: "action", label: t("ed_att_action", hass), selector: { ui_action: { default_action: "none" } } },

@@ -23,6 +23,23 @@ function toArray(v) {
   return Array.isArray(v) ? v : v == null ? [] : [v];
 }
 
+/**
+ * The entities that make a condition list hold right now: the leaves
+ * (state / numeric_state) that are met, walking into and/or. A `not` says
+ * nothing about which entity is to blame, so it contributes none.
+ */
+export function triggeringEntities(conditions, hass) {
+  const out = [];
+  const walk = (c) => {
+    if (!c || typeof c !== "object") return;
+    const type = c.condition ?? "state";
+    if (type === "and" || type === "or") return toArray(c.conditions).forEach(walk);
+    if ((type === "state" || type === "numeric_state") && c.entity && met(c, hass) && !out.includes(c.entity)) out.push(c.entity);
+  };
+  toArray(conditions).forEach(walk);
+  return out;
+}
+
 function met(c, hass) {
   if (!c || typeof c !== "object") return false;
   switch (c.condition ?? "state") {

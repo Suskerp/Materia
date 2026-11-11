@@ -20,7 +20,8 @@ const limits = {
   // and +1 KB for its put-off copy (mode: later, shared rules, live sync).
   // and +1 KB for its rules' "for at least N minutes".
   // 0.76.12: +1 KB for the attention heading and the vacuum's "due now / 3 h left".
-  main: { size: 1_069_000, gzipSize: 266_000 },
+  // 0.76.14: +1 KB for the attention detail that names what triggered a rule.
+  main: { size: 1_070_000, gzipSize: 266_500 },
   editors: { size: 320_000, gzipSize: 76_000 },
 };
 

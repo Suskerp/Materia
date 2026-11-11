@@ -967,7 +967,7 @@ export const EDITOR_STRINGS = {
   ed_att_vacuum: { en: "Robot vacuum", nl: "Robotstofzuiger" },
   ed_att_brand: { en: "Brand", nl: "Merk" },
   ed_att_name: { en: "Text (empty = the entity's name; template allowed)", nl: "Tekst (leeg = naam van de entiteit; template mag)" },
-  ed_att_secondary: { en: "Detail (template allowed)", nl: "Detail (template mag)" },
+  ed_att_secondary: { en: "Detail (empty = what triggered it, with its value; template allowed)", nl: "Detail (leeg = wat het uitlokte, met de waarde; template mag)" },
   ed_att_level: { en: "How urgent", nl: "Hoe dringend" },
   ed_att_level_urgent: { en: "Urgent (red)", nl: "Dringend (rood)" },
   ed_att_level_warning: { en: "Soon (yellow)", nl: "Binnenkort (geel)" },

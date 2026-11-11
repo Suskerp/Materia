@@ -3,6 +3,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { t } from "../../utils/i18n.js";
 import { vacuumAlerts } from "../../utils/vacuum-status.js";
 import { activeItems } from "./model.js";
+import { triggeringEntities } from "../../utils/conditions.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
 import { DragScroll } from "../../utils/drag-scroll.js";
@@ -180,8 +181,18 @@ class MateriaAttention extends ActionMixin(LitElement) {
     if (item.key[0] !== "r") return field === "n" ? item.name : item.secondary;
     const raw = field === "n" ? item.name : item.secondary;
     const text = this._isTemplate(raw) ? this._tplResults?.[`${field}${item.index}`] ?? "" : raw;
-    // No text of its own: the entity's name, so entity + test is already a working rule.
-    return text || (field === "n" ? this.hass.states[item.entity]?.attributes?.friendly_name ?? "" : text);
+    if (text) return text;
+    // No text of its own. Name: the entity's name. Detail: what triggered it,
+    // its value for one entity ("12 %"), name and value for several
+    // ("Spots remote 18 % · Lamps remote 15 %").
+    if (field === "n") return this.hass.states[item.entity]?.attributes?.friendly_name ?? "";
+    const ids = triggeringEntities(item.conditions, this.hass);
+    const value = (id) => {
+      const st = this.hass.states[id];
+      return st ? this.hass.formatEntityState?.(st) ?? st.state : "";
+    };
+    if (ids.length === 1) return value(ids[0]);
+    return ids.map((id) => `${this.hass.states[id]?.attributes?.friendly_name ?? id} ${value(id)}`).join(" · ");
   }
 
   _tap(item) {

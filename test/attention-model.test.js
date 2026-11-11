@@ -48,3 +48,10 @@ test("errors_only keeps just the vacuum's red alerts", () => {
   const out = activeItems([{ type: "vacuum", entity: "vacuum.r", errors_only: true }], { states: {} }, fake);
   assert.deepEqual(out.map((i) => i.name), ["Stuck"]);
 });
+
+test("triggeringEntities lists only the met leaves", async () => {
+  const { triggeringEntities } = await import("../src/utils/conditions.js");
+  const hass = { states: { "sensor.a": { state: "15" }, "sensor.b": { state: "80" }, "sensor.c": { state: "5" } } };
+  const c = [{ condition: "or", conditions: ["sensor.a", "sensor.b", "sensor.c"].map((e) => ({ condition: "numeric_state", entity: e, below: 20 })) }];
+  assert.deepEqual(triggeringEntities(c, hass), ["sensor.a", "sensor.c"]);
+});
