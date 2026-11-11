@@ -7,11 +7,21 @@ import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
 import { inputValue, serviceData, CLEARED_DATETIME } from "./model.js";
 
-/** Now as a datetime-local value (YYYY-MM-DDTHH:MM): the earliest pickable moment. */
-const nowLocalInput = () => {
-  const d = new Date();
+const localInput = (d) => {
   const p = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+
+/** Now as a datetime-local value (YYYY-MM-DDTHH:MM): the earliest pickable moment. */
+const nowLocalInput = () => localInput(new Date());
+
+/** Where a "Not set" date-time's picker starts: the next full hour. It must be a
+ *  complete value: desktop Chrome's picker on an empty field fills in only the
+ *  date, leaving the time blank, so the pick never becomes a value. */
+const nextHourLocalInput = () => {
+  const d = new Date();
+  d.setHours(d.getHours() + 1, 0, 0, 0);
+  return localInput(d);
 };
 
 
@@ -145,7 +155,7 @@ class MateriaTimeInput extends ActionMixin(LitElement) {
           required
           step=${String(this.config.step ?? 60)}
           aria-label=${name}
-          .value=${this._passed ? "" : this._value}
+          .value=${this._passed ? nextHourLocalInput() : this._value}
           min=${this._kind === "datetime" ? nowLocalInput() : ""}
           ?disabled=${unavailable}
           @change=${this._setTime}

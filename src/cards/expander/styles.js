@@ -11,6 +11,15 @@ export const styles = [
   css`
     /* The row becomes a column: header on top, disclosed body underneath. The
        header keeps the padding the row used to own. */
+    /* No switch, no on/off: the plain card colour (transparent when nested). */
+    ha-card.row.plain {
+      background: var(--ha-card-background, var(--card-background-color));
+    }
+
+    ha-card.row.flat.plain {
+      background: transparent;
+    }
+
     ha-card.row.exp {
       flex-direction: column;
       align-items: stretch;

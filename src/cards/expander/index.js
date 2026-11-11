@@ -161,9 +161,6 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
     }
 
     const on = hasEntity && this._on;
-    // No entity means no off state — a plain drawer stays at full presence
-    // instead of borrowing the switch row's dimmed "off" tone.
-    const tone = hasEntity ? (on ? "on" : "off") : "on";
     const unavailable = hasEntity && this._isUnavailable(st);
     const name =
       (this._isTemplate(this.config.name) ? this._resolvedName : this.config.name) ||
@@ -190,6 +187,9 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
       : this.config.switch_color_on;
 
     const showSwitch = hasEntity && this.config.show_switch !== false;
+    // Only a row with a switch shows on/off tones. Without one it is a plain
+    // drawer in the card colour, like the navigation rows beside it.
+    const tone = showSwitch ? (on ? "on" : "off") : "plain";
     const hasBody = this._cardConfigs().length > 0;
     const open = hasBody && (this._isOpen || this._alwaysOpen);
     const foldable = hasBody && !this._alwaysOpen;
