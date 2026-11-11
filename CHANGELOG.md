@@ -8,6 +8,21 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.13 — 2026-11-11
+
+Card editors open reliably again.
+
+### Breaking changes
+None.
+
+### Fixed
+- **Editors no longer break when another add-on carries Materia editor parts.** A bundle that
+  registered its own copy of, for example, the colour picker made Materia's whole editors file
+  fail, so no Materia card could be edited visually. Parts that are already registered are now
+  skipped.
+- **An outdated page after an update says so:** when the editors file of an older version is
+  gone, the card editor asks you to reload the page instead of showing a module-loading error.
+
 ## 0.76.12 — 2026-11-11
 
 Clearer robot-vacuum items, and an optional heading for Needs attention.
