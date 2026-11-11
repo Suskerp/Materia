@@ -16,7 +16,7 @@ export class MateriaExpanderEditor extends SmartEditorBase {
    *  key arrives undefined, ha-form draws the switch off, and merely opening
    *  and saving the editor would silently write show_switch: false. */
   _formData() {
-    return { expanded: false, show_switch: true, flat: false, ...this._config };
+    return { collapsible: true, expanded: false, show_switch: true, flat: false, ...this._config };
   }
 
   /** The name field is only required while there is no entity to borrow a
@@ -57,6 +57,7 @@ export class MateriaExpanderEditor extends SmartEditorBase {
         icon: "mdi:arrow-expand-vertical",
         fields: [
           { name: "expanded", label: "e_open_by_defaul", selector: { boolean: {} } },
+          { name: "collapsible", label: "ed_expander_collapsible", selector: { boolean: {} } },
           {
             name: "show_switch",
             label: "e_show_switch_in",

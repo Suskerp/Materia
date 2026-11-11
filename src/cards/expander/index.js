@@ -119,8 +119,13 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
     return this._stateObj?.state === "on";
   }
 
+  /** `collapsible: false`: a grouped card whose cards always show (no chevron, no fold). */
+  get _alwaysOpen() {
+    return this.config?.collapsible === false;
+  }
+
   _toggleOpen() {
-    if (!this._cardConfigs().length) return;
+    if (!this._cardConfigs().length || this._alwaysOpen) return;
     this._open = !this._open;
     this._fireHaptic("light");
   }
@@ -177,7 +182,8 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
 
     const showSwitch = hasEntity && this.config.show_switch !== false;
     const hasBody = this._cardConfigs().length > 0;
-    const open = hasBody && this._open;
+    const open = hasBody && (this._open || this._alwaysOpen);
+    const foldable = hasBody && !this._alwaysOpen;
 
     return html`
       <ha-card
@@ -188,9 +194,9 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
           <button
             type="button"
             class="disclosure"
-            aria-expanded=${hasBody ? (open ? "true" : "false") : nothing}
-            aria-label=${hasBody ? `${name}: ${t(open ? "expander_collapse" : "expander_expand", this.hass)}` : name}
-            ?disabled=${!hasBody}
+            aria-expanded=${foldable ? (open ? "true" : "false") : nothing}
+            aria-label=${foldable ? `${name}: ${t(open ? "expander_collapse" : "expander_expand", this.hass)}` : name}
+            ?disabled=${!foldable}
             @click=${this._toggleOpen}
           >
             <ha-icon class="r-icon" .icon=${icon}></ha-icon>
@@ -198,9 +204,9 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
               <span class="r-name">${name}</span>
               ${secondary ? html`<span class="r-sub">${secondary}</span>` : ""}
             </span>
-            ${hasBody ? html`<ha-icon class="chev" .icon=${"mdi:chevron-down"}></ha-icon>` : nothing}
+            ${foldable ? html`<ha-icon class="chev" .icon=${"mdi:chevron-down"}></ha-icon>` : nothing}
           </button>
-          ${showSwitch && hasBody ? html`<span class="split" aria-hidden="true"></span>` : nothing}
+          ${showSwitch && foldable ? html`<span class="split" aria-hidden="true"></span>` : nothing}
           ${showSwitch
             ? html`<button
                 type="button"

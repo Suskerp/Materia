@@ -8,6 +8,19 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.4 — 2026-11-11
+
+### Breaking changes
+None.
+
+### Added
+- **Expander `collapsible: false`:** a grouped card whose cards always show, with no
+  chevron and no fold; the header keeps its live subtitle (e.g. a mode and an arrival
+  moment above a button group and a time row).
+
+### Fixed
+- **Expander hairline:** it has room on both sides now, instead of touching the switch.
+
 ## 0.76.3 — 2026-11-11
 
 Expandable switch rows that look expandable, and no colour flash on the media card.
