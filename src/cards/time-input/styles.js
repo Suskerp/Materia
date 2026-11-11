@@ -2,6 +2,7 @@ import { css } from "lit";
 
 export const styles = css`
   .field {
+    position: relative;
     box-sizing: border-box;
     min-height: 64px;
     width: 100%;
@@ -73,11 +74,16 @@ export const styles = css`
     background: color-mix(in srgb, currentColor 10%, transparent);
   }
 
+  /* Not set: the (invisible) input covers the whole row, so a tap lands on the
+     real field and every browser, Safari included, opens its own picker. */
   input.hidden {
     position: absolute;
-    width: 1px;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
     opacity: 0;
-    pointer-events: none;
+    cursor: pointer;
   }
 
   input:focus-visible {
