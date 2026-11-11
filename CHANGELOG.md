@@ -8,6 +8,21 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.17 — 2026-11-11
+
+A Needs-attention editor that shows what you're editing, and no flash on load.
+
+### Breaking changes
+None.
+
+### Added
+- **The editor preview shows the open rule,** whether or not it holds right now, and follows
+  your edits. A robot-vacuum item without alerts shows a sample item.
+
+### Fixed
+- **No flash on page load:** a card that uses "Later" waits for the put-off list before it
+  shows anything, so put-off items no longer appear for a moment on every load.
+
 ## 0.76.16 — 2026-11-11
 
 Clearer Needs-attention details.
