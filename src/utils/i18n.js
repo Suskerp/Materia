@@ -29,6 +29,7 @@
 export const STRINGS = {
   /* ---- shared across many cards ------------------------------------ */
   unavailable: { en: "Unavailable", nl: "Niet beschikbaar" },
+  editors_reload: { en: "Materia was updated. Reload the page (on a phone: pull down to refresh) to edit this card.", nl: "Materia werd bijgewerkt. Herlaad de pagina (op een telefoon: omlaag trekken) om deze kaart te bewerken." },
   cancel: { en: "Cancel", nl: "Annuleren" },
   confirm: { en: "Confirm", nl: "Bevestigen" },
   reset: { en: "Reset", nl: "Resetten" },

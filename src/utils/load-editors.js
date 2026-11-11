@@ -17,6 +17,8 @@
  */
 globalThis[Symbol.for("materia.entry-url")] = import.meta.url;
 
+import { t } from "./i18n.js";
+
 let pending = null;
 
 /** Resolves once every materia-*-editor element is defined. */
@@ -25,7 +27,9 @@ export function loadEditors() {
     // A failed fetch (offline, a release swapped mid-session) must not stick:
     // the next editor that opens tries again.
     pending = null;
-    throw error;
+    // Almost always: Materia was updated while this page was open, and the old
+    // editors file is gone. Say what to do instead of a module-loading error.
+    throw new Error(t("editors_reload", document.querySelector("home-assistant")?.hass));
   });
   return pending;
 }
