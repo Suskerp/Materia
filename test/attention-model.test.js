@@ -39,3 +39,12 @@ test("for_minutes: shows only once the entity has held its state that long", () 
   assert.equal(activeItems(rule(3), hass, () => [], now).length, 0);
   assert.equal(activeItems(rule(2), hass, () => [], now).length, 1);
 });
+
+test("errors_only keeps just the vacuum's red alerts", () => {
+  const fake = () => [
+    { text: "Stuck", severity: "error", icon: "mdi:x", entity: "sensor.err" },
+    { text: "Filter", severity: "warning", icon: "mdi:y", entity: "sensor.f" },
+  ];
+  const out = activeItems([{ type: "vacuum", entity: "vacuum.r", errors_only: true }], { states: {} }, fake);
+  assert.deepEqual(out.map((i) => i.name), ["Stuck"]);
+});

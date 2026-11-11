@@ -30,7 +30,10 @@ export function activeItems(items, hass, vacuumAlerts = () => [], now = Date.now
   (Array.isArray(items) ? items : []).forEach((item, index) => {
     if (!item || typeof item !== "object") return;
     if (item.type === "vacuum") {
-      vacuumAlerts(item.entity, item.brand).forEach((a, j) => {
+      // `errors_only`: just the red alerts; worn parts and tanks stay on the vacuum's own page.
+      vacuumAlerts(item.entity, item.brand)
+        .filter((a) => !item.errors_only || a.severity === "error")
+        .forEach((a, j) => {
         out.push({
           key: `v${index}-${j}`,
           index,

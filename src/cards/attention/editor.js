@@ -21,6 +21,7 @@ const itemSchema = (hass, kind, when, entity = "", later = false) =>
             { value: "roborock", label: "Roborock" },
             { value: "ecovacs", label: "Ecovacs" },
           ] } } },
+          { name: "errors_only", label: t("ed_att_errors_only", hass), selector: { boolean: {} } },
           { name: "later", label: t("ed_att_later", hass), selector: { boolean: {} } },
           ...(later ? [{ name: "later_hours", label: t("ed_att_later_hours_item", hass), selector: { number: { min: 1, max: 168, step: 1, mode: "box" } } }] : []),
         ]
