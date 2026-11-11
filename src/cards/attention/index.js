@@ -18,6 +18,9 @@ export const RULES = new Map();
  *  return to the view) start from it instead of from "nothing put off". */
 let laterCache = null;
 
+/** The editor's "this rule is open" signal: the card's editor preview shows that rule. */
+export const PREVIEW_EVENT = "materia-attention-preview";
+
 /**
  * materia-attention — "needs attention": a list of rules, shown only while
  * they hold, most urgent first. Hidden when nothing needs attention.
@@ -88,6 +91,18 @@ class MateriaAttention extends ActionMixin(LitElement) {
    *  still active. Everything put off: the main card hides and the later copy
    *  shows them instead. */
   get _items() {
+    // Editor preview with a rule open: show that rule, whether or not it holds.
+    if (this.preview && this._previewRule) {
+      const rules = this._rules;
+      const key = JSON.stringify(this._previewRule);
+      const index = rules.findIndex((r) => JSON.stringify(r) === key);
+      if (index >= 0) {
+        const rule = rules[index];
+        if (rule.type !== "vacuum")
+          return [{ ...rule, key: `r${index}`, index, level: ["urgent", "warning", "info"].includes(rule.level) ? rule.level : "warning" }];
+        return activeItems([rule], this.hass, (entity, brand) => vacuumAlerts(this.hass, entity, brand));
+      }
+    }
     // Until the put-off list is known, a card that uses it shows nothing,
     // or everything would flash up for a moment on every page load.
     if (this._usesLater && !this._later) return [];
@@ -149,6 +164,11 @@ class MateriaAttention extends ActionMixin(LitElement) {
       } else this.requestUpdate();
     };
     window.addEventListener(SYNC, this._onSync);
+    this._onPreview ??= (e) => {
+      this._previewRule = e.detail?.rule ?? null;
+      this.requestUpdate();
+    };
+    window.addEventListener(PREVIEW_EVENT, this._onPreview);
   }
 
   /** Re-render when the first hidden item is due back. */
@@ -163,6 +183,7 @@ class MateriaAttention extends ActionMixin(LitElement) {
     // Home Assistant takes a card that hid itself out of the page. Such a card
     // must keep listening, or it never hears that it should come back (the
     // put-off copy, the main card once something is shown again).
+    window.removeEventListener(PREVIEW_EVENT, this._onPreview);
     if (!this.hidden) {
       clearTimeout(this._laterTimer);
       clearTimeout(this._forTimer);

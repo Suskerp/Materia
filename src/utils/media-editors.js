@@ -120,6 +120,14 @@ class MateriaItemListEditor extends LitElement {
     fire(this, items);
   }
 
+  /** Tell the editor around us which item is open (null: none), e.g. to preview it. */
+  updated(changed) {
+    super.updated?.(changed);
+    if (changed.has("_expanded")) {
+      this.dispatchEvent(new CustomEvent("item-expanded", { detail: { index: this._expanded ?? null }, bubbles: true, composed: true }));
+    }
+  }
+
   _add() {
     const items = [...this._items, this.newItem ? this.newItem() : {}];
     this._expanded = items.length - 1;

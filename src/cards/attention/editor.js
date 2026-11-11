@@ -2,7 +2,7 @@ import { html } from "lit";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 import { t } from "../../utils/i18n.js";
 import { WHEN, needsValue, readWhen, writeWhen } from "./when.js";
-import { RULES } from "./index.js";
+import { RULES, PREVIEW_EVENT } from "./index.js";
 
 /* One schema per (language, kind, test), so ha-form keeps its controls across renders.
    A rule reads top to bottom as a sentence: watch this entity, show when it
@@ -102,6 +102,24 @@ class MateriaAttentionEditor extends SmartEditorBase {
     ];
   }
 
+  /** The preview shows the rule that is open in the editor, whether or not it holds right now. */
+  _previewItem(index) {
+    this._previewIndex = index;
+    const rule = index == null ? null : (this._config?.items ?? [])[index] ?? null;
+    window.dispatchEvent(new CustomEvent(PREVIEW_EVENT, { detail: { rule } }));
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.dispatchEvent(new CustomEvent(PREVIEW_EVENT, { detail: { rule: null } }));
+  }
+
+  /** Editing the open rule: the preview follows the edit. */
+  updated(changed) {
+    super.updated?.(changed);
+    if (changed.has("_config") && this._previewIndex != null) this._previewItem(this._previewIndex);
+  }
+
   _itemsField(value) {
     const h = this.hass;
     return html`<materia-item-list-editor
@@ -131,6 +149,7 @@ class MateriaAttentionEditor extends SmartEditorBase {
                 update(next);
               }}
             ></materia-conditions-field>`}
+      @item-expanded=${(e) => this._previewItem(e.detail.index)}
       addLabel=${t("ed_att_items", h)}
       @value-changed=${(e) => {
         e.stopPropagation();
