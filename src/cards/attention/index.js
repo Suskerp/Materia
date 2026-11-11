@@ -1,6 +1,5 @@
 import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
-import { SheetOpenerMixin } from "../../primitives/sheet.js";
 import { t } from "../../utils/i18n.js";
 import { vacuumAlerts } from "../../utils/vacuum-status.js";
 import { activeItems } from "./model.js";
@@ -14,9 +13,9 @@ const LATER_KEY = "materia_attention_later";
  * materia-attention — "needs attention": a list of rules, shown only while
  * they hold, most urgent first. Hidden when nothing needs attention.
  *
- *  - One item: the card is that item, with its quick action.
- *  - Several: one summary row (overlapping icons, a count, the names), tinted
- *    by the most urgent; a tap opens every item in a bottom sheet.
+ * A carousel: one roomy card per item, swiped sideways (or dragged with a
+ * mouse), the next peeking in; the dots underneath carry each item's level,
+ * so "one red, two yellow" reads without swiping. One item fills the card.
  *
  * Rules clear themselves: an item shows while its conditions (HA's card
  * condition editor) hold, so "water the plant" goes away when the soil is wet
@@ -26,18 +25,17 @@ const LATER_KEY = "materia_attention_later";
  *   items[]: name, secondary (both may be templates), icon,
  *            level (urgent | warning | info), conditions, entity (tap opens
  *            it), action + action_label (a quick-action button), tap_action
- *            or { type: vacuum, entity, brand }
- *   title:   summary text; "{n}" is the count
+ *            later + later_hours (a "Later" button: hidden for a while, per
+ *            person), or { type: vacuum, entity, brand }
+ *   later_hours: the card's default for Later (4)
  */
-class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
+class MateriaAttention extends ActionMixin(LitElement) {
   static properties = {
     hass: { attribute: false },
     config: { state: true },
     preview: { type: Boolean },
-    _open: { state: true },
     _later: { state: true },
     _page: { state: true },
-    _top: { state: true },
   };
 
   static styles = styles;
@@ -53,10 +51,6 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
 
   setConfig(config) {
     this.config = { items: [], ...config };
-  }
-
-  get _list() {
-    return this.config.display === "list";
   }
 
   get _items() {
@@ -119,12 +113,6 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
       this._resolveTemplateValue(`s${i}`, item?.secondary);
     });
     const count = this._items.length;
-    if (this._list) {
-      // The sheet's copy: when the last item clears, close the sheet.
-      if (count === 0 && this._hadItems) this.dispatchEvent(new Event("materia-dismiss", { bubbles: true, composed: true }));
-      this._hadItems = count > 0;
-      return;
-    }
     const hide = !this.preview && count === 0;
     if (hide !== this.hidden) {
       this.hidden = hide;
@@ -159,41 +147,17 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
     return item.reset ? t("reset", this.hass) : item.action ? item.action_label || t("attention_do", this.hass) : null;
   }
 
-  /** B: the most urgent item on top with room for its action and "Later"; the rest peek out below. */
-  _stack(all) {
-    // Tapping the cards underneath (or the count) brings the next one up.
-    const k = (this._top ?? 0) % all.length;
-    const items = [...all.slice(k), ...all.slice(0, k)];
-    const next = (e) => {
-      e.stopPropagation();
-      this._fireHaptic("light");
-      this._top = (k + 1) % all.length;
-    };
-    const top = items[0];
-    const label = this._label(top);
-    const secondary = this._text(top, "s");
-    return html`<ha-card><div class="pile">
-      ${items.slice(1, 3).map((i, n) => html`<button class="peek ${i.level}" style="--n:${n + 1}" aria-label=${t("attention_next", this.hass)} @click=${next}></button>`)}
-      <div class="item top ${top.level}">
-        <button class="main" @click=${() => this._tap(top)}>
-          <span class="badge"><ha-icon .icon=${top.icon || "mdi:alert-circle-outline"}></ha-icon></span>
-          <span class="body"><span class="name">${this._text(top, "n")}</span>${secondary ? html`<span class="detail">${secondary}</span>` : nothing}</span>
-        </button>
-        ${all.length > 1 ? html`<button class="count" aria-label=${t("attention_next", this.hass)} @click=${next}>${k + 1} / ${all.length}</button>` : nothing}
-        <div class="acts" ?hidden=${!label && !top.later}>
-          ${label ? html`<button class="act" @click=${(e) => this._quick(e, top)}>${label}</button>` : nothing}
-          ${top.later ? this._laterBtn(top) : nothing}
-        </div>
-      </div>
-    </div></ha-card>`;
-  }
-
   get _dragger() {
     return (this.__drag ??= new DragScroll({ snap: true }));
   }
 
-  /** C: one roomy card per item, swiped sideways; the dots carry the levels. */
-  _carousel(items) {
+  render() {
+    if (!this.hass || !this.config) return nothing;
+    const items = this._items;
+    if (!items.length)
+      return this.preview
+        ? html`<ha-card><div class="empty"><ha-icon icon="mdi:check-circle-outline"></ha-icon>${t("attention_none", this.hass)}</div></ha-card>`
+        : nothing;
     const page = Math.min(this._page ?? 0, items.length - 1);
     return html`<ha-card>
       <div class="pages" @pointerdown=${this._dragger.down} @pointermove=${this._dragger.move} @pointerup=${this._dragger.up} @pointercancel=${this._dragger.up} @scroll=${(e) => {
@@ -204,9 +168,9 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
         ${items.map((i) => {
           const label = this._label(i);
           const secondary = this._text(i, "s");
-          return html`<div class="page item ${i.level}" @click=${() => !this._dragger.didDrag() && this._tap(i)}>
-            <span class="badge round"><ha-icon .icon=${i.icon || "mdi:alert-circle-outline"}></ha-icon></span>
-            <span class="body"><span class="name big">${this._text(i, "n")}</span>${secondary ? html`<span class="detail">${secondary}</span>` : nothing}</span>
+          return html`<div class="page item ${i.level} ${items.length === 1 ? "only" : ""}" @click=${() => !this._dragger.didDrag() && this._tap(i)}>
+            <span class="badge"><ha-icon .icon=${i.icon || "mdi:alert-circle-outline"}></ha-icon></span>
+            <span class="body"><span class="name">${this._text(i, "n")}</span>${secondary ? html`<span class="detail">${secondary}</span>` : nothing}</span>
             <div class="acts">${label ? html`<button class="act" @click=${(e) => this._quick(e, i)}>${label}</button>` : nothing}${i.later ? this._laterBtn(i) : nothing}</div>
           </div>`;
         })}
@@ -214,67 +178,6 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
       ${items.length > 1
         ? html`<div class="dots" aria-hidden="true">${items.map((i, n) => html`<span class="pip ${i.level} ${n === page ? "on" : ""}"></span>`)}</div>`
         : nothing}
-    </ha-card>`;
-  }
-
-  _row(item) {
-    const name = this._text(item, "n");
-    const secondary = this._text(item, "s");
-    const label = this._label(item);
-    return html`<div class="item ${item.level}">
-      <button class="main" @click=${() => this._tap(item)}>
-        <span class="badge"><ha-icon .icon=${item.icon || "mdi:alert-circle-outline"}></ha-icon></span>
-        <span class="body">
-          <span class="name">${name}</span>
-          ${secondary ? html`<span class="detail">${secondary}</span>` : nothing}
-        </span>
-      </button>
-      ${item.later ? this._laterBtn(item) : nothing}
-      ${label ? html`<button class="act" @click=${(e) => this._quick(e, item)}>${label}</button>` : nothing}
-    </div>`;
-  }
-
-  _openList() {
-    this._fireHaptic("light");
-    // `open: inline` unfolds the list in the card itself instead of a sheet.
-    if (this.config.open === "inline") return (this._open = !this._open);
-    this._openSheet(this, { ...this.config, type: "custom:materia-attention", display: "list" }, t("attention_heading", this.hass));
-  }
-
-  render() {
-    if (!this.hass || !this.config) return nothing;
-    const items = this._items;
-    if (this._list) return html`<div class="list">${items.map((i) => this._row(i))}</div>`;
-    if (!items.length)
-      return this.preview
-        ? html`<ha-card><div class="empty"><ha-icon icon="mdi:check-circle-outline"></ha-icon>${t("attention_none", this.hass)}</div></ha-card>`
-        : nothing;
-    if (this.config.layout === "stack") return this._stack(items);
-    if (this.config.layout === "carousel") return this._carousel(items);
-    if (items.length === 1) return html`<ha-card>${this._row(items[0])}</ha-card>`;
-
-    const title = this.config.title
-      ? String(this.config.title).replace("{n}", items.length)
-      : t("attention_count", this.hass, { n: items.length });
-    if (this._open && this.config.open === "inline")
-      return html`<ha-card><div class="panel">
-        <button class="phead" aria-expanded="true" @click=${this._openList}>
-          <span class="name">${title}</span><ha-icon class="chev" icon="mdi:chevron-up"></ha-icon>
-        </button>
-        <div class="list">${items.map((i) => this._row(i))}</div>
-      </div></ha-card>`;
-    const inline = this.config.open === "inline";
-    return html`<ha-card>
-      <button class="summary ${items[0].level}" aria-haspopup=${inline ? nothing : "dialog"} aria-expanded=${inline ? "false" : nothing} @click=${this._openList}>
-        <span class="stack">
-          ${items.slice(0, 3).map((i, n) => html`<span class="dot ${i.level}" style="z-index:${3 - n}"><ha-icon .icon=${i.icon || "mdi:alert-circle-outline"}></ha-icon></span>`)}
-        </span>
-        <span class="body">
-          <span class="name">${title}</span>
-          <span class="detail">${items.map((i) => this._text(i, "n")).filter(Boolean).join(" · ")}</span>
-        </span>
-        <ha-icon class="chev" icon=${inline ? "mdi:chevron-down" : "mdi:chevron-right"}></ha-icon>
-      </button>
     </ha-card>`;
   }
 
@@ -293,6 +196,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "materia-attention",
   name: "Materia Needs attention",
-  description: "Rules that show only while they hold, most urgent first; one item in full, several as a summary that opens a sheet.",
+  description: "Rules that show only while they hold, most urgent first, as a carousel; hides itself when nothing needs attention.",
   preview: true,
 });

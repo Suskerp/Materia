@@ -5,6 +5,7 @@ import { hourlyItems } from "./row.js";
 import { moonPhaseFrac } from "../weather-tile/icons.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { DragScroll } from "../../utils/drag-scroll.js";
 
 /**
  * Pixel-style hourly forecast strip: temp, colored glyph, precipitation
@@ -103,30 +104,9 @@ class MateriaForecastHourly extends ActionMixin(LitElement) {
     this._fcEntity = undefined;
   }
 
-  /* Mouse drag-to-scroll (touch pans natively). */
-  _onPointerDown(e) {
-    if (e.pointerType !== "mouse") return;
-    const row = e.currentTarget;
-    this._dragStartX = e.clientX;
-    this._dragStartScroll = row.scrollLeft;
-    this._captured = false;
-    this._dragPointerId = e.pointerId;
-  }
-
-  _onPointerMove(e) {
-    if (this._dragStartX == null) return;
-    const dx = e.clientX - this._dragStartX;
-    if (!this._captured && Math.abs(dx) > 4) {
-      this._captured = true;
-      e.currentTarget.setPointerCapture(this._dragPointerId);
-    }
-    if (this._captured) e.currentTarget.scrollLeft = this._dragStartScroll - dx;
-  }
-
-  _onPointerUp(e) {
-    if (this._dragStartX == null) return;
-    e.currentTarget.releasePointerCapture?.(e.pointerId);
-    this._dragStartX = null;
+  /* Mouse drag-to-scroll (utils/drag-scroll.js; touch pans natively). */
+  get _drag() {
+    return (this.__drag ??= new DragScroll());
   }
 
   render() {
@@ -153,10 +133,10 @@ class MateriaForecastHourly extends ActionMixin(LitElement) {
           : ""}
         <div
           class="hours"
-          @pointerdown=${this._onPointerDown}
-          @pointermove=${this._onPointerMove}
-          @pointerup=${this._onPointerUp}
-          @pointercancel=${this._onPointerUp}
+          @pointerdown=${this._drag.down}
+          @pointermove=${this._drag.move}
+          @pointerup=${this._drag.up}
+          @pointercancel=${this._drag.up}
         >
           ${hourlyItems(hours, {
             locale,

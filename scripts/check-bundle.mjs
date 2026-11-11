@@ -16,8 +16,8 @@ const packageJson = JSON.parse(await readFile(new URL("../package.json", import.
 // main bundle alone. The main budget is what every page load pays; it sits
 // just above the main bundle at the split (~1.05 MB raw / ~261 KB gzip).
 const limits = {
-  // 0.76.11: +2 KB for the attention card's in-place list (last 1_065_000 / 264_000).
-  main: { size: 1_067_000, gzipSize: 264_500 },
+  // 0.76.11: +1 KB for the attention carousel's "Later" and the shared drag helper (last 1_065_000 / 264_000).
+  main: { size: 1_066_000, gzipSize: 264_500 },
   editors: { size: 320_000, gzipSize: 76_000 },
 };
 

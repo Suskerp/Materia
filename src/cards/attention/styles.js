@@ -7,10 +7,6 @@ export const styles = [
   haCardReset,
   motionTokens,
   css`
-    /* Colour ROLES, never raw mixes: error for urgent, Materia's custom
-       warning role for soon, surface roles for info. Each level sets a
-       container (the row), its text, a badge and the badge's glyph, so it is
-       legible in light and dark alike. */
     :host {
       --at-surface: var(--ha-card-background, var(--card-background-color, #1c1c1c));
     }
@@ -34,72 +30,57 @@ export const styles = [
       --on-b: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
     }
 
-    .list {
+    .pages {
       display: flex;
-      flex-direction: column;
       gap: 8px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      cursor: grab;
     }
-
-    .item,
-    .summary {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
+    .pages::-webkit-scrollbar {
+      display: none;
+    }
+    .item {
+      --row: color-mix(in srgb, var(--c) var(--mix, 50%), var(--at-surface));
+      flex: none;
+      width: 86%;
       min-height: 64px;
       box-sizing: border-box;
-      padding: 10px 12px 10px 10px;
-      border: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px;
       border-radius: 28px;
-      /* The row is the level's container softened toward the card, as in the
-         design: a tint you can live with on a home screen. Badge and button
-         keep the full-strength role. */
-      --row: color-mix(in srgb, var(--c) var(--mix, 50%), var(--at-surface));
       background: var(--row);
       color: var(--md-sys-color-on-surface, var(--primary-text-color));
-      font: inherit;
-      text-align: start;
-    }
-    .main,
-    .summary {
+      scroll-snap-align: start;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
-    .main {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 0;
-      border: 0;
-      background: none;
-      color: inherit;
-      font: inherit;
-      text-align: start;
+    .item.only {
+      width: 100%;
     }
-
     .badge {
-      flex: none;
       width: 44px;
       height: 44px;
       display: grid;
       place-items: center;
-      border-radius: 14px;
+      border-radius: 50%;
       background: var(--b);
       color: var(--on-b);
     }
-
     .body {
-      flex: 1;
-      min-width: 0;
       display: flex;
       flex-direction: column;
       gap: 2px;
+      min-width: 0;
+      max-width: 100%;
     }
     .name {
-      font-size: 15px;
-      line-height: 20px;
+      font-size: 18px;
+      line-height: 24px;
       font-weight: 600;
     }
     .detail {
@@ -110,9 +91,14 @@ export const styles = [
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-
+    .acts {
+      display: flex;
+      gap: 8px;
+    }
+    .acts:empty {
+      display: none;
+    }
     .act {
-      flex: none;
       height: 40px;
       padding: 0 18px;
       border: 0;
@@ -125,147 +111,12 @@ export const styles = [
       cursor: pointer;
       transition: border-radius var(--md-sys-motion-expressive-fast-spatial, 200ms);
     }
-    .act:active,
-    .summary:active {
+    .act:active {
       border-radius: 12px;
-    }
-
-    .stack {
-      flex: none;
-      display: flex;
-      padding-inline-end: 4px;
-    }
-    .dot {
-      width: 36px;
-      height: 36px;
-      display: grid;
-      place-items: center;
-      border-radius: 50%;
-      background: var(--b);
-      color: var(--on-b);
-      box-shadow: 0 0 0 2px var(--ring);
-      --mdc-icon-size: 20px;
-    }
-    .summary {
-      --ring: var(--row);
-    }
-    .dot + .dot {
-      margin-inline-start: -10px;
-    }
-    .dot {
-      position: relative;
-    }
-    .chev {
-      flex: none;
-      opacity: 0.7;
-    }
-
-    .panel {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 8px 12px 12px;
-      border-radius: 28px;
-      background: var(--md-sys-color-surface-container-high, var(--at-surface));
-    }
-    .phead {
-      display: flex;
-      align-items: center;
-      min-height: 40px;
-      padding: 0 4px;
-      border: 0;
-      background: none;
-      color: inherit;
-      font: inherit;
-      text-align: start;
-      cursor: pointer;
-    }
-    .phead .name {
-      flex: 1;
-    }
-    .panel .item {
-      --row: var(--md-sys-color-surface-container-low, var(--at-surface));
-    }
-    .panel .act {
-      background: var(--md-sys-color-surface-container-highest, rgba(127, 127, 127, 0.3));
-      color: var(--md-sys-color-on-surface, var(--primary-text-color));
-    }
-
-    .pile {
-      position: relative;
-      padding-bottom: 14px;
-    }
-    .peek {
-      border: 0;
-      padding: 0;
-      cursor: pointer;
-      position: absolute;
-      left: calc(var(--n) * 10px);
-      right: calc(var(--n) * 10px);
-      bottom: calc(14px - var(--n) * 7px);
-      height: 40px;
-      border-radius: 0 0 24px 24px;
-      background: color-mix(in srgb, var(--c) 35%, var(--at-surface));
-      z-index: calc(3 - var(--n));
-    }
-    .item.top {
-      position: relative;
-      z-index: 3;
-      flex-wrap: wrap;
-      padding: 14px;
-    }
-    .count {
-      flex: none;
-      border: 0;
-      color: inherit;
-      font: inherit;
-      cursor: pointer;
-      padding: 4px 10px;
-      border-radius: 12px;
-      background: color-mix(in srgb, var(--md-sys-color-on-surface, #fff) 10%, transparent);
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .acts {
-      display: flex;
-      gap: 8px;
-      width: 100%;
-    }
-    .acts .act {
-      flex: 1;
-      height: 44px;
     }
     .act.later {
       background: color-mix(in srgb, var(--md-sys-color-on-surface, #fff) 10%, transparent);
       color: inherit;
-    }
-    .pages {
-      display: flex;
-      cursor: grab;
-      gap: 8px;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      scrollbar-width: none;
-    }
-    .pages::-webkit-scrollbar {
-      display: none;
-    }
-    .page {
-      flex: none;
-      width: 86%;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 16px;
-      scroll-snap-align: start;
-      cursor: pointer;
-    }
-    .badge.round {
-      border-radius: 50%;
-    }
-    .name.big {
-      font-size: 18px;
-      line-height: 24px;
     }
     .dots {
       display: flex;
@@ -285,7 +136,6 @@ export const styles = [
       width: 18px;
       opacity: 1;
     }
-
     .empty {
       display: flex;
       align-items: center;

@@ -54,17 +54,7 @@ class MateriaAttentionEditor extends SmartEditorBase {
         title: "e_content",
         icon: "mdi:bell-badge-outline",
         fields: [
-          { name: "title", label: "ed_att_title", selector: { text: {} } },
-          { name: "layout", label: "ed_att_layout", selector: { select: { mode: "dropdown", options: [
-            { value: "summary", label: "ed_att_layout_summary" },
-            { value: "stack", label: "ed_att_layout_stack" },
-            { value: "carousel", label: "ed_att_layout_carousel" },
-          ] } } },
           { name: "later_hours", label: "ed_att_later_hours", selector: { number: { min: 1, max: 48, step: 1, mode: "box" } } },
-          { name: "open", label: "ed_att_open", selector: { select: { mode: "dropdown", options: [
-            { value: "sheet", label: "ed_att_open_sheet" },
-            { value: "inline", label: "ed_att_open_inline" },
-          ] } } },
         ],
       },
       {
