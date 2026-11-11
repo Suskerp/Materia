@@ -19,7 +19,8 @@ const limits = {
   // 0.76.11: +1 KB for the attention carousel's "Later" and the shared drag helper (last 1_065_000 / 264_000).
   // and +1 KB for its put-off copy (mode: later, shared rules, live sync).
   // and +1 KB for its rules' "for at least N minutes".
-  main: { size: 1_068_000, gzipSize: 265_500 },
+  // 0.76.12: +1 KB for the attention heading and the vacuum's "due now / 3 h left".
+  main: { size: 1_069_000, gzipSize: 266_000 },
   editors: { size: 320_000, gzipSize: 76_000 },
 };
 

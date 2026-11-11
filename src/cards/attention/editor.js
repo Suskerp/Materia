@@ -86,6 +86,7 @@ class MateriaAttentionEditor extends SmartEditorBase {
           ...(later
             ? [{ name: "rules_from", label: "ed_att_rules_from", helper: "ed_att_rules_from_help", selector: { select: { mode: "dropdown", custom_value: true, options: [...RULES.keys()] } } }]
             : [
+                { name: "heading", label: "ed_att_heading", helper: "ed_att_heading_help", selector: { text: {} } },
                 { name: "id", label: "ed_att_id", helper: "ed_att_id_help", selector: { text: {} } },
                 { name: "later_hours", label: "ed_att_later_hours", selector: { number: { min: 1, max: 168, step: 1, mode: "box" } } },
               ]),

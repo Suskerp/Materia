@@ -32,6 +32,8 @@ export const RULES = new Map();
  *            later + later_hours (a "Later" button: hidden for a while, per
  *            person), or { type: vacuum, entity, brand }
  *   later_hours: the card's default for Later (24, a day)
+ *   heading:     optional title above the carousel ("{n}" = the count), shown
+ *                and hidden together with the card
  *   id:          a name, so a second copy can use these rules
  *   Put-off items stay at the end of the carousel, in neutral colours with
  *   "Show now", as long as anything is still active.
@@ -224,7 +226,10 @@ class MateriaAttention extends ActionMixin(LitElement) {
         ? html`<ha-card><div class="empty"><ha-icon icon="mdi:check-circle-outline"></ha-icon>${t("attention_none", this.hass)}</div></ha-card>`
         : nothing;
     const page = Math.min(this._page ?? 0, items.length - 1);
+    // An optional heading lives inside the card, so it disappears with it.
+    const heading = this.config.heading ? String(this.config.heading).replace("{n}", items.length) : "";
     return html`<ha-card>
+      ${heading ? html`<div class="heading">${heading}</div>` : nothing}
       <div class="pages" @pointerdown=${this._dragger.down} @pointermove=${this._dragger.move} @pointerup=${this._dragger.up} @pointercancel=${this._dragger.up} @scroll=${(e) => {
         const el = e.currentTarget;
         const p = Math.round(el.scrollLeft / (el.firstElementChild?.offsetWidth + 8 || 1));

@@ -44,6 +44,13 @@ export const styles = [
       --on-b: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
     }
 
+    .heading {
+      padding: 8px 4px 10px;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      opacity: 0.85;
+    }
     .pages {
       display: flex;
       gap: 8px;

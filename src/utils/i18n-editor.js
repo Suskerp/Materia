@@ -953,6 +953,8 @@ export const EDITOR_STRINGS = {
   ed_att_mode: { en: "Shows", nl: "Toont" },
   ed_att_mode_now: { en: "What needs attention now", nl: "Wat nu aandacht vraagt" },
   ed_att_mode_later: { en: "Only put-off items (a second copy, lower on the page)", nl: "Enkel uitgestelde items (een tweede kopie, lager op de pagina)" },
+  ed_att_heading: { en: "Heading (optional)", nl: "Titel (optioneel)" },
+  ed_att_heading_help: { en: "Shown above the items and hidden together with the card. {n} is the number of items.", nl: "Staat boven de items en verdwijnt samen met de kaart. {n} is het aantal items." },
   ed_att_id: { en: "Card name (optional)", nl: "Naam van de kaart (optioneel)" },
   ed_att_id_help: { en: "Give it a name to place a second copy lower on the page that takes over when everything here has been put off.", nl: "Geef een naam om lager op de pagina een tweede kopie te plaatsen die overneemt wanneer alles hier uitgesteld is." },
   ed_att_rules_from: { en: "Use the rules of", nl: "Gebruik de regels van" },
