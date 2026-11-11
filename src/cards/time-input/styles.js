@@ -47,6 +47,39 @@ export const styles = css`
     min-width: 0;
   }
 
+  /* A passed date-time: "Not set" in its place; the input stays (invisible)
+     so a tap still opens the picker. */
+  .unset {
+    flex: none !important;
+    font-size: 15px !important;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
+  }
+  .clear {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    margin-inline-end: -8px;
+    border: 0;
+    border-radius: 20px;
+    background: transparent;
+    color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    --mdc-icon-size: 20px;
+  }
+  .clear:hover {
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  input.hidden {
+    position: absolute;
+    width: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
   input:focus-visible {
     outline: 2px solid var(--md-sys-color-primary, var(--primary-color));
     outline-offset: 4px;

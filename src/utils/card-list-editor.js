@@ -21,9 +21,21 @@ export function ensureHuiEditors() {
   if (customElements.get("hui-card-element-editor") && customElements.get("hui-card-picker")) return Promise.resolve();
   huiLoad ??= (async () => {
     const helpers = await loadCardHelpers();
-    const stack = await helpers.createCardElement({ type: "vertical-stack", cards: [] });
-    await stack.constructor.getConfigElement();
+    // createCardElement can hand back the element before its lazy chunk has
+    // upgraded it (a bare HTMLElement without getConfigElement); wait for the
+    // class itself and ask IT, so the editors always end up loaded.
+    helpers.createCardElement({ type: "vertical-stack", cards: [] });
+    const Stack = await Promise.race([
+      customElements.whenDefined("hui-vertical-stack-card"),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 15000)),
+    ]);
+    await Stack.getConfigElement();
+    await Promise.all([
+      customElements.whenDefined("hui-card-picker"),
+      customElements.whenDefined("hui-card-element-editor"),
+    ]);
   })().catch(() => {
+    // Let the next editor that opens try again instead of hanging on "Loading".
     huiLoad = null;
   });
   return huiLoad;
@@ -116,7 +128,15 @@ class HuiHost extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    if (!this._ready) ensureHuiEditors().then(() => (this._ready = !!customElements.get("hui-card-picker")));
+    if (!this._ready) this._load();
+  }
+
+  /** Load HA's editors; if that fails, try again a moment later (never stay on "Loading"). */
+  _load(attempt = 0) {
+    ensureHuiEditors().then(() => {
+      this._ready = !!customElements.get("hui-card-picker") && !!customElements.get("hui-card-element-editor");
+      if (!this._ready && attempt < 5 && this.isConnected) setTimeout(() => this._load(attempt + 1), 1000);
+    });
   }
 
   _picker(onPick) {

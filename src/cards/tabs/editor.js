@@ -1,7 +1,7 @@
 import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
-import { loadCardHelpers } from "../../styles/shared.js";
+import { ensureHuiEditors } from "../../utils/card-list-editor.js";
 import { localize, t } from "../../utils/i18n.js";
 
 class MateriaTabsEditor extends SmartEditorBase {
@@ -101,9 +101,7 @@ class MateriaTabsEditor extends SmartEditorBase {
    *  requesting a stack card's config element pulls them in. */
   async _loadHuiElements() {
     if (customElements.get("hui-card-element-editor") && customElements.get("hui-card-picker")) return;
-    const helpers = await loadCardHelpers();
-    const stack = await helpers.createCardElement({ type: "vertical-stack", cards: [] });
-    await stack.constructor.getConfigElement();
+    await ensureHuiEditors();
     this.requestUpdate();
   }
 

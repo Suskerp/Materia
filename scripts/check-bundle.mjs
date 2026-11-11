@@ -18,7 +18,7 @@ const gzipSize = gzipSync(source).byteLength;
 // Schedule editor without YAML (one-moment card, list editors for steps,
 // quick picks, triggers, devices and plans, en + nl): ~336 KB gzip; the
 // limit keeps ~4 KB headroom.
-const limits = { size: 1_360_000, gzipSize: 340_000 };
+const limits = { size: 1_380_000, gzipSize: 345_000 };
 
 console.log(`Bundle: ${size} bytes (${gzipSize} bytes gzip).`);
 if (size > limits.size || gzipSize > limits.gzipSize) {

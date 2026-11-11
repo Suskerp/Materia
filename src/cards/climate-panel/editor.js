@@ -1,7 +1,7 @@
 import { html, nothing } from "lit";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 import { localize, t, tr } from "../../utils/i18n.js";
-import { loadCardHelpers } from "../../styles/shared.js";
+import { ensureHuiEditors } from "../../utils/card-list-editor.js";
 
 const ROW =
   "display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;" +
@@ -34,13 +34,7 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
       this._huiReady = true;
       return;
     }
-    try {
-      const helpers = await loadCardHelpers();
-      const stack = await helpers.createCardElement({ type: "vertical-stack", cards: [] });
-      await stack?.constructor?.getConfigElement?.();
-    } catch {
-      /* picker unavailable — the YAML fallback below still works */
-    }
+    await ensureHuiEditors();
     this._huiReady = !!customElements.get("hui-card-picker");
   }
 

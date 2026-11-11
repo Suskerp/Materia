@@ -1212,6 +1212,7 @@ export const STRINGS = {
   alerts_level_orange: { en: "Orange warning", nl: "Code oranje" },
   alerts_level_red: { en: "Red warning", nl: "Code rood" },
   ed_expander_collapsible: { en: "Can be folded (off: its cards always show)", nl: "Inklapbaar (uit: de kaarten zijn altijd zichtbaar)" },
+  ed_time_clearable: { en: "Clear button for a date & time", nl: "Wisknop voor een datum en tijd" },
   alerts_short_yellow: { en: "Yellow", nl: "Geel" },
   alerts_short_orange: { en: "Orange", nl: "Oranje" },
   alerts_short_red: { en: "Red", nl: "Rood" },

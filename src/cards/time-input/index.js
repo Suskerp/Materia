@@ -2,6 +2,7 @@ import { LitElement, html } from "lit";
 import { hostStyles, haCardReset } from "../../styles/card-styles.js";
 import { motionTokens } from "../../utils/motion.js";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
 import "./editor.js";
 import { inputValue, serviceData } from "./model.js";
@@ -59,6 +60,13 @@ class MateriaTimeInput extends ActionMixin(LitElement) {
     return this._pending || this._liveValue;
   }
 
+  /** A date-time already in the past reads as "nothing set" (e.g. an arrival that happened). */
+  get _passed() {
+    if (this._pending || this._kind !== "datetime" || !this._liveValue) return false;
+    const t = new Date(this._liveValue).getTime();
+    return Number.isFinite(t) && t < Date.now();
+  }
+
   _showPicker(event) {
     const input = event.currentTarget.querySelector("input");
     if (!input || event.composedPath().includes(input)) return;
@@ -88,6 +96,21 @@ class MateriaTimeInput extends ActionMixin(LitElement) {
     }
   }
 
+  /** Clear a date-time: set it to now, so it reads as passed ("Not set"). */
+  async _clear(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this._fireHaptic?.("light");
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, "0");
+    await this._callService(
+      "input_datetime",
+      "set_datetime",
+      { datetime: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:00` },
+      { entity_id: this.config.entity }
+    );
+  }
+
   disconnectedCallback() {
     super.disconnectedCallback();
     clearTimeout(this._pendingTimer);
@@ -101,8 +124,9 @@ class MateriaTimeInput extends ActionMixin(LitElement) {
     return html`<ha-card>
       <label class="field ${unavailable ? "unavailable" : ""}" @click=${this._showPicker}>
         <span>${name}</span>
+        ${this._passed ? html`<span class="unset">${t("sched_not_set", this.hass)}</span>` : ""}
         <input
-          class=${this._kind}
+          class="${this._kind} ${this._passed ? "hidden" : ""}"
           type=${{ datetime: "datetime-local", date: "date", time: "time" }[this._kind]}
           required
           step=${String(this.config.step ?? 60)}
@@ -111,6 +135,9 @@ class MateriaTimeInput extends ActionMixin(LitElement) {
           ?disabled=${unavailable}
           @change=${this._setTime}
         />
+        ${this._kind === "datetime" && this.config.clearable !== false && this._liveValue && !this._passed && !this._pending
+          ? html`<button class="clear" type="button" aria-label=${t("sched_clear", this.hass)} @click=${this._clear}><ha-icon icon="mdi:close"></ha-icon></button>`
+          : ""}
       </label>
     </ha-card>`;
   }
