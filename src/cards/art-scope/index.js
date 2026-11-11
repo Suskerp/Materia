@@ -6,6 +6,7 @@ import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
 
 import { kioskTracks, scopeGridColumns } from "./layout.js";
+import { demoInitial, demoReduce, stationsIn } from "./demo.js";
 
 /** Last palette per player in localStorage: only the token map, never the image. */
 function readPaletteCache(key) {
@@ -96,6 +97,8 @@ class MateriaArtScope extends PanelHostMixin(LitElement) {
     if (!config.entity) throw new Error("entity is required");
     if (!Array.isArray(config.cards)) throw new Error("cards is required");
     this.config = { layout: "stack", gap: 16, background: true, panel_timeout: 10, ...config };
+    this._demoStations = null;
+    if (!config.demo) this._demoState = null;
     const sig = JSON.stringify([config.entity, config.cards]);
     if (this.__cardsSig !== sig) {
       this.__cardsSig = sig;
@@ -127,7 +130,7 @@ class MateriaArtScope extends PanelHostMixin(LitElement) {
     const els = await Promise.all(
       this.config.cards.map(async (c) => {
         const el = await helpers.createCardElement(inheritScopeEntity(c, this.config.entity));
-        if (this.hass) el.hass = this.hass;
+        if (this.hass) el.hass = this._scopeHass;
         return el;
       })
     );
@@ -218,14 +221,47 @@ class MateriaArtScope extends PanelHostMixin(LitElement) {
     super.updated(changed);
     this._observeKiosk();
     this._announceLayout();
-    if (changed.has("hass") && this.hass) {
-      if (this._cards) for (const el of this._cards) el.hass = this.hass;
-      this._palette();
-    }
+    if (changed.has("hass") && this.hass) this._pushHass();
+  }
+
+  /* ------------------------------------------------------------- demo mode */
+
+  /**
+   * What the cards inside see. Normally hass itself; with `demo: true` a copy
+   * whose player is a pretend state and whose callService changes that state
+   * instead of reaching Home Assistant (see demo.js). Cached per real hass and
+   * demo state, so children only re-render when either changes.
+   */
+  get _scopeHass() {
+    if (!this.config?.demo || !this.hass) return this.hass;
+    const entity = this.config.entity;
+    this._demoStations ??= stationsIn(this.config.cards);
+    this._demoState ??= demoInitial(entity, this.hass.states[entity], this._demoStations);
+    if (this._demoHass?.base === this.hass && this._demoHass.state === this._demoState) return this._demoHass.hass;
+    const hass = {
+      ...this.hass,
+      states: { ...this.hass.states, [entity]: this._demoState },
+      callService: (domain, service, data = {}) => {
+        const next = demoReduce(this._demoState, domain, service, data, this._demoStations);
+        if (next !== this._demoState) {
+          this._demoState = { ...next, last_changed: new Date().toISOString() };
+          this._pushHass();
+        }
+        return Promise.resolve({});
+      },
+    };
+    this._demoHass = { base: this.hass, state: this._demoState, hass };
+    return hass;
+  }
+
+  _pushHass() {
+    const hass = this._scopeHass;
+    if (this._cards) for (const el of this._cards) el.hass = hass;
+    this._palette();
   }
 
   _palette() {
-    const url = artUrl(this.hass.states[this.config.entity]);
+    const url = artUrl(this._scopeHass.states[this.config.entity]);
     const dark = this.hass.themes?.darkMode ?? window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
     const settings = themeSettings(this.hass);
     const key = `${url}|${dark}|${JSON.stringify(settings)}`;

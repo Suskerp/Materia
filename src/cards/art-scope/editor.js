@@ -31,6 +31,12 @@ class MateriaArtScopeEditor extends MateriaExpanderEditor {
             required: true,
             selector: { entity: { domain: "media_player" } },
           },
+          {
+            name: "demo",
+            label: "e_scope_demo",
+            helper: "e_scope_demo_help",
+            selector: { boolean: {} },
+          },
         ],
       },
       {

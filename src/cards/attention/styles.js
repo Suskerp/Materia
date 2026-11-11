@@ -2,20 +2,36 @@ import { css } from "lit";
 import { hostStyles, haCardReset } from "../../styles/card-styles.js";
 import { motionTokens } from "../../utils/motion.js";
 
-/* Levels: the tone fills the badge; the row is a tonal container mixed from
-   it (as materia-alerts does), so text stays on-surface in light and dark.
-   info has no tone of its own: a neutral row, the badge in surface colours. */
 export const styles = [
   hostStyles,
   haCardReset,
   motionTokens,
   css`
+    /* Colour ROLES, never raw mixes: error for urgent, Materia's custom
+       warning role for soon, surface roles for info. Each level sets a
+       container (the row), its text, a badge and the badge's glyph, so it is
+       legible in light and dark alike. */
     :host {
-      --at-urgent: var(--materia-attention-urgent, var(--md-sys-color-error, #e5484d));
-      --at-warning: var(--materia-attention-warning, #f2c94c);
-      --at-info: var(--md-sys-color-surface-container-highest, rgba(127, 127, 127, 0.3));
       --at-surface: var(--ha-card-background, var(--card-background-color, #1c1c1c));
-      --at-on: var(--md-sys-color-on-surface, var(--primary-text-color));
+    }
+    .urgent {
+      --mix: 65%;
+      --c: var(--md-sys-cust-color-error-container, var(--md-sys-color-error-container, #ffdad6));
+      --on-c: var(--md-sys-cust-color-on-error-container, var(--md-sys-color-on-error-container, #410002));
+      --b: var(--md-sys-color-error, #ba1a1a);
+      --on-b: var(--md-sys-color-on-error, #fff);
+    }
+    .warning {
+      --c: var(--md-sys-cust-color-warning-container, #feefca);
+      --on-c: var(--md-sys-cust-color-on-warning-container, #745d00);
+      --b: var(--md-sys-cust-color-warning, #d9a000);
+      --on-b: var(--md-sys-cust-color-on-warning, #4a3a00);
+    }
+    .info {
+      --c: var(--md-sys-color-surface-container-high, rgba(127, 127, 127, 0.16));
+      --on-c: var(--md-sys-color-on-surface, var(--primary-text-color));
+      --b: var(--md-sys-color-secondary-container, rgba(127, 127, 127, 0.3));
+      --on-b: var(--md-sys-color-on-secondary-container, var(--primary-text-color));
     }
 
     .list {
@@ -26,7 +42,6 @@ export const styles = [
 
     .item,
     .summary {
-      --tone: var(--at-warning);
       display: flex;
       align-items: center;
       gap: 8px;
@@ -35,22 +50,15 @@ export const styles = [
       padding: 10px 12px 10px 10px;
       border: 0;
       border-radius: 28px;
-      background: color-mix(in srgb, var(--tone) 20%, var(--at-surface));
-      color: var(--at-on);
+      /* The row is the level's container softened toward the card, as in the
+         design: a tint you can live with on a home screen. Badge and button
+         keep the full-strength role. */
+      --row: color-mix(in srgb, var(--c) var(--mix, 50%), var(--at-surface));
+      background: var(--row);
+      color: var(--md-sys-color-on-surface, var(--primary-text-color));
       font: inherit;
       text-align: start;
     }
-    .urgent {
-      --tone: var(--at-urgent);
-    }
-    .info {
-      --tone: var(--at-info);
-    }
-    .item.info,
-    .summary.info {
-      background: color-mix(in srgb, var(--at-on) 6%, var(--at-surface));
-    }
-
     .main,
     .summary {
       cursor: pointer;
@@ -77,12 +85,8 @@ export const styles = [
       display: grid;
       place-items: center;
       border-radius: 14px;
-      background: var(--tone);
-      color: #1b1b1b;
-    }
-    .info .badge,
-    .dot.info {
-      color: var(--at-on);
+      background: var(--b);
+      color: var(--on-b);
     }
 
     .body {
@@ -109,28 +113,20 @@ export const styles = [
     .act {
       flex: none;
       height: 40px;
-      padding: 0 16px;
+      padding: 0 18px;
       border: 0;
       border-radius: 20px;
-      background: var(--tone);
-      color: #1b1b1b;
+      background: var(--b);
+      color: var(--on-b);
       font: inherit;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
       transition: border-radius var(--md-sys-motion-expressive-fast-spatial, 200ms);
     }
-    .info .act {
-      background: var(--md-sys-color-secondary-container, rgba(127, 127, 127, 0.3));
-      color: var(--md-sys-color-on-secondary-container, var(--at-on));
-    }
     .act:active,
     .summary:active {
       border-radius: 12px;
-    }
-    .list .act {
-      background: color-mix(in srgb, var(--at-on) 10%, transparent);
-      color: var(--at-on);
     }
 
     .stack {
@@ -139,22 +135,19 @@ export const styles = [
       padding-inline-end: 4px;
     }
     .dot {
-      --tone: var(--at-warning);
       width: 36px;
       height: 36px;
       display: grid;
       place-items: center;
       border-radius: 50%;
-      background: var(--tone);
-      color: #1b1b1b;
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--at-urgent) 0%, var(--at-surface));
+      background: var(--b);
+      color: var(--on-b);
+      /* ring in the summary's own container colour, so overlaps read as cut-outs */
+      box-shadow: 0 0 0 2px var(--ring);
       --mdc-icon-size: 20px;
     }
-    .dot.urgent {
-      --tone: var(--at-urgent);
-    }
-    .dot.info {
-      --tone: var(--at-info);
+    .summary {
+      --ring: var(--row);
     }
     .dot + .dot {
       margin-inline-start: -10px;
@@ -171,7 +164,7 @@ export const styles = [
       padding: 16px;
       border-radius: 28px;
       background: var(--at-surface);
-      color: var(--at-on);
+      color: var(--md-sys-color-on-surface, var(--primary-text-color));
       opacity: 0.8;
     }
   `,
