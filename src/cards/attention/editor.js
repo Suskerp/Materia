@@ -51,6 +51,10 @@ class MateriaAttentionEditor extends SmartEditorBase {
         icon: "mdi:bell-badge-outline",
         fields: [
           { name: "title", label: "ed_att_title", selector: { text: {} } },
+          { name: "open", label: "ed_att_open", selector: { select: { mode: "dropdown", options: [
+            { value: "sheet", label: "ed_att_open_sheet" },
+            { value: "inline", label: "ed_att_open_inline" },
+          ] } } },
         ],
       },
       {

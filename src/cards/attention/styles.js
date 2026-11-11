@@ -160,6 +160,37 @@ export const styles = [
       opacity: 0.7;
     }
 
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px 12px 12px;
+      border-radius: 28px;
+      background: var(--md-sys-color-surface-container-high, var(--at-surface));
+    }
+    .phead {
+      display: flex;
+      align-items: center;
+      min-height: 40px;
+      padding: 0 4px;
+      border: 0;
+      background: none;
+      color: inherit;
+      font: inherit;
+      text-align: start;
+      cursor: pointer;
+    }
+    .phead .name {
+      flex: 1;
+    }
+    .panel .item {
+      --row: var(--md-sys-color-surface-container-low, var(--at-surface));
+    }
+    .panel .act {
+      background: var(--md-sys-color-surface-container-highest, rgba(127, 127, 127, 0.3));
+      color: var(--md-sys-color-on-surface, var(--primary-text-color));
+    }
+
     .empty {
       display: flex;
       align-items: center;

@@ -31,6 +31,7 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
     hass: { attribute: false },
     config: { state: true },
     preview: { type: Boolean },
+    _open: { state: true },
   };
 
   static styles = styles;
@@ -114,6 +115,8 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
 
   _openList() {
     this._fireHaptic("light");
+    // `open: inline` unfolds the list in the card itself instead of a sheet.
+    if (this.config.open === "inline") return (this._open = !this._open);
     this._openSheet(this, { ...this.config, type: "custom:materia-attention", display: "list" }, t("attention_heading", this.hass));
   }
 
@@ -130,8 +133,16 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
     const title = this.config.title
       ? String(this.config.title).replace("{n}", items.length)
       : t("attention_count", this.hass, { n: items.length });
+    if (this._open && this.config.open === "inline")
+      return html`<ha-card><div class="panel">
+        <button class="phead" aria-expanded="true" @click=${this._openList}>
+          <span class="name">${title}</span><ha-icon class="chev" icon="mdi:chevron-up"></ha-icon>
+        </button>
+        <div class="list">${items.map((i) => this._row(i))}</div>
+      </div></ha-card>`;
+    const inline = this.config.open === "inline";
     return html`<ha-card>
-      <button class="summary ${items[0].level}" aria-haspopup="dialog" @click=${this._openList}>
+      <button class="summary ${items[0].level}" aria-haspopup=${inline ? nothing : "dialog"} aria-expanded=${inline ? "false" : nothing} @click=${this._openList}>
         <span class="stack">
           ${items.slice(0, 3).map((i, n) => html`<span class="dot ${i.level}" style="z-index:${3 - n}"><ha-icon .icon=${i.icon || "mdi:alert-circle-outline"}></ha-icon></span>`)}
         </span>
@@ -139,7 +150,7 @@ class MateriaAttention extends SheetOpenerMixin(ActionMixin(LitElement)) {
           <span class="name">${title}</span>
           <span class="detail">${items.map((i) => this._text(i, "n")).filter(Boolean).join(" · ")}</span>
         </span>
-        <ha-icon class="chev" icon="mdi:chevron-right"></ha-icon>
+        <ha-icon class="chev" icon=${inline ? "mdi:chevron-down" : "mdi:chevron-right"}></ha-icon>
       </button>
     </ha-card>`;
   }
