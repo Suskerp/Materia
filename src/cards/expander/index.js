@@ -34,6 +34,8 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
     hass: { attribute: false },
     config: { state: true },
     _open: { state: true },
+    /** Set by HA on the card in the editor's preview. */
+    preview: { type: Boolean },
     _cards: { state: true },
     _resolvedName: { state: true },
     _resolvedSecondary: { state: true },
@@ -64,7 +66,8 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
     this.config = config;
     // Initial state is config, not a reset: HA re-runs setConfig on every
     // editor keystroke, and slamming the door on each one would be unusable.
-    this._open ??= config.expanded === true;
+    // Left unset until the user taps: _isOpen falls back to `expanded`, or to
+    // open in the editor's preview, which HA rebuilds on every change.
     const sig = JSON.stringify(config.cards || []);
     if (this.__cardsSig !== sig) {
       this.__cardsSig = sig;
@@ -119,6 +122,11 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
     return this._stateObj?.state === "on";
   }
 
+  /** Open: what the user chose, else `expanded`, else open in the editor's preview. */
+  get _isOpen() {
+    return this._open ?? (this.config?.expanded === true || this.preview === true);
+  }
+
   /** `collapsible: false`: a grouped card whose cards always show (no chevron, no fold). */
   get _alwaysOpen() {
     return this.config?.collapsible === false;
@@ -126,7 +134,7 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
 
   _toggleOpen() {
     if (!this._cardConfigs().length || this._alwaysOpen) return;
-    this._open = !this._open;
+    this._open = !this._isOpen;
     this._fireHaptic("light");
   }
 
@@ -182,7 +190,7 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
 
     const showSwitch = hasEntity && this.config.show_switch !== false;
     const hasBody = this._cardConfigs().length > 0;
-    const open = hasBody && (this._open || this._alwaysOpen);
+    const open = hasBody && (this._isOpen || this._alwaysOpen);
     const foldable = hasBody && !this._alwaysOpen;
 
     return html`
@@ -236,7 +244,7 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
   }
 
   getCardSize() {
-    return this._open && this._cards ? 1 + this._cards.length : 1;
+    return this._isOpen && this._cards ? 1 + this._cards.length : 1;
   }
 }
 
