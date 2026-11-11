@@ -218,8 +218,15 @@ class MateriaAttention extends ActionMixin(LitElement) {
 
   /** "Put off until 18:00" (the later copy's detail line). */
   _until(item) {
-    const until = this._later?.[this._laterKey(item)];
-    const time = new Date(until).toLocaleTimeString(this.hass.locale?.language, { hour: "2-digit", minute: "2-digit" });
+    const lang = this.hass.locale?.language;
+    const d = new Date(this._later?.[this._laterKey(item)]);
+    const clock = d.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
+    // Today: just the time. Tomorrow: "tomorrow 15:18". Later: "Thu 15:18".
+    const days = Math.round((new Date(d).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 864e5);
+    const time =
+      days <= 0 ? clock
+      : days === 1 ? t("attention_tomorrow", this.hass, { time: clock })
+      : `${d.toLocaleDateString(lang, { weekday: "short" })} ${clock}`;
     return t("attention_later_until", this.hass, { time });
   }
 

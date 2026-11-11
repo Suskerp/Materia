@@ -308,6 +308,7 @@ export const STRINGS = {
   attention_later: { en: "Later", nl: "Later" },
   attention_show_now: { en: "Show now", nl: "Nu tonen" },
   attention_later_until: { en: "Put off until {time}", nl: "Uitgesteld tot {time}" },
+  attention_tomorrow: { en: "tomorrow {time}", nl: "morgen {time}" },
   attention_do: { en: "Do it", nl: "Doen" },
 
   /* ---- materia-weather-hero --------------------------------------------- */
