@@ -3973,7 +3973,7 @@ class extends Re{constructor(t,e,i,s=Re.DEFAULT_SPEC_VERSION,a=Re.DEFAULT_PLATFO
     .item.off .body {
       opacity: 0.38;
     }
-    .item.off .act {
+    .item.off .act:not(.later) {
       background: transparent;
       box-shadow: inset 0 0 0 1px var(--md-sys-color-outline, rgba(127, 127, 127, 0.6));
       color: var(--md-sys-color-on-surface, var(--primary-text-color));
