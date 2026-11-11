@@ -935,8 +935,6 @@ export const EDITOR_STRINGS = {
   ed_alerts_show_all: { en: "Active and upcoming", nl: "Actief en verwacht" },
   ed_alerts_show_active: { en: "Active only", nl: "Enkel actief" },
   ed_alerts_max: { en: "At most this many", nl: "Maximaal zoveel" },
-  e_scope_demo: { en: "Demo mode (nothing is sent)", nl: "Demomodus (er wordt niets verstuurd)" },
-  e_scope_demo_help: { en: "The cards inside show a pretend player and every button changes only that: play, stations, sources, volume and power react, but nothing reaches Home Assistant. For trying out a layout.", nl: "De kaarten binnenin tonen een nepspeler en elke knop verandert enkel die: afspelen, zenders, bronnen, volume en aan/uit reageren, maar niets bereikt Home Assistant. Om een indeling uit te proberen." },
   ed_att_title: { en: "Summary text (optional, {n} = count)", nl: "Samenvatting (optioneel, {n} = aantal)" },
   ed_att_items: { en: "Rules", nl: "Regels" },
   ed_att_kind: { en: "Kind", nl: "Soort" },

@@ -16,8 +16,7 @@ const packageJson = JSON.parse(await readFile(new URL("../package.json", import.
 // main bundle alone. The main budget is what every page load pays; it sits
 // just above the main bundle at the split (~1.05 MB raw / ~261 KB gzip).
 const limits = {
-  // 0.76.10: +1 KB for the art scope's demo mode (last 1_065_000 / 264_000).
-  main: { size: 1_070_000, gzipSize: 265_000 },
+  main: { size: 1_065_000, gzipSize: 264_000 },
   editors: { size: 320_000, gzipSize: 76_000 },
 };
 
