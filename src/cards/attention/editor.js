@@ -8,8 +8,8 @@ import { RULES } from "./index.js";
    A rule reads top to bottom as a sentence: watch this entity, show when it
    is …, how urgent, what it says, what the button does. */
 const schemas = {};
-const itemSchema = (hass, kind, when, entity = "") =>
-  (schemas[`${hass?.locale?.language ?? ""}|${kind}|${when}|${needsValue(when) ? entity : ""}`] ??= [
+const itemSchema = (hass, kind, when, entity = "", later = false) =>
+  (schemas[`${hass?.locale?.language ?? ""}|${kind}|${when}|${needsValue(when) ? entity : ""}|${later}`] ??= [
     { name: "type", label: t("ed_att_kind", hass), selector: { select: { mode: "dropdown", options: [
       { value: "rule", label: t("ed_att_kind_rule", hass) },
       { value: "vacuum", label: t("ed_att_kind_vacuum", hass) },
@@ -22,7 +22,7 @@ const itemSchema = (hass, kind, when, entity = "") =>
             { value: "ecovacs", label: "Ecovacs" },
           ] } } },
           { name: "later", label: t("ed_att_later", hass), selector: { boolean: {} } },
-          { name: "later_hours", label: t("ed_att_later_hours_item", hass), selector: { number: { min: 1, max: 48, step: 1, mode: "box" } } },
+          ...(later ? [{ name: "later_hours", label: t("ed_att_later_hours_item", hass), selector: { number: { min: 1, max: 48, step: 1, mode: "box" } } }] : []),
         ]
       : [
           { name: "entity", label: t("ed_att_entity", hass), selector: { entity: {} } },
@@ -41,7 +41,7 @@ const itemSchema = (hass, kind, when, entity = "") =>
           { name: "action_label", label: t("ed_att_action_label", hass), selector: { text: {} } },
           { name: "action", label: t("ed_att_action", hass), selector: { ui_action: { default_action: "none" } } },
           { name: "later", label: t("ed_att_later", hass), selector: { boolean: {} } },
-          { name: "later_hours", label: t("ed_att_later_hours_item", hass), selector: { number: { min: 1, max: 48, step: 1, mode: "box" } } },
+          ...(later ? [{ name: "later_hours", label: t("ed_att_later_hours_item", hass), selector: { number: { min: 1, max: 48, step: 1, mode: "box" } } }] : []),
         ]),
   ]);
 
@@ -99,7 +99,7 @@ class MateriaAttentionEditor extends SmartEditorBase {
     return html`<materia-item-list-editor
       .hass=${h}
       .items=${Array.isArray(value) ? value : []}
-      .schema=${(item) => itemSchema(h, kindOf(item), kindOf(item) === "rule" ? readWhen(item).when : "", item?.entity)}
+      .schema=${(item) => itemSchema(h, kindOf(item), kindOf(item) === "rule" ? readWhen(item).when : "", item?.entity, !!item?.later)}
       .itemLabel=${(item) =>
         kindOf(item) === "vacuum"
           ? h?.states?.[item.entity]?.attributes?.friendly_name || t("ed_att_kind_vacuum", h)
