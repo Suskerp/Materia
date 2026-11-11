@@ -23,6 +23,15 @@ export const styles = [
       --b: var(--md-sys-cust-color-warning, #d9a000);
       --on-b: var(--md-sys-cust-color-on-warning, #4a3a00);
     }
+    .off {
+      --mix: 100%;
+      --c: var(--md-sys-color-surface-container, rgba(127, 127, 127, 0.12));
+      --b: var(--md-sys-color-surface-container-highest, rgba(127, 127, 127, 0.3));
+      --on-b: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
+    }
+    .item.off .name {
+      opacity: 0.75;
+    }
     .info {
       --c: var(--md-sys-color-surface-container-high, rgba(127, 127, 127, 0.16));
       --on-c: var(--md-sys-color-on-surface, var(--primary-text-color));

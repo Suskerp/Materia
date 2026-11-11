@@ -33,10 +33,11 @@ export const RULES = new Map();
  *            person), or { type: vacuum, entity, brand }
  *   later_hours: the card's default for Later (4)
  *   id:          a name, so a second copy can use these rules
+ *   Put-off items stay at the end of the carousel, in neutral colours with
+ *   "Show now", as long as anything is still active.
  *   mode: later  the second copy (rules_from: <id>), placed lower on the page:
- *                it shows only when everything that needs attention has been
- *                put off, lists those items with "Show now", and hides again
- *                the moment something new comes up (the top copy shows it).
+ *                it shows only when everything has been put off (the main card
+ *                then hides), and hides again when something comes up.
  */
 class MateriaAttention extends ActionMixin(LitElement) {
   static properties = {
@@ -75,14 +76,18 @@ class MateriaAttention extends ActionMixin(LitElement) {
     return this.config.mode === "later";
   }
 
-  /** What shows: not put off; the later copy shows the put-off ones, and only when nothing else is left. */
+  /** Active items first; put-off ones at the end (marked `off`) while anything is
+   *  still active. Everything put off: the main card hides and the later copy
+   *  shows them instead. */
   get _items() {
     const later = this._later ?? {};
     const now = Date.now();
     const all = activeItems(this._rules, this.hass, (entity, brand) => vacuumAlerts(this.hass, entity, brand));
-    const off = (i) => later[this._laterKey(i)] > now;
-    if (!this._laterMode) return all.filter((i) => !off(i));
-    return all.some((i) => !off(i)) ? [] : all.filter(off);
+    const isOff = (i) => later[this._laterKey(i)] > now;
+    const on = all.filter((i) => !isOff(i));
+    const off = all.filter(isOff).map((i) => ({ ...i, off: true }));
+    if (this._laterMode) return on.length ? [] : off;
+    return on.length ? [...on, ...off] : [];
   }
 
   /* ---- "Later": hidden for a while, per person, without helpers. Kept in
@@ -139,8 +144,13 @@ class MateriaAttention extends ActionMixin(LitElement) {
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    clearTimeout(this._laterTimer);
-    window.removeEventListener(SYNC, this._onSync);
+    // Home Assistant takes a card that hid itself out of the page. Such a card
+    // must keep listening, or it never hears that it should come back (the
+    // put-off copy, the main card once something is shown again).
+    if (!this.hidden) {
+      clearTimeout(this._laterTimer);
+      window.removeEventListener(SYNC, this._onSync);
+    }
   }
 
   updated(changed) {
@@ -182,7 +192,7 @@ class MateriaAttention extends ActionMixin(LitElement) {
   }
 
   _laterBtn(item) {
-    return this._laterMode
+    return item.off
       ? html`<button class="act later" @click=${(e) => this._snooze(e, item, true)}>${t("attention_show_now", this.hass)}</button>`
       : html`<button class="act later" @click=${(e) => this._snooze(e, item)}>${t("attention_later", this.hass)}</button>`;
   }
@@ -218,16 +228,16 @@ class MateriaAttention extends ActionMixin(LitElement) {
       }}>
         ${items.map((i) => {
           const label = this._label(i);
-          const secondary = this._laterMode ? this._until(i) : this._text(i, "s");
-          return html`<div class="page item ${i.level} ${items.length === 1 ? "only" : ""}" @click=${() => !this._dragger.didDrag() && this._tap(i)}>
+          const secondary = i.off ? this._until(i) : this._text(i, "s");
+          return html`<div class="page item ${i.off ? "off" : i.level} ${items.length === 1 ? "only" : ""}" @click=${() => !this._dragger.didDrag() && this._tap(i)}>
             <span class="badge"><ha-icon .icon=${i.icon || this.hass.states[i.entity]?.attributes?.icon || "mdi:alert-circle-outline"}></ha-icon></span>
             <span class="body"><span class="name">${this._text(i, "n")}</span>${secondary ? html`<span class="detail">${secondary}</span>` : nothing}</span>
-            <div class="acts">${label ? html`<button class="act" @click=${(e) => this._quick(e, i)}>${label}</button>` : nothing}${i.later || this._laterMode ? this._laterBtn(i) : nothing}</div>
+            <div class="acts">${label && !i.off ? html`<button class="act" @click=${(e) => this._quick(e, i)}>${label}</button>` : nothing}${i.later || i.off ? this._laterBtn(i) : nothing}</div>
           </div>`;
         })}
       </div>
       ${items.length > 1
-        ? html`<div class="dots" aria-hidden="true">${items.map((i, n) => html`<span class="pip ${i.level} ${n === page ? "on" : ""}"></span>`)}</div>`
+        ? html`<div class="dots" aria-hidden="true">${items.map((i, n) => html`<span class="pip ${i.off ? "off" : i.level} ${n === page ? "on" : ""}"></span>`)}</div>`
         : nothing}
     </ha-card>`;
   }
