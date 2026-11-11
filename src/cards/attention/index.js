@@ -100,7 +100,20 @@ class MateriaAttention extends ActionMixin(LitElement) {
         const rule = rules[index];
         if (rule.type !== "vacuum")
           return [{ ...rule, key: `r${index}`, index, level: ["urgent", "warning", "info"].includes(rule.level) ? rule.level : "warning" }];
-        return activeItems([rule], this.hass, (entity, brand) => vacuumAlerts(this.hass, entity, brand));
+        const alerts = activeItems([rule], this.hass, (entity, brand) => vacuumAlerts(this.hass, entity, brand));
+        // No alerts right now: a sample, so the open vacuum item still shows something.
+        return alerts.length
+          ? alerts
+          : [{
+              key: `v${index}-sample`,
+              index,
+              level: "urgent",
+              name: this.hass.states[rule.entity]?.attributes?.friendly_name ?? rule.entity ?? "",
+              secondary: t(rule.errors_only ? "attention_vacuum_sample_errors" : "attention_vacuum_sample", this.hass),
+              icon: "mdi:robot-vacuum-alert",
+              entity: rule.entity,
+              later: rule.later,
+            }];
       }
     }
     // Until the put-off list is known, a card that uses it shows nothing,

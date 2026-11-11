@@ -309,6 +309,8 @@ export const STRINGS = {
   attention_show_now: { en: "Show now", nl: "Nu tonen" },
   attention_later_until: { en: "Put off until {time}", nl: "Uitgesteld tot {time}" },
   attention_tomorrow: { en: "tomorrow {time}", nl: "morgen {time}" },
+  attention_vacuum_sample_errors: { en: "Its errors show here when there are any", nl: "Zijn fouten verschijnen hier zodra er zijn" },
+  attention_vacuum_sample: { en: "Its errors, worn parts and water tanks show here when there are any", nl: "Zijn fouten, versleten onderdelen en watertanks verschijnen hier zodra er zijn" },
   attention_do: { en: "Do it", nl: "Doen" },
 
   /* ---- materia-weather-hero --------------------------------------------- */
