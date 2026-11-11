@@ -81,9 +81,13 @@ export const styles = [
       gap: 6px;
       font-size: 12px;
       font-weight: normal;
-      opacity: 0.7;
       white-space: nowrap;
       overflow: hidden;
+    }
+
+    .line2 .m,
+    .line2 .dot {
+      opacity: 0.7;
     }
 
     .m {
@@ -121,15 +125,28 @@ export const styles = [
       margin: 0 -4px 0 0;
     }
   
-    /* An active weather warning (alerts_entity): the icon in its level colour. */
-    .line1 ha-icon.warn {
-      color: var(--materia-alert-yellow, #f2c94c);
+    /* An active weather warning (alerts_entity): a tonal pill leading line 2,
+       mixed from the level colour so the text stays readable in both themes. */
+    .warn {
+      --tone: var(--materia-alert-yellow, #f2c94c);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      padding: 2px 8px 2px 6px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--tone) 28%, transparent);
+      font-weight: 600;
     }
-    .line1 ha-icon.warn.orange {
-      color: var(--materia-alert-orange, #f2994a);
+    .warn.orange {
+      --tone: var(--materia-alert-orange, #f2994a);
     }
-    .line1 ha-icon.warn.red {
-      color: var(--materia-alert-red, var(--md-sys-color-error, #e5484d));
+    .warn.red {
+      --tone: var(--materia-alert-red, var(--md-sys-color-error, #e5484d));
+    }
+    .warn ha-icon {
+      --mdc-icon-size: 14px;
+      color: color-mix(in srgb, var(--tone) 70%, currentColor);
     }
   `,
 ];

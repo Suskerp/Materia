@@ -293,13 +293,13 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
     }
     const tempNum = this._num(temp);
 
-    // Alert template (e.g. a warning sensor) takes over line 1 when non-empty.
+    // An active weather warning (alerts_entity) leads line 2 as a coloured
+    // pill; the condition keeps line 1. The `alert` template still takes
+    // over line 1 when non-empty.
     const warning = this.config.alerts_entity
       ? worstActive(readAlerts(this.hass.states[this.config.alerts_entity]))
       : null;
-    const alert = warning
-      ? `${t(`alerts_level_${warning.tone}`, this.hass)} · ${warning.title}`
-      : this._isTemplate(this.config.alert) ? this._resolvedAlert : this.config.alert;
+    const alert = this._isTemplate(this.config.alert) ? this._resolvedAlert : this.config.alert;
     // Title is ALWAYS the condition (alert overrides); everything else is
     // secondary and lives on the subtitle line.
     const first = alert ? null : this._metricData({ type: "condition" }, stateObj);
@@ -328,12 +328,17 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
           <div class="mid">
             ${alert || first
               ? html`<div class="line1">
-                  ${alert ? html`<ha-icon class=${warning ? `warn ${warning.tone}` : ""} icon=${warning?.icon ?? "mdi:alert-outline"}></ha-icon>` : ""}
+                  ${alert ? html`<ha-icon icon="mdi:alert-outline"></ha-icon>` : ""}
                   ${alert ? html`<span>${alert}</span>` : metricSpan(first)}
                 </div>`
               : ""}
-            ${rest.length
+            ${rest.length || warning
               ? html`<div class="line2">
+                  ${warning
+                    ? html`<span class="warn ${warning.tone}" title=${`${t(`alerts_level_${warning.tone}`, this.hass)} · ${warning.title}`}>
+                        <ha-icon .icon=${warning.icon}></ha-icon>${t(`alerts_short_${warning.tone}`, this.hass)} · ${warning.title}
+                      </span>`
+                    : ""}
                   ${rest.map((i, n) => html`${n ? html`<span class="dot">·</span>` : ""}${metricSpan(i)}`)}
                 </div>`
               : ""}
