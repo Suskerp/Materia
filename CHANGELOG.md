@@ -8,6 +8,23 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.3 — 2026-11-11
+
+Expandable switch rows that look expandable, and no colour flash on the media card.
+
+### Breaking changes
+None.
+
+### Fixed
+- **Expander chevron:** it used an icon the Material Symbols set doesn't have, so it drew
+  nothing. It is a standard chevron now, with a hairline before the switch when the row
+  has both, so a switch row that holds settings reads as expandable.
+- **Expander switch alignment:** the switch sits 14 px from the edge, like a
+  `materia-switch` row, so stacked rows line their switches up.
+- **Media card colours on load:** `materia-art-scope` applies the colours a player had last
+  time straight away and replaces them once the cover is analysed, instead of showing the
+  dashboard's default colours for a moment.
+
 ## 0.76.2 — 2026-11-11
 
 The compact time row can now hold a date and a date-time as well.
