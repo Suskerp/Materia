@@ -6,6 +6,24 @@ import { styles } from "./styles.js";
 import "./editor.js";
 
 import { kioskTracks, scopeGridColumns } from "./layout.js";
+
+/** Last palette per player in localStorage: only the token map, never the image. */
+function readPaletteCache(key) {
+  try {
+    const v = JSON.parse(localStorage.getItem(key) || "null");
+    return v && typeof v === "object" ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+function writePaletteCache(key, tokens) {
+  try {
+    if (tokens) localStorage.setItem(key, JSON.stringify(tokens));
+  } catch {
+    /* storage full or blocked: the cache is only a nicety */
+  }
+}
 import { inheritScopeEntity } from "../../utils/media-editor-model.js";
 import { availableHeight } from "../../utils/media.js";
 
@@ -225,7 +243,17 @@ class MateriaArtScope extends PanelHostMixin(LitElement) {
       }
     };
     if (!url) return apply(null);
-    artPalette(url, settings, dark).then(apply, () => apply(null));
+    // First paint: the colours this player had last time (same theme mode), so a
+    // page load doesn't flash the dashboard's default colours while the cover is
+    // fetched and analysed. The fresh palette replaces them a moment later.
+    const cacheKey = `materia-art-palette:${this.config.entity}:${dark ? "dark" : "light"}`;
+    const cached = readPaletteCache(cacheKey);
+    if (cached && !this._paletteApplied) apply(cached);
+    artPalette(url, settings, dark).then((tokens) => {
+      apply(tokens);
+      if (key === this._paletteKey) writePaletteCache(cacheKey, tokens);
+    }, () => apply(null));
+    this._paletteApplied = true;
   }
 
   /* ---------------------------------------------------------------- render */

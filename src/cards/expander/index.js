@@ -198,8 +198,9 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
               <span class="r-name">${name}</span>
               ${secondary ? html`<span class="r-sub">${secondary}</span>` : ""}
             </span>
-            ${hasBody ? html`<ha-icon class="chev" .icon=${"m3o:expand-more"}></ha-icon>` : nothing}
+            ${hasBody ? html`<ha-icon class="chev" .icon=${"mdi:chevron-down"}></ha-icon>` : nothing}
           </button>
+          ${showSwitch && hasBody ? html`<span class="split" aria-hidden="true"></span>` : nothing}
           ${showSwitch
             ? html`<button
                 type="button"

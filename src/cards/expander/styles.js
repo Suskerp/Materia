@@ -57,7 +57,9 @@ export const styles = [
       width: 48px;
       height: 48px;
       padding: 0;
-      margin-inline-end: 4px;
+      /* 12 + the 2px inside the 48px target = 14px to the card edge, the same as
+         a materia-switch row, so stacked rows line their switches up. */
+      margin-inline-end: 12px;
       border: 0;
       background: transparent;
       color: inherit;
@@ -79,8 +81,18 @@ export const styles = [
     .chev {
       --mdc-icon-size: 20px;
       flex-shrink: 0;
-      opacity: 0.55;
+      opacity: 0.7;
       transition: transform var(--md-sys-motion-expressive-fast-spatial);
+    }
+
+    /* A hairline between the chevron (opens the row) and the switch (its own
+       target), so a switch row that holds settings reads as expandable. */
+    .split {
+      flex: none;
+      width: 1px;
+      height: 28px;
+      margin-inline-start: 4px;
+      background: var(--md-sys-color-outline-variant, var(--divider-color, rgba(127, 127, 127, 0.4)));
     }
 
     ha-card.row.exp.open .chev {
