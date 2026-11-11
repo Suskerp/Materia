@@ -8,6 +8,20 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.16 — 2026-11-11
+
+Clearer Needs-attention details.
+
+### Breaking changes
+None.
+
+### Fixed
+- **A rule on several entities always says which one matched,** also when only one does
+  ("iPad Battery Level 8 %" instead of just "8 %").
+
+### Changed
+- **"Put off until" names the day** when it isn't today: "tomorrow 15:18", "Thu 15:18".
+
 ## 0.76.15 — 2026-11-11
 
 A second button per Needs-attention item.
