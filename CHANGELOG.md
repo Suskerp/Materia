@@ -8,6 +8,17 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.15 — 2026-11-11
+
+A second button per Needs-attention item.
+
+### Breaking changes
+None.
+
+### Added
+- **Needs attention: an optional second button per rule** (for example "Disarm" plus
+  "Cameras" on an alarm), shown as an outlined button next to the first.
+
 ## 0.76.14 — 2026-11-11
 
 Needs attention explains itself without templates.
