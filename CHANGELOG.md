@@ -8,6 +8,24 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.12 — 2026-11-11
+
+Clearer robot-vacuum items, and an optional heading for Needs attention.
+
+### Breaking changes
+None.
+
+### Added
+- **Needs attention: optional heading** above the items ("{n}" is the count). It lives inside
+  the card, so it appears and disappears with it.
+- **Robot vacuum item: "Only errors".** Shows just the red alerts (vacuum error, dock error,
+  water shortage); worn parts and water tanks stay on the vacuum's own page.
+
+### Changed
+- **Vacuum maintenance texts say more:** "Clean the robot's sensors (cliff and wall sensors)"
+  instead of "Clean the sensors", and worn parts tell how pressing they are ("due now",
+  "3 h left", "4 % left"). In Needs attention the item also names the machine.
+
 ## 0.76.11 — 2026-11-11
 
 Needs attention becomes a carousel with "Later", and is much easier to set up.
