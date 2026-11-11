@@ -68,9 +68,13 @@ class MateriaTimeInput extends ActionMixin(LitElement) {
     return Number.isFinite(t) && t < Date.now();
   }
 
+  /** Any tap on the row opens the picker: desktop browsers only open it from
+   *  their (hidden) calendar icon, so a click on the field itself must ask too.
+   *  Touch browsers open it natively on the field; asking again is harmless. */
   _showPicker(event) {
     const input = event.currentTarget.querySelector("input");
-    if (!input || event.composedPath().includes(input)) return;
+    if (!input || input.disabled) return;
+    if (event.composedPath().some((el) => el?.classList?.contains?.("clear"))) return;
     input.focus();
     try { input.showPicker?.(); } catch (_) { /* focus is the fallback */ }
   }
