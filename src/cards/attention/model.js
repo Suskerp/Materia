@@ -20,8 +20,12 @@ const rank = (level) => {
  *    for that machine, read through `vacuumAlerts(entity, brand)`.
  * Each entry is { key, level, name, secondary, icon, entity, action,
  * action_label, tap_action, reset } with `index` pointing at its rule.
+ *
+ * `for_minutes` on a rule: it only shows once its entity has been in its
+ * current state that long (the entity's own last_changed, so no helper:
+ * "the fridge door has been open for 3 minutes").
  */
-export function activeItems(items, hass, vacuumAlerts = () => []) {
+export function activeItems(items, hass, vacuumAlerts = () => [], now = Date.now()) {
   const out = [];
   (Array.isArray(items) ? items : []).forEach((item, index) => {
     if (!item || typeof item !== "object") return;
@@ -43,10 +47,19 @@ export function activeItems(items, hass, vacuumAlerts = () => []) {
       return;
     }
     if (!conditionsMet(item.conditions, hass)) return;
+    if (heldFor(item, hass, now) === false) return;
     out.push({ ...item, key: `r${index}`, index, level: LEVELS.includes(item.level) ? item.level : "warning" });
   });
   return out
     .map((x, order) => ({ x, order }))
     .sort((a, b) => rank(a.x.level) - rank(b.x.level) || a.order - b.order)
     .map(({ x }) => x);
+}
+
+/** null without `for_minutes`; else whether its entity has held its state that long. */
+export function heldFor(item, hass, now = Date.now()) {
+  const min = Number(item?.for_minutes);
+  if (!(min > 0) || !item.entity) return null;
+  const since = Date.parse(hass?.states?.[item.entity]?.last_changed ?? "");
+  return Number.isFinite(since) && now - since >= min * 60000;
 }

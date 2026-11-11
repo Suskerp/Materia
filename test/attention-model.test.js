@@ -31,3 +31,11 @@ test("a vacuum item expands to the hero's alerts in levels", () => {
   assert.equal(out[1].reset, "button.f");
   assert.deepEqual(out[0].tap_action, { action: "more-info", entity: "vacuum.r" });
 });
+
+test("for_minutes: shows only once the entity has held its state that long", () => {
+  const now = Date.parse("2026-11-11T12:10:00Z");
+  const hass = { states: { "binary_sensor.door": { entity_id: "binary_sensor.door", state: "on", last_changed: "2026-11-11T12:08:00Z" } } };
+  const rule = (m) => [{ name: "Door", entity: "binary_sensor.door", for_minutes: m, conditions: [{ condition: "state", entity: "binary_sensor.door", state: "on" }] }];
+  assert.equal(activeItems(rule(3), hass, () => [], now).length, 0);
+  assert.equal(activeItems(rule(2), hass, () => [], now).length, 1);
+});

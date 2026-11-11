@@ -149,6 +149,7 @@ class MateriaAttention extends ActionMixin(LitElement) {
     // put-off copy, the main card once something is shown again).
     if (!this.hidden) {
       clearTimeout(this._laterTimer);
+      clearTimeout(this._forTimer);
       window.removeEventListener(SYNC, this._onSync);
     }
   }
@@ -158,6 +159,9 @@ class MateriaAttention extends ActionMixin(LitElement) {
     if (!this.hass || !this.config) return;
     const rules = this._rules;
     if (this._laterMode || rules.some((i) => i?.later)) this._loadLater();
+    // "For at least N minutes" turns true with time, not with a state change: look again every 30 s.
+    clearTimeout(this._forTimer);
+    if (rules.some((i) => i?.for_minutes > 0)) this._forTimer = setTimeout(() => this.requestUpdate(), 30000);
     rules.forEach((item, i) => {
       this._resolveTemplateValue(`n${i}`, item?.name);
       this._resolveTemplateValue(`s${i}`, item?.secondary);

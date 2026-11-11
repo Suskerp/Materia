@@ -18,7 +18,8 @@ const packageJson = JSON.parse(await readFile(new URL("../package.json", import.
 const limits = {
   // 0.76.11: +1 KB for the attention carousel's "Later" and the shared drag helper (last 1_065_000 / 264_000).
   // and +1 KB for its put-off copy (mode: later, shared rules, live sync).
-  main: { size: 1_067_000, gzipSize: 265_000 },
+  // and +1 KB for its rules' "for at least N minutes".
+  main: { size: 1_068_000, gzipSize: 265_500 },
   editors: { size: 320_000, gzipSize: 76_000 },
 };
 

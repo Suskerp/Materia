@@ -948,6 +948,7 @@ export const EDITOR_STRINGS = {
   ed_att_when_is_not: { en: "is not (state) …", nl: "niet (toestand) … is" },
   ed_att_when_unavailable: { en: "is unavailable", nl: "niet beschikbaar is" },
   ed_att_when_custom: { en: "Custom conditions (several entities, and/or …)", nl: "Eigen voorwaarden (meerdere entiteiten, en/of …)" },
+  ed_att_for: { en: "For at least (minutes; empty = right away)", nl: "Minstens zo lang (minuten; leeg = meteen)" },
   ed_att_value: { en: "Value", nl: "Waarde" },
   ed_att_mode: { en: "Shows", nl: "Toont" },
   ed_att_mode_now: { en: "What needs attention now", nl: "Wat nu aandacht vraagt" },

@@ -30,6 +30,9 @@ const itemSchema = (hass, kind, when, entity = "", later = false) =>
           ...(needsValue(when)
             ? [{ name: "value", label: t("ed_att_value", hass), selector: when === "below" || when === "above" ? { number: { mode: "box", step: "any" } } : { state: { entity_id: entity } } }]
             : []),
+          ...(when !== "custom"
+            ? [{ name: "for_minutes", label: t("ed_att_for", hass), selector: { number: { min: 1, max: 1440, step: 1, mode: "box" } } }]
+            : []),
           { name: "level", label: t("ed_att_level", hass), selector: { select: { mode: "dropdown", options: [
             { value: "urgent", label: t("ed_att_level_urgent", hass) },
             { value: "warning", label: t("ed_att_level_warning", hass) },
