@@ -1,11 +1,14 @@
 import { html } from "lit";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 import { t } from "../../utils/i18n.js";
+import { WHEN, needsValue, readWhen, writeWhen } from "./when.js";
 
-/* One schema per (language, kind), so ha-form keeps its controls across renders. */
+/* One schema per (language, kind, test), so ha-form keeps its controls across renders.
+   A rule reads top to bottom as a sentence: watch this entity, show when it
+   is …, how urgent, what it says, what the button does. */
 const schemas = {};
-const itemSchema = (hass, kind) =>
-  (schemas[`${hass?.locale?.language ?? ""}|${kind}`] ??= [
+const itemSchema = (hass, kind, when) =>
+  (schemas[`${hass?.locale?.language ?? ""}|${kind}|${when}`] ??= [
     { name: "type", label: t("ed_att_kind", hass), selector: { select: { mode: "dropdown", options: [
       { value: "rule", label: t("ed_att_kind_rule", hass) },
       { value: "vacuum", label: t("ed_att_kind_vacuum", hass) },
@@ -21,15 +24,19 @@ const itemSchema = (hass, kind) =>
           { name: "later_hours", label: t("ed_att_later_hours_item", hass), selector: { number: { min: 1, max: 48, step: 1, mode: "box" } } },
         ]
       : [
-          { name: "name", label: t("ed_att_name", hass), selector: { text: {} } },
-          { name: "secondary", label: t("ed_att_secondary", hass), selector: { text: {} } },
-          { name: "icon", selector: { icon: {} } },
+          { name: "entity", label: t("ed_att_entity", hass), selector: { entity: {} } },
+          { name: "when", label: t("ed_att_when", hass), selector: { select: { mode: "dropdown", options: WHEN.map((w) => ({ value: w, label: t(`ed_att_when_${w}`, hass) })) } } },
+          ...(needsValue(when)
+            ? [{ name: "value", label: t("ed_att_value", hass), selector: when === "below" || when === "above" ? { number: { mode: "box", step: "any" } } : { text: {} } }]
+            : []),
           { name: "level", label: t("ed_att_level", hass), selector: { select: { mode: "dropdown", options: [
             { value: "urgent", label: t("ed_att_level_urgent", hass) },
             { value: "warning", label: t("ed_att_level_warning", hass) },
             { value: "info", label: t("ed_att_level_info", hass) },
           ] } } },
-          { name: "entity", label: t("ed_att_entity", hass), selector: { entity: {} } },
+          { name: "name", label: t("ed_att_name", hass), selector: { text: {} } },
+          { name: "secondary", label: t("ed_att_secondary", hass), selector: { text: {} } },
+          { name: "icon", selector: { icon: {} } },
           { name: "action_label", label: t("ed_att_action_label", hass), selector: { text: {} } },
           { name: "action", label: t("ed_att_action", hass), selector: { ui_action: { default_action: "none" } } },
           { name: "later", label: t("ed_att_later", hass), selector: { boolean: {} } },
@@ -38,10 +45,19 @@ const itemSchema = (hass, kind) =>
   ]);
 
 const kindOf = (item) => (item?.type === "vacuum" ? "vacuum" : "rule");
-const toForm = (item) => ({ level: "warning", brand: "roborock", ...item, type: kindOf(item) });
+const toForm = (item) => ({ level: "warning", brand: "roborock", ...item, type: kindOf(item), ...(kindOf(item) === "rule" ? readWhen(item) : {}) });
 const fromForm = (item, value) => {
-  const next = { ...item, ...value };
-  if (next.type !== "vacuum") delete next.type;
+  const { when, value: v, ...rest } = value;
+  const next = { ...item, ...rest };
+  if (next.type !== "vacuum") {
+    delete next.type;
+    // A simple test is written as the conditions the card reads; "custom" keeps them as built.
+    if (when && when !== "custom") {
+      const conditions = writeWhen(next.entity, when, v);
+      if (conditions) next.conditions = conditions;
+      else delete next.conditions;
+    }
+  }
   for (const k of Object.keys(next)) if (next[k] === "" || next[k] == null) delete next[k];
   if (next.action?.action === "none") delete next.action;
   return next;
@@ -70,16 +86,16 @@ class MateriaAttentionEditor extends SmartEditorBase {
     return html`<materia-item-list-editor
       .hass=${h}
       .items=${Array.isArray(value) ? value : []}
-      .schema=${(item) => itemSchema(h, kindOf(item))}
+      .schema=${(item) => itemSchema(h, kindOf(item), kindOf(item) === "rule" ? readWhen(item).when : "")}
       .itemLabel=${(item) =>
         kindOf(item) === "vacuum"
           ? h?.states?.[item.entity]?.attributes?.friendly_name || t("ed_att_kind_vacuum", h)
-          : item?.name || t("ed_att_kind_rule", h)}
+          : item?.name || h?.states?.[item?.entity]?.attributes?.friendly_name || t("ed_att_kind_rule", h)}
       .toForm=${toForm}
       .fromForm=${fromForm}
       .newItem=${() => ({ level: "warning" })}
       .itemExtra=${(item, update) =>
-        kindOf(item) === "vacuum"
+        kindOf(item) === "vacuum" || readWhen(item).when !== "custom"
           ? html``
           : html`<materia-conditions-field
               .hass=${h}

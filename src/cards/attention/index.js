@@ -123,7 +123,9 @@ class MateriaAttention extends ActionMixin(LitElement) {
   _text(item, field) {
     if (item.key[0] !== "r") return field === "n" ? item.name : item.secondary;
     const raw = field === "n" ? item.name : item.secondary;
-    return this._isTemplate(raw) ? this._tplResults?.[`${field}${item.index}`] ?? "" : raw;
+    const text = this._isTemplate(raw) ? this._tplResults?.[`${field}${item.index}`] ?? "" : raw;
+    // No text of its own: the entity's name, so entity + test is already a working rule.
+    return text || (field === "n" ? this.hass.states[item.entity]?.attributes?.friendly_name ?? "" : text);
   }
 
   _tap(item) {
@@ -169,7 +171,7 @@ class MateriaAttention extends ActionMixin(LitElement) {
           const label = this._label(i);
           const secondary = this._text(i, "s");
           return html`<div class="page item ${i.level} ${items.length === 1 ? "only" : ""}" @click=${() => !this._dragger.didDrag() && this._tap(i)}>
-            <span class="badge"><ha-icon .icon=${i.icon || "mdi:alert-circle-outline"}></ha-icon></span>
+            <span class="badge"><ha-icon .icon=${i.icon || this.hass.states[i.entity]?.attributes?.icon || "mdi:alert-circle-outline"}></ha-icon></span>
             <span class="body"><span class="name">${this._text(i, "n")}</span>${secondary ? html`<span class="detail">${secondary}</span>` : nothing}</span>
             <div class="acts">${label ? html`<button class="act" @click=${(e) => this._quick(e, i)}>${label}</button>` : nothing}${i.later ? this._laterBtn(i) : nothing}</div>
           </div>`;
