@@ -8,6 +8,38 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.11 — 2026-11-11
+
+Needs attention becomes a carousel with "Later", and is much easier to set up.
+
+### Breaking changes
+- **materia-attention is always a carousel now.** The one-line summary that opened a sheet is
+  gone, and with it the `title` option (ignored if still set). Existing rules keep working
+  unchanged.
+
+### Added
+- **Carousel:** one roomy card per item, swiped (or dragged with a mouse) sideways, the next
+  one peeking in; the dots underneath carry each item's level.
+- **Later, per rule:** an optional "Later" button hides an item for you only (on all your
+  devices), by default for a day; each rule can set its own duration. Kept in Home
+  Assistant's own per-user store, so no helpers. While something still needs attention,
+  put-off items stay at the end of the carousel in a greyed-out look with "Show now"; their
+  fix button stays available.
+- **A put-off copy:** give the card a name and add a second copy lower on the page set to
+  "Only put-off items". When everything has been put off, the main card hides and that copy
+  takes over; both switch live.
+- **Simpler rules in the editor:** pick what to watch, then "Shows when it is on / off /
+  below … / above … / (state) … / unavailable", with Home Assistant's own state picker. HA's
+  full condition editor stays available as "Custom conditions". An item without text or icon
+  uses the entity's name and icon.
+- **"For at least N minutes":** a rule can wait until its entity has been in that state that
+  long ("the fridge door has been open for 3 minutes"), using the entity's own last change,
+  so no helper.
+
+### Changed
+- **One drag helper:** the carousel card, the hourly forecast and the attention carousel share
+  the same mouse dragging (with momentum or snapping).
+
 ## 0.76.10 — 2026-11-11
 
 The needs-attention card gets its designed look, and single-zone players get simpler header buttons.
