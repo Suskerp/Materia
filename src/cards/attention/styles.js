@@ -152,6 +152,19 @@ export const styles = [
     .dot + .dot {
       margin-inline-start: -10px;
     }
+    /* The most urgent icon comes first and must stay on top of the overlap. */
+    .dot {
+      position: relative;
+    }
+    .dot:nth-child(1) {
+      z-index: 3;
+    }
+    .dot:nth-child(2) {
+      z-index: 2;
+    }
+    .dot:nth-child(3) {
+      z-index: 1;
+    }
     .chev {
       flex: none;
       opacity: 0.7;
