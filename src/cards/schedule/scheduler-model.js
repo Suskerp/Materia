@@ -66,21 +66,51 @@ export const parsePlanArrivalMarker = (tags = []) => parseOneShotMarker(
   tags.map((tag) => String(tag).replace(/^materia_arrival_/, "materia_once_"))
 );
 
-export const normalizeSchedulerAction = (action) => {
-  if (!action || typeof action !== "object" || !action.service) return null;
-  const entityId = action.entity_id ?? action.target?.entity_id;
-  return {
-    service: String(action.service),
-    ...(entityId ? { entity_id: entityId } : {}),
-    ...(action.service_data && Object.keys(action.service_data).length
-      ? { service_data: action.service_data }
-      : {}),
-  };
+const TARGET_KEYS = ["area_id", "device_id", "floor_id", "label_id"];
+
+const asList = (value) => (Array.isArray(value) ? value : value == null || value === "" ? [] : [value]);
+
+/** One configured action (or a list) as Scheduler actions. Accepts both the
+ * Scheduler shape ({ service, entity_id, service_data }) and what Home
+ * Assistant's own action picker writes ({ action: "perform-action",
+ * perform_action, target, data }). Scheduler takes ONE entity_id per action,
+ * so a target of several entities becomes several actions with the same
+ * service, which Scheduler allows in one timeslot. Area, device, floor and
+ * label targets travel in the service data, where Home Assistant accepts them
+ * as well. */
+export const toSchedulerActions = (action) => {
+  if (Array.isArray(action)) return action.flatMap(toSchedulerActions);
+  if (!action || typeof action !== "object") return [];
+  const haShape = action.perform_action != null || ["perform-action", "call-service"].includes(action.action);
+  const service = haShape ? (action.perform_action ?? action.service) : action.service;
+  if (!service) return [];
+  const data = { ...((haShape ? (action.data ?? action.service_data) : action.service_data) || {}) };
+  const target = action.target || {};
+  const entities = [...new Set([
+    ...asList(action.entity_id),
+    ...asList(target.entity_id),
+    ...asList(data.entity_id),
+  ].map(String))];
+  delete data.entity_id;
+  for (const key of TARGET_KEYS) if (target[key] != null && data[key] == null) data[key] = target[key];
+  const base = { service: String(service), ...(Object.keys(data).length ? { service_data: data } : {}) };
+  return entities.length ? entities.map((entity_id) => ({ ...base, entity_id })) : [base];
 };
+
+/** True once a one-shot entry's own moment lies more than `graceMs` behind
+ * `now`. Scheduler deletes a `repeat_type: single` entry right after it ran;
+ * one still present after that missed its moment (Home Assistant was down)
+ * and will never run, so it must not read as "scheduled". */
+export const isSpentOneShot = (tags = [], now = Date.now(), graceMs = 5 * 60_000) => {
+  const when = parseOneShotMarker(tags);
+  return !!when && when.getTime() < now - graceMs;
+};
+
+export const phaseOffsetMinutes = (phase) => Number(phase?.offset_minutes ?? phase?.offset ?? 0) || 0;
 
 export const oneShotPayload = ({ name, when, actions, tags = [] }) => {
   if (!(when instanceof Date) || Number.isNaN(when.getTime())) throw new TypeError("A valid execution date is required");
-  const normalized = (actions || []).map(normalizeSchedulerAction).filter(Boolean);
+  const normalized = toSchedulerActions(actions || []);
   if (!normalized.length) throw new TypeError("At least one Scheduler action is required");
   const moment = localMoment(when);
   const cleanTags = [...new Set([
@@ -107,7 +137,7 @@ export const planPayloads = ({ plan, arrival, managerTag, instanceId }) => {
   const groupTag = `materia_plan_${planKey}_${instance}`;
 
   return plan.phases.map((phase, index) => {
-    const when = addMinutes(arrival, phase.offset_minutes ?? phase.offset ?? 0);
+    const when = addMinutes(arrival, phaseOffsetMinutes(phase));
     if (when.getTime() <= Date.now()) throw new RangeError("Every plan phase must be in the future");
     const phaseName = phase.name || phase.label || `${index + 1}`;
     return oneShotPayload({
