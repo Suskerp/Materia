@@ -4,6 +4,7 @@
  * through loadEditors() (src/utils/load-editors.js) in getConfigElement().
  * The editor-only strings register first, so labels translate from the start.
  */
+import "./utils/editors-define-guard.js";
 import "./utils/i18n-editor.js";
 
 import "./cards/card/editor.js";
@@ -61,3 +62,6 @@ import "./elements/media/editor.js";
 import "./elements/clock/editor.js";
 import "./elements/volume-ring/editor.js";
 import "./elements/media-source/editor.js";
+
+// Last: customElements.define behaves normally again.
+import "./utils/editors-define-release.js";
