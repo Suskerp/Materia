@@ -1,13 +1,12 @@
 import { html, css } from "lit";
 import { computeLabel, sortableList } from "../../utils/editor-helpers.js";
 import { SmartEditorBase, DISABLED_FIELD } from "../../utils/smart-editor.js";
-import { ensureHuiEditors } from "../../utils/card-list-editor.js";
+import "../../utils/card-list-editor.js";
 import { localize, t } from "../../utils/i18n.js";
 
 class MateriaTabsEditor extends SmartEditorBase {
   static properties = {
     _expanded: { state: true },
-    _editingCard: { state: true },
   };
 
   static styles = [
@@ -52,57 +51,12 @@ class MateriaTabsEditor extends SmartEditorBase {
         display: block;
         width: 100%;
       }
-      .cards-head {
-        font-size: 13px;
-        font-weight: 600;
-        margin-top: 4px;
-      }
-      .card-row {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        padding: 2px 4px 2px 12px;
-        border: 1px solid var(--divider-color, rgba(0, 0, 0, 0.12));
-        border-radius: 10px;
-      }
-      .card-row span {
-        flex: 1;
-        font-size: 13px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      hui-card-picker {
-        display: block;
-      }
-      .edit-head {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        margin-top: 16px;
-        font-weight: 600;
-        font-size: 14px;
-      }
     `,
   ];
 
   setConfig(config) {
     super.setConfig(config);
     this._expanded ??= null;
-    this._editingCard ??= null;
-  }
-
-  connectedCallback() {
-    super.connectedCallback();
-    this._loadHuiElements();
-  }
-
-  /** hui-card-picker / hui-card-element-editor are lazy-loaded by HA;
-   *  requesting a stack card's config element pulls them in. */
-  async _loadHuiElements() {
-    if (customElements.get("hui-card-element-editor") && customElements.get("hui-card-picker")) return;
-    await ensureHuiEditors();
-    this.requestUpdate();
   }
 
   _formData() {
@@ -149,7 +103,6 @@ class MateriaTabsEditor extends SmartEditorBase {
   }
 
   _renderExtra() {
-    if (this._editingCard) return this._renderCardEditor();
     const items = this._config.items || [];
     return html`
       <div class="options-header">
@@ -194,61 +147,18 @@ class MateriaTabsEditor extends SmartEditorBase {
           @value-changed=${(e) => this._updateItem(i, e.detail.value)}
         ></ha-form>
 
-        <div class="cards-head">${t("e_tab_cards", this.hass)}</div>
-        ${cards.map(
-          (c, j) => html`
-            <div class="card-row">
-              <span>${c?.type || "card"}</span>
-              <ha-icon-button @click=${() => (this._editingCard = { item: i, card: j })}>
-                <ha-icon icon="mdi:pencil"></ha-icon>
-              </ha-icon-button>
-              <ha-icon-button @click=${() => this._removeCard(i, j)}>
-                <ha-icon icon="mdi:delete"></ha-icon>
-              </ha-icon-button>
-            </div>
-          `
-        )}
-        ${customElements.get("hui-card-picker")
-          ? html`
-              <hui-card-picker
-                .hass=${this.hass}
-                @config-changed=${(e) => {
-                  e.stopPropagation();
-                  this._addCard(i, e.detail.config);
-                }}
-              ></hui-card-picker>
-            `
-          : html`<div style="font-size:12px;opacity:.6;">${t("e_loading_picker", this.hass)}</div>`}
+        <materia-card-list-editor
+          .hass=${this.hass}
+          .lovelace=${this.lovelace}
+          .cards=${cards}
+          .label=${"e_tab_cards"}
+          .addButton=${cards.length > 0}
+          @value-changed=${(e) => {
+            e.stopPropagation();
+            this._writeCards(i, e.detail.value);
+          }}
+        ></materia-card-list-editor>
       </div>
-    `;
-  }
-
-  _renderCardEditor() {
-    const { item, card } = this._editingCard;
-    const cfg = this._itemCards(this._config.items?.[item])[card];
-    if (!cfg) {
-      this._editingCard = null;
-      return html``;
-    }
-    return html`
-      <div class="edit-head">
-        <ha-icon-button @click=${() => (this._editingCard = null)}>
-          <ha-icon icon="mdi:arrow-left"></ha-icon>
-        </ha-icon-button>
-        <span>${this._config.items[item]?.label || t("e_tab_n", this.hass, { n: item + 1 })} · ${t("e_card_n", this.hass, { n: card + 1 })}</span>
-      </div>
-      ${customElements.get("hui-card-element-editor")
-        ? html`
-            <hui-card-element-editor
-              .hass=${this.hass}
-              .value=${cfg}
-              @config-changed=${(e) => {
-                e.stopPropagation();
-                this._updateCard(item, card, e.detail.config);
-              }}
-            ></hui-card-element-editor>
-          `
-        : html`<div style="font-size:12px;opacity:.6;">${t("e_loading_editor", this.hass)}</div>`}
     `;
   }
 
@@ -262,23 +172,6 @@ class MateriaTabsEditor extends SmartEditorBase {
     this._commit({ ...this._config, items });
   }
 
-  _addCard(i, cardConfig) {
-    this._writeCards(i, [...this._itemCards(this._config.items?.[i]), cardConfig]);
-  }
-
-  _removeCard(i, j) {
-    const cards = [...this._itemCards(this._config.items?.[i])];
-    cards.splice(j, 1);
-    if (this._editingCard?.item === i && this._editingCard?.card === j) this._editingCard = null;
-    this._writeCards(i, cards);
-  }
-
-  _updateCard(i, j, cardConfig) {
-    const cards = [...this._itemCards(this._config.items?.[i])];
-    cards[j] = cardConfig;
-    this._writeCards(i, cards);
-  }
-
   _addItem() {
     const items = [...(this._config.items || []), { label: "", value: "", icon: "" }];
     this._expanded = items.length - 1;
@@ -289,7 +182,6 @@ class MateriaTabsEditor extends SmartEditorBase {
     const items = [...(this._config.items || [])];
     items.splice(index, 1);
     if (this._expanded === index) this._expanded = null;
-    this._editingCard = null;
     this._commit({ ...this._config, items });
   }
 
