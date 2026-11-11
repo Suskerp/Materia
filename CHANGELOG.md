@@ -8,6 +8,21 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.8 — 2026-11-11
+
+Arrival times can be set from a computer again, and switchless expanders match their neighbours.
+
+### Breaking changes
+None.
+
+### Fixed
+- **A "Not set" date-and-time works on desktop browsers:** the picker now starts on today at
+  the next full hour. Desktop Chrome filled in only the date of an empty field, so a pick
+  never became a value and nothing was saved.
+- **An expander without a switch uses the plain card colour** instead of the lighter "on"
+  tint, so it matches the navigation rows next to it. Expanders with a switch keep their
+  on/off tones.
+
 ## 0.76.7 — 2026-11-11
 
 The time input's picker is easier to hit and no longer starts in the year 2000.
