@@ -8,6 +8,18 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.7 — 2026-11-11
+
+The time input's picker is easier to hit and no longer starts in the year 2000.
+
+### Breaking changes
+None.
+
+### Fixed
+- **A click anywhere on a time-input row opens the picker,** on computers as well as phones.
+- **A "Not set" date-and-time opens the picker on today** instead of on the cleared value
+  (1 January 2000), and moments in the past can no longer be picked.
+
 ## 0.76.6 — 2026-11-11
 
 A quarter smaller: the visual editors now load only when you open one.
