@@ -192,7 +192,8 @@ class MateriaAttention extends ActionMixin(LitElement) {
       const st = this.hass.states[id];
       return st ? this.hass.formatEntityState?.(st) ?? st.state : "";
     };
-    if (ids.length === 1) return value(ids[0]);
+    // One watched entity: just its value. Several: always say which one, even when only one matches.
+    if (ids.length === 1 && triggeringEntities(item.conditions, this.hass, true).length === 1) return value(ids[0]);
     return ids.map((id) => `${this.hass.states[id]?.attributes?.friendly_name ?? id} ${value(id)}`).join(" · ");
   }
 

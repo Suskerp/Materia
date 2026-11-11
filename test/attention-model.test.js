@@ -55,3 +55,10 @@ test("triggeringEntities lists only the met leaves", async () => {
   const c = [{ condition: "or", conditions: ["sensor.a", "sensor.b", "sensor.c"].map((e) => ({ condition: "numeric_state", entity: e, below: 20 })) }];
   assert.deepEqual(triggeringEntities(c, hass), ["sensor.a", "sensor.c"]);
 });
+
+test("triggeringEntities(all) lists every watched entity", async () => {
+  const { triggeringEntities } = await import("../src/utils/conditions.js");
+  const hass = { states: { "sensor.a": { state: "15" }, "sensor.b": { state: "80" } } };
+  const c = [{ condition: "or", conditions: ["sensor.a", "sensor.b"].map((e) => ({ condition: "numeric_state", entity: e, below: 20 })) }];
+  assert.deepEqual(triggeringEntities(c, hass, true), ["sensor.a", "sensor.b"]);
+});
