@@ -8,6 +8,28 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.76.6 — 2026-11-11
+
+A quarter smaller: the visual editors now load only when you open one.
+
+### Breaking changes
+None for dashboards. Manual installs (without the Marketplace) must copy every `.js` file in
+`dist/` next to `materia.js`, not only `materia.js`.
+
+### Changed
+- **Editors load on demand:** the card editors and their translations moved to a separate
+  file next to `materia.js` (`materia-editors-<hash>.js`), fetched the first time someone
+  opens a card editor. The main file went from 340 KB to 261 KB gzipped.
+- **Clearing a date-and-time** (time input and the schedule card's date & time mode) writes
+  2000-01-01 00:00 instead of now: an `input_datetime` can't be empty, and this way no
+  automation on the helper can fire from a cleared value, whatever its offset.
+
+### Fixed
+- **A "Not set" date-and-time row opens the picker on every browser,** Safari included; the
+  tap now lands on the date field itself.
+- **The expander stays open in the card editor's preview,** instead of folding shut after
+  every change.
+
 ## 0.76.5 — 2026-11-11
 
 ### Breaking changes
