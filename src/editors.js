@@ -32,6 +32,7 @@ import "./cards/climate-panel/editor.js";
 import "./cards/icon-row/editor.js";
 import "./cards/lock/editor.js";
 import "./cards/schedule/editor.js";
+import "./cards/weekly-scheduler/editor.js";
 import "./cards/time-input/editor.js";
 import "./cards/select-hero/editor.js";
 import "./cards/heading/editor.js";

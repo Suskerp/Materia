@@ -22,8 +22,10 @@ const limits = {
   // 0.76.12: +1 KB for the attention heading and the vacuum's "due now / 3 h left".
   // 0.76.14: +1 KB for the attention detail that names what triggered a rule.
   // 0.76.17: +1.5 KB for the attention editor previewing the open rule (and its vacuum sample).
-  main: { size: 1_071_500, gzipSize: 267_000 },
-  editors: { size: 320_000, gzipSize: 76_000 },
+  // 0.77.0: +61 KB / +16 KB gzip for the weekly scheduler card (overview, group,
+  // period/copy/preset/plan sheets) and +7 KB for its editor (last 1_071_500 / 267_000, 320_000 / 76_000).
+  main: { size: 1_133_500, gzipSize: 283_000 },
+  editors: { size: 327_500, gzipSize: 77_500 },
 };
 
 const files = (await readdir(dist)).filter((name) => /^materia(-.+)?\.js$/.test(name)).sort();

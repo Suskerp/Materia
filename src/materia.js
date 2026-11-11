@@ -41,6 +41,7 @@ import "./cards/climate-panel/index.js";
 import "./cards/icon-row/index.js";
 import "./cards/lock/index.js";
 import "./cards/schedule/index.js";
+import "./cards/weekly-scheduler/index.js";
 import "./cards/time-input/index.js";
 import "./cards/select-hero/index.js";
 import "./cards/heading/index.js";
