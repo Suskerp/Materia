@@ -28,6 +28,7 @@ import "./cards/forecast-hourly/index.js";
 import "./cards/weather-metric/index.js";
 import "./cards/weather-glance/index.js";
 import "./cards/alerts/index.js";
+import "./cards/attention/index.js";
 import "./cards/list/index.js";
 import "./cards/switch/index.js";
 import "./cards/glance-tile/index.js";

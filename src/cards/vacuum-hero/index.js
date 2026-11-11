@@ -296,6 +296,58 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
     });
   }
 
+  /** The hero's status: its title ("Cleaning", "Docked", …) and sub-line
+   *  (room and time left, drying, or when it last cleaned). Shared with
+   *  utils/vacuum-status.js, so a navigation row to the vacuum says the same. */
+  _statusLines(st) {
+    const c = this._caps;
+    const working = this._working;
+    const batt = this._numOf(c.battery);
+    const rawStatus = this._stateOf(c.status) ?? st.state;
+
+    // "Charging" at a full battery is a lie the sensor keeps telling, so a full
+    // battery relabels it "Docked".
+    //
+    // ONLY when the status is actually charging-ish, though. This used to fire for
+    // ANY non-working state, so a PAUSED robot sitting at 100% was relabelled
+    // "Docked" — the card flatly contradicting a machine that was paused mid-room.
+    // Paused, idle and error all reach this branch and none of them mean docked.
+    let title = this._pretty(rawStatus);
+    const raw = String(rawStatus ?? "").toLowerCase();
+    const chargingIsh = raw.includes("charg") || raw.includes("dock");
+    if (!working && chargingIsh && batt != null && batt >= 100) {
+      title = this.config.docked_label ?? t("vh_docked", this.hass);
+    }
+    // Sub-line, in priority order.
+    let secondary = null;
+    if (working) {
+      const room = this._stateOf(c.room);
+      const mins = this._minutesLeft;
+      const bits = [];
+      if (room && !["unknown", "unavailable"].includes(room)) bits.push(this._pretty(room));
+      if (mins != null) bits.push(t("vh_min_left", this.hass, { mins }));
+      secondary = bits.join(" - ") || null;
+    } else if (this._drying) {
+      secondary = this.config.drying_label ?? t("vh_drying", this.hass);
+    } else {
+      const last = this._stateOf(c.last_clean);
+      if (last) {
+        const d = new Date(last);
+        if (!Number.isNaN(d.getTime())) {
+          const mins = Math.round((Date.now() - d.getTime()) / 60000);
+          const rel = mins < 60
+            ? t("unit_min", this.hass, { n: Math.max(1, mins) })
+            : mins < 1440
+            ? t("unit_hours", this.hass, { n: Math.round(mins / 60) })
+            : t("unit_days", this.hass, { n: Math.round(mins / 1440) });
+          secondary = t("vh_last_cleaned", this.hass, { rel });
+        }
+      }
+    }
+
+    return { title, secondary };
+  }
+
   /** Ordered alerts: worst first, then anything the user appended. */
   get _alerts() {
     const c = this._caps;
@@ -407,21 +459,8 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
 
     const batt = this._numOf(c.battery);
     const progress = this._numOf(c.progress);
-    const rawStatus = this._stateOf(c.status) ?? st.state;
-
-    // "Charging" at a full battery is a lie the sensor keeps telling, so a full
-    // battery relabels it "Docked".
-    //
-    // ONLY when the status is actually charging-ish, though. This used to fire for
-    // ANY non-working state, so a PAUSED robot sitting at 100% was relabelled
-    // "Docked" — the card flatly contradicting a machine that was paused mid-room.
-    // Paused, idle and error all reach this branch and none of them mean docked.
-    let title = this._pretty(rawStatus);
-    const raw = String(rawStatus ?? "").toLowerCase();
-    const chargingIsh = raw.includes("charg") || raw.includes("dock");
-    if (!working && chargingIsh && batt != null && batt >= 100) {
-      title = this.config.docked_label ?? t("vh_docked", this.hass);
-    }
+    const { title: statusTitle, secondary } = this._statusLines(st);
+    let title = statusTitle;
     if (unavailable) title = t("unavailable", this.hass);
 
     // Progress while working, battery otherwise.
@@ -430,33 +469,6 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
     const caption = showProgress
       ? (this.config.progress_caption ?? "done")
       : (this.config.battery_caption ?? t("vh_battery_caption", this.hass));
-
-    // Sub-line, in priority order.
-    let secondary = null;
-    if (working) {
-      const room = this._stateOf(c.room);
-      const mins = this._minutesLeft;
-      const bits = [];
-      if (room && !["unknown", "unavailable"].includes(room)) bits.push(this._pretty(room));
-      if (mins != null) bits.push(t("vh_min_left", this.hass, { mins }));
-      secondary = bits.join(" - ") || null;
-    } else if (this._drying) {
-      secondary = this.config.drying_label ?? t("vh_drying", this.hass);
-    } else {
-      const last = this._stateOf(c.last_clean);
-      if (last) {
-        const d = new Date(last);
-        if (!Number.isNaN(d.getTime())) {
-          const mins = Math.round((Date.now() - d.getTime()) / 60000);
-          const rel = mins < 60
-            ? t("unit_min", this.hass, { n: Math.max(1, mins) })
-            : mins < 1440
-            ? t("unit_hours", this.hass, { n: Math.round(mins / 60) })
-            : t("unit_days", this.hass, { n: Math.round(mins / 1440) });
-          secondary = t("vh_last_cleaned", this.hass, { rel });
-        }
-      }
-    }
 
     // Colour, per M3: roles encode EMPHASIS, not subject matter. primary /
     // secondary / tertiary express prominence, and `error` is the only role

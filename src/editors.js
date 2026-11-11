@@ -18,6 +18,7 @@ import "./cards/forecast-hourly/editor.js";
 import "./cards/weather-metric/editor.js";
 import "./cards/weather-glance/editor.js";
 import "./cards/alerts/editor.js";
+import "./cards/attention/editor.js";
 import "./cards/list/editor.js";
 import "./cards/switch/editor.js";
 import "./cards/glance-tile/editor.js";

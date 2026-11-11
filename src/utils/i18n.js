@@ -303,6 +303,10 @@ export const STRINGS = {
   alerts_from: { en: "From {time}", nl: "Vanaf {time}" },
   alerts_now: { en: "Now", nl: "Nu" },
   alerts_none: { en: "No weather warnings", nl: "Geen weerwaarschuwingen" },
+  attention_count: { en: "{n} things need attention", nl: "{n} dingen vragen aandacht" },
+  attention_heading: { en: "Needs attention", nl: "Vraagt aandacht" },
+  attention_none: { en: "Nothing needs attention", nl: "Niets vraagt aandacht" },
+  attention_do: { en: "Do it", nl: "Doen" },
 
   /* ---- materia-weather-hero --------------------------------------------- */
   wh_night: { en: "Night", nl: "Nacht" },

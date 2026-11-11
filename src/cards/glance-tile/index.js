@@ -1,5 +1,6 @@
 import { LitElement, html, svg, nothing } from "lit";
 import { t } from "../../utils/i18n.js";
+import { vacuumReading } from "../../utils/vacuum-status.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { roundedPolygonPath } from "../../utils/shapes.js";
 import { fetchNumericHistory, resample, segments, bucketDays, delta, withLiveSample, lastDistinctChange } from "../../utils/history.js";
@@ -880,7 +881,71 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
       : html`<div class="big small-big">${this._fmtState()}</div>`;
 
     const battSt = this.config.battery_entity ? this.hass.states[this.config.battery_entity] : null;
-    const battVal = battSt ? this._num(battSt.state) : null;
+    const battVal = battSt ? this._num(battSt.state) : hero?.battery ?? null;
+    if (battVal != null) {
+      const frac = Math.min(1, Math.max(0, battVal / 100));
+      const color = this._batteryColor(frac);
+      return html`
+        <div class="rect-tile left">
+          ${this._header("mdi:eye-outline")}
+          <div class="split-row">
+            <div class="split-main">
+              ${value}
+              ${this._label ? html`<div class="sub">${this._label}</div>` : ""}
+            </div>
+            <div class="thermo">
+              <i style="height:${Math.max(8, frac * 100)}%;background:${color}"></i>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    return html`
+      <div class="rect-tile">
+        ${this._header("mdi:eye-outline")}
+        ${value}
+        ${this._label ? html`<div class="sub">${this._label}</div>` : ""}
+      </div>
+    `;
+  }
+
+  /* ---- vacuum: name top-left, state centered, room at the bottom while
+     cleaning, battery bar on the right. Pairs the vacuum entity with optional
+     status_entity (richer state text) / room_entity / battery_entity — direct
+     entity lookups, not templates, since the room should only show while the
+     vacuum is actually cleaning. --------------------------------------------- */
+  _fmtObj(stateObj) {
+    return this.hass.formatEntityState?.(stateObj) ?? stateObj.state;
+  }
+
+  /** Vacuum-specific state text: our own table first, formatEntityState as
+   *  fallback. See VACUUM_STATE_KEYS above for why. */
+  _vacuumStateText(stateObj) {
+    const key = VACUUM_STATE_KEYS[String(stateObj.state).toLowerCase()];
+    return key ? t(key, this.hass) : this._fmtObj(stateObj);
+  }
+
+  _vacuum() {
+    const st = this._stateObj;
+    // The robot-vacuum hero's reading (shared, utils/vacuum-status.js): working
+    // by negation, the richer status sensor and room it discovers itself.
+    // Explicit status_entity / room_entity still win.
+    const hero = vacuumReading(this.hass, this.config.entity, this.config.brand);
+    const active = hero ? hero.working : st.state === "cleaning";
+
+    const statusSt = this.config.status_entity ? this.hass.states[this.config.status_entity] : null;
+    const stateText = statusSt || !hero ? this._vacuumStateText(statusSt ?? st) : hero.title;
+
+    const roomSt = this.config.room_entity ? this.hass.states[this.config.room_entity] : null;
+    const roomText = hero?.error
+      ? hero.error
+      : active
+        ? (roomSt ? this._fmtObj(roomSt) : hero?.secondary ?? "")
+        : "";
+
+    const battSt = this.config.battery_entity ? this.hass.states[this.config.battery_entity] : null;
+    const battVal = battSt ? this._num(battSt.state) : hero?.battery ?? null;
     if (battVal != null) {
       const frac = Math.min(1, Math.max(0, battVal / 100));
       const color = this._batteryColor(frac);
@@ -936,7 +1001,7 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     const roomText = active && roomSt ? this._fmtObj(roomSt) : "";
 
     const battSt = this.config.battery_entity ? this.hass.states[this.config.battery_entity] : null;
-    const battVal = battSt ? this._num(battSt.state) : null;
+    const battVal = battSt ? this._num(battSt.state) : hero?.battery ?? null;
     const battFrac = battVal != null ? Math.min(1, Math.max(0, battVal / 100)) : null;
     const battColor = battFrac != null ? this._batteryColor(battFrac) : null;
 

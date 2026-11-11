@@ -10,6 +10,7 @@ import {
 import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { vacuumStatusLine } from "../../utils/vacuum-status.js";
 
 /* ------------------------------------------------------------------ */
 /*  Domain configuration map                                          */
@@ -312,6 +313,13 @@ export class MateriaCard extends ActionMixin(LitElement) {
 
     // Scene: show name, no state
     if (domain === "scene") return "";
+
+    // Vacuum: the robot-vacuum hero's own reading (status, room, last clean,
+    // errors), so a row that leads to the vacuum page says what the page says.
+    if (domain === "vacuum") {
+      const line = vacuumStatusLine(this.hass, this.config.entity, this.config.brand);
+      if (line) return line;
+    }
 
     // Light
     if (domain === "light") {
