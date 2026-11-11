@@ -8,6 +8,10 @@ import { loadEditors } from "../../utils/load-editors.js";
 import { DragScroll } from "../../utils/drag-scroll.js";
 
 const LATER_KEY = "materia_attention_later";
+const SYNC = "materia-attention-sync";
+
+/** Rules by card name, so a copy elsewhere on the page can use them (`rules_from`). */
+export const RULES = new Map();
 
 /**
  * materia-attention — "needs attention": a list of rules, shown only while
@@ -28,6 +32,11 @@ const LATER_KEY = "materia_attention_later";
  *            later + later_hours (a "Later" button: hidden for a while, per
  *            person), or { type: vacuum, entity, brand }
  *   later_hours: the card's default for Later (4)
+ *   id:          a name, so a second copy can use these rules
+ *   mode: later  the second copy (rules_from: <id>), placed lower on the page:
+ *                it shows only when everything that needs attention has been
+ *                put off, lists those items with "Show now", and hides again
+ *                the moment something new comes up (the top copy shows it).
  */
 class MateriaAttention extends ActionMixin(LitElement) {
   static properties = {
@@ -51,14 +60,29 @@ class MateriaAttention extends ActionMixin(LitElement) {
 
   setConfig(config) {
     this.config = { items: [], ...config };
+    if (config.id) {
+      RULES.set(config.id, this.config.items);
+      window.dispatchEvent(new Event(SYNC));
+    }
   }
 
+  /** Its own rules, or (the later copy) those of the card it names. */
+  get _rules() {
+    return this.config.rules_from ? RULES.get(this.config.rules_from) ?? [] : this.config.items ?? [];
+  }
+
+  get _laterMode() {
+    return this.config.mode === "later";
+  }
+
+  /** What shows: not put off; the later copy shows the put-off ones, and only when nothing else is left. */
   get _items() {
     const later = this._later ?? {};
     const now = Date.now();
-    return activeItems(this.config.items, this.hass, (entity, brand) => vacuumAlerts(this.hass, entity, brand)).filter(
-      (i) => !(later[this._laterKey(i)] > now)
-    );
+    const all = activeItems(this._rules, this.hass, (entity, brand) => vacuumAlerts(this.hass, entity, brand));
+    const off = (i) => later[this._laterKey(i)] > now;
+    if (!this._laterMode) return all.filter((i) => !off(i));
+    return all.some((i) => !off(i)) ? [] : all.filter(off);
   }
 
   /* ---- "Later": hidden for a while, per person, without helpers. Kept in
@@ -66,7 +90,7 @@ class MateriaAttention extends ActionMixin(LitElement) {
      so it follows the person across their devices and clears itself. ---- */
 
   _laterKey(item) {
-    return String(item.key[0] === "r" ? this.config.items[item.index]?.name ?? item.key : item.name);
+    return String(item.key[0] === "r" ? this._rules[item.index]?.name ?? item.key : item.name);
   }
 
   async _loadLater() {
@@ -81,15 +105,29 @@ class MateriaAttention extends ActionMixin(LitElement) {
     this._wakeLater();
   }
 
-  _snooze(e, item) {
+  /** Put an item off (`back` false) or bring it back now (`back` true); every copy on the page follows. */
+  _snooze(e, item, back = false) {
     e.stopPropagation();
     this._fireHaptic("light");
     const now = Date.now();
     const later = Object.fromEntries(Object.entries(this._later ?? {}).filter(([, until]) => until > now));
-    later[this._laterKey(item)] = now + (Number(item.later_hours) || Number(this.config.later_hours) || 4) * 3600e3;
+    if (back) delete later[this._laterKey(item)];
+    else later[this._laterKey(item)] = now + (Number(item.later_hours) || Number(this.config.later_hours) || 4) * 3600e3;
     this._later = later;
     this.hass.connection.sendMessagePromise({ type: "frontend/set_user_data", key: LATER_KEY, value: later }).catch(() => {});
+    window.dispatchEvent(new CustomEvent(SYNC, { detail: later }));
     this._wakeLater();
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._onSync ??= (e) => {
+      if (e.detail) {
+        this._later = e.detail;
+        this._wakeLater();
+      } else this.requestUpdate();
+    };
+    window.addEventListener(SYNC, this._onSync);
   }
 
   /** Re-render when the first hidden item is due back. */
@@ -102,13 +140,15 @@ class MateriaAttention extends ActionMixin(LitElement) {
   disconnectedCallback() {
     super.disconnectedCallback();
     clearTimeout(this._laterTimer);
+    window.removeEventListener(SYNC, this._onSync);
   }
 
   updated(changed) {
     super.updated?.(changed);
     if (!this.hass || !this.config) return;
-    if ((this.config.items || []).some((i) => i?.later)) this._loadLater();
-    (this.config.items || []).forEach((item, i) => {
+    const rules = this._rules;
+    if (this._laterMode || rules.some((i) => i?.later)) this._loadLater();
+    rules.forEach((item, i) => {
       this._resolveTemplateValue(`n${i}`, item?.name);
       this._resolveTemplateValue(`s${i}`, item?.secondary);
     });
@@ -142,7 +182,16 @@ class MateriaAttention extends ActionMixin(LitElement) {
   }
 
   _laterBtn(item) {
-    return html`<button class="act later" @click=${(e) => this._snooze(e, item)}>${t("attention_later", this.hass)}</button>`;
+    return this._laterMode
+      ? html`<button class="act later" @click=${(e) => this._snooze(e, item, true)}>${t("attention_show_now", this.hass)}</button>`
+      : html`<button class="act later" @click=${(e) => this._snooze(e, item)}>${t("attention_later", this.hass)}</button>`;
+  }
+
+  /** "Put off until 18:00" (the later copy's detail line). */
+  _until(item) {
+    const until = this._later?.[this._laterKey(item)];
+    const time = new Date(until).toLocaleTimeString(this.hass.locale?.language, { hour: "2-digit", minute: "2-digit" });
+    return t("attention_later_until", this.hass, { time });
   }
 
   _label(item) {
@@ -169,11 +218,11 @@ class MateriaAttention extends ActionMixin(LitElement) {
       }}>
         ${items.map((i) => {
           const label = this._label(i);
-          const secondary = this._text(i, "s");
+          const secondary = this._laterMode ? this._until(i) : this._text(i, "s");
           return html`<div class="page item ${i.level} ${items.length === 1 ? "only" : ""}" @click=${() => !this._dragger.didDrag() && this._tap(i)}>
             <span class="badge"><ha-icon .icon=${i.icon || this.hass.states[i.entity]?.attributes?.icon || "mdi:alert-circle-outline"}></ha-icon></span>
             <span class="body"><span class="name">${this._text(i, "n")}</span>${secondary ? html`<span class="detail">${secondary}</span>` : nothing}</span>
-            <div class="acts">${label ? html`<button class="act" @click=${(e) => this._quick(e, i)}>${label}</button>` : nothing}${i.later ? this._laterBtn(i) : nothing}</div>
+            <div class="acts">${label ? html`<button class="act" @click=${(e) => this._quick(e, i)}>${label}</button>` : nothing}${i.later || this._laterMode ? this._laterBtn(i) : nothing}</div>
           </div>`;
         })}
       </div>

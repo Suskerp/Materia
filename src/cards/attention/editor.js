@@ -2,6 +2,7 @@ import { html } from "lit";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 import { t } from "../../utils/i18n.js";
 import { WHEN, needsValue, readWhen, writeWhen } from "./when.js";
+import { RULES } from "./index.js";
 
 /* One schema per (language, kind, test), so ha-form keeps its controls across renders.
    A rule reads top to bottom as a sentence: watch this entity, show when it
@@ -64,20 +65,32 @@ const fromForm = (item, value) => {
 };
 
 class MateriaAttentionEditor extends SmartEditorBase {
+  _formData() {
+    return { mode: "now", ...this._config };
+  }
+
   get _sections() {
+    const later = this._config?.mode === "later";
     return [
       {
         title: "e_content",
         icon: "mdi:bell-badge-outline",
         fields: [
-          { name: "later_hours", label: "ed_att_later_hours", selector: { number: { min: 1, max: 48, step: 1, mode: "box" } } },
+          { name: "mode", label: "ed_att_mode", selector: { select: { mode: "dropdown", options: [
+            { value: "now", label: "ed_att_mode_now" },
+            { value: "later", label: "ed_att_mode_later" },
+          ] } } },
+          ...(later
+            ? [{ name: "rules_from", label: "ed_att_rules_from", helper: "ed_att_rules_from_help", selector: { select: { mode: "dropdown", custom_value: true, options: [...RULES.keys()] } } }]
+            : [
+                { name: "id", label: "ed_att_id", helper: "ed_att_id_help", selector: { text: {} } },
+                { name: "later_hours", label: "ed_att_later_hours", selector: { number: { min: 1, max: 48, step: 1, mode: "box" } } },
+              ]),
         ],
       },
-      {
-        title: "ed_att_items",
-        icon: "mdi:format-list-checks",
-        fields: [{ name: "items", render: (value) => this._itemsField(value) }],
-      },
+      ...(later
+        ? []
+        : [{ title: "ed_att_items", icon: "mdi:format-list-checks", fields: [{ name: "items", render: (value) => this._itemsField(value) }] }]),
     ];
   }
 

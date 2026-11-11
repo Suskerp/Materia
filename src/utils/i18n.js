@@ -305,6 +305,8 @@ export const STRINGS = {
   alerts_none: { en: "No weather warnings", nl: "Geen weerwaarschuwingen" },
   attention_none: { en: "Nothing needs attention", nl: "Niets vraagt aandacht" },
   attention_later: { en: "Later", nl: "Later" },
+  attention_show_now: { en: "Show now", nl: "Nu tonen" },
+  attention_later_until: { en: "Put off until {time}", nl: "Uitgesteld tot {time}" },
   attention_do: { en: "Do it", nl: "Doen" },
 
   /* ---- materia-weather-hero --------------------------------------------- */
