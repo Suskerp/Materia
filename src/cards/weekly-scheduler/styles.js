@@ -95,9 +95,12 @@ export const styles = [hostStyles, motionTokens, css`
   .week-row[aria-checked="true"] .week-day.today { color: inherit; }
 
   .day-card { margin: 12px 16px 0; padding: 16px; border-radius: 12px; background: var(--s-mid); }
-  .day-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
-  .day-head h3 { margin: 0; font-size: 16px; line-height: 24px; font-weight: 500; letter-spacing: .15px; text-transform: capitalize; }
-  .day-head span { font-size: 12px; line-height: 16px; letter-spacing: .4px; color: var(--on-variant); }
+  .day-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: -8px -8px 8px; }
+  .day-head h3 { margin: 0; flex: 1; text-align: center; font-size: 16px; line-height: 24px; font-weight: 500; letter-spacing: .15px; }
+  .icon-button.small { width: 40px; height: 40px; border-radius: 20px; }
+  .hint { margin: 4px 0 0; font-size: 12px; line-height: 16px; letter-spacing: .4px; color: var(--on-variant); text-align: center; }
+  .day-switch { padding: 0 16px 12px; }
+  .bar.big { touch-action: pan-y; }
   .bar.big { height: 64px; border-radius: 16px; cursor: copy; }
   .bar.big .grid { position: absolute; top: 12px; bottom: 12px; width: 1px; background: var(--outline-variant); }
   .bar.big .seg { top: 4px; bottom: 4px; border-radius: 12px; background: var(--k-container); color: var(--k-on-container); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--k-accent) 40%, transparent); }

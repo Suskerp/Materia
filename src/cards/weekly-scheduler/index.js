@@ -208,21 +208,48 @@ class MateriaWeeklyScheduler extends LitElement {
             return html`<button class="filter-chip" aria-pressed=${String(on)} @click=${() => this._openPlan(index)}>${on ? html`<ha-icon icon="mdi:check"></ha-icon>` : nothing}${plan.name}</button>`;
           })}
         </div>` : nothing}
-      <h3 class="section">${this._label("today", { day: this._days("short")[today] })}</h3>
+      <h3 class="section">${this._day === today ? this._label("today", { day: this._days("long")[today] }) : this._days("long")[this._day]}</h3>
+      <div class="day-switch">${this._daySwitch()}</div>
       <div class="groups">
         ${this.config.rooms.map((group, index) => {
           const current = this._currentValue(group);
-          return html`<button class="group-card theme-${this._theme(group)}" @click=${() => { this._room = index; this._day = today; this._overview = false; }}>
+          return html`<button class="group-card theme-${this._theme(group)}" @click=${() => { this._room = index; this._overview = false; }}>
             <span class="row">
               <span class="avatar"><ha-icon .icon=${group.icon || memberIcon(group.members[0] || {}, this.hass)}></ha-icon></span>
-              <span class="text"><span class="headline">${group.name || this._label("group")}</span><span class="supporting">${this._schedule(group) ? this._status(group) : this._label("unavailable")}</span></span>
+              <span class="text"><span class="headline">${group.name || this._label("group")}</span><span class="supporting">${!this._schedule(group) ? this._label("unavailable") : this._day === today ? this._status(group) : this._dayLine(group, this._day)}</span></span>
               ${current ? html`<span class="trailing">${current}</span>` : nothing}
             </span>
-            ${this._bar(this._blocks(group, today), { now: true })}
+            ${this._bar(this._blocks(group, this._day), { now: this._day === today })}
           </button>`;
         })}
       </div>
       <div class="hours" aria-hidden="true"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>`;
+  }
+
+  /** Seven days as one connected button group; today is the starting point. */
+  _daySwitch() {
+    const short = this._days("short"), long = this._days("long"), today = dayIndex();
+    return choiceGroup(this, DAYS.map((_, i) => ({ label: short[i], aria_label: i === today ? this._label("today", { day: long[i] }) : long[i], value: String(i), active: i === this._day })), String(this._day), (v) => { this._day = Number(v); }, { label: this._label("day") });
+  }
+
+  /** Another day's periods in a line ("05:45–06:45 · 19:00–22:00"). */
+  _dayLine(group, day) {
+    const blocks = this._blocks(group, day);
+    if (!blocks.length) return this._outside(group) ? this._label("status_outside_day", { outside: this._outside(group) }) : this._label("empty");
+    const times = blocks.map((b) => `${clock(b.from)}–${clock(b.to)}`).join(" · ");
+    return group.members.length === 1 ? `${times} · ${this._blockLabel(blocks[0], group)}` : times;
+  }
+
+  /** Step the chosen day, wrapping around the week. */
+  _step(delta) { this._day = (this._day + delta + 7) % 7; }
+
+  /** A horizontal swipe on the day bar moves a day back or forward. */
+  _swipeStart(e) { this._swipe = { x: e.clientX, y: e.clientY }; }
+  _swipeEnd(e) {
+    const s = this._swipe; this._swipe = null;
+    if (!s) return;
+    const dx = e.clientX - s.x, dy = e.clientY - s.y;
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) { this._swiped = true; this._step(dx < 0 ? 1 : -1); }
   }
 
   /** A single thermostat's room temperature, shown beside its group. */
@@ -252,18 +279,24 @@ class MateriaWeeklyScheduler extends LitElement {
       </div>
 
       <section class="day-card">
-        <div class="day-head"><h3>${long[this._day]}</h3><span>${this._label("tap_to_add")}</span></div>
-        <div class="bar big" @click=${(e) => this._tapBar(e)}>
+        <div class="day-head">
+          <button class="icon-button small" aria-label=${this._label("previous_day")} @click=${() => this._step(-1)}><ha-icon icon="mdi:chevron-left"></ha-icon></button>
+          <h3>${this._day === today ? this._label("today", { day: long[this._day] }) : long[this._day]}</h3>
+          <button class="icon-button small" aria-label=${this._label("next_day")} @click=${() => this._step(1)}><ha-icon icon="mdi:chevron-right"></ha-icon></button>
+        </div>
+        <div class="bar big" @pointerdown=${(e) => this._swipeStart(e)} @pointerup=${(e) => this._swipeEnd(e)} @pointercancel=${() => { this._swipe = null; }} @click=${(e) => this._tapBar(e)}>
           <span class="grid" style="left:25%"></span><span class="grid" style="left:50%"></span><span class="grid" style="left:75%"></span>
           ${blocks.map((b, i) => {
-            const narrow = minutes(b.to) - minutes(b.from) < 150;
-            return html`<button class="seg" style=${span(b)} aria-label=${`${clock(b.from)}–${clock(b.to)} · ${this._blockLabel(b)}`} @click=${(e) => { e.stopPropagation(); this._openPeriod(i); }}>
-              ${narrow ? nothing : html`<span class="seg-value">${this._blockLabel(b)}</span><span class="seg-time">${clock(b.from)} – ${clock(b.to)}</span>`}
+            // Short periods show just their value, very short ones nothing; the list below has it all.
+            const length = minutes(b.to) - minutes(b.from);
+            return html`<button class="seg" style=${span(b)} aria-label=${`${clock(b.from)}–${clock(b.to)} · ${this._blockLabel(b)}`} @click=${(e) => { e.stopPropagation(); if (this._swiped) { this._swiped = false; return; } this._openPeriod(i); }}>
+              ${length >= 120 ? html`<span class="seg-value">${this._blockLabel(b)}</span>` : nothing}${length >= 300 ? html`<span class="seg-time">${clock(b.from)} – ${clock(b.to)}</span>` : nothing}
             </button>`;
           })}
           ${this._day === today ? html`<span class="now" style=${`left:${nowMinutes() / 14.4}%`}></span>` : nothing}
         </div>
         <div class="hours" aria-hidden="true"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+        <p class="hint">${this._label("tap_to_add")}</p>
       </section>
 
       <div class="list">
@@ -284,6 +317,7 @@ class MateriaWeeklyScheduler extends LitElement {
   }
 
   _tapBar(event) {
+    if (this._swiped) { this._swiped = false; return; }
     if (!this._schedule()) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const slot = slotAt(this._blocks(), (event.clientX - rect.left) / rect.width);

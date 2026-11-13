@@ -24,7 +24,8 @@ const limits = {
   // 0.76.17: +1.5 KB for the attention editor previewing the open rule (and its vacuum sample).
   // 0.77.0: +61 KB / +16 KB gzip for the weekly scheduler card (overview, group,
   // period/copy/preset/plan sheets) and +7 KB for its editor (last 1_071_500 / 267_000, 320_000 / 76_000).
-  main: { size: 1_133_500, gzipSize: 283_000 },
+  // and +2 KB for switching days on the overview and the group page.
+  main: { size: 1_136_000, gzipSize: 283_800 },
   editors: { size: 327_500, gzipSize: 77_500 },
 };
 
