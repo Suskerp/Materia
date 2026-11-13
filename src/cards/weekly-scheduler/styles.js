@@ -134,7 +134,15 @@ export const styles = [hostStyles, motionTokens, css`
   .week-row, .text-button, .filled-button { position: relative; }
   .hint { margin: 4px 0 0; font-size: 12px; line-height: 16px; letter-spacing: .4px; color: var(--on-variant); text-align: center; }
   .day-switch { padding: 0 16px 12px; }
-  .bar.big { touch-action: pan-y; }
+  .bar.big { touch-action: pan-y; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+  /* A held period lifts: a little larger, a shadow, a grab bar at each end, and the times above the finger. */
+  .bar.big .seg.lifted { transform: scaleY(1.08); z-index: 2; box-shadow: inset 0 0 0 2px var(--k-accent), 0 2px 6px 2px rgba(0,0,0,.15), 0 1px 2px rgba(0,0,0,.3); transition: transform var(--md-sys-motion-expressive-fast-spatial); }
+  .bar.big.dragging .seg { transition: none; }
+  .handle-bar { position: absolute; top: 50%; width: 4px; height: 28px; margin-top: -14px; border-radius: 2px; background: var(--k-accent); }
+  .handle-bar.start { left: 4px; } .handle-bar.end { right: 4px; }
+  .bar.big .seg.ghost { background: color-mix(in srgb, var(--k-container) 70%, transparent); box-shadow: inset 0 0 0 2px var(--k-accent); pointer-events: none; }
+  .readout { position: absolute; top: -48px; transform: translateX(-50%); z-index: 3; padding: 6px 12px; border-radius: 12px; background: var(--md-sys-color-inverse-surface, #322f35); color: var(--md-sys-color-inverse-on-surface, #f5eff7); font-size: 18px; line-height: 24px; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; pointer-events: none; }
+  .day-card { position: relative; }
   .bar.big { height: 64px; border-radius: 16px; cursor: copy; }
   .bar.big .grid { position: absolute; top: 12px; bottom: 12px; width: 1px; background: var(--outline-variant); }
   .bar.big .seg { top: 4px; bottom: 4px; border-radius: 12px; background: var(--k-container); color: var(--k-on-container); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; box-shadow: inset 0 0 0 2px var(--k-accent); }
@@ -184,8 +192,19 @@ export const styles = [hostStyles, motionTokens, css`
   .supporting-text { margin: -12px 16px 0; font-size: 12px; line-height: 16px; letter-spacing: .4px; color: var(--on-variant); }
 
   /* Outlined text fields for the two times. */
-  .times { display: flex; align-items: center; gap: 8px; padding-top: 8px; }
-  .times .arrow { flex: none; color: var(--outline); --mdc-icon-size: 20px; }
+  .times { display: grid; gap: 16px; padding-top: 8px; }
+  .time-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px; align-items: center; gap: 8px; }
+  .tonal-icon.step { font-size: 12px; line-height: 16px; font-weight: 500; font-variant-numeric: tabular-nums; position: relative; }
+  .tonal-icon.step::before { content: ""; position: absolute; inset: -4px; }
+  .info-row.what { align-items: flex-start; padding: 12px 16px; color: var(--on-surface); }
+  .info-row.what ha-icon { color: var(--on-variant); --mdc-icon-size: 20px; margin-top: 0; }
+
+  /* M3 snackbar: inverse surface, fixed above the bottom edge, one action. */
+  .snackbar { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 10; width: min(560px, calc(100vw - 32px)); min-height: 48px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 4px 8px 4px 16px; border-radius: 4px; background: var(--md-sys-color-inverse-surface, #322f35); color: var(--md-sys-color-inverse-on-surface, #f5eff7); font-size: 14px; line-height: 20px; box-shadow: 0 3px 6px rgba(0,0,0,.3); animation: snack-in var(--md-sys-motion-expressive-fast-spatial); }
+  .snackbar span { flex: 1; }
+  .snackbar button { height: 40px; padding: 0 12px; border-radius: 20px; color: var(--md-sys-color-inverse-primary, #d0bcff); font-weight: 500; }
+  @keyframes snack-in { from { transform: translate(-50%, 24px); opacity: 0; } }
+  .sheet-head, .handle { touch-action: none; }
   .outlined-field { position: relative; flex: 1; min-width: 0; display: block; }
   .outlined-field span { position: absolute; top: -8px; left: 12px; padding: 0 4px; background: var(--s-low); font-size: 12px; line-height: 16px; letter-spacing: .4px; color: var(--on-variant); pointer-events: none; }
   .outlined-field input { display: block; width: 100%; min-width: 0; height: 56px; padding: 0 12px 0 16px; border: 1px solid var(--outline); border-radius: 4px; background: transparent; color: var(--on-surface); font: 400 16px/24px inherit; font-family: inherit; letter-spacing: .5px; font-variant-numeric: tabular-nums; -webkit-appearance: none; appearance: none; }

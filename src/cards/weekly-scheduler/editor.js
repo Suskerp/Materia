@@ -31,7 +31,7 @@ const groupSchema = () => once("g", () => [
 ]);
 
 const memberSchema = (climate, unit) => once(`m${climate}${unit}`, () => [
-  { name: "entity", label: "ed_ws_entity", required: true, selector: { entity: {} } },
+  { name: "entity", label: "ed_ws_entity", required: true, selector: { entity: { domain: ["climate", "humidifier", "light", "switch", "input_boolean", "fan", "number", "input_number", "select", "input_select", "button", "input_button", "scene", "script"] } } },
   { name: "name", label: "ed_ws_member_name", selector: { text: {} } },
   { name: "icon", label: "ed_ws_icon", selector: { icon: {} } },
   ...(climate

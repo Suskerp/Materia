@@ -4,7 +4,7 @@ import { loadEditors } from "../../utils/load-editors.js";
 import { DAYS, clock, minutes, clone, validateBlock, applyPreset, presetDayBlocks, copyDays } from "./model.js";
 import { entityId, memberName, memberIcon, domainOf, cleanSettings, validateSettings, describeSettings, periodActions, actionData, defaultSettings, settingsSchema } from "./targets.js";
 import { homePlanWeeks, saveScheduleBatch } from "./plans.js";
-import { dayIndex, nowMinutes, sortedBlocks, where, slotAt, planMatchesDay, span, sameOnDays } from "./view-model.js";
+import { dayIndex, nowMinutes, sortedBlocks, where, slotAt, planMatchesDay, span, sameOnDays, hhmm } from "./view-model.js";
 import { renderSettings, choiceGroup } from "./controls.js";
 import { styles } from "./styles.js";
 import { MOTION } from "../../utils/motion.js";
@@ -35,6 +35,9 @@ export const roommindArea = (members) => {
 /** "18 °C" never breaks between the number and its unit. */
 const keepUnit = (text) => String(text).replace(/ (°[CF]|%|K)(?=$|[\s·,])/g, "\u00a0$1");
 
+/** Kinds of device that a period switches on, and that should go off again at its end by default. */
+const ONOFF = new Set(["light", "switch", "input_boolean", "fan", "humidifier"]);
+
 class MateriaWeeklyScheduler extends LitElement {
   static properties = {
     hass: { attribute: false },
@@ -48,6 +51,8 @@ class MateriaWeeklyScheduler extends LitElement {
     _busy: { state: true },
     _error: { state: true },
     _tick: { state: true },
+    _snackbar: { state: true },
+    _drag: { state: true },
   };
 
   static styles = styles;
@@ -193,6 +198,7 @@ class MateriaWeeklyScheduler extends LitElement {
       return html`<ha-card class="theme-${this._overview ? "neutral" : this._theme()}">
         ${this._overview ? this._renderOverview() : this._renderGroup()}
         ${this._error ? html`<div class="error" role="alert">${this._error}</div>` : nothing}
+        ${this._snackbar ? html`<div class="snackbar" role="status"><span>${this._snackbar.text}</span>${this._snackbar.undo ? html`<button @click=${this._snackbar.undo}>${this._label("undo")}</button>` : nothing}</div>` : nothing}
       </ha-card>${this._sheet ? this._renderSheet() : nothing}`;
     } catch (error) {
       return html`<ha-card><div class="error" role="alert">${error.message || String(error)}</div></ha-card>`;
@@ -271,6 +277,103 @@ class MateriaWeeklyScheduler extends LitElement {
     if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) { this._swiped = true; this._step(dx < 0 ? 1 : -1); }
   }
 
+  /* ---------------------------------------------- direct manipulation */
+
+  /**
+   * Hold a period for 0,3 s to pick it up, then drag an end or the middle;
+   * hold on empty time to draw a new period. Times snap to 15 minutes with a
+   * selection haptic per step; letting go saves (with Undo). A tap still
+   * opens the sheet and a quick horizontal swipe still changes the day.
+   */
+  _pressStart(e) {
+    if (e.button > 0 || !this._schedule()) return;
+    const bar = e.currentTarget, rect = bar.getBoundingClientRect();
+    const seg = e.target.closest?.(".seg[data-index]");
+    const index = seg ? Number(seg.dataset.index) : -1;
+    const block = index >= 0 ? this._blocks()[index] : null;
+    const at = this._snap((e.clientX - rect.left) / rect.width);
+    let edge = "move";
+    if (seg) {
+      const s = seg.getBoundingClientRect();
+      if (e.clientX - s.left < 24) edge = "start";
+      else if (s.right - e.clientX < 24) edge = "end";
+    }
+    this._press = { x: e.clientX, y: e.clientY, id: e.pointerId, bar, rect, index, block, at, edge };
+    clearTimeout(this._pressTimer);
+    this._pressTimer = setTimeout(() => this._lift(), 300);
+  }
+
+  _snap(fraction) { return Math.max(0, Math.min(1440, Math.round((fraction * 1440) / 15) * 15)); }
+
+  _lift() {
+    const p = this._press;
+    if (!p) return;
+    if (p.index < 0 && slotAt(this._blocks(), p.at / 1440) == null) return;
+    this._swipe = null;
+    p.bar.setPointerCapture?.(p.id);
+    // Scrolling would fight the drag on touch: block it while a period is held.
+    this._noScroll = (ev) => ev.preventDefault();
+    p.bar.addEventListener("touchmove", this._noScroll, { passive: false });
+    const from = p.block ? minutes(p.block.from) : p.at, to = p.block ? minutes(p.block.to) : Math.min(1440, p.at + 15);
+    this._drag = { lifted: true, index: p.index, edge: p.block ? p.edge : "end", origin: { from, to }, from: hhmm(from), to: hhmm(to), grab: p.at };
+    this._haptic("medium");
+  }
+
+  _pressMove(e) {
+    const p = this._press;
+    if (!p) return;
+    if (!this._drag?.lifted) {
+      if (Math.hypot(e.clientX - p.x, e.clientY - p.y) > 8) this._pressCancel();
+      return;
+    }
+    const d = this._drag, at = this._snap((e.clientX - p.rect.left) / p.rect.width);
+    const others = this._blocks().filter((_, i) => i !== d.index);
+    const lo = Math.max(0, ...others.filter((b) => minutes(b.to) <= d.origin.from).map((b) => minutes(b.to)));
+    const hi = Math.min(1440, ...others.filter((b) => minutes(b.from) >= d.origin.to).map((b) => minutes(b.from)));
+    let from = d.origin.from, to = d.origin.to;
+    if (d.edge === "start") from = Math.min(to - 15, Math.max(lo, at));
+    else if (d.edge === "end") to = Math.max(from + 15, Math.min(hi, d.index < 0 ? Math.max(at, from + 15) : at));
+    else {
+      const len = to - from, shift = at - d.grab;
+      from = Math.min(hi - len, Math.max(lo, d.origin.from + shift));
+      to = from + len;
+    }
+    if (hhmm(from) !== d.from || hhmm(to) !== d.to) {
+      this._drag = { ...d, from: hhmm(from), to: hhmm(to) };
+      this._haptic(from % 60 === 0 || to % 60 === 0 ? "light" : "selection");
+    }
+  }
+
+  /** Ends a press; true when it was a drag (so the swipe and click are skipped). */
+  _pressEnd() {
+    clearTimeout(this._pressTimer);
+    const d = this._drag, p = this._press;
+    this._press = null;
+    if (!d?.lifted) return false;
+    this._drag = null;
+    p?.bar.removeEventListener("touchmove", this._noScroll);
+    this._swiped = true;
+    if (d.index < 0) {
+      this._openPeriod(-1, { from: d.from, to: d.to });
+      return true;
+    }
+    const block = this._blocks()[d.index];
+    if (!block || (clock(block.from) === d.from && clock(block.to) === d.to)) return true;
+    const week = Object.fromEntries(DAYS.map((day) => [day, clone(this._schedule()[day] || [])]));
+    week[DAYS[this._day]] = week[DAYS[this._day]].map((b) => (b.from === block.from && b.to === block.to ? { ...b, from: `${d.from}:00`, to: `${d.to}:00` } : b));
+    this._save(week, "moved");
+    return true;
+  }
+
+  _pressCancel() {
+    clearTimeout(this._pressTimer);
+    if (this._drag) this._press?.bar.removeEventListener("touchmove", this._noScroll);
+    this._press = null;
+    this._drag = null;
+  }
+
+  _haptic(type) { this.dispatchEvent(new CustomEvent("haptic", { detail: type, bubbles: true, composed: true })); }
+
   /** A single thermostat's room temperature, shown beside its group. */
   _currentValue(group) {
     if (group.members.length !== 1) return "";
@@ -303,15 +406,20 @@ class MateriaWeeklyScheduler extends LitElement {
           <h3>${this._day === today ? this._label("today", { day: long[this._day] }) : long[this._day]}</h3>
           <button class="icon-button small" aria-label=${this._label("next_day")} @click=${() => this._step(1)}><ha-icon icon="mdi:chevron-right"></ha-icon></button>
         </div>
-        <div class="bar big" @pointerdown=${(e) => this._swipeStart(e)} @pointerup=${(e) => this._swipeEnd(e)} @pointercancel=${() => { this._swipe = null; }} @click=${(e) => this._tapBar(e)}>
+        <div class="bar big ${this._drag?.lifted ? "dragging" : ""}" @pointerdown=${(e) => { this._swipeStart(e); this._pressStart(e); }} @pointermove=${(e) => this._pressMove(e)} @pointerup=${(e) => { if (!this._pressEnd(e)) this._swipeEnd(e); }} @pointercancel=${() => { this._swipe = null; this._pressCancel(); }} @click=${(e) => this._tapBar(e)}>
           <span class="grid" style="left:25%"></span><span class="grid" style="left:50%"></span><span class="grid" style="left:75%"></span>
           ${blocks.map((b, i) => {
+            const d = this._drag?.lifted && this._drag.index === i ? this._drag : null;
+            const shown = d ? { from: d.from, to: d.to } : b;
             // Short periods show just their value, very short ones nothing; the list below has it all.
-            const length = minutes(b.to) - minutes(b.from);
-            return html`<button class="seg" style=${span(b)} aria-label=${`${clock(b.from)}–${clock(b.to)} · ${this._blockLabel(b)}`} @click=${(e) => { e.stopPropagation(); if (this._swiped) { this._swiped = false; return; } this._openPeriod(i); }}>
-              ${length >= 210 ? html`<span class="seg-value">${this._blockLabel(b)}</span>` : nothing}${length >= 300 ? html`<span class="seg-time">${clock(b.from)} – ${clock(b.to)}</span>` : nothing}
+            const length = minutes(shown.to) - minutes(shown.from);
+            return html`<button class="seg ${d ? "lifted" : ""}" data-index=${i} style=${span(shown)} aria-label=${`${clock(b.from)}–${clock(b.to)} · ${this._blockLabel(b)}`} @click=${(e) => { e.stopPropagation(); if (this._swiped) { this._swiped = false; return; } this._openPeriod(i, null, e.currentTarget); }}>
+              ${d ? html`<span class="handle-bar start"></span><span class="handle-bar end"></span>` : nothing}
+              ${length >= 210 ? html`<span class="seg-value">${this._blockLabel(b)}</span>` : nothing}${length >= 300 ? html`<span class="seg-time">${clock(shown.from)} – ${clock(shown.to)}</span>` : nothing}
             </button>`;
           })}
+          ${this._drag?.lifted && this._drag.index < 0 ? html`<span class="seg ghost" style=${span(this._drag)}></span>` : nothing}
+          ${this._drag?.lifted ? html`<span class="readout" style=${`left:${(this._drag.edge === "start" ? minutes(this._drag.from) : minutes(this._drag.to)) / 14.4}%`}>${clock(this._drag.from)} → ${clock(this._drag.to)}</span>` : nothing}
           ${this._day === today ? html`<span class="now" style=${`left:${nowMinutes() / 14.4}%`}></span>` : nothing}
         </div>
         <div class="hours" aria-hidden="true"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
@@ -322,7 +430,7 @@ class MateriaWeeklyScheduler extends LitElement {
         ${blocks.map((b, i) => {
           const on = this._day === today && where(blocks, nowMinutes()).current === i;
           const left = on ? minutes(b.to) - nowMinutes() : 0;
-          return html`<button class="list-item" @click=${() => this._openPeriod(i)}>
+          return html`<button class="list-item" @click=${(e) => this._openPeriod(i, null, e.currentTarget)}>
             <span class="avatar"><ha-icon .icon=${group.icon || memberIcon(group.members[0] || {}, this.hass)}></ha-icon></span>
             <span class="text"><span class="headline">${clock(b.from)} – ${clock(b.to)}</span><span class="supporting">${on ? this._label("now_left", { h: Math.floor(left / 60), m: left % 60 }) : group.members.length > 1 ? group.members.map((m) => memberName(m, this.hass)).join(" · ") : this._label("period")}</span></span>
             <span class="trailing-value">${this._blockLabel(b)}</span>
@@ -332,7 +440,7 @@ class MateriaWeeklyScheduler extends LitElement {
         ${!blocks.length && !outside ? html`<div class="empty">${this._label("empty")}</div>` : nothing}
       </div>
 
-      <div class="fab-row"><button class="fab" ?disabled=${!ready || !this._members.length || this._busy} @click=${() => this._openPeriod(-1)}><ha-icon icon="mdi:plus"></ha-icon>${this._label("add")}</button></div>`;
+      <div class="fab-row"><button class="fab" ?disabled=${!ready || !this._members.length || this._busy} @click=${(e) => this._openPeriod(-1, null, e.currentTarget)}><ha-icon icon="mdi:plus"></ha-icon>${this._label("add")}</button></div>`;
   }
 
   _tapBar(event) {
@@ -353,7 +461,7 @@ class MateriaWeeklyScheduler extends LitElement {
     const dialog = this.renderRoot.querySelector("dialog");
     if (dialog && !dialog.open) {
       dialog.showModal();
-      this._animateSheet(dialog, true);
+      this._animateSheet(dialog, true, this._origin);
     }
     dialog?.querySelector(".sheet-body")?.focus({ preventScroll: true });
   }
@@ -363,8 +471,16 @@ class MateriaWeeklyScheduler extends LitElement {
    * spring (up from the bottom edge on a phone, growing from 90 % as a dialog)
    * and leaves faster, without overshoot, on the standard fast spring.
    */
-  _animateSheet(dialog, opening) {
+  _animateSheet(dialog, opening, origin) {
     if (!dialog.animate || matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
+    // The period you tapped grows into the sheet, and the sheet shrinks back into it.
+    if (origin?.isConnected) {
+      const o = origin.getBoundingClientRect(), d = dialog.getBoundingClientRect();
+      const inset = `inset(${Math.max(0, o.top - d.top)}px ${Math.max(0, d.right - o.right)}px ${Math.max(0, d.bottom - o.bottom)}px ${Math.max(0, o.left - d.left)}px round 12px)`;
+      const full = "inset(0px 0px 0px 0px round 28px)";
+      const spring = MOTION[opening ? "expressive-default-spatial" : "standard-fast-spatial"];
+      return dialog.animate(opening ? [{ clipPath: inset }, { clipPath: full }] : [{ clipPath: full }, { clipPath: inset, opacity: 0 }], { duration: spring.ms, easing: spring.easing, fill: "forwards" });
+    }
     const phone = matchMedia("(max-width: 600px)").matches;
     const spring = MOTION[opening ? "expressive-default-spatial" : "standard-fast-spatial"];
     const hidden = phone ? { transform: "translateY(100%)" } : { transform: "scale(0.9)", opacity: 0 };
@@ -372,23 +488,64 @@ class MateriaWeeklyScheduler extends LitElement {
     return dialog.animate(opening ? [hidden, shown] : [shown, hidden], { duration: spring.ms, easing: spring.easing, fill: "forwards" });
   }
 
+  /**
+   * Drag the sheet down to close it (phones): it follows the finger 1:1,
+   * rubber-bands upward, and closes past a third of its height or on a flick;
+   * otherwise it springs back.
+   */
+  _dragSheetStart(e) {
+    const dialog = this.renderRoot.querySelector("dialog");
+    if (!dialog || !matchMedia("(max-width: 600px)").matches || e.button > 0 || e.target.closest?.("button:not(.handle)")) return;
+    const startY = e.clientY, h = dialog.getBoundingClientRect().height;
+    let last = { y: e.clientY, t: performance.now() }, v = 0, dy = 0;
+    dialog.getAnimations().forEach((a) => a.cancel());
+    const move = (ev) => {
+      dy = ev.clientY - startY;
+      const now = performance.now();
+      v = (ev.clientY - last.y) / Math.max(1, now - last.t);
+      last = { y: ev.clientY, t: now };
+      dialog.style.transform = `translateY(${dy > 0 ? dy : dy * 0.2}px)`;
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+      dialog.style.transform = "";
+      if (dy > h / 3 || v > 0.5) {
+        const spring = MOTION["standard-fast-spatial"];
+        dialog.animate([{ transform: `translateY(${Math.max(0, dy)}px)` }, { transform: "translateY(100%)" }], { duration: spring.ms, easing: spring.easing, fill: "forwards" })
+          .finished.then(() => { this._origin = null; dialog.close(); this._sheet = null; this._opener?.isConnected && this._opener.focus({ preventScroll: true }); }).catch(() => {});
+      } else if (dy) {
+        const spring = MOTION["expressive-fast-spatial"];
+        dialog.animate([{ transform: `translateY(${dy > 0 ? dy : dy * 0.2}px)` }, { transform: "translateY(0)" }], { duration: spring.ms, easing: spring.easing });
+      }
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+  }
+
   async _closeSheet() {
     const dialog = this.renderRoot.querySelector("dialog");
     if (dialog?.open && !this._closing) {
       this._closing = true;
       dialog.classList.add("closing");
-      await this._animateSheet(dialog, false)?.finished.catch(() => {});
+      await this._animateSheet(dialog, false, this._origin)?.finished.catch(() => {});
       dialog.close();
       this._closing = false;
     }
     this._sheet = null;
     this._opener?.isConnected && this._opener.focus({ preventScroll: true });
     this._opener = null;
+    this._origin = null;
   }
 
-  _openPeriod(index, slot) {
+  _openPeriod(index, slot, origin) {
     const block = this._blocks()[index];
     const actions = this._actions(block);
+    // A new period for something you switch on ends by switching it off again, not "leave as is".
+    if (!block && !this._isRoommind()) actions.forEach((a, i) => { if (!Object.keys(a.end || {}).length && ONOFF.has(domainOf(this._members[i]))) a.end = this._endDefault(this._members[i]); });
+    this._origin = origin || null;
     this._showSheet({
       kind: "period", index,
       from: clock(block?.from || slot?.from || "07:00"),
@@ -406,8 +563,8 @@ class MateriaWeeklyScheduler extends LitElement {
     const primary = { period: [s.index < 0 ? "add_short" : "save", this._savePeriod], copy: ["copy_short", this._copyDay], preset: ["apply", this._applyPreset], plan: ["apply", this._applyPlan] }[s.kind];
     const blocked = this._busy || (s.kind === "copy" && !s.destinations.length) || (s.kind === "preset" && (s.loading || !s.weeks?.[s.index])) || (s.kind === "plan" && (s.loading || !s.entries || !s.destinations.length));
     return html`<dialog class="sheet theme-${this._theme()}" aria-labelledby="sheet-title" @close=${() => { this._sheet = null; }} @cancel=${(e) => { e.preventDefault(); this._closeSheet(); }} @click=${(e) => { if (e.target === e.currentTarget) this._closeSheet(); }}>
-      <button class="handle" aria-label=${this._label("close")} @click=${this._closeSheet}><span></span></button>
-      <header class="sheet-head">
+      <button class="handle" aria-label=${this._label("close")} @click=${this._closeSheet} @pointerdown=${(e) => this._dragSheetStart(e)}><span></span></button>
+      <header class="sheet-head" @pointerdown=${(e) => this._dragSheetStart(e)}>
         <div><h2 id="sheet-title">${this._label(title)}</h2><div class="sheet-sub">${sub}</div></div>
         ${s.kind === "period" && s.index >= 0 ? html`<button class="icon-button danger" aria-label=${this._label("delete")} ?disabled=${this._busy} @click=${this._deletePeriod}><ha-icon icon="mdi:delete-outline"></ha-icon></button>` : nothing}
       </header>
@@ -428,9 +585,11 @@ class MateriaWeeklyScheduler extends LitElement {
     const long = this._days("long"), letters = this._days("narrow");
     return html`
       <div class="times">
-        <label class="outlined-field"><span>${this._label("from")}</span><input type="time" .value=${s.from} @change=${(e) => { this._sheet = { ...this._sheet, from: e.target.value, error: null }; }}></label>
-        <ha-icon class="arrow" icon="mdi:arrow-right" aria-hidden="true"></ha-icon>
-        <label class="outlined-field"><span>${this._label("until")}</span><input type="time" .value=${s.to === "24:00" ? "00:00" : s.to} @change=${(e) => { this._sheet = { ...this._sheet, to: e.target.value, error: null }; }}></label>
+        ${["from", "to"].map((key) => html`<div class="time-row">
+          <button class="tonal-icon step" aria-label=${this._label("earlier", { what: this._label(key === "from" ? "from" : "until") })} @click=${() => this._shiftTime(key, -15)}>−15</button>
+          <label class="outlined-field"><span>${this._label(key === "from" ? "from" : "until")}</span><input type="time" .value=${key === "to" && s.to === "24:00" ? "00:00" : s[key]} @change=${(e) => { this._sheet = { ...this._sheet, [key]: e.target.value, error: null }; }}></label>
+          <button class="tonal-icon step" aria-label=${this._label("later", { what: this._label(key === "from" ? "from" : "until") })} @click=${() => this._shiftTime(key, 15)}>+15</button>
+        </div>`)}
       </div>
 
       ${this._members.length === 1
@@ -455,7 +614,26 @@ class MateriaWeeklyScheduler extends LitElement {
       }, { multi: true, label: this._label("repeat_on") })}
       ${s.days.length > 1 ? html`<p class="supporting-text">${this._label(s.index >= 0 ? "also_changes" : "also_adds", { days: s.days.filter((d) => d !== this._day).sort().map((d) => this._days("short")[d]).join(", ") })}</p>` : nothing}
 
-      ${outside ? html`<div class="info-row"><ha-icon icon="mdi:weather-night"></ha-icon><span>${this._label("before_after")}</span><strong>${outside}</strong></div>` : nothing}`;
+      <div class="info-row what"><ha-icon icon="mdi:clock-outline"></ha-icon><span>${this._whatWillHappen(s)}</span></div>`;
+  }
+
+  /** Move one end of the period by 15 minutes, keeping at least 15 minutes between them. */
+  _shiftTime(key, delta) {
+    const s = this._sheet, m = (t) => minutes(t === "00:00" && key === "to" ? "24:00" : t);
+    const from = m(s.from), to = m(s.to === "24:00" ? "24:00" : s.to);
+    const next = key === "from" ? Math.min(to - 15, Math.max(0, from + delta)) : Math.max(from + 15, Math.min(1440, to + delta));
+    this._sheet = { ...s, [key]: hhmm(next), error: null };
+  }
+
+  /** One plain sentence: which days, what, when, and what comes after. */
+  _whatWillHappen(s) {
+    const long = this._days("long");
+    const days = [...s.days].sort();
+    const list = days.length === 7 ? this._label("every_day") : days.length > 1 ? days.map((d) => long[d]).join(", ") : long[days[0] ?? this._day];
+    const unit = this._unit, members = this._members;
+    const what = members.length === 1 ? keepUnit(describeSettings(members[0], s.actions[0]?.start, (k) => this._label(k), unit)) : this._label("device_count", { count: members.length });
+    const end = members.length === 1 && Object.keys(s.actions[0]?.end || {}).length ? keepUnit(describeSettings(members[0], s.actions[0].end, (k) => this._label(k), unit)) : this._outside();
+    return this._label(end ? "what_then" : "what", { days: list, what, from: s.from, to: s.to === "24:00" ? "24:00" : s.to, then: end });
   }
 
   _summary(member, action) {
@@ -527,7 +705,7 @@ class MateriaWeeklyScheduler extends LitElement {
     const old = this._blocks()[this._sheet.index];
     const week = Object.fromEntries(DAYS.map((d) => [d, clone(this._schedule()[d] || [])]));
     week[DAYS[this._day]] = week[DAYS[this._day]].filter((b) => !(b.from === old.from && b.to === old.to));
-    this._save(week);
+    this._save(week, "deleted");
   }
 
   _renderCopySheet(s) {
@@ -547,7 +725,7 @@ class MateriaWeeklyScheduler extends LitElement {
       <p class="supporting-text">${this._label("copy_note")}</p>`;
   }
 
-  _copyDay() { this._save(copyDays(this._schedule(), this._day, this._sheet.destinations)); }
+  _copyDay() { this._save(copyDays(this._schedule(), this._day, this._sheet.destinations), "copied"); }
 
   /** A preset's week: from the schedule list when it is a UI helper, else asked for. */
   async _week(entity) {
@@ -596,7 +774,7 @@ class MateriaWeeklyScheduler extends LitElement {
     const s = this._sheet, preset = this._group.presets[s.index], week = s.weeks?.[s.index];
     if (!week) return;
     const mapped = Object.fromEntries(DAYS.map((d) => [d, (week[d] || []).map((b) => ({ ...b, data: actionData(b.data, this._actions(b)) }))]));
-    this._save(applyPreset(this._schedule(), mapped, this._day, s.scope, preset?.source_day));
+    this._save(applyPreset(this._schedule(), mapped, this._day, s.scope, preset?.source_day), "applied");
   }
 
   /** Every plan's per-group pattern, read once, so the sheet can show them all side by side. */
@@ -666,10 +844,33 @@ class MateriaWeeklyScheduler extends LitElement {
       await saveScheduleBatch((u) => this.hass.callWS(u), updates, originals);
       this._closeSheet();
       await this._load();
+      this._snack({ text: this._label("applied"), undo: async () => {
+        this._snackbar = null;
+        try { await saveScheduleBatch((u) => this.hass.callWS(u), originals, updates); await this._load(); this._snack({ text: this._label("undone") }); }
+        catch (error) { this._error = error.message || String(error); }
+      } });
     } catch (error) {
       this._sheet = { ...this._sheet, error: `${this._label(error.rollbackFailed ? "plan_partial" : "plan_failed")} ${error.message || ""}` };
     } finally {
       this._busy = false;
+    }
+  }
+
+  /** M3 snackbar with Undo, gone after 6 s. */
+  _snack(snack) {
+    clearTimeout(this._snackTimer);
+    this._snackbar = snack;
+    this._snackTimer = setTimeout(() => { this._snackbar = null; }, 6000);
+  }
+
+  async _restore(before, group) {
+    this._snackbar = null;
+    try {
+      await this.hass.callWS(this._update(before, before, group));
+      await this._load();
+      this._snack({ text: this._label("undone") });
+    } catch (error) {
+      this._error = error.message || String(error);
     }
   }
 
@@ -683,14 +884,16 @@ class MateriaWeeklyScheduler extends LitElement {
     return update;
   }
 
-  async _save(week) {
+  async _save(week, message = "saved") {
     const current = this._schedule();
     if (!current || this._busy) return;
     this._busy = true;
+    const before = clone(current), group = this._group;
     try {
-      await this.hass.callWS(this._update(current, week, this._group));
+      await this.hass.callWS(this._update(current, week, group));
       this._closeSheet();
       await this._load();
+      this._snack({ text: this._label(message), undo: () => this._restore(before, group) });
     } catch (error) {
       if (this._sheet) this._sheet = { ...this._sheet, error: error.message || String(error) };
       else this._error = error.message || String(error);

@@ -28,7 +28,8 @@ const limits = {
   // and +6 KB for the button group's touch selection spring, equal widths and the scheduler's M3 motion.
   // and +1.5 KB for the Tabs card's selected tab, primary preset and secondary variant.
   // and +1.5 KB for the fix pack (picker examples, matching days, focus return, motion fixes).
-  main: { size: 1_147_000, gzipSize: 286_000 },
+  // and +10 KB for drag-to-edit on the day bar, swipe-to-close, the period growing into its sheet, ±15 min and Undo.
+  main: { size: 1_158_000, gzipSize: 289_500 },
   editors: { size: 327_500, gzipSize: 77_500 },
 };
 
