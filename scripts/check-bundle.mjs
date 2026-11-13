@@ -25,7 +25,8 @@ const limits = {
   // 0.77.0: +61 KB / +16 KB gzip for the weekly scheduler card (overview, group,
   // period/copy/preset/plan sheets) and +7 KB for its editor (last 1_071_500 / 267_000, 320_000 / 76_000).
   // and +2 KB for switching days on the overview and the group page.
-  main: { size: 1_136_000, gzipSize: 283_800 },
+  // and +6 KB for the button group's touch selection spring, equal widths and the scheduler's M3 motion.
+  main: { size: 1_142_500, gzipSize: 285_000 },
   editors: { size: 327_500, gzipSize: 77_500 },
 };
 

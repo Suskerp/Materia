@@ -164,6 +164,7 @@ class MateriaButtonGroupEditor extends SmartEditorBase {
           { name: "entity", selector: { entity: {} } },
           { name: "attribute", selector: { text: {} } },
           { name: "preset", label: "e_color_preset", selector: { select: { mode: "dropdown", options: presetOptions } } },
+          { name: "equal_width", label: "e_equal_width", selector: { boolean: {} } },
         ]),
         { name: "size", label: "e_size_applie_whole", selector: { select: { mode: "dropdown", options: [
           { value: "xs", label: "XS (32dp)" },

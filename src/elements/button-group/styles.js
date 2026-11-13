@@ -91,6 +91,12 @@ export const styles = [
       text-overflow: ellipsis;
     }
 
+    /* Opt-in for dense equal-width pickers such as all seven weekdays.
+       Compact horizontal insets leave labels legible within each calendar
+       column while keeping the normal button size and 48px touch height. */
+    .group.equal-width > button { flex: 1 1 0; }
+    .group.equal-width .button-surface { padding-inline: 4px; }
+
     .button-surface::before {
       content: "";
       position: absolute;
@@ -118,7 +124,7 @@ export const styles = [
     /* M3 toggle buttons share one pressed shape regardless of whether their
        resting shape is round or square. The release then visibly morphs to the
        newly selected resting shape through the spatial spring above. */
-    .group.multi button:active .button-surface {
+    .group button:active .button-surface {
       border-radius: var(--pressed-radius) !important;
     }
 

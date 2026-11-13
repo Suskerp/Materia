@@ -7,6 +7,7 @@ import { homePlanWeeks, saveScheduleBatch } from "./plans.js";
 import { dayIndex, nowMinutes, sortedBlocks, where, slotAt, planMatchesDay, span } from "./view-model.js";
 import { renderSettings, choiceGroup } from "./controls.js";
 import { styles } from "./styles.js";
+import { MOTION } from "../../utils/motion.js";
 import "../../elements/button-group/index.js";
 
 /**
@@ -201,11 +202,12 @@ class MateriaWeeklyScheduler extends LitElement {
         <h2 class="title">${this.config.title || this._label("title")}</h2>
       </header>
       ${this.config.plans?.length ? html`
-        <h3 class="section">${this._label("plan_today")}</h3>
-        <div class="chips" role="group" aria-label=${this._label("home_plans")}>
+        <h3 class="section">${this._label("home_plans")}</h3>
+        <div class="plans" role="group" aria-label=${this._label("home_plans")}>
           ${this.config.plans.map((plan, index) => {
-            const on = this._schedules ? planMatchesDay(plan, lookup, today) : false;
-            return html`<button class="filter-chip" aria-pressed=${String(on)} @click=${() => this._openPlan(index)}>${on ? html`<ha-icon icon="mdi:check"></ha-icon>` : nothing}${plan.name}</button>`;
+            // The plan the chosen day already runs is the selected one.
+            const on = this._schedules ? planMatchesDay(plan, lookup, this._day) : false;
+            return html`<button class="tonal-button ${on ? "selected" : ""}" aria-pressed=${String(on)} @click=${() => this._openPlan(index)}>${on ? html`<ha-icon icon="mdi:check"></ha-icon>` : nothing}${plan.name}</button>`;
           })}
         </div>` : nothing}
       <h3 class="section">${this._day === today ? this._label("today", { day: this._days("long")[today] }) : this._days("long")[this._day]}</h3>
@@ -330,10 +332,38 @@ class MateriaWeeklyScheduler extends LitElement {
     this._sheet = { error: null, ...state };
     await this.updateComplete;
     const dialog = this.renderRoot.querySelector("dialog");
-    if (dialog && !dialog.open) dialog.showModal();
+    if (dialog && !dialog.open) {
+      dialog.showModal();
+      this._animateSheet(dialog, true);
+    }
     dialog?.querySelector(".sheet-body")?.focus({ preventScroll: true });
   }
-  _closeSheet() { this.renderRoot.querySelector("dialog")?.close(); this._sheet = null; }
+
+  /**
+   * M3 motion for the sheet: it enters on the expressive default spatial
+   * spring (up from the bottom edge on a phone, growing from 90 % as a dialog)
+   * and leaves faster, without overshoot, on the standard fast spring.
+   */
+  _animateSheet(dialog, opening) {
+    if (!dialog.animate || matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
+    const phone = matchMedia("(max-width: 600px)").matches;
+    const spring = MOTION[opening ? "expressive-default-spatial" : "standard-fast-spatial"];
+    const hidden = phone ? { transform: "translateY(100%)" } : { transform: "scale(0.9)", opacity: 0 };
+    const shown = phone ? { transform: "translateY(0)" } : { transform: "scale(1)", opacity: 1 };
+    return dialog.animate(opening ? [hidden, shown] : [shown, hidden], { duration: spring.ms, easing: spring.easing, fill: "forwards" });
+  }
+
+  async _closeSheet() {
+    const dialog = this.renderRoot.querySelector("dialog");
+    if (dialog?.open && !this._closing) {
+      this._closing = true;
+      dialog.classList.add("closing");
+      await this._animateSheet(dialog, false)?.finished.catch(() => {});
+      dialog.close();
+      this._closing = false;
+    }
+    this._sheet = null;
+  }
 
   _openPeriod(index, slot) {
     const block = this._blocks()[index];
@@ -353,7 +383,7 @@ class MateriaWeeklyScheduler extends LitElement {
     const sub = s.kind === "plan" ? this.config.plans[s.index]?.name : `${this._group.name || this._label("group")}${s.kind === "period" ? ` · ${this._days("long")[this._day]}` : ""}`;
     const primary = { period: [s.index < 0 ? "add_short" : "save", this._savePeriod], copy: ["copy_short", this._copyDay], preset: ["apply", this._applyPreset], plan: ["apply", this._applyPlan] }[s.kind];
     const blocked = this._busy || (s.kind === "copy" && !s.destinations.length) || (s.kind === "preset" && (s.loading || !s.weeks?.[s.index])) || (s.kind === "plan" && (s.loading || !s.entries || !s.destinations.length));
-    return html`<dialog class="sheet theme-${this._theme()}" aria-labelledby="sheet-title" @close=${() => { this._sheet = null; }} @cancel=${() => { this._sheet = null; }}>
+    return html`<dialog class="sheet theme-${this._theme()}" aria-labelledby="sheet-title" @close=${() => { this._sheet = null; }} @cancel=${(e) => { e.preventDefault(); this._closeSheet(); }} @click=${(e) => { if (e.target === e.currentTarget) this._closeSheet(); }}>
       <div class="handle" aria-hidden="true"></div>
       <header class="sheet-head">
         <div><h2 id="sheet-title">${this._label(title)}</h2><div class="sheet-sub">${sub}</div></div>
@@ -546,7 +576,7 @@ class MateriaWeeklyScheduler extends LitElement {
   }
 
   async _openPlan(index) {
-    await this._showSheet({ kind: "plan", index, destinations: [dayIndex()], loading: true });
+    await this._showSheet({ kind: "plan", index, destinations: [this._day], loading: true });
     try {
       const plan = this.config.plans[index];
       const entries = await Promise.all((plan.groups || []).map(async (item) => {

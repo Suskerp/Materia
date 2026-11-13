@@ -960,6 +960,7 @@ export const EDITOR_STRINGS = {
   ed_att_rules_from: { en: "Use the rules of", nl: "Gebruik de regels van" },
   ed_att_rules_from_help: { en: "The card name you gave the main card. This copy shows only when everything that needs attention has been put off.", nl: "De naam die je de hoofdkaart gaf. Deze kopie toont enkel wanneer alles wat aandacht vraagt uitgesteld is." },
   ed_att_items: { en: "Rules", nl: "Regels" },
+  e_equal_width: { en: "Equal-width options", nl: "Opties even breed" },
   /* ---- materia-weekly-scheduler editor ------------------------------ */
   ed_ws_title: { en: "Overview title", nl: "Titel van het overzicht" },
   ed_ws_title_help: { en: "Shown above the groups when there is more than one. Empty: “Schedules”.", nl: "Boven de groepen als er meer dan één is. Leeg: “Planningen”." },

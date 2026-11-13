@@ -31,7 +31,7 @@ export function choiceGroup(host, options, selected, change, { multi = false, la
   return html`<materia-button-group
     .hass=${host.hass}
     .value=${value}
-    .config=${{ group: "connected", size: "s", preset: "primary", variant: "tonal", multi_select: multi, active_shape: multi ? "square" : undefined, columns: multi ? options.length : undefined, aria_label: label, options }}
+    .config=${{ group: "connected", size: "s", preset: "primary", variant: "tonal", multi_select: multi, active_shape: multi ? "square" : undefined, columns: multi ? options.length : undefined, equal_width: options.length > 4, aria_label: label, options }}
     @option-selected=${(e) => {
       e.stopPropagation();
       change(e.detail.option.value);

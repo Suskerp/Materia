@@ -233,7 +233,7 @@ export class MateriaButtonGroup extends MediaGroupMixin(SheetOpenerMixin(Disable
 
     return html`
       <ha-card>
-        <div class="group ${unavailable ? 'unavailable' : ''} ${multiSelect ? 'multi' : ''}"
+        <div class="group ${unavailable ? 'unavailable' : ''} ${multiSelect ? 'multi' : ''} ${this.config.equal_width ? 'equal-width' : ''}"
           role="group"
           aria-label=${this.config.aria_label || this.config.name || t("e_options", this.hass)}
           style="--visual-height:${height}px;${!multiSelect ? `height: max(48px, ${height}px);` : `--btn-height:max(48px, ${height}px);`} ${columns ? `--btn-columns: ${columns};` : ''}">
@@ -273,7 +273,7 @@ export class MateriaButtonGroup extends MediaGroupMixin(SheetOpenerMixin(Disable
             return html`
               <button
                 type="button"
-                style="--pressed-radius: ${pressedCorner}px;"
+                style="--pressed-radius: ${multiSelect ? `${pressedCorner}px` : options.length === 1 ? `${outerR}px` : isFirst ? `${outerR}px ${sizeKey === 's' ? 4 : pressedCorner}px ${sizeKey === 's' ? 4 : pressedCorner}px ${outerR}px` : isLast ? `${sizeKey === 's' ? 4 : pressedCorner}px ${outerR}px ${outerR}px ${sizeKey === 's' ? 4 : pressedCorner}px` : `${sizeKey === 's' ? 4 : pressedCorner}px`};"
                 aria-pressed=${isActive ? "true" : "false"}
                 aria-label=${opt.aria_label || opt.label || String(opt.value ?? `Option ${i + 1}`)}
                 ?disabled=${unavailable || opt.disabled === true}
@@ -298,13 +298,17 @@ export class MateriaButtonGroup extends MediaGroupMixin(SheetOpenerMixin(Disable
     if (!el?.animate || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
     const spring = MOTION["expressive-fast-spatial"];
     this.__selectionMotion?.cancel();
-    // A pointer's :active frame is too brief to survive a touch release on
-    // mobile. Releasing from the M3 pressed scale into the spatial spring
-    // makes the same feedback visible for mouse, touch and keyboard.
-    this.__selectionMotion = el.animate(
-      [{ transform: "scale(0.96)" }, { transform: "scale(1)" }],
-      { duration: spring.ms, easing: spring.easing, fill: "none" }
-    );
+    cancelAnimationFrame(this.__selectionFrame);
+    // Touch often has no painted :active frame. Wait until parent-owned
+    // selection has rendered, then show the actual connected pressed shape
+    // returning to its selected shape on the same spatial spring as CSS.
+    this.__selectionFrame = requestAnimationFrame(() => {
+      const pressed = getComputedStyle(el.parentElement).getPropertyValue('--pressed-radius').trim();
+      this.__selectionMotion = el.animate(
+        [{ borderRadius: pressed, transform: 'scale(0.96)' }, { borderRadius: el.style.borderRadius, transform: 'scale(1)' }],
+        { duration: spring.ms, easing: spring.easing, fill: 'none' }
+      );
+    });
   }
 
   _handleOptionTap(opt, event) {
@@ -383,6 +387,7 @@ export class MateriaButtonGroup extends MediaGroupMixin(SheetOpenerMixin(Disable
     super.disconnectedCallback();
     clearTimeout(this._optimisticTimer);
     this.__selectionMotion?.cancel();
+    cancelAnimationFrame(this.__selectionFrame);
     for (const t of Object.values(this._optEntityTimers || {})) clearTimeout(t);
   }
 
