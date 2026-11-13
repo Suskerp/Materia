@@ -1,5 +1,6 @@
 import { LitElement, html, render } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { motionTiming } from "../../utils/motion.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
 import "../menu-list/index.js";
@@ -346,13 +347,15 @@ class MateriaMenu extends ActionMixin(LitElement) {
     this._syncThemeVars();
     this._positionPortal();
     this._renderPortal();
+    this._animatePanel(true);
     this._attachReposition();
   }
 
   _closePortal() {
     if (!this._portalRoot) return;
     this._closing = true;
-    this._renderPortal(); // play the close animation
+    this._renderPortal();
+    const ms = this._animatePanel(false);
     this._detachReposition();
     clearTimeout(this._portalTimer);
     this._portalTimer = setTimeout(() => {
@@ -360,7 +363,31 @@ class MateriaMenu extends ActionMixin(LitElement) {
       // re-adopting stylesheets on every open made menus feel sluggish.
       if (this._portal) this._portal.style.display = "none";
       this._closing = false;
-    }, 170);
+    }, ms);
+  }
+
+  /** The portal sits under <body>, outside the card's motion tokens, so the
+   *  panel animates with WAAPI straight from the MOTION table: in on the
+   *  expressive fast spring, out quicker on the standard fast one, opacity on
+   *  the fast effects spring. Returns how long the exit runs. */
+  _animatePanel(opening) {
+    const panel = this._portalRoot?.querySelector(".portal-panel");
+    this._panelAnims?.forEach((a) => a.cancel());
+    this._panelAnims = [];
+    const spatial = motionTiming(opening ? "expressive-fast-spatial" : "standard-fast-spatial", { fill: "forwards" });
+    const effects = motionTiming("fast-effects", { fill: "forwards" });
+    if (!panel?.animate) return 0;
+    const scale = ["scaleY(0.9)", "scaleY(1)"];
+    const fade = [0, 1];
+    if (!opening) {
+      scale.splice(0, 2, "scaleY(1)", "scaleY(0.96)");
+      fade.reverse();
+    }
+    this._panelAnims = [
+      panel.animate({ transform: scale }, spatial),
+      panel.animate({ opacity: fade }, effects),
+    ];
+    return Math.max(spatial.duration, effects.duration);
   }
 
   _renderPortal() {

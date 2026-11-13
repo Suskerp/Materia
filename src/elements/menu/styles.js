@@ -1,7 +1,8 @@
 import { css } from "lit";
 import { hostStyles, haCardReset, unavailableStyles } from "../../styles/card-styles.js";
+import { motionTokens } from "../../utils/motion.js";
 
-export const styles = [hostStyles, haCardReset, unavailableStyles, css`
+export const styles = [hostStyles, haCardReset, unavailableStyles, motionTokens, css`
   :host {
     position: relative;
     z-index: 1;
@@ -23,7 +24,7 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     box-sizing: border-box;
     cursor: pointer;
     z-index: 1;
-    transition: border-radius 0.2s ease;
+    transition: border-radius var(--md-sys-motion-expressive-fast-spatial);
   }
 
   .trigger.open-below {
@@ -112,13 +113,13 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
   }
 
   /* The dropdown is rendered into a body-level portal so it escapes any
-     ancestor stacking/overflow context. The panel animates in/out; positioning
+     ancestor stacking/overflow context. The panel animates in/out with the
+     Web Animations API from the MOTION table (index.js); positioning
      (left/top/width) is set imperatively on the portal host. */
   .portal-panel {
     max-height: min(600px, 70vh);
     overflow-y: auto;
     transform-origin: top center;
-    animation: menu-pop-in 0.16s ease both;
   }
 
   .portal-panel.above {
@@ -126,17 +127,7 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
   }
 
   .portal-panel.closing {
-    animation: menu-pop-out 0.14s ease both;
-  }
-
-  @keyframes menu-pop-in {
-    from { opacity: 0; transform: scaleY(0.9); }
-    to { opacity: 1; transform: scaleY(1); }
-  }
-
-  @keyframes menu-pop-out {
-    from { opacity: 1; }
-    to { opacity: 0; transform: scaleY(0.96); }
+    pointer-events: none;
   }
 
   .dropdown {
@@ -235,7 +226,7 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     background: currentColor;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s;
+    transition: opacity var(--md-sys-motion-fast-effects);
   }
 
   .menu-item:hover::before {
@@ -269,9 +260,9 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .portal-panel,
-    .portal-panel.closing {
-      animation: none;
+    .trigger,
+    .menu-item::before {
+      transition: none;
     }
   }
 `];
