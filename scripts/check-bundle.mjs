@@ -27,7 +27,8 @@ const limits = {
   // and +2 KB for switching days on the overview and the group page.
   // and +6 KB for the button group's touch selection spring, equal widths and the scheduler's M3 motion.
   // and +1.5 KB for the Tabs card's selected tab, primary preset and secondary variant.
-  main: { size: 1_145_000, gzipSize: 285_500 },
+  // and +1.5 KB for the fix pack (picker examples, matching days, focus return, motion fixes).
+  main: { size: 1_147_000, gzipSize: 286_000 },
   editors: { size: 327_500, gzipSize: 77_500 },
 };
 

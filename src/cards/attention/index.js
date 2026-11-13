@@ -67,7 +67,8 @@ class MateriaAttention extends ActionMixin(LitElement) {
   }
 
   static getStubConfig() {
-    return { items: [] };
+    // One example rule that always holds (the sun always has a state), so the picker shows a real item.
+    return { heading: "Needs attention", items: [{ name: "Water the plants", secondary: "Soil moisture 12 %", icon: "mdi:water-outline", level: "warning", entity: "sun.sun", conditions: [{ condition: "state", entity: "sun.sun", state_not: "unavailable" }] }] };
   }
 
   setConfig(config) {

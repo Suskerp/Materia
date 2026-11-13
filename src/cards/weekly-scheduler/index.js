@@ -4,7 +4,7 @@ import { loadEditors } from "../../utils/load-editors.js";
 import { DAYS, clock, minutes, clone, validateBlock, applyPreset, presetDayBlocks, copyDays } from "./model.js";
 import { entityId, memberName, memberIcon, domainOf, cleanSettings, validateSettings, describeSettings, periodActions, actionData, defaultSettings, settingsSchema } from "./targets.js";
 import { homePlanWeeks, saveScheduleBatch } from "./plans.js";
-import { dayIndex, nowMinutes, sortedBlocks, where, slotAt, planMatchesDay, span } from "./view-model.js";
+import { dayIndex, nowMinutes, sortedBlocks, where, slotAt, planMatchesDay, span, sameOnDays } from "./view-model.js";
 import { renderSettings, choiceGroup } from "./controls.js";
 import { styles } from "./styles.js";
 import { MOTION } from "../../utils/motion.js";
@@ -259,7 +259,11 @@ class MateriaWeeklyScheduler extends LitElement {
   _step(delta) { this._day = (this._day + delta + 7) % 7; }
 
   /** A horizontal swipe on the day bar moves a day back or forward. */
-  _swipeStart(e) { this._swipe = { x: e.clientX, y: e.clientY }; }
+  _swipeStart(e) {
+    // A swipe that ended without a click must not swallow the next real tap.
+    this._swiped = false;
+    this._swipe = { x: e.clientX, y: e.clientY };
+  }
   _swipeEnd(e) {
     const s = this._swipe; this._swipe = null;
     if (!s) return;
@@ -342,6 +346,8 @@ class MateriaWeeklyScheduler extends LitElement {
   /* ------------------------------------------------------------ sheets */
 
   async _showSheet(state) {
+    // Remember what opened the sheet, so focus goes back there when it closes.
+    if (!this._sheet) this._opener = this.renderRoot.activeElement;
     this._sheet = { error: null, ...state };
     await this.updateComplete;
     const dialog = this.renderRoot.querySelector("dialog");
@@ -376,6 +382,8 @@ class MateriaWeeklyScheduler extends LitElement {
       this._closing = false;
     }
     this._sheet = null;
+    this._opener?.isConnected && this._opener.focus({ preventScroll: true });
+    this._opener = null;
   }
 
   _openPeriod(index, slot) {
@@ -386,7 +394,8 @@ class MateriaWeeklyScheduler extends LitElement {
       from: clock(block?.from || slot?.from || "07:00"),
       to: clock(block?.to || slot?.to || "09:00"),
       actions, open: this._members.length > 1 ? 0 : -1,
-      days: [this._day],
+      // Editing a period that other days share (same times and settings) changes those days too.
+      days: block ? sameOnDays(this._schedule(), block, this._day) : [this._day],
     });
   }
 
@@ -397,7 +406,7 @@ class MateriaWeeklyScheduler extends LitElement {
     const primary = { period: [s.index < 0 ? "add_short" : "save", this._savePeriod], copy: ["copy_short", this._copyDay], preset: ["apply", this._applyPreset], plan: ["apply", this._applyPlan] }[s.kind];
     const blocked = this._busy || (s.kind === "copy" && !s.destinations.length) || (s.kind === "preset" && (s.loading || !s.weeks?.[s.index])) || (s.kind === "plan" && (s.loading || !s.entries || !s.destinations.length));
     return html`<dialog class="sheet theme-${this._theme()}" aria-labelledby="sheet-title" @close=${() => { this._sheet = null; }} @cancel=${(e) => { e.preventDefault(); this._closeSheet(); }} @click=${(e) => { if (e.target === e.currentTarget) this._closeSheet(); }}>
-      <div class="handle" aria-hidden="true"></div>
+      <button class="handle" aria-label=${this._label("close")} @click=${this._closeSheet}><span></span></button>
       <header class="sheet-head">
         <div><h2 id="sheet-title">${this._label(title)}</h2><div class="sheet-sub">${sub}</div></div>
         ${s.kind === "period" && s.index >= 0 ? html`<button class="icon-button danger" aria-label=${this._label("delete")} ?disabled=${this._busy} @click=${this._deletePeriod}><ha-icon icon="mdi:delete-outline"></ha-icon></button>` : nothing}
@@ -444,6 +453,7 @@ class MateriaWeeklyScheduler extends LitElement {
         if (d === this._day) return;
         this._sheet = { ...this._sheet, days: s.days.includes(d) ? s.days.filter((x) => x !== d) : [...s.days, d], error: null };
       }, { multi: true, label: this._label("repeat_on") })}
+      ${s.days.length > 1 ? html`<p class="supporting-text">${this._label(s.index >= 0 ? "also_changes" : "also_adds", { days: s.days.filter((d) => d !== this._day).sort().map((d) => this._days("short")[d]).join(", ") })}</p>` : nothing}
 
       ${outside ? html`<div class="info-row"><ha-icon icon="mdi:weather-night"></ha-icon><span>${this._label("before_after")}</span><strong>${outside}</strong></div>` : nothing}`;
   }
@@ -504,7 +514,8 @@ class MateriaWeeklyScheduler extends LitElement {
     const week = Object.fromEntries(DAYS.map((d) => [d, clone(this._schedule()[d] || [])]));
     const long = this._days("long");
     for (const day of s.days) {
-      const others = sortedBlocks(week, day).filter((b) => !(day === this._day && old && b.from === old.from && b.to === old.to));
+      // The edited period is replaced on every chosen day that has it, not added beside it.
+      const others = sortedBlocks(week, day).filter((b) => !(old && b.from === old.from && b.to === old.to));
       const error = validateBlock(block, others);
       if (error) { this._sheet = { ...s, error: s.days.length > 1 ? `${long[day]}: ${this._label(error)}` : this._label(error) }; return; }
       week[DAYS[day]] = [...others, clone(block)].sort((a, b) => minutes(a.from) - minutes(b.from));
@@ -694,5 +705,5 @@ for (const tag of ["materia-weekly-scheduler", "materia-climate-scheduler"]) {
 }
 window.customCards = window.customCards || [];
 if (!window.customCards.some((c) => c.type === "materia-weekly-scheduler")) {
-  window.customCards.push({ type: "materia-weekly-scheduler", name: "Materia Weekly Scheduler", description: "A week of periods for any group of devices, stored in a schedule helper", preview: false });
+  window.customCards.push({ type: "materia-weekly-scheduler", name: "Materia Weekly Scheduler", description: "A week of periods for any group of devices, stored in a schedule helper", preview: true });
 }

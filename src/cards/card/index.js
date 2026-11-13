@@ -8,6 +8,7 @@ import {
   unavailableStyles,
 } from "../../styles/card-styles.js";
 import { t } from "../../utils/i18n.js";
+import { motionTokens } from "../../utils/motion.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
 import { vacuumStatusLine } from "../../utils/vacuum-status.js";
@@ -917,6 +918,7 @@ export class MateriaCard extends ActionMixin(LitElement) {
 
   static styles = [
     hostStyles,
+    motionTokens,
     haCardReset,
     rowCardStyles,
     fillBarStyles,

@@ -59,8 +59,8 @@ export const styles = css`
     cursor: pointer;
     background: var(--md-sys-color-surface-container-highest);
     transition:
-      border-radius var(--md-sys-motion-default-spatial),
-      transform var(--md-sys-motion-fast-spatial),
+      border-radius var(--md-sys-motion-expressive-default-spatial),
+      transform var(--md-sys-motion-expressive-fast-spatial),
       background-color var(--md-sys-motion-default-effects);
   }
 
@@ -94,8 +94,8 @@ export const styles = css`
     background: var(--control-color);
     color: var(--control-on-color);
     transition:
-      border-radius var(--md-sys-motion-default-spatial),
-      transform var(--md-sys-motion-fast-spatial);
+      border-radius var(--md-sys-motion-expressive-default-spatial),
+      transform var(--md-sys-motion-expressive-fast-spatial);
   }
 
   .adjust:active { transform: scale(0.96); border-radius: 16px; }
@@ -145,8 +145,8 @@ export const styles = css`
     background: transparent;
     border: 1px solid var(--md-sys-color-outline-variant);
     transition:
-      border-radius var(--md-sys-motion-default-spatial),
-      transform var(--md-sys-motion-fast-spatial),
+      border-radius var(--md-sys-motion-expressive-default-spatial),
+      transform var(--md-sys-motion-expressive-fast-spatial),
       background-color var(--md-sys-motion-default-effects),
       color var(--md-sys-motion-default-effects);
   }

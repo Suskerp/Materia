@@ -94,7 +94,10 @@ export const styles = [
     @media (prefers-reduced-motion: reduce) {
       .shape.spin-once,
       .shape.spin-once .silhouette,
-      .shape.spin-once ha-icon {
+      .shape.spin-once ha-icon,
+      .shape.vector.spin-once .silhouette,
+      .shape:not(.vector).spin-once,
+      .shape:not(.vector).spin-once ha-icon {
         animation: none;
       }
     }

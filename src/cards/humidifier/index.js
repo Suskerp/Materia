@@ -114,6 +114,8 @@ class MateriaHumidifier extends ActionMixin(LitElement) {
         background: "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)",
         foreground: "var(--md-sys-cust-color-on-climate-cool, #205f82)",
         control: "var(--md-sys-cust-color-climate-cool-accent, #205f82)",
+        // Icons and the selected mode sit ON the accent fill, so they take the light container colour.
+        controlOn: "var(--md-sys-cust-color-climate-cool-container, #eaf3ff)",
       };
     }
     return {
@@ -236,7 +238,7 @@ class MateriaHumidifier extends ActionMixin(LitElement) {
         class=${unavailable ? "unavailable" : ""}
         style="
           background:${theme.background}; color:${theme.foreground};
-          --control-color:${theme.control}; --control-on-color:${theme.foreground};
+          --control-color:${theme.control}; --control-on-color:${theme.controlOn ?? theme.foreground};
         "
         @click=${() => this._handleAction(this.config.tap_action ?? { action: "more-info" })}
       >

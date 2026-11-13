@@ -39,3 +39,11 @@ test("helpers", () => {
   assert.deepEqual(quickTemperatures({}, 5, 35, "°C"), [16, 18, 20, 22]);
   assert.deepEqual(quickTemperatures({}, 17, 21, "°C"), [18, 20]);
 });
+
+test("sameOnDays finds the days that share a period", async () => {
+  const { sameOnDays } = await import("../src/cards/weekly-scheduler/view-model.js");
+  const p = { from: "06:00:00", to: "07:00:00", data: { temperature: 18 } };
+  const week = { monday: [p], tuesday: [{ ...p }], wednesday: [{ ...p, data: { temperature: 20 } }], thursday: [] };
+  assert.deepEqual(sameOnDays(week, p, 0), [0, 1]);
+  assert.deepEqual(sameOnDays(week, p, 3), [0, 1, 3]);
+});

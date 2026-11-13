@@ -39,8 +39,10 @@ class MateriaDoorbell extends ActionMixin(LitElement) {
     return document.createElement("materia-doorbell-editor");
   }
 
-  static getStubConfig() {
-    return { entity: "", timeout: 30 };
+  static getStubConfig(hass) {
+    const ids = Object.keys(hass?.states || {}).filter((e) => e.startsWith("binary_sensor."));
+    const entity = ids.find((e) => /door|bell|ring/.test(e)) || ids[0] || "";
+    return { entity, timeout: 30 };
   }
 
   setConfig(config) {

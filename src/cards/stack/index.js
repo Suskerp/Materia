@@ -51,8 +51,10 @@ class MateriaStack extends LitElement {
     return document.createElement("materia-stack-editor");
   }
 
-  static getStubConfig() {
-    return { direction: "column", cards: [] };
+  static getStubConfig(hass) {
+    const ids = Object.keys(hass?.states || {});
+    const light = ids.find((e) => e.startsWith("light.")), sensor = ids.find((e) => e.startsWith("sensor."));
+    return { direction: "column", cards: [light, sensor].filter(Boolean).map((entity) => ({ type: "tile", entity })) };
   }
 
   setConfig(config) {
@@ -109,5 +111,5 @@ window.customCards.push({
   type: "materia-stack",
   name: "Materia Stack",
   description: "Cards in a row or column that fill the available space (mixers, panels).",
-  preview: false,
+  preview: true,
 });

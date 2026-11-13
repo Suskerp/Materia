@@ -57,3 +57,10 @@ export function planMatchesDay(plan, lookup, day) {
 
 /** CSS left/width of a block on a 24 h bar. */
 export const span = (block) => `left:${minutes(block.from) / 14.4}%;width:${(minutes(block.to) - minutes(block.from)) / 14.4}%`;
+
+/** The days (always including `day`) whose week holds this exact period: same times and settings. */
+export function sameOnDays(week, block, day) {
+  const key = (b) => JSON.stringify([clock(b.from), clock(b.to), b.data || {}]);
+  const want = key(block);
+  return DAYS.map((d, i) => ((week?.[d] || []).some((b) => key(b) === want) || i === day ? i : -1)).filter((i) => i >= 0);
+}

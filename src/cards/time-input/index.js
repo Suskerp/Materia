@@ -181,4 +181,5 @@ window.customCards.push({
   type: "materia-time-input",
   name: "Materia Time Input",
   description: "Compact native time, date or date-and-time picker bound to an input_datetime helper.",
+  preview: true,
 });

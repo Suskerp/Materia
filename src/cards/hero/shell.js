@@ -265,9 +265,9 @@ export const heroShellStyles = [
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .burst,
+      .burst, .burst.working, .burst.alarm,
       .loom,
-      .drift {
+      .drift, .burst.working .drift {
         animation: none;
       }
     }

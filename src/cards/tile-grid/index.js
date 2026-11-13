@@ -114,7 +114,11 @@ export class MateriaTileGrid extends ActionMixin(LitElement) {
 
   static getStubConfig(hass) {
     const entity = Object.keys(hass?.states || {}).find((e) => e.startsWith("media_player.")) || "";
-    return { entity, items: [{ name: "Radio 1", image: "", tap_action: { action: "none" } }] };
+    return { entity, items: [
+      { name: "Radio 1", icon: "mdi:radio", tap_action: { action: "none" } },
+      { name: "Jazz", icon: "mdi:saxophone", tap_action: { action: "none" } },
+      { name: "News", icon: "mdi:newspaper-variant-outline", tap_action: { action: "none" } },
+    ] };
   }
 
   setConfig(config) {

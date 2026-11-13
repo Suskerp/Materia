@@ -50,7 +50,7 @@ export const styles = [hostStyles, motionTokens, css`
   .assist-chip:active, .filter-chip:active { border-radius: 4px; }
   .fab:active { border-radius: 12px; }
   .week-row:active { border-radius: 8px; }
-  .group-card:active { border-radius: 20px; }
+  .group-card:active { border-radius: 8px; }
   .radio-item:active, .device-head:active { background: color-mix(in srgb, var(--on-surface) 10%, transparent); }
   .list-item:active { background: color-mix(in srgb, var(--on-surface) 10%, transparent); }
   /* State layers: hover 8 %, pressed 10 % of the content colour. */
@@ -94,7 +94,7 @@ export const styles = [hostStyles, motionTokens, css`
 
   /* Overview: one filled card per group. */
   .groups { display: grid; gap: 8px; padding: 0 16px; }
-  .group-card { display: block; width: 100%; text-align: start; padding: 12px 16px 16px; border-radius: 12px; background: var(--s-mid); transition: background-color var(--md-sys-motion-fast-effects, 150ms); }
+  .group-card { display: block; width: 100%; text-align: start; padding: 12px 16px 16px; border-radius: 12px; background: var(--s-mid); }
   .group-card:hover { background: color-mix(in srgb, var(--on-surface) 8%, var(--s-mid)); }
   .row { display: flex; align-items: center; gap: 16px; min-height: 56px; }
   .avatar { width: 40px; height: 40px; flex: none; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; background: var(--k-container); color: var(--k-on-container); }
@@ -128,13 +128,16 @@ export const styles = [hostStyles, motionTokens, css`
   .day-card { margin: 12px 16px 0; padding: 16px; border-radius: 12px; background: var(--s-mid); }
   .day-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: -8px -8px 8px; }
   .day-head h3 { margin: 0; flex: 1; text-align: center; font-size: 16px; line-height: 24px; font-weight: 500; letter-spacing: .15px; }
-  .icon-button.small { width: 40px; height: 40px; border-radius: 20px; }
+  .icon-button.small { width: 40px; height: 40px; border-radius: 20px; position: relative; }
+  /* 40dp shapes keep a 48dp touch target. */
+  .icon-button.small::before, .week-row::before, .text-button::before, .filled-button::before { content: ""; position: absolute; inset: -4px; }
+  .week-row, .text-button, .filled-button { position: relative; }
   .hint { margin: 4px 0 0; font-size: 12px; line-height: 16px; letter-spacing: .4px; color: var(--on-variant); text-align: center; }
   .day-switch { padding: 0 16px 12px; }
   .bar.big { touch-action: pan-y; }
   .bar.big { height: 64px; border-radius: 16px; cursor: copy; }
   .bar.big .grid { position: absolute; top: 12px; bottom: 12px; width: 1px; background: var(--outline-variant); }
-  .bar.big .seg { top: 4px; bottom: 4px; border-radius: 12px; background: var(--k-container); color: var(--k-on-container); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--k-accent) 40%, transparent); }
+  .bar.big .seg { top: 4px; bottom: 4px; border-radius: 12px; background: var(--k-container); color: var(--k-on-container); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; box-shadow: inset 0 0 0 2px var(--k-accent); }
   .seg-value { font-size: 16px; line-height: 20px; font-weight: 500; white-space: nowrap; }
   .seg-time { font-size: 12px; line-height: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .bar.big .now { box-shadow: 0 0 0 2px var(--s-mid); }
@@ -150,7 +153,7 @@ export const styles = [hostStyles, motionTokens, css`
 
   /* Extended FAB: 56dp, 16dp corners, primary container, level 3. */
   .fab-row { display: flex; justify-content: flex-end; padding: 8px 16px 0; }
-  .fab { display: inline-flex; align-items: center; gap: 12px; height: 56px; padding: 0 20px 0 16px; border-radius: 16px; background: var(--primary-container); color: var(--on-primary-container); font-size: 16px; line-height: 24px; font-weight: 500; letter-spacing: .15px; box-shadow: 0 1px 3px rgba(0,0,0,.3), 0 4px 8px 3px rgba(0,0,0,.15); transition: box-shadow var(--md-sys-motion-fast-effects, 150ms); }
+  .fab { display: inline-flex; align-items: center; gap: 12px; height: 56px; padding: 0 20px 0 16px; border-radius: 16px; background: var(--primary-container); color: var(--on-primary-container); font-size: 16px; line-height: 24px; font-weight: 500; letter-spacing: .15px; box-shadow: 0 1px 3px rgba(0,0,0,.3), 0 4px 8px 3px rgba(0,0,0,.15); }
   .fab:hover { box-shadow: 0 2px 3px rgba(0,0,0,.3), 0 6px 10px 4px rgba(0,0,0,.15); }
 
   .error { margin: 12px 16px 0; color: var(--error); font-size: 14px; line-height: 20px; }
@@ -158,12 +161,13 @@ export const styles = [hostStyles, motionTokens, css`
   /* Modal bottom sheet on phones, a basic dialog on wider screens. */
   dialog.sheet { border: 0; padding: 0; margin: auto; width: min(560px, calc(100vw - 48px)); max-height: min(90dvh, 900px); border-radius: 28px; background: var(--s-low); color: var(--on-surface); box-shadow: 0 1px 3px rgba(0,0,0,.3), 0 4px 8px 3px rgba(0,0,0,.15); overflow: hidden; }
   dialog.sheet[open] { display: flex; flex-direction: column; }
-  dialog.sheet::backdrop { background: rgba(0, 0, 0, .32); animation: fade-in var(--md-sys-motion-default-effects-duration, 233ms) ease-out; }
-  dialog.sheet.closing::backdrop { opacity: 0; transition: opacity 150ms; }
+  dialog.sheet::backdrop { background: rgba(0, 0, 0, .32); animation: fade-in var(--md-sys-motion-default-effects); }
+  dialog.sheet.closing::backdrop { opacity: 0; transition: opacity var(--md-sys-motion-fast-effects); }
   .handle { display: none; }
+  .handle span { display: block; width: 32px; height: 4px; border-radius: 2px; background: var(--on-variant); opacity: .4; }
   @media (max-width: 600px) {
     dialog.sheet { width: 100vw; max-width: 100vw; margin: auto 0 0; border-radius: 28px 28px 0 0; max-height: 92dvh; }
-    .handle { display: block; flex: none; width: 32px; height: 4px; margin: 22px auto 0; border-radius: 2px; background: var(--on-variant); opacity: .4; }
+    .handle { display: flex; align-items: center; justify-content: center; flex: none; width: 48px; height: 36px; margin: 6px auto 0; }
   }
   .sheet-head { flex: none; display: flex; align-items: center; gap: 8px; padding: 24px 12px 16px 24px; }
   @media (max-width: 600px) { .sheet-head { padding: 16px 8px 16px 16px; } }

@@ -19,7 +19,8 @@ class MateriaMediaSource extends MenuButton {
   }
 
   static getStubConfig(hass) {
-    const entity = Object.keys(hass?.states || {}).find((e) => e.startsWith("media_player.")) || "";
+    const players = Object.keys(hass?.states || {}).filter((e) => e.startsWith("media_player."));
+    const entity = players.find((e) => hass.states[e].attributes?.source_list?.length) || players[0] || "";
     return { entity };
   }
 
