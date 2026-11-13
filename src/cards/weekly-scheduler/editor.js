@@ -14,31 +14,27 @@ const memo = new Map();
 /* One schema object per shape, so ha-form keeps its controls across renders. */
 const once = (key, make) => (memo.has(key) ? memo.get(key) : memo.set(key, make()).get(key));
 
-const groupSchema = (roommind) => once(`g${roommind}`, () => [
+/* A group is a schedule helper and its devices, whatever they are. A RoomMind
+   thermostat is recognised by the card itself, so nothing here asks about it. */
+const groupSchema = () => once("g", () => [
   { name: "name", label: "ed_ws_group_name", selector: { text: {} } },
   { name: "icon", label: "ed_ws_icon", selector: { icon: {} } },
   { name: "schedule", label: "ed_ws_schedule", helper: "ed_ws_schedule_help", required: true, selector: { entity: { domain: "schedule" } } },
-  { name: "backend", label: "ed_ws_backend", selector: { select: { mode: "dropdown", options: [
-    { value: "data", label: "ed_ws_backend_data" },
-    { value: "roommind", label: "ed_ws_backend_roommind" },
+  { name: "mode", label: "ed_ws_colour", helper: "ed_ws_colour_help", selector: { select: { mode: "dropdown", options: [
+    { value: "", label: "ed_ws_colour_auto" },
+    { value: "heat", label: "ed_ws_colour_heat" },
+    { value: "cool", label: "ed_ws_colour_cool" },
+    { value: "auto", label: "ed_ws_colour_green" },
+    { value: "light", label: "ed_ws_colour_light" },
+    { value: "neutral", label: "ed_ws_colour_neutral" },
   ] } } },
-  ...(roommind
-    ? [{ name: "roommind_area", label: "ed_ws_roommind_area", helper: "ed_ws_roommind_area_help", selector: { area: {} } }]
-    : [{ name: "mode", label: "ed_ws_colour", helper: "ed_ws_colour_help", selector: { select: { mode: "dropdown", options: [
-        { value: "", label: "ed_ws_colour_auto" },
-        { value: "heat", label: "ed_ws_colour_heat" },
-        { value: "cool", label: "ed_ws_colour_cool" },
-        { value: "auto", label: "ed_ws_colour_green" },
-        { value: "light", label: "ed_ws_colour_light" },
-        { value: "neutral", label: "ed_ws_colour_neutral" },
-      ] } } }]),
 ]);
 
-const memberSchema = (roommind, climate, unit) => once(`m${roommind}${climate}${unit}`, () => [
-  { name: "entity", label: "ed_ws_entity", required: true, selector: { entity: roommind ? { domain: "climate" } : {} } },
+const memberSchema = (climate, unit) => once(`m${climate}${unit}`, () => [
+  { name: "entity", label: "ed_ws_entity", required: true, selector: { entity: {} } },
   { name: "name", label: "ed_ws_member_name", selector: { text: {} } },
   { name: "icon", label: "ed_ws_icon", selector: { icon: {} } },
-  ...(climate || roommind
+  ...(climate
     ? [{ name: "default_temperature", label: "ed_ws_default_temp", helper: "ed_ws_default_temp_help", selector: { number: { min: 5, max: 35, step: 0.5, mode: "box", unit_of_measurement: unit } } }]
     : []),
 ]);
@@ -74,13 +70,12 @@ class MateriaWeeklySchedulerEditor extends SmartEditorBase {
   _name(entity) { return this.hass?.states?.[entity]?.attributes?.friendly_name || entity || ""; }
 
   _members(group, index, update) {
-    const roommind = group.backend === "roommind";
     const unit = this.hass?.config?.unit_system?.temperature || "°C";
     const members = group.members || (group.climate ? [{ entity: group.climate }] : []);
     return html`<materia-item-list-editor
       .hass=${this.hass}
       .items=${members}
-      .schema=${(m) => memberSchema(roommind, String(m?.entity || "").startsWith("climate."), unit)}
+      .schema=${(m) => memberSchema(String(m?.entity || "").startsWith("climate."), unit)}
       .itemLabel=${(m) => m?.name || this._name(m?.entity) || t("ed_ws_entity", this.hass)}
       .toForm=${(m) => ({ ...m, default_temperature: m?.defaults?.temperature })}
       .fromForm=${(m, v) => {
@@ -94,7 +89,7 @@ class MateriaWeeklySchedulerEditor extends SmartEditorBase {
         return next;
       }}
       .newItem=${() => ({})}
-      addLabel=${roommind ? "ed_ws_roommind_entity" : "ed_ws_devices"}
+      addLabel="ed_ws_devices"
       @value-changed=${(e) => {
         e.stopPropagation();
         const { climate, ...rest } = group;
@@ -164,14 +159,12 @@ class MateriaWeeklySchedulerEditor extends SmartEditorBase {
         <materia-item-list-editor
           .hass=${this.hass}
           .items=${groups}
-          .schema=${(g) => groupSchema(g?.backend === "roommind")}
+          .schema=${() => groupSchema()}
           .itemLabel=${(g) => g?.name || this._name(g?.schedule) || t("ed_ws_group", this.hass)}
-          .toForm=${(g) => ({ backend: "data", mode: "", ...g })}
+          .toForm=${(g) => ({ mode: "", ...g })}
           .fromForm=${(g, v) => {
-            const next = clean({ ...g, ...v });
-            if (next.backend === "data") delete next.backend;
-            if (next.backend !== "roommind") delete next.roommind_area;
-            else delete next.mode;
+            // RoomMind is recognised from the device now; the old switches go.
+            const { backend, roommind_area, ...next } = clean({ ...g, ...v });
             return next;
           }}
           .newItem=${() => ({ name: "", members: [] })}

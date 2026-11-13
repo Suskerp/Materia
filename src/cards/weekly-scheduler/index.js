@@ -21,9 +21,17 @@ import "../../elements/button-group/index.js";
  * drawn per device from targets.js, so climate is one kind of device among
  * lights, switches, fans, humidifiers, numbers, selects and actions.
  *
- * RoomMind groups (`backend: roommind`) store only a temperature per period;
- * outside periods RoomMind holds its own Eco temperature, read from RoomMind.
+ * Every group is just a schedule helper and its devices. A group whose one
+ * device is a RoomMind thermostat (climate.roommind_<area>) is recognised by
+ * itself: its periods store only a temperature (RoomMind reads the schedule)
+ * and outside periods RoomMind's own Eco temperature applies.
  */
+/** The RoomMind area of a group whose only device is a RoomMind thermostat, else null. */
+export const roommindArea = (members) => {
+  const ids = members.map(entityId).filter(Boolean);
+  return ids.length === 1 && ids[0].startsWith("climate.roommind_") ? ids[0].slice("climate.roommind_".length) : null;
+};
+
 /** "18 °C" never breaks between the number and its unit. */
 const keepUnit = (text) => String(text).replace(/ (°[CF]|%|K)(?=$|[\s·,])/g, "\u00a0$1");
 
@@ -60,13 +68,14 @@ class MateriaWeeklyScheduler extends LitElement {
     if (!Array.isArray(groups) || !groups.length) throw new Error("Weekly scheduler: add at least one schedule group.");
     for (const group of groups) {
       const ids = (group.members || []).map(entityId).filter(Boolean);
-      if (group.backend === "roommind" && ids.length > 1) throw new Error("A RoomMind schedule group has one RoomMind climate entity.");
       if (new Set(ids).size !== ids.length) throw new Error("Each entity can appear only once in a schedule group.");
     }
-    const rooms = groups.map((group) => ({
-      ...group,
-      members: (group.members || (group.climate ? [{ entity: group.climate }] : [])).filter((m) => entityId(m)).map((m) => ({ ...m, backend: group.backend })),
-    }));
+    const rooms = groups.map((group) => {
+      const members = (group.members || (group.climate ? [{ entity: group.climate }] : [])).filter((m) => entityId(m));
+      const roommind = roommindArea(members);
+      const backend = roommind ? "roommind" : undefined;
+      return { ...group, backend, roommind_area: group.roommind_area || roommind || undefined, members: members.map((m) => ({ ...m, backend })) };
+    });
     this.config = { ...config, rooms };
     this._room = Math.min(this._room ?? 0, rooms.length - 1);
     this._day ??= dayIndex();
