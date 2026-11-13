@@ -290,7 +290,7 @@ class MateriaWeeklyScheduler extends LitElement {
             // Short periods show just their value, very short ones nothing; the list below has it all.
             const length = minutes(b.to) - minutes(b.from);
             return html`<button class="seg" style=${span(b)} aria-label=${`${clock(b.from)}–${clock(b.to)} · ${this._blockLabel(b)}`} @click=${(e) => { e.stopPropagation(); if (this._swiped) { this._swiped = false; return; } this._openPeriod(i); }}>
-              ${length >= 120 ? html`<span class="seg-value">${this._blockLabel(b)}</span>` : nothing}${length >= 300 ? html`<span class="seg-time">${clock(b.from)} – ${clock(b.to)}</span>` : nothing}
+              ${length >= 210 ? html`<span class="seg-value">${this._blockLabel(b)}</span>` : nothing}${length >= 300 ? html`<span class="seg-time">${clock(b.from)} – ${clock(b.to)}</span>` : nothing}
             </button>`;
           })}
           ${this._day === today ? html`<span class="now" style=${`left:${nowMinutes() / 14.4}%`}></span>` : nothing}

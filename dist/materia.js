@@ -10729,7 +10729,7 @@ const Wr={CHILD:2},Kr=t=>(...e)=>({_$litDirective$:t,values:e});let Gr=class{con
         <div class="bar big" @pointerdown=${t=>this._swipeStart(t)} @pointerup=${t=>this._swipeEnd(t)} @pointercancel=${()=>{this._swipe=null}} @click=${t=>this._tapBar(t)}>
           <span class="grid" style="left:25%"></span><span class="grid" style="left:50%"></span><span class="grid" style="left:75%"></span>
           ${e.map((t,e)=>{const i=xo(t.to)-xo(t.from);return U`<button class="seg" style=${Ko(t)} aria-label=${`${wo(t.from)}–${wo(t.to)} · ${this._blockLabel(t)}`} @click=${t=>{t.stopPropagation(),this._swiped?this._swiped=!1:this._openPeriod(e)}}>
-              ${i>=120?U`<span class="seg-value">${this._blockLabel(t)}</span>`:W}${i>=300?U`<span class="seg-time">${wo(t.from)} – ${wo(t.to)}</span>`:W}
+              ${i>=210?U`<span class="seg-value">${this._blockLabel(t)}</span>`:W}${i>=300?U`<span class="seg-time">${wo(t.from)} – ${wo(t.to)}</span>`:W}
             </button>`})}
           ${this._day===i?U`<span class="now" style=${`left:${Bo()/14.4}%`}></span>`:W}
         </div>
