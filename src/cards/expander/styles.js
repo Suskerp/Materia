@@ -110,6 +110,28 @@ export const styles = [
       transform: rotate(180deg);
     }
 
+    /* Expand/collapse: 0fr -> 1fr animates the height without measuring
+       (room's pattern), on the standard spring so it does not overshoot,
+       with the content fading on the fast effects spring. */
+    .fold {
+      display: grid;
+      grid-template-rows: 0fr;
+      opacity: 0;
+      transition:
+        grid-template-rows var(--md-sys-motion-standard-default-spatial),
+        opacity var(--md-sys-motion-fast-effects);
+    }
+
+    .fold.open {
+      grid-template-rows: 1fr;
+      opacity: 1;
+    }
+
+    .fold-inner {
+      min-height: 0;
+      overflow: hidden;
+    }
+
     .body {
       display: flex;
       flex-direction: column;
@@ -173,7 +195,8 @@ export const styles = [
       .chev,
       .m3-switch,
       .m3-switch i,
-      ha-card.row.exp {
+      ha-card.row.exp,
+      .fold {
         transition: none;
       }
     }

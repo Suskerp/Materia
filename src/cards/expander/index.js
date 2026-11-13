@@ -6,6 +6,7 @@ import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
 import { PressController } from "../../utils/press.js";
+import { motionTiming } from "../../utils/motion.js";
 
 /**
  * Disclosure container (materia-expander): a materia-switch row that opens.
@@ -100,8 +101,50 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
     if (this.__cardsSig === sig) this._cards = els;
   }
 
+  /** True when the body should show: it has cards and the row is open (or
+   *  always open). Cards still being built do not count as a close. */
+  get _bodyOpen() {
+    return this._cardConfigs().length > 0 && (this._isOpen || this._alwaysOpen);
+  }
+
+  /* THE FOLD. The body is mounted while open AND while it folds away, so the
+     close can animate; once folded it leaves the DOM again (the cards keep
+     their state and their hass, see the header). _mounted: in the DOM;
+     _unfolded: at full height. Opening mounts it folded and unfolds it on the
+     next update, so the grid-template-rows transition has a start to run from. */
+  willUpdate(changed) {
+    super.willUpdate?.(changed);
+    const open = this._bodyOpen;
+    if (open && !this._mounted) {
+      this._mounted = true;
+      // The first paint, or a body that never folds, lands open: nothing to animate.
+      this._unfolded = !this.hasUpdated || this._alwaysOpen;
+    } else if (open) {
+      clearTimeout(this._foldTimer);
+    } else if (this._mounted && this._unfolded) {
+      this._unfolded = false;
+      clearTimeout(this._foldTimer);
+      this._foldTimer = setTimeout(() => {
+        if (this._bodyOpen) return;
+        this._mounted = false;
+        this.requestUpdate();
+      }, motionTiming("standard-default-spatial").duration);
+    }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    clearTimeout(this._foldTimer);
+  }
+
   updated(changed) {
     super.updated?.(changed);
+    if (this._mounted && !this._unfolded && this._bodyOpen) {
+      // Commit the folded start before unfolding, or there is nothing to transition from.
+      this.renderRoot.querySelector(".fold")?.getBoundingClientRect();
+      this._unfolded = true;
+      this.requestUpdate();
+    }
     if (changed.has("hass") && this.hass) {
       // name went through raw while secondary was resolved, so a templated
       // name printed literal Jinja on the dashboard. The inconsistency was the
@@ -233,10 +276,18 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
                 ><i></i></span></button>`
             : nothing}
         </div>
-        ${open && this._cards
-          ? html`<div class="body">
-              <div class="sep"></div>
-              ${this._cards}
+        ${this._mounted && this._cards
+          ? html`<div
+              class="fold ${this._unfolded ? "open" : ""}"
+              ?inert=${!this._unfolded}
+              aria-hidden=${this._unfolded ? "false" : "true"}
+            >
+              <div class="fold-inner">
+                <div class="body">
+                  <div class="sep"></div>
+                  ${this._cards}
+                </div>
+              </div>
             </div>`
           : nothing}
       </ha-card>
