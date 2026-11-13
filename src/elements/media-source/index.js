@@ -74,5 +74,6 @@ window.customCards.push({
   type: "materia-media-source",
   name: "Materia Media Source",
   description: "A player's source button: tap to cycle the inputs, or open them as a menu.",
-  preview: true,
+  // A lone 48px button that only draws when a player has inputs: the description says more in the picker.
+  preview: false,
 });

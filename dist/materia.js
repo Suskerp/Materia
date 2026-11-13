@@ -14914,7 +14914,7 @@ const Vr={CHILD:2},Wr=t=>(...e)=>({_$litDirective$:t,values:e});let Kr=class{con
         aria-expanded=${i?this._menu?"true":"false":W}
         @click=${i?t=>this._toggleMenu(t,"start"):this._cycle}
       ><ha-icon icon="mdi:import"></ha-icon></button
-      >${i?this._popover(this._menu?this._rows(e,t.attributes.source):W,"start scroll"):W}`}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-media-source",name:"Materia Media Source",description:"A player's source button: tap to cycle the inputs, or open them as a menu.",preview:!0});const vc=[zt,Mt,mt,oc,rc,gc,n`
+      >${i?this._popover(this._menu?this._rows(e,t.attributes.source):W,"start scroll"):W}`}}),window.customCards=window.customCards||[],window.customCards.push({type:"materia-media-source",name:"Materia Media Source",description:"A player's source button: tap to cycle the inputs, or open them as a menu.",preview:!1});const vc=[zt,Mt,mt,oc,rc,gc,n`
     ha-card {
       color: var(--mx-on);
     }
