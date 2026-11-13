@@ -202,13 +202,17 @@ class MateriaWeeklyScheduler extends LitElement {
         <h2 class="title">${this.config.title || this._label("title")}</h2>
       </header>
       ${this.config.plans?.length ? html`
-        <h3 class="section">${this._label("home_plans")}</h3>
-        <div class="plans" role="group" aria-label=${this._label("home_plans")}>
-          ${this.config.plans.map((plan, index) => {
-            // The plan the chosen day already runs is the selected one.
-            const on = this._schedules ? planMatchesDay(plan, lookup, this._day) : false;
-            return html`<button class="tonal-button ${on ? "selected" : ""}" aria-pressed=${String(on)} @click=${() => this._openPlan(index)}>${on ? html`<ha-icon icon="mdi:check"></ha-icon>` : nothing}${plan.name}</button>`;
-          })}
+        <div class="plan-entry">
+          ${(() => {
+            // One row in the style of the preset list; the plan the chosen day already runs is named.
+            const match = this._schedules ? this.config.plans.findIndex((plan) => planMatchesDay(plan, lookup, this._day)) : -1;
+            return html`<button class="radio-item single" @click=${() => this._openPlan(Math.max(0, match))}>
+              <span class="avatar neutral"><ha-icon icon="mdi:home-clock-outline"></ha-icon></span>
+              <span class="text"><span class="headline">${this._label("home_plans")}</span>
+                <span class="supporting">${this._days("long")[this._day]} · ${match >= 0 ? this.config.plans[match].name : this._label("plan_custom")}</span></span>
+              <ha-icon icon="mdi:chevron-right" aria-hidden="true"></ha-icon>
+            </button>`;
+          })()}
         </div>` : nothing}
       <h3 class="section">${this._day === today ? this._label("today", { day: this._days("long")[today] }) : this._days("long")[this._day]}</h3>
       <div class="day-switch">${this._daySwitch()}</div>
@@ -380,7 +384,7 @@ class MateriaWeeklyScheduler extends LitElement {
   _renderSheet() {
     const s = this._sheet;
     const title = { period: s.index < 0 ? "new_period" : "edit_period", copy: "copy", preset: "presets", plan: "home_plans" }[s.kind];
-    const sub = s.kind === "plan" ? this.config.plans[s.index]?.name : `${this._group.name || this._label("group")}${s.kind === "period" ? ` · ${this._days("long")[this._day]}` : ""}`;
+    const sub = s.kind === "plan" ? this._label("plan_sub") : `${this._group.name || this._label("group")}${s.kind === "period" ? ` · ${this._days("long")[this._day]}` : ""}`;
     const primary = { period: [s.index < 0 ? "add_short" : "save", this._savePeriod], copy: ["copy_short", this._copyDay], preset: ["apply", this._applyPreset], plan: ["apply", this._applyPlan] }[s.kind];
     const blocked = this._busy || (s.kind === "copy" && !s.destinations.length) || (s.kind === "preset" && (s.loading || !s.weeks?.[s.index])) || (s.kind === "plan" && (s.loading || !s.entries || !s.destinations.length));
     return html`<dialog class="sheet theme-${this._theme()}" aria-labelledby="sheet-title" @close=${() => { this._sheet = null; }} @cancel=${(e) => { e.preventDefault(); this._closeSheet(); }} @click=${(e) => { if (e.target === e.currentTarget) this._closeSheet(); }}>
@@ -575,18 +579,19 @@ class MateriaWeeklyScheduler extends LitElement {
     this._save(applyPreset(this._schedule(), mapped, this._day, s.scope, preset?.source_day));
   }
 
+  /** Every plan's per-group pattern, read once, so the sheet can show them all side by side. */
   async _openPlan(index) {
     await this._showSheet({ kind: "plan", index, destinations: [this._day], loading: true });
     try {
-      const plan = this.config.plans[index];
-      const entries = await Promise.all((plan.groups || []).map(async (item) => {
+      const plans = await Promise.all(this.config.plans.map((plan) => Promise.all((plan.groups || []).map(async (item) => {
         const group = this.config.rooms.find((g) => g.schedule === item.schedule);
-        if (!group || !item.source) throw new Error(this._label("unavailable"));
-        const source = await this._week(item.source);
+        if (!group || !item.source) return null;
+        const source = await this._week(item.source).catch(() => null);
+        if (!source) return null;
         const week = Object.fromEntries(DAYS.map((d) => [d, (source[d] || []).map((b) => ({ ...b, data: actionData(b.data, this._actions(b, group)) }))]));
         return { ...item, week, group, pattern: group.presets?.find((p) => p.schedule === item.source)?.name || "" };
-      }));
-      if (this._sheet?.kind === "plan") this._sheet = { ...this._sheet, entries, loading: false };
+      })).then((list) => (list.some((e) => !e) ? null : list))));
+      if (this._sheet?.kind === "plan") this._sheet = { ...this._sheet, plans, entries: plans[this._sheet.index], loading: false };
     } catch (error) {
       if (this._sheet?.kind === "plan") this._sheet = { ...this._sheet, loading: false, error: error.message || String(error) };
     }
@@ -596,6 +601,22 @@ class MateriaWeeklyScheduler extends LitElement {
     const long = this._days("long"), short = this._days("short");
     const set = (destinations) => { this._sheet = { ...this._sheet, destinations }; };
     return html`
+      ${s.loading ? html`<p class="sheet-text">${this._label("loading")}</p>` : html`
+        <div class="radio-list" role="radiogroup" aria-label=${this._label("home_plans")}>
+          ${this.config.plans.map((plan, i) => {
+            const entries = s.plans?.[i];
+            const on = i === s.index;
+            return html`<button class="radio-item" role="radio" aria-checked=${String(on)} ?disabled=${!entries} @click=${() => { this._sheet = { ...this._sheet, index: i, entries }; }}>
+              <span class="text"><span class="headline">${plan.name}</span>
+                ${entries ? entries.map((e) => {
+                  const day = presetDayBlocks(e.week, e.source_day);
+                  return html`<span class="plan-row theme-${this._theme(e.group)}"><span class="plan-room">${e.group.name}</span>${this._bar(day, { cls: "mini on-container" })}</span>`;
+                }) : html`<span class="supporting">${this._label("unavailable")}</span>`}
+              </span>
+              <span class="radio ${on ? "on" : ""}" aria-hidden="true"></span>
+            </button>`;
+          })}
+        </div>`}
       <h3 class="section in-sheet">${this._label("apply_to")}</h3>
       ${choiceGroup(this, DAYS.map((_, i) => ({ label: short[i], aria_label: long[i], value: String(i), active: s.destinations.includes(i) })), s.destinations.map(String), (v) => {
         const d = Number(v);
@@ -605,14 +626,7 @@ class MateriaWeeklyScheduler extends LitElement {
         <button class="assist-chip" @click=${() => set([0, 1, 2, 3, 4])}>${this._label("weekdays")}</button>
         <button class="assist-chip" @click=${() => set([5, 6])}>${this._label("weekend")}</button>
         <button class="assist-chip" @click=${() => set([0, 1, 2, 3, 4, 5, 6])}>${this._label("every_day")}</button>
-      </div>
-      ${s.loading ? html`<p class="sheet-text">${this._label("loading")}</p>` : html`<div class="plan-list">${(s.entries || []).map((e) => {
-        const day = presetDayBlocks(e.week, e.source_day);
-        return html`<div class="plan-item theme-${this._theme(e.group)}">
-          <span class="avatar"><ha-icon .icon=${e.group.icon || memberIcon(e.group.members[0] || {}, this.hass)}></ha-icon></span>
-          <span class="text"><span class="headline">${e.group.name}</span><span class="supporting">${e.pattern || day.map((b) => `${clock(b.from)}–${clock(b.to)}`).join(" · ") || this._label("empty")}</span>${this._bar(day, { cls: "mini on-container" })}</span>
-        </div>`;
-      })}</div>`}`;
+      </div>`;
   }
 
   async _applyPlan() {

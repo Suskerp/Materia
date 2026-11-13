@@ -26,7 +26,7 @@ const limits = {
   // period/copy/preset/plan sheets) and +7 KB for its editor (last 1_071_500 / 267_000, 320_000 / 76_000).
   // and +2 KB for switching days on the overview and the group page.
   // and +6 KB for the button group's touch selection spring, equal widths and the scheduler's M3 motion.
-  main: { size: 1_142_500, gzipSize: 285_000 },
+  main: { size: 1_143_000, gzipSize: 285_000 },
   editors: { size: 327_500, gzipSize: 77_500 },
 };
 

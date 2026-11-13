@@ -127,7 +127,9 @@ export const STRINGS = {
   /* ---- materia-weekly-scheduler ------------------------------------ */
   ws_title: { en: "Schedules", nl: "Planningen" },
   ws_plan_today: { en: "Whole-home plan for today", nl: "Plan voor het hele huis vandaag" },
-  ws_home_plans: { en: "Whole-home plans", nl: "Plannen voor het hele huis" },
+  ws_home_plans: { en: "Whole-home plan", nl: "Plan voor het hele huis" },
+  ws_plan_custom: { en: "Own mix", nl: "Eigen mix" },
+  ws_plan_sub: { en: "One pattern for every room at once", nl: "Eén patroon voor alle kamers tegelijk" },
   ws_today: { en: "Today · {day}", nl: "Vandaag · {day}" },
   ws_previous_day: { en: "Previous day", nl: "Vorige dag" },
   ws_next_day: { en: "Next day", nl: "Volgende dag" },

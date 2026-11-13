@@ -43,10 +43,10 @@ export const styles = [hostStyles, motionTokens, css`
   /* M3 Expressive motion. Shapes and positions move on the spatial springs
      (they overshoot a little); colours and opacity on the effects springs.
      Every pressable thing tightens its corners while held and springs back. */
-  .icon-button, .tonal-button, .assist-chip, .filter-chip, .fab, .text-button, .filled-button, .week-row, .tonal-icon, .radio-item, .device-head, .group-card, .list-item {
+  .icon-button, .assist-chip, .filter-chip, .fab, .text-button, .filled-button, .week-row, .tonal-icon, .radio-item, .device-head, .group-card, .list-item {
     transition: border-radius var(--md-sys-motion-expressive-fast-spatial), background-color var(--md-sys-motion-fast-effects), color var(--md-sys-motion-fast-effects), box-shadow var(--md-sys-motion-fast-effects);
   }
-  .icon-button:active, .tonal-button:active, .text-button:active, .filled-button:active { border-radius: 8px; }
+  .icon-button:active, .text-button:active, .filled-button:active { border-radius: 8px; }
   .assist-chip:active, .filter-chip:active { border-radius: 4px; }
   .fab:active { border-radius: 12px; }
   .week-row:active { border-radius: 8px; }
@@ -54,7 +54,7 @@ export const styles = [hostStyles, motionTokens, css`
   .radio-item:active, .device-head:active { background: color-mix(in srgb, var(--on-surface) 10%, transparent); }
   .list-item:active { background: color-mix(in srgb, var(--on-surface) 10%, transparent); }
   /* State layers: hover 8 %, pressed 10 % of the content colour. */
-  .tonal-button:hover, .assist-chip:hover, .filter-chip:hover, .text-button:hover, .week-row:hover:not([aria-checked="true"]) { background-image: linear-gradient(color-mix(in srgb, currentColor 8%, transparent), color-mix(in srgb, currentColor 8%, transparent)); }
+  .assist-chip:hover, .filter-chip:hover, .text-button:hover, .week-row:hover:not([aria-checked="true"]) { background-image: linear-gradient(color-mix(in srgb, currentColor 8%, transparent), color-mix(in srgb, currentColor 8%, transparent)); }
   .filled-button:hover { box-shadow: 0 1px 2px rgba(0,0,0,.3), 0 1px 3px 1px rgba(0,0,0,.15); }
 
   /* Periods slide and stretch to their new place when the day changes. */
@@ -63,13 +63,13 @@ export const styles = [hostStyles, motionTokens, css`
   .seg-value, .seg-time { animation: fade-in var(--md-sys-motion-default-effects); }
   @keyframes fade-in { from { opacity: 0; } }
 
-  /* Whole-home plans: a standard M3 button group of small tonal buttons. */
-  .plans { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px; }
-  .tonal-button { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 20px; background: var(--secondary-container); color: var(--on-secondary-container); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: .1px; white-space: nowrap; position: relative; }
-  .tonal-button::before { content: ""; position: absolute; inset: -4px 0; }
-  .tonal-button.selected { background: var(--primary); color: var(--on-primary); border-radius: 12px; padding-left: 12px; }
-  .tonal-button.selected:active { border-radius: 8px; }
-  .tonal-button ha-icon { --mdc-icon-size: 18px; }
+  /* Whole-home plans: one entry row on the overview, a radio list in the sheet. */
+  .plan-entry { padding: 0 16px 4px; margin-top: 8px; }
+  .radio-item.single { border-radius: 12px; }
+  .radio-item.single > ha-icon { color: var(--on-variant); }
+  .plan-row { display: grid; grid-template-columns: minmax(72px, 30%) minmax(0, 1fr); align-items: center; gap: 12px; margin-top: 8px; }
+  .plan-row .bar { margin-top: 0; }
+  .plan-room { font-size: 12px; line-height: 16px; letter-spacing: .4px; color: var(--on-variant); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* Top app bar: 64dp, Title Large, 48dp icon buttons. */
   .appbar { display: flex; align-items: center; gap: 4px; min-height: 64px; padding: 8px 4px 8px 16px; }
