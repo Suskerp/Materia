@@ -1,6 +1,7 @@
 import { html, css, nothing } from "lit";
 import { createCardContent, openSheet } from "./sheet.js";
 import { t } from "../utils/i18n.js";
+import { motionTiming } from "../utils/motion.js";
 import {
   PANEL_OPEN_EVENT,
   PANEL_CHANGED_EVENT,
@@ -124,7 +125,12 @@ export const PanelHostMixin = (superClass) =>
       const animate = !immediate && this._panelMode?.() === "side";
       this._setPanel(null, animate ? undefined : null);
       clearTimeout(this.__panelRemoveTimer);
-      if (animate) this.__panelRemoveTimer = setTimeout(() => (this._panelEl = null), 400);
+      // The side panel closes on the kiosk grid's standard-default-spatial
+      // transition (art-scope styles); its content leaves once that has run.
+      if (animate) {
+        const ms = motionTiming("standard-default-spatial").duration;
+        this.__panelRemoveTimer = setTimeout(() => (this._panelEl = null), ms + 10);
+      }
       else this._panelActions = [];
     }
 

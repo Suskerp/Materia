@@ -1,5 +1,5 @@
 import { LitElement, html, css } from "lit";
-import { motionTokens } from "../utils/motion.js";
+import { motionTokens, motionTiming } from "../utils/motion.js";
 import { hostStyles } from "../styles/card-styles.js";
 import { ART_VARIABLES } from "../utils/art-palette.js";
 import { loadCardHelpers } from "../styles/shared.js";
@@ -56,22 +56,30 @@ class MateriaSheet extends LitElement {
         box-sizing: border-box;
         padding: 0 16px calc(16px + env(safe-area-inset-bottom, 0px));
         border-radius: 28px 28px 0 0;
-        background: var(--md-sys-color-surface-container-low, var(--card-background-color));
+        --_sheet-bg: var(--md-sys-color-surface-container-low, var(--card-background-color));
+        background: var(--_sheet-bg);
+        /* The enter spring overshoots upward: the same surface continues below
+           the bottom edge so no gap opens under the sheet. */
+        box-shadow: 0 96px 0 0 var(--_sheet-bg);
         color: var(--md-sys-color-on-surface, var(--primary-text-color));
         transform: translateY(105%);
-        transition: transform var(--md-sys-motion-standard-slow-spatial);
+        /* Exit: quicker, without overshoot. */
+        transition: transform var(--md-sys-motion-standard-fast-spatial);
         pointer-events: auto;
         outline: none;
         overscroll-behavior: contain;
       }
-      .sheet.dragging {
-        transition: none;
-      }
       :host([open]) .scrim {
         opacity: 0.32;
       }
+      /* Enter (and the snap back after a short drag): the expressive spring. */
       :host([open]) .sheet {
         transform: none;
+        transition: transform var(--md-sys-motion-expressive-default-spatial);
+      }
+      .sheet.dragging,
+      :host([open]) .sheet.dragging {
+        transition: none;
       }
       .grab {
         padding: 16px 0 12px;
@@ -209,7 +217,7 @@ class MateriaSheet extends LitElement {
     setTimeout(() => {
       this.remove();
       this.content = null;
-    }, 350);
+    }, motionTiming("standard-fast-spatial").duration + 30);
     this.onclose?.();
   }
 }
