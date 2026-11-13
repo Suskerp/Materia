@@ -131,7 +131,7 @@ export const mediaButtonStyles = css`
       color: var(--mx-on);
       box-shadow: 0 6px 18px rgb(0 0 0 / 0.35);
       transform-origin: top right;
-      animation: pmenu-in var(--md-sys-motion-expressive-fast-spatial, 0.2s ease-out) both;
+      animation: pmenu-in var(--md-sys-motion-expressive-fast-spatial) both;
     }
 
     @keyframes pmenu-in {
@@ -200,16 +200,21 @@ export const mediaButtonStyles = css`
       transition: background-color var(--md-sys-motion-fast-effects), border-color var(--md-sys-motion-fast-effects);
     }
 
+    /* One 16px thumb, moved and sized by transform: 12px (scale 0.75) at
+       the start when off, full size 18px along when on. */
     .psw::after {
       content: "";
       position: absolute;
-      top: 5px;
-      left: 5px;
-      width: 12px;
-      height: 12px;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
       background: var(--mx-onv);
-      transition: all var(--md-sys-motion-expressive-fast-spatial, 0.2s);
+      transform: scale(0.75);
+      transition:
+        transform var(--md-sys-motion-expressive-fast-spatial),
+        background-color var(--md-sys-motion-fast-effects);
     }
 
     .psw.on {
@@ -218,16 +223,18 @@ export const mediaButtonStyles = css`
     }
 
     .psw.on::after {
-      top: 3px;
-      left: 21px;
-      width: 16px;
-      height: 16px;
+      transform: translateX(18px);
       background: var(--mx-op);
     }
 
     @media (prefers-reduced-motion: reduce) {
       .pmenu {
         animation: none;
+      }
+
+      .psw,
+      .psw::after {
+        transition: none;
       }
     }
 
