@@ -274,10 +274,10 @@ class MateriaSlider extends LitElement {
         place-items: center;
         z-index: 1;
         pointer-events: none;
-        /* Effects, not spatial: a spatial spring overshoots, and a slider
-           handle that swings past the value is a handle showing a value the
-           entity does not have. */
-        transition: left var(--md-sys-motion-default-effects);
+        /* Standard, not expressive: an expressive spring overshoots, and a
+           slider handle that swings past the value is a handle showing a value
+           the entity does not have. */
+        transition: left var(--md-sys-motion-standard-default-spatial);
       }
 
       .handle {
@@ -288,7 +288,7 @@ class MateriaSlider extends LitElement {
            including the 2dp pressed one. */
         border-radius: 999px;
         background: var(--_fill);
-        transition: width var(--md-sys-motion-fast-effects),
+        transition: width var(--md-sys-motion-standard-fast-spatial),
           background-color var(--md-sys-motion-default-effects);
       }
 
@@ -330,7 +330,7 @@ class MateriaSlider extends LitElement {
         pointer-events: none;
         opacity: 0;
         transition: opacity var(--md-sys-motion-fast-effects),
-          left var(--md-sys-motion-default-effects);
+          left var(--md-sys-motion-standard-default-spatial);
       }
 
       .slider.pressed .indicator,

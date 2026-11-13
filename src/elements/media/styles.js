@@ -111,7 +111,7 @@ export const styles = [motionTokens, css`
 
   /* Only fits after the first ease; the first lands at once (no shrink on load). */
   :host([art-fitted]) .art.art-auto {
-    transition: width var(--md-sys-motion-default-effects);
+    transition: width var(--md-sys-motion-standard-default-spatial);
   }
 
   /* No remembered size yet: hidden until the first measurement places it. */

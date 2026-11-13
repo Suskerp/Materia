@@ -43,7 +43,7 @@ export const styles = [
     /* Always a translucent wash — the level should tint the card, not bury it. */
     .level-fill {
       fill: color-mix(in srgb, var(--ms-accent, var(--md-sys-color-primary, #6750a4)) 30%, transparent);
-      transition: d var(--md-sys-motion-default-effects);
+      transition: d var(--md-sys-motion-standard-default-spatial);
     }
 
     /* Ambient "working" rotation — the small corner glyph carries a livelier

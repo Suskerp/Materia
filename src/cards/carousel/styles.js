@@ -76,12 +76,11 @@ export const styles = [
       background: var(--md-sys-color-surface-container-high, color-mix(in srgb, var(--md-sys-color-on-surface, #1c1b1f) 5%, transparent));
       color: var(--md-sys-color-on-surface-variant, var(--primary-text-color));
       border-radius: 28px;
-      /* One duration for everything, matching the chips. The radius was on the
-         slower default curve while the colours were on the fast one, so the
-         tile visibly lagged the rest of the page. Non-overshooting throughout:
-         a spring overshoots the radius and, with overflow:hidden, flashes
-         square corners mid-transition. */
-      transition: border-radius var(--md-sys-motion-fast-effects),
+      /* Fast curves, matching the chips: the radius on the slower default
+         curve visibly lagged the rest of the page. Non-overshooting standard
+         spatial spring: an expressive one overshoots the radius and, with
+         overflow:hidden, flashes square corners mid-transition. */
+      transition: border-radius var(--md-sys-motion-standard-fast-spatial),
         background-color var(--md-sys-motion-fast-effects),
         color var(--md-sys-motion-fast-effects);
     }

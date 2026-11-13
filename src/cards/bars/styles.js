@@ -149,7 +149,8 @@ export const styles = [
       width: var(--mb-p, 0%);
       border-radius: 7px;
       background: var(--mb-row-color, var(--md-sys-color-primary));
-      transition: width var(--md-sys-motion-default-effects),
+      /* Width, not scaleX: a scale would squash the rounded ends. */
+      transition: width var(--md-sys-motion-standard-default-spatial),
         background-color var(--md-sys-motion-default-effects);
     }
 

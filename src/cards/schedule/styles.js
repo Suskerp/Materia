@@ -698,12 +698,12 @@ export const styles = [
     /* The quick chips fold away while the calendar is open — the picker takes
        real space, and offering both at once made the sheet enormous. 0fr/1fr
        animates height without measuring; the inert attribute on the wrapper (set in the
-       template) takes the hidden buttons out of tab order. Effects curve:
-       a fold is occlusion, not movement, so nothing should overshoot. */
+       template) takes the hidden buttons out of tab order. Standard spatial
+       spring: a fold should not overshoot. */
     .chips-wrap {
       display: grid;
       grid-template-rows: 1fr;
-      transition: grid-template-rows var(--md-sys-motion-default-effects),
+      transition: grid-template-rows var(--md-sys-motion-standard-default-spatial),
         opacity var(--md-sys-motion-fast-effects);
     }
 

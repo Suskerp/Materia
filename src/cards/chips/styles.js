@@ -52,13 +52,11 @@ export const styles = [
       position: relative;
       overflow: hidden;
       -webkit-tap-highlight-color: transparent;
-      /* All on ONE duration so the chip reads as a single motion. Mixing
-         durations made it grow in two stages: the colour landed on the fast
-         curve while the width (driven by the check expanding) was still
-         running on the slower one. Non-overshooting curve throughout — on the
-         springy spatial one the radius sailed past its target and
-         overflow:hidden flashed square corners. */
-      transition: border-radius var(--md-sys-motion-fast-effects),
+      /* Shape and width share ONE spring so the chip reads as a single
+         motion (the width is driven by the check expanding). Non-overshooting
+         standard spatial spring — on the expressive one the radius sailed
+         past its target and overflow:hidden flashed square corners. */
+      transition: border-radius var(--md-sys-motion-standard-fast-spatial),
         background-color var(--md-sys-motion-fast-effects),
         color var(--md-sys-motion-fast-effects);
     }
@@ -82,7 +80,7 @@ export const styles = [
       opacity: 0;
       overflow: hidden;
       flex-shrink: 0;
-      transition: width var(--md-sys-motion-fast-effects),
+      transition: width var(--md-sys-motion-standard-fast-spatial),
         opacity var(--md-sys-motion-fast-effects);
     }
 

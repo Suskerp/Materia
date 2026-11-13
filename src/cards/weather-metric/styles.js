@@ -121,7 +121,7 @@ export const styles = [
       stroke: var(--wm-accent, var(--md-sys-color-primary));
       stroke-width: 7;
       stroke-linecap: round;
-      transition: d var(--md-sys-motion-default-effects);
+      transition: d var(--md-sys-motion-standard-default-spatial);
     }
 
     /* Pressure ring: thinner and inset from the circle edge (Pixel style). */
