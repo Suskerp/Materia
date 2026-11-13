@@ -53,7 +53,7 @@ export const PREVIEW_EVENT = "materia-attention-preview";
  */
 class MateriaAttention extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".act");
+  _pressController = new PressController(this, ".act");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

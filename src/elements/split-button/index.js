@@ -14,7 +14,7 @@ const TICON = { xs: 20, s: 20, m: 24, l: 32, xl: 40, default: 24, large: 24 };
 
 class MateriaSplitButton extends DisabledMixin(ActionMixin(LitElement)) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".trailing, .menu-item");
+  _pressController = new PressController(this, ".trailing, .menu-item");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

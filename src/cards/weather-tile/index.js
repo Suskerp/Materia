@@ -7,7 +7,7 @@ import { PressController } from "../../utils/press.js";
 
 class MateriaWeatherTile extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".blob");
+  _pressController = new PressController(this, ".blob");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

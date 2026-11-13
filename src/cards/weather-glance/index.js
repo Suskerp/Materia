@@ -22,7 +22,7 @@ function compass(deg, hass) {
  */
 class MateriaWeatherGlance extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".glance");
+  _pressController = new PressController(this, ".glance");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

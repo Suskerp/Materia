@@ -93,7 +93,7 @@ const DEFAULT_DOMAIN = {
 /* ------------------------------------------------------------------ */
 export class MateriaCard extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".sub-btn");
+  _pressController = new PressController(this, ".sub-btn");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

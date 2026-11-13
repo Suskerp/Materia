@@ -29,7 +29,8 @@ const limits = {
   // and +1.5 KB for the Tabs card's selected tab, primary preset and secondary variant.
   // and +1.5 KB for the fix pack (picker examples, matching days, focus return, motion fixes).
   // and +10 KB for drag-to-edit on the day bar, swipe-to-close, the period growing into its sheet, ±15 min and Undo.
-  main: { size: 1_158_000, gzipSize: 289_500 },
+  // and +15 KB / +3 KB gzip for the motion audit fixes (shared press controller, pressed states, tokenised curves).
+  main: { size: 1_173_500, gzipSize: 292_500 },
   editors: { size: 327_500, gzipSize: 77_500 },
 };
 

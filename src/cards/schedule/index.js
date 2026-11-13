@@ -43,7 +43,7 @@ import { PressController } from "../../utils/press.js";
  */
 class MateriaSchedule extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".sw");
+  _pressController = new PressController(this, ".sw");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

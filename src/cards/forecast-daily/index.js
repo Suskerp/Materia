@@ -14,7 +14,7 @@ import { PressController } from "../../utils/press.js";
  */
 class MateriaForecastDaily extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".pill");
+  _pressController = new PressController(this, ".pill");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

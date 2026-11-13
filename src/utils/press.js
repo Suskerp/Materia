@@ -64,6 +64,3 @@ export class PressController {
     this.el = null;
   }
 }
-
-/** `new PressController(host, selector)`, for symmetry with other helpers. */
-export const pressController = (host, selector) => new PressController(host, selector);

@@ -403,7 +403,7 @@ export const heroShellStyles = [
 export const HeroShellMixin = (Base) =>
   class extends Base {
     /** Holds the pressed shape on touch (see utils/press.js). */
-    _press = new PressController(this, ".hero.tap, .alert-action");
+    _pressController = new PressController(this, ".hero.tap, .alert-action");
 
     /** Reflected so the whole shell can restyle from one attribute, including
      *  parts (the alert strip) that are not inside the container. */

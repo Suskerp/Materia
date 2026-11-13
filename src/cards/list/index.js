@@ -33,7 +33,7 @@ import { PressController } from "../../utils/press.js";
  */
 class MateriaList extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".row:not(.text), .row.text.live");
+  _pressController = new PressController(this, ".row:not(.text), .row.text.live");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

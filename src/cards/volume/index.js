@@ -59,7 +59,7 @@ import { PressController } from "../../utils/press.js";
  */
 class MateriaVolume extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".pm button, .tfoot .step");
+  _pressController = new PressController(this, ".pm button, .tfoot .step");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

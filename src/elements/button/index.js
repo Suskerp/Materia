@@ -29,7 +29,7 @@ const DOMAIN_ACTIVE = {
 
 class MateriaButton extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".touch-target");
+  _pressController = new PressController(this, ".touch-target");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

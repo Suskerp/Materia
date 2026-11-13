@@ -17,7 +17,7 @@ import { PressController } from "../../utils/press.js";
  */
 class MateriaVolumeRing extends SheetOpenerMixin(ActionMixin(LitElement)) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, "button");
+  _pressController = new PressController(this, "button");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

@@ -101,7 +101,7 @@ const SPARK_DEFAULT_DAYS = 3;
  */
 class MateriaGlanceTile extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".detail-metric.interactive");
+  _pressController = new PressController(this, ".detail-metric.interactive");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

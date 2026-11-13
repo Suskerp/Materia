@@ -49,7 +49,7 @@ let tabInstance = 0;
  */
 class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".tab");
+  _pressController = new PressController(this, ".tab");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

@@ -27,7 +27,7 @@ const BUZZED_LINGER_MS = 6000;
  */
 class MateriaDoorbell extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".panel.buzz");
+  _pressController = new PressController(this, ".panel.buzz");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

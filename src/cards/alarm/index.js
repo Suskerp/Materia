@@ -146,7 +146,7 @@ const ACTIVE_R = 28;
  */
 class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, "button.mode, .chip");
+  _pressController = new PressController(this, "button.mode, .chip");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

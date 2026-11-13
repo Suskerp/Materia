@@ -18,7 +18,7 @@ import { PressController } from "../../utils/press.js";
  */
 export class MenuButton extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".iconbtn");
+  _pressController = new PressController(this, ".iconbtn");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

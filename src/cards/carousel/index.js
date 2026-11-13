@@ -24,7 +24,7 @@ import { PressController } from "../../utils/press.js";
  */
 class MateriaCards extends DisabledMixin(ActionMixin(LitElement)) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".tile");
+  _pressController = new PressController(this, ".tile");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

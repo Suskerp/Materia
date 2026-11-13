@@ -51,7 +51,7 @@ const ON_STATES = new Set(["on", "true", "open", "opening", "unlocked", "unlocki
  */
 class MateriaConfirm extends DisabledMixin(ActionMixin(LitElement)) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, "button.active-face");
+  _pressController = new PressController(this, "button.active-face");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

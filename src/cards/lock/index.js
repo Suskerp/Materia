@@ -85,7 +85,7 @@ const SHAPE_STYLES = {
  * locked). */
 class MateriaLock extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".open-btn");
+  _pressController = new PressController(this, ".open-btn");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

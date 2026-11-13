@@ -23,7 +23,7 @@ import { PressController } from "../../utils/press.js";
  */
 class MateriaChips extends DisabledMixin(ActionMixin(LitElement)) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".chip");
+  _pressController = new PressController(this, ".chip");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

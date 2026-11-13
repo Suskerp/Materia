@@ -24,7 +24,7 @@ import { PressController } from "../../utils/press.js";
  */
 class MateriaBarSelect extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement))) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".off, .bar");
+  _pressController = new PressController(this, ".off, .bar");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

@@ -33,7 +33,7 @@ import { motionTiming } from "../../utils/motion.js";
  */
 class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".switch-target, .m3-switch");
+  _pressController = new PressController(this, ".switch-target, .m3-switch");
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -135,6 +135,8 @@ class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
   disconnectedCallback() {
     super.disconnectedCallback();
     clearTimeout(this._foldTimer);
+    // A fold cut short by leaving the page finishes at once.
+    if (!this._unfolded) this._mounted = false;
   }
 
   updated(changed) {

@@ -22,7 +22,7 @@ import { PressController } from "../../utils/press.js";
  */
 class MateriaAlerts extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".alert");
+  _pressController = new PressController(this, ".alert");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

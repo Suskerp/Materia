@@ -8,7 +8,7 @@ import { PressController } from "../../utils/press.js";
 
 class MateriaClimate extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".btn");
+  _pressController = new PressController(this, ".btn");
   static get properties() {
     return {
       hass: { attribute: false },

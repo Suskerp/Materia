@@ -18,7 +18,7 @@ const KNOWN_MODE_KEYS = new Set(["auto", "away", "baby", "boost", "comfort", "ec
 
 class MateriaHumidifier extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".power, .adjust, .mode");
+  _pressController = new PressController(this, ".power, .adjust, .mode");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

@@ -32,7 +32,7 @@ const CONDITION_LABELS = {
 
 class MateriaWeather extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _press = new PressController(this, ".container");
+  _pressController = new PressController(this, ".container");
   static properties = {
     hass: { attribute: false },
     config: { state: true },
