@@ -124,7 +124,11 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
   }
 
   static getStubConfig(hass) {
-    const entity = Object.keys(hass?.states || {}).find((e) => e.startsWith("sensor.")) || "";
+    // A real percentage (a battery, humidity) so the picker shows a filled example.
+    const states = hass?.states || {};
+    const numeric = (e) => e.startsWith("sensor.") && Number.isFinite(Number(states[e]?.state));
+    const entity = Object.keys(states).find((e) => numeric(e) && states[e].attributes?.unit_of_measurement === "%")
+      || Object.keys(states).find(numeric) || "";
     return { entity, variant: "percent" };
   }
 

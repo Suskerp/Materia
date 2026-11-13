@@ -77,6 +77,9 @@ class MateriaTabsEditor extends SmartEditorBase {
           },
           { name: "attribute", label: "e_attrib_instea_state", selector: { text: {} } },
           { name: "vertical", label: "e_vertic_rail_off", selector: { boolean: {} } },
+          { name: "variant", label: "e_tabs_variant", selector: { select: { mode: "dropdown", options: [{ value: "connected", label: "e_tabs_connected" }, { value: "secondary", label: "e_tabs_secondary" }] } } },
+          { name: "selected", label: "e_tabs_selected", helper: "e_tabs_selected_help", selector: { text: {} } },
+          { name: "preset", label: "e_tabs_preset", selector: { select: { mode: "dropdown", options: [{ value: "secondary", label: "e_tabs_preset_secondary" }, { value: "primary", label: "e_tabs_preset_primary" }] } } },
         ],
       },
       {

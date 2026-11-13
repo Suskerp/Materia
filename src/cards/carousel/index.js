@@ -339,9 +339,4 @@ window.customCards.push({
   description: "Grid of selectable tile cards — the richer alternative to a chip row. carousel: true scrolls instead.",
   preview: true,
 });
-window.customCards.push({
-  type: "materia-carousel",
-  name: "Materia Carousel (deprecated — use Materia Cards)",
-  description: "Legacy alias of Materia Cards; defaults to the scrolling rail.",
-  preview: false,
-});
+// materia-carousel stays defined for existing dashboards but is no longer offered in the card picker.

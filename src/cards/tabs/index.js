@@ -23,12 +23,13 @@ let tabInstance = 0;
  * own `cards:` list, like a small vertical-stack per tab) or external
  * conditional cards (design 13a: "tabs, not a taller column").
  *
- * NOT the M3 Tabs component. Segmented buttons are deprecated in M3
+ * Default appearance is a connected switcher. `variant: secondary` uses
+ * M3 secondary tabs for peer pages under a shared app heading.
+ * Segmented buttons are deprecated in M3
  * Expressive in favor of the connected button group (Google's own
  * migration note), and Expressive never touched Tabs at all — new
  * shape-morph treatment went to ButtonGroup/ToggleButton instead. Tabs are
- * also the wrong SEMANTIC fit here: M3's hierarchy reserves tabs for
- * top-level content groups (3+), while switching between two views of the
+ * appropriate for related peer content, while switching between two views of the
  * same content (rooms vs. map) is exactly the section-level job a
  * connected group is for. So this wears that grammar: joined tonal
  * segments, the selected one growing and rounding to a full pill while its
@@ -76,10 +77,12 @@ class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
 
   setConfig(config) {
     if (!config.items?.length) throw new Error("Materia Tabs: at least one item is required");
-    this.config = { ...config };
+    this.config = { ...config, vertical: config.variant === "secondary" ? false : config.vertical };
+    this.toggleAttribute("secondary", config.variant === "secondary");
+    this.toggleAttribute("primary-preset", config.preset === "primary");
     // vertical rail by default; vertical: false lays the tabs out as a
     // horizontal bar (above the pages, when pages are embedded).
-    this.toggleAttribute("horizontal", config.vertical === false);
+    this.toggleAttribute("horizontal", this.config.vertical === false);
     this._panes = null;
     this._buildPanes();
   }
@@ -217,7 +220,7 @@ class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
       return cur == null ? null : String(cur);
     }
     const first = this._items()[0];
-    return this._sel ?? String(first?.value ?? first?.label ?? "");
+    return this._sel ?? String(this.config.selected ?? first?.value ?? first?.label ?? "");
   }
 
   _tap(item) {
@@ -282,6 +285,8 @@ class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
     const items = this._items();
     const current = this._current;
     const vertical = this.config.vertical !== false;
+    const secondary = this.config.variant === "secondary";
+    const selectedIndex = items.findIndex((item) => String(item.value ?? item.label) === current);
     const rail = html`
       <div
         class="rail"
@@ -302,7 +307,7 @@ class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
               aria-selected=${on ? "true" : "false"}
               aria-controls=${this._panes?.[i] ? `${this.__tabUid}-panel-${i}` : nothing}
               tabindex=${on ? "0" : "-1"}
-              style="border-radius:${radius};${vertical ? `min-height:${HEIGHT}px;` : `height:${HEIGHT}px;`}"
+              style="border-radius:${secondary ? "0px" : radius};${vertical ? `min-height:${HEIGHT}px;` : `height:${HEIGHT}px;`}"
               @click=${() => this._tap(item)}
               @keydown=${(event) => this._tabKeydown(event, i, items, vertical)}
             >
@@ -311,6 +316,7 @@ class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
             </button>
           `;
         })}
+        ${secondary && selectedIndex >= 0 ? html`<span class="indicator" aria-hidden="true" style="width:${100 / items.length}%;--tab-position:${selectedIndex * 100}%;"></span>` : nothing}
       </div>
     `;
 

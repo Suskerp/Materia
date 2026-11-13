@@ -63,6 +63,11 @@ export const styles = [
       color: var(--md-sys-color-on-secondary-container);
     }
 
+    :host([primary-preset]:not([secondary])) .tab.on {
+      background: var(--md-sys-color-primary, var(--primary-color));
+      color: var(--md-sys-color-on-primary, var(--text-primary-color));
+    }
+
     .glyph {
       --mdc-icon-size: 20px;
       flex-shrink: 0;
@@ -156,6 +161,44 @@ export const styles = [
       min-width: 0;
     }
 
+    /* M3 secondary-navigation-tab: 48dp row, 2dp full-width primary
+       indicator, title-small labels. Peer navigation uses surface roles. */
+    :host([secondary]) .rail {
+      position: relative;
+      gap: 0;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant, var(--divider-color));
+    }
+
+    :host([secondary]) .tab {
+      flex: 1 1 0;
+      background: transparent;
+      color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
+    }
+
+    :host([secondary]) .tab.on {
+      flex-grow: 1;
+      color: var(--md-sys-color-on-surface, var(--primary-text-color));
+    }
+
+    :host([secondary]) .glyph {
+      --mdc-icon-size: 24px;
+    }
+
+    .indicator {
+      position: absolute;
+      inset-inline-start: 0;
+      bottom: 0;
+      height: 2px;
+      pointer-events: none;
+      background: var(--md-sys-color-primary, var(--primary-color));
+      transform: translateX(var(--tab-position));
+      transition: transform var(--md-sys-motion-standard-fast-spatial);
+    }
+
+    :host(:dir(rtl)) .indicator {
+      transform: translateX(calc(-1 * var(--tab-position)));
+    }
+
     /* Bar above, pages below — markup stays stage-then-rail. */
     :host([horizontal]) .wrap {
       display: flex;
@@ -166,7 +209,8 @@ export const styles = [
 
     @media (prefers-reduced-motion: reduce) {
       .tab,
-      .tab::before {
+      .tab::before,
+      .indicator {
         transition: none;
       }
     }
