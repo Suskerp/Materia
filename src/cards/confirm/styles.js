@@ -111,7 +111,8 @@ export const styles = [
       opacity: 0.08;
     }
 
-    button.active-face:active .layer {
+    button.active-face:active .layer,
+    button.active-face[data-pressed] .layer {
       opacity: 0.1;
     }
 

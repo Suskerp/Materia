@@ -41,7 +41,8 @@ export const styles = [
         transform var(--md-sys-motion-expressive-fast-spatial);
     }
 
-    .glance:active {
+    .glance:active,
+    .glance[data-pressed] {
       transform: scale(0.985);
     }
 

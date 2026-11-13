@@ -97,7 +97,8 @@ export const styles = [
       transition: opacity var(--md-sys-motion-fast-effects);
     }
     .trailing:hover .trailing-surface::before { opacity: 0.08; }
-    .trailing:active .trailing-surface::before { opacity: 0.12; }
+    .trailing:active .trailing-surface::before,
+    .trailing[data-pressed] .trailing-surface::before { opacity: 0.12; }
     .trailing:focus-visible { outline: 2px solid var(--md-sys-color-primary, #6750a4); outline-offset: 2px; }
 
     .trailing-surface ha-icon {
@@ -160,14 +161,19 @@ export const styles = [
       box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
       opacity: 0;
       pointer-events: none;
+      /* Exit: quicker, no overshoot. */
       transition:
         opacity var(--md-sys-motion-fast-effects),
         transform var(--md-sys-motion-standard-fast-spatial);
     }
+    /* Enter: the expressive spring. */
     .menu.open {
       opacity: 1;
       transform: none;
       pointer-events: auto;
+      transition:
+        opacity var(--md-sys-motion-fast-effects),
+        transform var(--md-sys-motion-expressive-fast-spatial);
     }
 
     /* Menu alignment: opens below or above, anchored to the left or right edge
@@ -241,7 +247,8 @@ export const styles = [
       pointer-events: none;
     }
     .menu-item:hover::before { opacity: 0.08; }
-    .menu-item:active::before { opacity: 0.12; }
+    .menu-item:active::before,
+    .menu-item[data-pressed]::before { opacity: 0.12; }
     .menu-item:focus-visible {
       outline: 3px solid var(--md-sys-color-primary, currentColor);
       outline-offset: -3px;
@@ -268,6 +275,7 @@ export const styles = [
       .trailing-surface::before,
       .chev,
       .menu,
+      .menu.open,
       .menu-item::before {
         transition: none;
       }

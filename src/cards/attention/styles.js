@@ -132,7 +132,8 @@ export const styles = [
       cursor: pointer;
       transition: border-radius var(--md-sys-motion-expressive-fast-spatial, 200ms);
     }
-    .act:active {
+    .act:active,
+    .act[data-pressed] {
       border-radius: 12px;
     }
     .act.second {

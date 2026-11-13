@@ -460,7 +460,8 @@ export const styles = [
       opacity: 0.08;
     }
 
-    button.mode:active .layer {
+    button.mode:active .layer,
+    button.mode[data-pressed] .layer {
       opacity: 0.1;
     }
 
@@ -666,7 +667,8 @@ export const styles = [
       background: color-mix(in srgb, currentColor 8%, transparent);
     }
 
-    .chip:active {
+    .chip:active,
+    .chip[data-pressed] {
       background: color-mix(in srgb, currentColor 10%, transparent);
     }
 

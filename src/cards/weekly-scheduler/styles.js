@@ -46,13 +46,13 @@ export const styles = [hostStyles, motionTokens, css`
   .icon-button, .assist-chip, .filter-chip, .fab, .text-button, .filled-button, .week-row, .tonal-icon, .radio-item, .device-head, .group-card, .list-item {
     transition: border-radius var(--md-sys-motion-expressive-fast-spatial), background-color var(--md-sys-motion-fast-effects), color var(--md-sys-motion-fast-effects), box-shadow var(--md-sys-motion-fast-effects);
   }
-  .icon-button:active, .text-button:active, .filled-button:active { border-radius: 8px; }
-  .assist-chip:active, .filter-chip:active { border-radius: 4px; }
-  .fab:active { border-radius: 12px; }
-  .week-row:active { border-radius: 8px; }
-  .group-card:active { border-radius: 8px; }
-  .radio-item:active, .device-head:active { background: color-mix(in srgb, var(--on-surface) 10%, transparent); }
-  .list-item:active { background: color-mix(in srgb, var(--on-surface) 10%, transparent); }
+  .icon-button:active, .text-button:active, .filled-button:active, .icon-button[data-pressed], .text-button[data-pressed], .filled-button[data-pressed] { border-radius: 8px; }
+  .assist-chip:active, .filter-chip:active, .assist-chip[data-pressed], .filter-chip[data-pressed] { border-radius: 4px; }
+  .fab:active, .fab[data-pressed] { border-radius: 12px; }
+  .week-row:active, .week-row[data-pressed] { border-radius: 8px; }
+  .group-card:active, .group-card[data-pressed] { border-radius: 8px; }
+  .radio-item:active, .device-head:active, .radio-item[data-pressed], .device-head[data-pressed] { background: color-mix(in srgb, var(--on-surface) 10%, transparent); }
+  .list-item:active, .list-item[data-pressed] { background: color-mix(in srgb, var(--on-surface) 10%, transparent); }
   /* State layers: hover 8 %, pressed 10 % of the content colour. */
   .assist-chip:hover, .filter-chip:hover, .text-button:hover, .week-row:hover:not([aria-checked="true"]) { background-image: linear-gradient(color-mix(in srgb, currentColor 8%, transparent), color-mix(in srgb, currentColor 8%, transparent)); }
   .filled-button:hover { box-shadow: 0 1px 2px rgba(0,0,0,.3), 0 1px 3px 1px rgba(0,0,0,.15); }
@@ -231,10 +231,10 @@ export const styles = [hostStyles, motionTokens, css`
   .stepper { display: flex; align-items: center; gap: 12px; }
   .stepper.big { justify-content: space-between; padding: 8px 0; }
   .stepper-label { flex: 1; font-size: 14px; line-height: 20px; }
-  .tonal-icon { width: 40px; height: 40px; flex: none; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; background: var(--secondary-container); color: var(--on-secondary-container); transition: border-radius var(--md-sys-motion-expressive-fast-spatial, 200ms); }
-  .tonal-icon:active { border-radius: 12px; }
+  .tonal-icon { width: 40px; height: 40px; flex: none; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; background: var(--secondary-container); color: var(--on-secondary-container); transition: border-radius var(--md-sys-motion-expressive-fast-spatial); }
+  .tonal-icon:active, .tonal-icon[data-pressed] { border-radius: 12px; }
   .stepper.big .tonal-icon { width: 56px; height: 56px; border-radius: 28px; }
-  .stepper.big .tonal-icon:active { border-radius: 16px; }
+  .stepper.big .tonal-icon:active, .stepper.big .tonal-icon[data-pressed] { border-radius: 16px; }
   .stepper-value { min-width: 64px; text-align: center; font-size: 16px; line-height: 24px; font-variant-numeric: tabular-nums; }
   .stepper-value span { margin-left: 2px; }
   .stepper.big .stepper-value { font-family: var(--materia-font-display, inherit); font-size: 45px; line-height: 52px; color: var(--k-on-container); }

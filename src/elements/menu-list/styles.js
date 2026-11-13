@@ -25,7 +25,8 @@ export const mediaButtonStyles = css`
         color var(--md-sys-motion-fast-effects);
     }
 
-    .iconbtn:active {
+    .iconbtn:active,
+    .iconbtn[data-pressed] {
       border-radius: 12px;
     }
 
@@ -47,7 +48,8 @@ export const mediaButtonStyles = css`
       border-radius: 24px;
     }
 
-    .iconbtn.seg:active {
+    .iconbtn.seg:active,
+    .iconbtn.seg[data-pressed] {
       border-radius: 12px;
     }
 

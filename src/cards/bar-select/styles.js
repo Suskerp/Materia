@@ -149,7 +149,9 @@ export const styles = [
     }
 
     .off:active::before,
-    .bar:active::before {
+    .bar:active::before,
+    .off[data-pressed]::before,
+    .bar[data-pressed]::before {
       opacity: 0.12;
     }
 

@@ -4,8 +4,11 @@ import { hostStyles, haCardReset, unavailableStyles } from "../../styles/card-st
 import { motionTokens } from "../../utils/motion.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 class MateriaClimate extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".btn");
   static get properties() {
     return {
       hass: { attribute: false },

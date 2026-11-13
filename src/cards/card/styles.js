@@ -70,7 +70,7 @@ export const styles = css`
     align-items: center;
     justify-content: center;
     padding: 0;
-    transition: background-color 0.15s ease;
+    transition: background-color var(--md-sys-motion-fast-effects);
   }
 
   .sub-btn ha-icon {
@@ -82,7 +82,8 @@ export const styles = css`
     background: color-mix(in srgb, currentColor 8%, transparent);
   }
 
-  .sub-btn:active {
+  .sub-btn:active,
+  .sub-btn[data-pressed] {
     background: color-mix(in srgb, currentColor 14%, transparent);
   }
 `;

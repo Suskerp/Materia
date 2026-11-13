@@ -145,7 +145,7 @@ export const fillBarStyles = css`
     top: 0;
     bottom: 0;
     left: 0;
-    transition: width var(--md-sys-motion-default-effects);
+    transition: width var(--md-sys-motion-standard-default-spatial);
     z-index: 0;
     border-radius: 28px 0 0 28px;
   }
@@ -218,14 +218,15 @@ export const m3StateLayer = css`
     background: currentColor;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s;
+    transition: opacity var(--md-sys-motion-fast-effects);
   }
 
   button:hover::before {
     opacity: 0.08;
   }
 
-  button:active::before {
+  button:active::before,
+  button[data-pressed]::before {
     opacity: 0.12;
   }
 `;

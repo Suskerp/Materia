@@ -5,6 +5,7 @@ import { MOTION } from "../../utils/motion.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
 import { DragScroll } from "../../utils/drag-scroll.js";
+import { PressController } from "../../utils/press.js";
 
 /**
  * Selectable tile cards (materia-cards): rows of tiles — icon top-left,
@@ -22,6 +23,8 @@ import { DragScroll } from "../../utils/drag-scroll.js";
  * identically, `wrap: true` included.
  */
 class MateriaCards extends DisabledMixin(ActionMixin(LitElement)) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".tile");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

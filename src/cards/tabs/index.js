@@ -5,6 +5,7 @@ import { DisabledMixin } from "../../utils/conditions.js";
 import { loadCardHelpers } from "../../styles/shared.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /** M3 tab row height (48dp) and its stadium/seam radii — the SAME formula
  *  materia-button-group's connected mode uses, ported rather than shared
@@ -47,6 +48,8 @@ let tabInstance = 0;
  * zoom/pan survives a round-trip through another tab.
  */
 class MateriaTabs extends DisabledMixin(ActionMixin(LitElement)) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".tab");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

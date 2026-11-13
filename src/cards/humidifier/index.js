@@ -12,10 +12,13 @@ import {
 } from "./model.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 const KNOWN_MODE_KEYS = new Set(["auto", "away", "baby", "boost", "comfort", "eco", "home", "laundry", "normal", "sleep"]);
 
 class MateriaHumidifier extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".power, .adjust, .mode");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

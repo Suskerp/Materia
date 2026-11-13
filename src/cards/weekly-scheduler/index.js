@@ -8,6 +8,7 @@ import { dayIndex, nowMinutes, sortedBlocks, where, slotAt, planMatchesDay, span
 import { renderSettings, choiceGroup } from "./controls.js";
 import { styles } from "./styles.js";
 import { MOTION } from "../../utils/motion.js";
+import { PressController } from "../../utils/press.js";
 import "../../elements/button-group/index.js";
 
 /**
@@ -39,6 +40,8 @@ const keepUnit = (text) => String(text).replace(/ (°[CF]|%|K)(?=$|[\s·,])/g, "
 const ONOFF = new Set(["light", "switch", "input_boolean", "fan", "humidifier"]);
 
 class MateriaWeeklyScheduler extends LitElement {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".icon-button, .text-button, .filled-button, .assist-chip, .filter-chip, .fab, .week-row, .group-card, .radio-item, .device-head, .list-item, .tonal-icon");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

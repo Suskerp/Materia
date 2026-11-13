@@ -326,10 +326,11 @@ export const styles = [
     /* Press acknowledgement on the stage, not the cookie — the cookie's scale
        belongs to the breathe. */
     .cookie-stage {
-      transition: scale 0.3s var(--md-sys-motion-expressive-default-spatial-easing, cubic-bezier(0.2, 1.5, 0.3, 1));
+      transition: scale var(--md-sys-motion-expressive-default-spatial);
     }
 
-    .panel.buzz:active .cookie-stage {
+    .panel.buzz:active .cookie-stage,
+    .panel.buzz[data-pressed] .cookie-stage {
       scale: 0.93;
     }
 

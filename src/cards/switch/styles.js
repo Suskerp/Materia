@@ -129,16 +129,19 @@ export const styles = [
     }
 
     /* Pressed: thumb swells toward the spec's 28/32 pressed size. */
-    ha-card.row:active .m3-switch i {
+    ha-card.row:active .m3-switch i,
+    ha-card.row[data-pressed] .m3-switch i {
       width: 22px;
       height: 22px;
     }
 
-    ha-card.row:active .m3-switch:not(.on) i {
+    ha-card.row:active .m3-switch:not(.on) i,
+    ha-card.row[data-pressed] .m3-switch:not(.on) i {
       left: 2px;
     }
 
-    ha-card.row:active .m3-switch.on i {
+    ha-card.row:active .m3-switch.on i,
+    ha-card.row[data-pressed] .m3-switch.on i {
       left: 16px;
     }
   `,

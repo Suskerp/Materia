@@ -186,11 +186,11 @@ export const styles = [
       place-items: center;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
-      /* Effects easing (NO overshoot): a springy radius overshoots past the
+      /* Standard spatial (NO overshoot): a springy radius overshoots past the
          target on release, pokes through the container's pill clip and reads
          as bounce+flicker under repeated taps. */
       transition:
-        border-radius var(--md-sys-motion-fast-effects),
+        border-radius var(--md-sys-motion-standard-fast-spatial),
         background-color var(--md-sys-motion-fast-effects);
     }
 
@@ -206,7 +206,8 @@ export const styles = [
       --mdc-icon-size: clamp(22px, 8cqi, 26px);
     }
 
-    .nudge .seg:active {
+    .nudge .seg:active,
+    .nudge .seg[data-pressed] {
       border-radius: 999px;
       background: color-mix(in srgb, currentColor 12%, var(--md-sys-color-secondary-container));
     }
@@ -251,7 +252,8 @@ export const styles = [
       opacity: 0.08;
     }
 
-    .nudge.vertical .seg:active::before {
+    .nudge.vertical .seg:active::before,
+    .nudge.vertical .seg[data-pressed]::before {
       opacity: 0.12;
     }
 
@@ -263,7 +265,8 @@ export const styles = [
        group's flex-grow selection morph — steppers get mashed repeatedly and
        a layout reflow inside the clipping pill container both clips on
        release and looks frantic under rapid taps. */
-    .nudge.vertical .seg:active {
+    .nudge.vertical .seg:active,
+    .nudge.vertical .seg[data-pressed] {
       border-radius: 999px;
     }
 

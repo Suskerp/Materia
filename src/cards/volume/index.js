@@ -1,5 +1,6 @@
 import { LitElement, html, svg, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
+import { MOTION, reducedMotion } from "../../utils/motion.js";
 import { t } from "../../utils/i18n.js";
 import { MAX_STEPS, volumeSteps, volumeLimit, isMediaOff, maxSteps } from "../../utils/media.js";
 import { attributeMapOf } from "../../utils/media-attributes.js";
@@ -38,6 +39,7 @@ import {
 import { scopeContext } from "../../primitives/sheet.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /**
  * materia-volume — one media player's volume: a kinetic rotary knob, an arc
@@ -56,6 +58,8 @@ import { loadEditors } from "../../utils/load-editors.js";
  * on slow tablets (see materia-media-progress for the same rule).
  */
 class MateriaVolume extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".pm button, .tfoot .step");
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -186,7 +190,7 @@ class MateriaVolume extends ActionMixin(LitElement) {
     this._dragging = false;
     ev.currentTarget.classList.remove("drag");
     const idle = ev.timeStamp - (this._lastMoveT ?? 0);
-    if (this._knob && shouldCoast(this._vel ?? 0, idle)) this._startCoast(this._vel);
+    if (this._knob && !reducedMotion() && shouldCoast(this._vel ?? 0, idle)) this._startCoast(this._vel);
     else this._settle();
   }
 
@@ -223,7 +227,7 @@ class MateriaVolume extends ActionMixin(LitElement) {
     g?.classList.add("settle");
     this._knobAngle = null;
     this._setVolume(this._dragVal ?? this._volValue(), true);
-    setTimeout(() => g?.classList.remove("settle"), 260);
+    setTimeout(() => g?.classList.remove("settle"), MOTION["standard-fast-spatial"].ms + 10);
   }
 
   _startCoast(speedDegPerMs) {

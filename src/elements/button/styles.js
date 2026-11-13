@@ -145,6 +145,7 @@ export const styles = [
        shape for their size. The selected resting shape is handled separately
        in index.js, so releasing returns to the correct inverse shape. */
     .touch-target:active .btn,
+    .touch-target[data-pressed] .btn,
     .btn.confirming.armed {
       border-radius: var(--mb-rpress, 12px);
       transform: scale(0.96);
@@ -240,7 +241,8 @@ export const styles = [
       transition: opacity var(--md-sys-motion-fast-effects);
     }
     .btn:hover::before { opacity: 0.08; }
-    .touch-target:active .btn::before { opacity: 0.1; }
+    .touch-target:active .btn::before,
+    .touch-target[data-pressed] .btn::before { opacity: 0.1; }
 
     /* ---- the confirm gesture ----
        The button's OWN surface is the track: a fill sweeps from the leading
@@ -284,7 +286,8 @@ export const styles = [
 
     /* A confirm button is never fired by a tap, so it must not advertise one:
        the press state layer would promise something the control does not do. */
-    .touch-target:active .btn.confirming::before {
+    .touch-target:active .btn.confirming::before,
+    .touch-target[data-pressed] .btn.confirming::before {
       opacity: 0.08;
     }
 

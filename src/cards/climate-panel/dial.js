@@ -4,6 +4,7 @@ import { materialCookiePath } from "../../utils/shapes.js";
 import { t } from "../../utils/i18n.js";
 import { humidifierAction, humidifierRange, humidifierTarget } from "../humidifier/model.js";
 import { styles } from "./dial-styles.js";
+import { PressController } from "../../utils/press.js";
 
 const DIAL_START = -135; // degrees, 0 = 12 o'clock
 const DIAL_SWEEP = 270;
@@ -38,6 +39,8 @@ const MODE_META = {
  * Modes render as a connected button group; -/+ nudge by `step`.
  */
 class MateriaClimateDial extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".nudge .seg");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

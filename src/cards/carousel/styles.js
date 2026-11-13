@@ -173,7 +173,8 @@ export const styles = [
       opacity: 0.08;
     }
 
-    .tile:active::before {
+    .tile:active::before,
+    .tile[data-pressed]::before {
       opacity: 0.12;
     }
 
@@ -196,7 +197,7 @@ export const styles = [
 
     :host([card-disabled]) .tile,
     :host([card-disabled]) .check {
-      transition: opacity 0.2s ease;
+      transition: opacity var(--md-sys-motion-default-effects);
     }
   `,
 ];

@@ -70,7 +70,7 @@ export const styles = css`
     color: var(--control-on-color);
   }
 
-  .power:active { transform: scale(0.94); border-radius: 12px; }
+  .power:active, .power[data-pressed] { transform: scale(0.94); border-radius: 12px; }
   .power ha-icon { --mdc-icon-size: 22px; }
 
   .setpoint {
@@ -98,7 +98,7 @@ export const styles = css`
       transform var(--md-sys-motion-expressive-fast-spatial);
   }
 
-  .adjust:active { transform: scale(0.96); border-radius: 16px; }
+  .adjust:active:not(:disabled), .adjust[data-pressed] { transform: scale(0.96); border-radius: 16px; }
   .adjust:disabled { opacity: 0.38; cursor: default; }
   .adjust ha-icon { --mdc-icon-size: 20px; }
 
@@ -158,7 +158,7 @@ export const styles = css`
     color: var(--control-on-color);
     font-weight: 600;
   }
-  .mode:active { transform: scale(0.96); border-radius: 12px; }
+  .mode:active:not(:disabled), .mode[data-pressed] { transform: scale(0.96); border-radius: 12px; }
   .mode:disabled { opacity: 0.38; cursor: default; }
 
   @media (max-width: 420px) {

@@ -5,6 +5,7 @@ import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
 import { readAlerts, worstSoon } from "../../utils/weather-alerts.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 function compass(deg, hass) {
   const nl = hass?.locale?.language?.toLowerCase().startsWith("nl");
@@ -20,6 +21,8 @@ function compass(deg, hass) {
  * Meant as the home-screen row that routes to the weather page.
  */
 class MateriaWeatherGlance extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".glance");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

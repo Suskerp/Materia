@@ -5,6 +5,7 @@ import { loadCardHelpers } from "../../styles/shared.js";
 import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /**
  * Disclosure container (materia-expander): a materia-switch row that opens.
@@ -30,6 +31,8 @@ import { loadEditors } from "../../utils/load-editors.js";
  * and hass keeps flowing to them while they are out of the DOM.
  */
 class MateriaExpander extends DisabledMixin(ActionMixin(LitElement)) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".switch-target, .m3-switch");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

@@ -4,6 +4,7 @@ import { materialCookiePath } from "../../utils/shapes.js";
 import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /* NOT the design's literal 12-scallop blob: the buzz shape is Materia's own
  * 9-lobe cookie — the exact silhouette materia-lock wears — so the two door
@@ -25,6 +26,8 @@ const BUZZED_LINGER_MS = 6000;
  * 6s "Buzzed" linger, which is a presentation beat, not a fact.
  */
 class MateriaDoorbell extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".panel.buzz");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

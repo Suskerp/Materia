@@ -98,3 +98,19 @@ export function springAt(t, k = 560, zeta = 0.56) {
   }
   return 1 - Math.exp(-wn * t) * (1 + wn * t);
 }
+
+/** True when the user asked the OS for less motion (JS animations and timers check this). */
+export const reducedMotion = () => !!globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+
+/** WAAPI timing for a MOTION token, collapsed to 1 ms under reduced motion. */
+export function motionTiming(name, extra = {}) {
+  const m = MOTION[name];
+  return reducedMotion()
+    ? { duration: 1, easing: "linear", ...extra }
+    : { duration: m.ms, easing: m.easing, ...extra };
+}
+
+/** The spring's linear() stops as numbers, for WAAPI keyframes sampled from it
+ *  (older Android WebViews reject linear() as a WAAPI easing). */
+export const springSamples = (name) =>
+  MOTION[name].easing.slice(7, -1).split(",").map(Number);

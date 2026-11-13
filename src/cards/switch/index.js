@@ -3,6 +3,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /**
  * Generic toggle row (materia-switch): icon + name + secondary line + a spec
@@ -16,6 +17,8 @@ import { loadEditors } from "../../utils/load-editors.js";
  * flat: true drops the card chrome for nesting inside other cards.
  */
 class MateriaSwitch extends DisabledMixin(ActionMixin(LitElement)) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, "ha-card.row");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

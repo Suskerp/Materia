@@ -57,7 +57,8 @@ export const styles = [
         transform var(--md-sys-motion-expressive-fast-spatial);
     }
 
-    .pill:active {
+    .pill:active,
+    .pill[data-pressed] {
       transform: scale(0.96);
     }
 
@@ -65,7 +66,8 @@ export const styles = [
       cursor: default;
     }
 
-    .pill.static:active {
+    .pill.static:active,
+    .pill.static[data-pressed] {
       transform: none;
     }
 

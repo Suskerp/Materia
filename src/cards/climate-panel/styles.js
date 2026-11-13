@@ -170,7 +170,8 @@ export const styles = [
       transition: background-color var(--md-sys-motion-fast-effects);
     }
 
-    .mini:active {
+    .mini:active,
+    .mini[data-pressed] {
       background: color-mix(in srgb, currentColor 10%, transparent);
     }
 

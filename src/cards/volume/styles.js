@@ -141,7 +141,7 @@ export const volumeControlStyles = css`
       stroke: var(--mx-p);
       stroke-width: 3;
       stroke-linecap: round;
-      transition: stroke-dasharray 0.35s ease-out, stroke var(--md-sys-motion-slow-effects);
+      transition: stroke-dasharray var(--md-sys-motion-standard-default-spatial), stroke var(--md-sys-motion-slow-effects);
     }
 
 
@@ -150,7 +150,7 @@ export const volumeControlStyles = css`
     }
 
     #knobg.settle {
-      transition: transform 0.25s ease-out;
+      transition: transform var(--md-sys-motion-standard-fast-spatial);
     }
 
     .limlabel {
@@ -219,7 +219,8 @@ export const volumeControlStyles = css`
       border-radius: 8px 28px 28px 8px;
     }
 
-    .pm button:active {
+    .pm button:active,
+    .pm button[data-pressed] {
       border-radius: 16px;
     }
 
@@ -259,9 +260,10 @@ export const volumeControlStyles = css`
     .tin,
     .thandle {
       position: absolute;
+      /* Not scaleY: the parts' rounded ends would stretch with the scale. */
       transition:
-        height 0.18s ease-out,
-        bottom 0.18s ease-out;
+        height var(--md-sys-motion-standard-fast-spatial),
+        bottom var(--md-sys-motion-standard-fast-spatial);
     }
 
     /* While dragging the parts follow the finger without easing. */
@@ -435,7 +437,8 @@ export const volumeControlStyles = css`
       border-radius: 10px 32px 32px 10px;
     }
 
-    .tfoot .step:active {
+    .tfoot .step:active,
+    .tfoot .step[data-pressed] {
       border-radius: 16px;
     }
 
@@ -450,6 +453,20 @@ export const volumeControlStyles = css`
       border-radius: 20px;
       background: var(--mx-p);
       color: var(--mx-op);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .bigknob,
+      .actual,
+      #knobg.settle,
+      .round,
+      .pm button,
+      .tfill,
+      .tin,
+      .thandle,
+      .tfoot button {
+        transition: none;
+      }
     }
 `;
 

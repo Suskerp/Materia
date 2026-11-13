@@ -116,7 +116,8 @@ export const styles = [
       opacity: 0.08;
     }
 
-    .chip:active::before {
+    .chip:active::before,
+    .chip[data-pressed]::before {
       opacity: 0.12;
     }
 

@@ -11,6 +11,7 @@ import "../../elements/media-source/index.js";
 import { menuRows, entityRows } from "../../elements/menu-list/model.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /**
  * materia-media-header — the top row of a player.
@@ -30,6 +31,8 @@ import { loadEditors } from "../../utils/load-editors.js";
  * materia-art-scope with layout: kiosk, and in a bottom sheet otherwise.
  */
 class MateriaMediaHeader extends SheetOpenerMixin(ActionMixin(LitElement)) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".iconbtn");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

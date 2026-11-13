@@ -6,6 +6,7 @@ import { OptimismBus } from "../../utils/optimism-bus.js";
 import { MOTION } from "../../utils/motion.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /** AlarmControlPanelEntityFeature, from HA core
  *  (homeassistant/components/alarm_control_panel/const.py). The modes a panel
@@ -144,6 +145,8 @@ const ACTIVE_R = 28;
  * legible from across the room before anyone reads a word of it.
  */
 class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, "button.mode, .chip");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

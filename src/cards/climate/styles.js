@@ -92,13 +92,16 @@ export const styles = css`
     justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background-color var(--md-sys-motion-fast-effects);
+    transition:
+      background-color var(--md-sys-motion-fast-effects),
+      opacity var(--md-sys-motion-fast-effects);
     -webkit-tap-highlight-color: transparent;
     padding: 0;
     outline: none;
   }
 
-  .btn:active {
+  .btn:active,
+  .btn[data-pressed] {
     opacity: 0.8;
   }
 

@@ -6,6 +6,7 @@ import { OptimismBus } from "../../utils/optimism-bus.js";
 import { styles } from "./styles.js";
 import "../../primitives/drag-confirm.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /** States that read as active for the common switch-ish domains. Same
  *  vocabulary materia-doorbell uses for its own truthiness, so two cards
@@ -49,6 +50,8 @@ const ON_STATES = new Set(["on", "true", "open", "opening", "unlocked", "unlocki
  * no state to reflect, so it stays on the gesture face.
  */
 class MateriaConfirm extends DisabledMixin(ActionMixin(LitElement)) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, "button.active-face");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

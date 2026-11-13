@@ -7,6 +7,7 @@ import { settledLockState, isLockBusy } from "../../utils/lock-state.js";
 import { styles } from "./styles.js";
 import "../../primitives/drag-confirm.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /** Silhouettes the shape can take, drawn in a 180x180 box.
  *
@@ -82,6 +83,8 @@ const SHAPE_STYLES = {
  * settling reported as "unlocking" seconds after a door that was never
  * locked). */
 class MateriaLock extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".open-btn");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

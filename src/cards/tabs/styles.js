@@ -99,7 +99,8 @@ export const styles = [
       opacity: 0.08;
     }
 
-    .tab:active::before {
+    .tab:active::before,
+    .tab[data-pressed]::before {
       opacity: 0.12;
     }
 

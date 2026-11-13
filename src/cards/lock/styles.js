@@ -328,7 +328,8 @@ export const styles = [
       background: color-mix(in srgb, var(--ml-fg) 8%, transparent);
     }
 
-    .open-btn:active:not(:disabled) {
+    .open-btn:active:not(:disabled),
+    .open-btn[data-pressed]:not(:disabled) {
       background: color-mix(in srgb, var(--ml-fg) 12%, transparent);
     }
 

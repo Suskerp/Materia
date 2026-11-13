@@ -8,6 +8,7 @@ import { mediaTokens } from "../../styles/media-styles.js";
 import { volumeRing, volumeRingStyles } from "./ring.js";
 import { attributeMapOf } from "../../utils/media-attributes.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /**
  * materia-volume-ring — a 48 px button showing the volume as a thin 270° arc
@@ -15,6 +16,8 @@ import { loadEditors } from "../../utils/load-editors.js";
  * `volume:` block is that knob's config (zones, link_entity, style).
  */
 class MateriaVolumeRing extends SheetOpenerMixin(ActionMixin(LitElement)) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, "button");
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -42,7 +45,8 @@ class MateriaVolumeRing extends SheetOpenerMixin(ActionMixin(LitElement)) {
           border-radius var(--md-sys-motion-expressive-fast-spatial),
           background-color var(--md-sys-motion-fast-effects);
       }
-      button:active {
+      button:active,
+      button[data-pressed] {
         border-radius: 12px;
       }
       button.open {

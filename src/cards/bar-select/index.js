@@ -4,6 +4,7 @@ import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.j
 import { OptimisticMixin } from "../../utils/optimistic.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /**
  * Ascending-bar level picker (materia-bar-select): a label, the current value,
@@ -21,6 +22,8 @@ import { loadEditors } from "../../utils/load-editors.js";
  * round button, since "off" isn't a rung on the ladder.
  */
 class MateriaBarSelect extends OptimisticMixin(DisabledMixin(ActionMixin(LitElement))) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".off, .bar");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

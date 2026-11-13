@@ -5,6 +5,7 @@ import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
 import { hourlyItems } from "../forecast-hourly/row.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /**
  * Pixel-style daily forecast: a horizontally scrollable row of stadium pills,
@@ -12,6 +13,8 @@ import { loadEditors } from "../../utils/load-editors.js";
  * weekday. Tapping a pill selects (highlights) it.
  */
 class MateriaForecastDaily extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".pill");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

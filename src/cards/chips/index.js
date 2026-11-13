@@ -3,6 +3,7 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /**
  * M3 filter chips (materia-chips): a wrapping row of selectable chips. The
@@ -21,6 +22,8 @@ import { loadEditors } from "../../utils/load-editors.js";
  * driven with select_option so the common case needs no wiring.
  */
 class MateriaChips extends DisabledMixin(ActionMixin(LitElement)) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".chip");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

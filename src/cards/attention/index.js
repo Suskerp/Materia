@@ -7,6 +7,7 @@ import { triggeringEntities } from "../../utils/conditions.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
 import { DragScroll } from "../../utils/drag-scroll.js";
+import { PressController } from "../../utils/press.js";
 
 const LATER_KEY = "materia_attention_later";
 const SYNC = "materia-attention-sync";
@@ -51,6 +52,8 @@ export const PREVIEW_EVENT = "materia-attention-preview";
  *                then hides), and hides again when something comes up.
  */
 class MateriaAttention extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".act");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

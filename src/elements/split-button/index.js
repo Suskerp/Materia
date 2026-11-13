@@ -5,6 +5,7 @@ import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.j
 import "../button/index.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /** Container heights / inner-corner / trailing-icon per size — matched to materia-button. */
 const HEIGHTS = { xs: 32, s: 40, m: 56, l: 96, xl: 136, default: 48, large: 56 };
@@ -12,6 +13,8 @@ const INNER = { xs: 12, s: 12, m: 16, l: 28, xl: 28, default: 14, large: 16 };
 const TICON = { xs: 20, s: 20, m: 24, l: 32, xl: 40, default: 24, large: 24 };
 
 class MateriaSplitButton extends DisabledMixin(ActionMixin(LitElement)) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".trailing, .menu-item");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

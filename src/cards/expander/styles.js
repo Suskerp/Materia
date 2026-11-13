@@ -149,19 +149,23 @@ export const styles = [
       height: 20px;
     }
 
-    .m3-switch:active i {
+    .m3-switch:active i,
+    .m3-switch[data-pressed] i {
       width: 22px;
       height: 22px;
     }
 
-    .switch-target:active .m3-switch i {
+    .switch-target:active .m3-switch i,
+    .switch-target[data-pressed] .m3-switch i {
       width: 22px;
       height: 22px;
     }
-    .switch-target:active .m3-switch:not(.on) i {
+    .switch-target:active .m3-switch:not(.on) i,
+    .switch-target[data-pressed] .m3-switch:not(.on) i {
       left: 2px;
     }
-    .switch-target:active .m3-switch.on i {
+    .switch-target:active .m3-switch.on i,
+    .switch-target[data-pressed] .m3-switch.on i {
       left: 16px;
     }
 
@@ -173,10 +177,12 @@ export const styles = [
         transition: none;
       }
     }
-    .m3-switch:not(.on):active i {
+    .m3-switch:not(.on):active i,
+    .m3-switch:not(.on)[data-pressed] i {
       left: 2px;
     }
-    .m3-switch.on:active i {
+    .m3-switch.on:active i,
+    .m3-switch.on[data-pressed] i {
       left: 16px;
     }
   `,

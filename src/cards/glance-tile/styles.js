@@ -942,7 +942,7 @@ export const styles = [
     .detail-metric.interactive {
       cursor: pointer;
       transition:
-        background var(--md-sys-motion-expressive-fast-spatial),
+        background var(--md-sys-motion-fast-effects),
         border-radius var(--md-sys-motion-expressive-fast-spatial),
         transform var(--md-sys-motion-expressive-fast-spatial);
     }
@@ -951,7 +951,8 @@ export const styles = [
       background: color-mix(in srgb, currentColor 10%, transparent);
     }
 
-    .detail-metric.interactive:active {
+    .detail-metric.interactive:active,
+    .detail-metric.interactive[data-pressed] {
       border-radius: 10px;
       transform: scale(0.98);
     }

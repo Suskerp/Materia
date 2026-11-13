@@ -6,6 +6,7 @@ import { styles } from "./styles.js";
 import { actionSummary, addPresetOffset, clearDatetimeData, helperIsSet, helperMoment, isSpentOneShot, oneShotPayload, parseOneShotMarker, parsePlanArrivalMarker, phaseOffsetMinutes, planPayloads, setDatetimeData, slug, toSchedulerActions } from "./scheduler-model.js";
 import "../../elements/button-group/index.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /**
  * Schedule picker (materia-schedule) — design doc 7a and 7b as ONE card.
@@ -41,6 +42,8 @@ import { loadEditors } from "../../utils/load-editors.js";
  * Search this file for _isWindow.
  */
 class MateriaSchedule extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".sw");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

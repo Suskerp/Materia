@@ -12,6 +12,7 @@ import { motionTokens } from "../../utils/motion.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
 import { vacuumStatusLine } from "../../utils/vacuum-status.js";
+import { PressController } from "../../utils/press.js";
 
 /* ------------------------------------------------------------------ */
 /*  Domain configuration map                                          */
@@ -91,6 +92,8 @@ const DEFAULT_DOMAIN = {
 /*  MateriaCard                                                       */
 /* ------------------------------------------------------------------ */
 export class MateriaCard extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".sub-btn");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

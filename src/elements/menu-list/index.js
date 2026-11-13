@@ -5,6 +5,7 @@ import { powerTransition } from "../../utils/media.js";
 import { t } from "../../utils/i18n.js";
 import { menuRows, entityRows, allRows, rowOn, anyOn, allTargets, switchService, menuPlacement, segClass } from "./model.js";
 import { menuButtonStyles } from "./styles.js";
+import { PressController } from "../../utils/press.js";
 
 /**
  * A media header button that opens a popover menu (top layer, so no
@@ -16,6 +17,8 @@ import { menuButtonStyles } from "./styles.js";
  * element a click may land in without closing the menu.
  */
 export class MenuButton extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".iconbtn");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

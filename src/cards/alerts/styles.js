@@ -41,7 +41,8 @@ export const styles = [
       -webkit-tap-highlight-color: transparent;
       transition: border-radius var(--md-sys-motion-expressive-fast-spatial, 200ms);
     }
-    .alert:active {
+    .alert:active,
+    .alert[data-pressed] {
       border-radius: 20px;
     }
     .alert.orange {

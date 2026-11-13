@@ -1231,7 +1231,8 @@ export const styles = [
     }
 
     /* Pressed swells toward the spec's 28/32. */
-    .sw:active i {
+    .sw:active i,
+    .sw[data-pressed] i {
       width: 26px;
       height: 26px;
     }

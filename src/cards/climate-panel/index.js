@@ -5,6 +5,7 @@ import { t } from "../../utils/i18n.js";
 import { humidifierAction, humidifierModes } from "../humidifier/model.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 import "./dial.js";
 
 /**
@@ -46,6 +47,8 @@ const HUMIDIFIER_MODE_ICONS = {
 };
 
 class MateriaClimatePanel extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".mini");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

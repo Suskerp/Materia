@@ -3,9 +3,10 @@ import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { CommitGesture } from "../../utils/commit-gesture.js";
 import { conditionsMet } from "../../utils/conditions.js";
-import { MOTION } from "../../utils/motion.js";
+import { MOTION, springSamples } from "../../utils/motion.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /** Legacy materia-icon-button variant names → M3 button variants. */
 const VARIANT_ALIAS = {
@@ -27,6 +28,8 @@ const DOMAIN_ACTIVE = {
 };
 
 class MateriaButton extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".touch-target");
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -116,16 +119,15 @@ class MateriaButton extends ActionMixin(LitElement) {
     const delta = to - from;
     const clamp = (value) => Math.max(0, Math.min(round, value));
 
+    /* The expressive default spring, sampled into keyframes (see
+       _playGestureSpring): its overshoot is the morph's settle. */
+    const samples = springSamples("expressive-default-spatial");
+    const last = samples.length - 1;
     this.__morphAnimation?.cancel();
-    this.__morphAnimation = el.animate([
-      { borderRadius: `${from}px`, transform: "scale(1)" },
-      { borderRadius: `${clamp(to + delta * 0.16)}px`, transform: "scale(0.97)", offset: 0.58 },
-      { borderRadius: `${clamp(to - delta * 0.07)}px`, transform: "scale(1.015)", offset: 0.82 },
-      { borderRadius: `${to}px`, transform: "scale(1)" },
-    ], {
-      duration: 533,
-      easing: "cubic-bezier(0.2, 0, 0, 1)",
-    });
+    this.__morphAnimation = el.animate(
+      samples.map((p, i) => ({ offset: i / last, borderRadius: `${clamp(from + delta * p)}px` })),
+      { duration: MOTION["expressive-default-spatial"].ms, easing: "linear" },
+    );
   }
 
   _isActive(stateObj) {

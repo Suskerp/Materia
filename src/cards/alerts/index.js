@@ -4,6 +4,7 @@ import { t, resolveLanguage } from "../../utils/i18n.js";
 import { readAlerts, visibleAlerts } from "../../utils/weather-alerts.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /**
  * materia-alerts — weather warnings, read from an entity's `warnings`
@@ -20,6 +21,8 @@ import { loadEditors } from "../../utils/load-editors.js";
  *   expanded: show every warning's text without a tap
  */
 class MateriaAlerts extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".alert");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

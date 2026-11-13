@@ -6,6 +6,7 @@ import { roundedPolygonPath } from "../../utils/shapes.js";
 import { fetchNumericHistory, resample, segments, bucketDays, delta, withLiveSample, lastDistinctChange } from "../../utils/history.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 // Severity/temperature scale — same harmonizable tokens as the weather metrics.
 const SCALE = {
@@ -99,6 +100,8 @@ const SPARK_DEFAULT_DAYS = 3;
  * View only: tap opens more-info (or any configured tap_action).
  */
 class MateriaGlanceTile extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".detail-metric.interactive");
   static properties = {
     hass: { attribute: false },
     config: { state: true },
