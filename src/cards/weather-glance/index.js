@@ -2,7 +2,7 @@ import { LitElement, html, svg } from "lit";
 import { t } from "../../utils/i18n.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { coloredWeatherIcon, moonPhaseFrac } from "../weather-tile/icons.js";
-import { readAlerts, worstActive } from "../../utils/weather-alerts.js";
+import { readAlerts, worstSoon } from "../../utils/weather-alerts.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
 
@@ -294,12 +294,18 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
     }
     const tempNum = this._num(temp);
 
-    // An active weather warning (alerts_entity) leads line 2 as a coloured
-    // pill; the condition keeps line 1. The `alert` template still takes
+    // A weather warning (alerts_entity) leads line 2 as a coloured pill: an
+    // active one, else one starting within 24 h with its start time ("from
+    // 00:00"). The condition keeps line 1. The `alert` template still takes
     // over line 1 when non-empty.
     const warning = this.config.alerts_entity
-      ? worstActive(readAlerts(this.hass.states[this.config.alerts_entity]))
+      ? worstSoon(readAlerts(this.hass.states[this.config.alerts_entity]))
       : null;
+    const warnText = warning
+      ? warning.active
+        ? warning.title
+        : t("glance_warn_from", this.hass, { title: warning.title, time: new Date(warning.start).toLocaleTimeString(this.hass?.locale?.language || undefined, { hour: "2-digit", minute: "2-digit" }) })
+      : "";
     const alert = this._isTemplate(this.config.alert) ? this._resolvedAlert : this.config.alert;
     // Title is ALWAYS the condition (alert overrides); everything else is
     // secondary and lives on the subtitle line.
@@ -336,8 +342,8 @@ class MateriaWeatherGlance extends ActionMixin(LitElement) {
             ${rest.length || warning
               ? html`<div class="line2">
                   ${warning
-                    ? html`<span class="warn ${warning.tone}" title=${`${t(`alerts_level_${warning.tone}`, this.hass)} · ${warning.title}`}>
-                        <ha-icon .icon=${warning.icon}></ha-icon>${t(`alerts_short_${warning.tone}`, this.hass)} · ${warning.title}
+                    ? html`<span class="warn ${warning.tone} ${warning.active ? "" : "soon"}" title=${`${t(`alerts_level_${warning.tone}`, this.hass)} · ${warnText}`}>
+                        <ha-icon .icon=${warning.icon}></ha-icon>${t(`alerts_short_${warning.tone}`, this.hass)} · ${warnText}
                       </span>`
                     : ""}
                   ${rest.map((i, n) => html`${n ? html`<span class="dot">·</span>` : ""}${metricSpan(i)}`)}

@@ -76,3 +76,17 @@ export function worstActive(alerts) {
   const rank = { yellow: 1, orange: 2, red: 3 };
   return alerts.filter((a) => a.active).sort((a, b) => rank[b.tone] - rank[a.tone])[0] ?? null;
 }
+
+/**
+ * What a one-line card should warn about: the worst active alert, else the
+ * worst one starting within `within` ms (earliest first among equals), so a
+ * warning for tonight is on the home screen before it begins.
+ */
+export function worstSoon(alerts, now = Date.now(), within = 24 * 3600 * 1000) {
+  const active = worstActive(alerts);
+  if (active) return active;
+  const rank = { yellow: 1, orange: 2, red: 3 };
+  return alerts
+    .filter((a) => a.upcoming && a.start != null && a.start - now <= within)
+    .sort((a, b) => (rank[b.tone] ?? 0) - (rank[a.tone] ?? 0) || a.start - b.start)[0] ?? null;
+}

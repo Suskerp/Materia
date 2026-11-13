@@ -48,3 +48,14 @@ test("visibleAlerts: current first, then most severe", () => {
   ];
   assert.deepEqual(visibleAlerts(list).map((a) => a.tone), ["red", "orange", "yellow"]);
 });
+
+test("worstSoon: active first, else a warning starting within a day", async () => {
+  const { worstSoon } = await import("../src/utils/weather-alerts.js");
+  const now = Date.parse("2026-11-13T14:00:00+01:00");
+  const state = (warnings) => ({ attributes: { warnings } });
+  const ice = { slug: "ice_or_snow", level: 1, friendly_name: "Ice or snow", starts_at: "2026-11-14T00:00:00+01:00", ends_at: "2026-11-14T11:00:00+01:00" };
+  assert.equal(worstSoon(readAlerts(state([ice]), now), now).title, "Ice or snow");
+  assert.equal(worstSoon(readAlerts(state([{ ...ice, starts_at: "2026-11-15T00:00:00+01:00", ends_at: "2026-11-15T11:00:00+01:00" }]), now), now), null);
+  const wind = { slug: "wind", level: 2, friendly_name: "Wind", starts_at: "2026-11-13T10:00:00+01:00", ends_at: "2026-11-13T20:00:00+01:00" };
+  assert.equal(worstSoon(readAlerts(state([ice, wind]), now), now).title, "Wind");
+});

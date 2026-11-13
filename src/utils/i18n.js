@@ -387,6 +387,7 @@ export const STRINGS = {
   alerts_short_red: { en: "Red", nl: "Rood" },
   alerts_upcoming: { en: "upcoming", nl: "verwacht" },
   alerts_until: { en: "Until {time}", nl: "Tot {time}" },
+  glance_warn_from: { en: "{title} from {time}", nl: "{title} vanaf {time}" },
   alerts_from: { en: "From {time}", nl: "Vanaf {time}" },
   alerts_now: { en: "Now", nl: "Nu" },
   alerts_none: { en: "No weather warnings", nl: "Geen weerwaarschuwingen" },
