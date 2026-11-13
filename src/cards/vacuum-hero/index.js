@@ -530,7 +530,7 @@ class MateriaVacuumHero extends HeroShellMixin(ActionMixin(LitElement)) {
       <ha-card style="--mh-bg:${bg};--mh-fg:${fg};--mh-alert-bg:${alertBg ?? bg};--mh-alert-fg:${alertFg ?? fg};--mh-calm-d:path('${BURST_CALM}');--mh-live-d:path('${BURST_LIVE}');">
         <div class="stack">
           <div
-            class="hero ${unavailable ? "unavailable" : ""} ${alert ? "attached" : ""}"
+            class="hero tap ${unavailable ? "unavailable" : ""} ${alert ? "attached" : ""}"
             @click=${() => this._handleAction(this.config.tap_action || { action: "more-info", entity: this.config.entity })}
           >
             ${this._renderBurst({ alarm: isError, working })}

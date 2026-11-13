@@ -2,6 +2,7 @@ import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 /**
  * Row list: an optional header (icon + title) and one row per entry.
@@ -31,6 +32,8 @@ import { loadEditors } from "../../utils/load-editors.js";
  * it, while a container pair is guaranteed legible by the theme.
  */
 class MateriaList extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".row:not(.text), .row.text.live");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

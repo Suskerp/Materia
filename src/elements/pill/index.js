@@ -3,8 +3,11 @@ import { ActionMixin } from "../../utils/action-handler.js";
 import { unavailableStyles } from "../../styles/card-styles.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 class MateriaPill extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".container");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

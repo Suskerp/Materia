@@ -1,9 +1,11 @@
 import { css } from "lit";
 import { hostStyles, haCardReset } from "../../styles/card-styles.js";
+import { motionTokens } from "../../utils/motion.js";
 
 export const styles = [
   hostStyles,
   haCardReset,
+  motionTokens,
   css`
     ha-card {
       background: transparent;
@@ -27,6 +29,17 @@ export const styles = [
     .row.tappable {
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
+      border-radius: 12px;
+      transition:
+        background-color var(--md-sys-motion-fast-effects),
+        border-radius var(--md-sys-motion-expressive-fast-spatial);
+    }
+
+    /* Pressed: a 10% state layer and slightly tighter corners. */
+    .row.tappable:active,
+    .row.tappable[data-pressed] {
+      background: color-mix(in srgb, currentColor 10%, transparent);
+      border-radius: 8px;
     }
 
     ha-icon {

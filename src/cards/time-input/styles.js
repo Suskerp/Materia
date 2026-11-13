@@ -14,11 +14,36 @@ export const styles = css`
     background: var(--md-sys-color-surface-container-high, var(--ha-card-background));
     color: var(--md-sys-color-on-surface, var(--primary-text-color));
     cursor: pointer;
-    transition: background-color var(--md-sys-motion-fast-effects);
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background-color var(--md-sys-motion-fast-effects),
+      border-radius var(--md-sys-motion-expressive-fast-spatial);
   }
 
   .field:hover {
     background: var(--md-sys-color-surface-container-highest, var(--ha-card-background));
+  }
+
+  /* Pressed: a 10% state layer and slightly tighter corners. */
+  .field::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--md-sys-motion-fast-effects);
+  }
+
+  .field:active::after,
+  .field[data-pressed]::after {
+    opacity: 0.1;
+  }
+
+  .field:active,
+  .field[data-pressed] {
+    border-radius: 14px;
   }
 
   .field > span {
@@ -69,9 +94,17 @@ export const styles = css`
     place-items: center;
     cursor: pointer;
     --mdc-icon-size: 20px;
+    transition:
+      background-color var(--md-sys-motion-fast-effects),
+      border-radius var(--md-sys-motion-expressive-fast-spatial);
   }
   .clear:hover {
     background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+  .clear:active,
+  .clear[data-pressed] {
+    background: color-mix(in srgb, currentColor 10%, transparent);
+    border-radius: 12px;
   }
 
   /* Not set: the (invisible) input covers the whole row, so a tap lands on the

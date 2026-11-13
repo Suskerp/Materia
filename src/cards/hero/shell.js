@@ -2,6 +2,7 @@ import { html, svg, nothing, css } from "lit";
 import { hostStyles, haCardReset, unavailableStyles } from "../../styles/card-styles.js";
 import { motionTokens } from "../../utils/motion.js";
 import { boomPath, softBurstPath } from "../../utils/shapes.js";
+import { PressController } from "../../utils/press.js";
 
 /* Burst geometry is CONSTANT — the fillet solver costs real time (~25-45us a
  * call) and used to run twice per hero per render, every hass tick. Once, at
@@ -81,12 +82,39 @@ export const heroShellStyles = [
       background: var(--mh-bg);
       color: var(--mh-fg);
       transition: background-color var(--md-sys-motion-default-effects),
-        color var(--md-sys-motion-default-effects);
+        color var(--md-sys-motion-default-effects),
+        border-radius var(--md-sys-motion-expressive-fast-spatial);
     }
 
     /* Bottom corners tighten only while something is attached below. */
     .hero.attached {
       border-radius: 32px 32px 8px 8px;
+    }
+
+    /* Pressed: a 10% state layer and the big corners tighten a little. */
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: currentColor;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--md-sys-motion-fast-effects);
+    }
+
+    .hero.tap:active::after,
+    .hero.tap[data-pressed]::after {
+      opacity: 0.1;
+    }
+
+    .hero.tap:active,
+    .hero.tap[data-pressed] {
+      border-radius: 26px 26px 12px 26px;
+    }
+
+    .hero.tap.attached:active,
+    .hero.tap.attached[data-pressed] {
+      border-radius: 26px 26px 8px 8px;
     }
 
     /* ---- THE SIDEKICK TIER ------------------------------------------------
@@ -106,6 +134,16 @@ export const heroShellStyles = [
 
     :host([variant="sidekick"]) .hero.attached {
       border-radius: 26px 26px 8px 8px;
+    }
+
+    :host([variant="sidekick"]) .hero.tap:active,
+    :host([variant="sidekick"]) .hero.tap[data-pressed] {
+      border-radius: 22px;
+    }
+
+    :host([variant="sidekick"]) .hero.tap.attached:active,
+    :host([variant="sidekick"]) .hero.tap.attached[data-pressed] {
+      border-radius: 22px 22px 8px 8px;
     }
 
     :host([variant="sidekick"]) .alert {
@@ -201,6 +239,11 @@ export const heroShellStyles = [
 
     .alert-action:hover {
       background: color-mix(in srgb, currentColor 22%, transparent);
+    }
+
+    .alert-action:active,
+    .alert-action[data-pressed] {
+      background: color-mix(in srgb, currentColor 24%, transparent);
     }
 
     .burst {
@@ -359,6 +402,9 @@ export const heroShellStyles = [
  */
 export const HeroShellMixin = (Base) =>
   class extends Base {
+    /** Holds the pressed shape on touch (see utils/press.js). */
+    _press = new PressController(this, ".hero.tap, .alert-action");
+
     /** Reflected so the whole shell can restyle from one attribute, including
      *  parts (the alert strip) that are not inside the container. */
     willUpdate(changed) {

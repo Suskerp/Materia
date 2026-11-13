@@ -1,7 +1,8 @@
 import { css } from "lit";
 import { hostStyles, haCardReset } from "../../styles/card-styles.js";
+import { motionTokens } from "../../utils/motion.js";
 
-export const styles = [hostStyles, haCardReset, css`
+export const styles = [hostStyles, haCardReset, motionTokens, css`
   ha-card {
     background: none;
     border: none;
@@ -61,6 +62,26 @@ export const styles = [hostStyles, haCardReset, css`
     background: var(--wt-bg, var(--md-sys-color-surface-container-high, var(--card-background-color)));
     transform: rotate(var(--wt-tilt, -26deg)) scale(var(--wt-pill-scale, 0.86));
     z-index: 0;
+  }
+
+  /* Pressed: a 10% state layer over the pill (a stadium has no corner to
+     tighten). Same geometry as the pill, one layer up. */
+  .blob::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transform: rotate(var(--wt-tilt, -26deg)) scale(var(--wt-pill-scale, 0.86));
+    z-index: 0;
+    transition: opacity var(--md-sys-motion-fast-effects);
+  }
+
+  .blob:active::after,
+  .blob[data-pressed]::after {
+    opacity: 0.1;
   }
 
   /* Both pieces are pinned to the tile's centre and then nudged by their own

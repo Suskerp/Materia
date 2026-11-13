@@ -6,6 +6,7 @@ import { t } from "../../utils/i18n.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
 import { inputValue, serviceData, CLEARED_DATETIME } from "./model.js";
+import { PressController } from "../../utils/press.js";
 
 const localInput = (d) => {
   const p = (n) => String(n).padStart(2, "0");
@@ -26,6 +27,8 @@ const nextHourLocalInput = () => {
 
 
 class MateriaTimeInput extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".clear, .field");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

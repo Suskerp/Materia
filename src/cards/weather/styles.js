@@ -1,7 +1,8 @@
 import { css } from "lit";
 import { hostStyles, haCardReset, unavailableStyles } from "../../styles/card-styles.js";
+import { motionTokens } from "../../utils/motion.js";
 
-export const styles = [hostStyles, haCardReset, unavailableStyles, css`
+export const styles = [hostStyles, haCardReset, unavailableStyles, motionTokens, css`
   .container {
     position: relative;
     width: 100%;
@@ -12,6 +13,30 @@ export const styles = [hostStyles, haCardReset, unavailableStyles, css`
     align-items: center;
     box-sizing: border-box;
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-radius var(--md-sys-motion-expressive-fast-spatial);
+  }
+
+  /* Pressed: a 10% state layer and slightly tighter corners. */
+  .container::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--md-sys-motion-fast-effects);
+  }
+
+  .container:active::after,
+  .container[data-pressed]::after {
+    opacity: 0.1;
+  }
+
+  .container:active,
+  .container[data-pressed] {
+    border-radius: 20px;
   }
 
   .icon-container {

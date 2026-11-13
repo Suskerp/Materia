@@ -2,6 +2,7 @@ import { LitElement, html } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
+import { PressController } from "../../utils/press.js";
 
 const CONDITION_ICONS = {
   sunny: "m3o:sunny",
@@ -30,6 +31,8 @@ const CONDITION_LABELS = {
 };
 
 class MateriaWeather extends ActionMixin(LitElement) {
+  /** Holds the pressed shape on touch (see utils/press.js). */
+  _press = new PressController(this, ".container");
   static properties = {
     hass: { attribute: false },
     config: { state: true },

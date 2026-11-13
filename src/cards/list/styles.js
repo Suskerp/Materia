@@ -54,7 +54,9 @@ export const styles = [
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       border-radius: 10px;
-      transition: background-color var(--md-sys-motion-fast-effects);
+      transition:
+        background-color var(--md-sys-motion-fast-effects),
+        border-radius var(--md-sys-motion-expressive-fast-spatial);
     }
 
     .row:hover {
@@ -82,6 +84,15 @@ export const styles = [
 
     .row.text.live:hover {
       background: color-mix(in srgb, currentColor 5%, transparent);
+    }
+
+    /* Pressed: a 10% state layer and slightly tighter corners. */
+    .row:not(.text):active,
+    .row:not(.text)[data-pressed],
+    .row.text.live:active,
+    .row.text.live[data-pressed] {
+      background: color-mix(in srgb, currentColor 10%, transparent);
+      border-radius: 6px;
     }
 
     /* M3 body-medium: 14sp / 20sp line. The name column above deliberately
