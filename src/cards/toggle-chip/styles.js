@@ -66,21 +66,21 @@ export const styles = [
         border-color var(--md-sys-motion-fast-effects);
     }
 
+    /* One 24px thumb, moved and sized by transform: 16px (scale 2/3) with
+       its centre 14px in when off, full size 20px along when on. */
     .switch i {
       position: absolute;
-      top: 6px;
-      left: 6px;
-      width: 16px;
-      height: 16px;
+      top: 2px;
+      left: 2px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       background: var(--md-sys-color-outline, var(--mx-onv));
       display: grid;
       place-items: center;
+      transform: scale(0.6667);
       transition:
-        left var(--md-sys-motion-expressive-fast-spatial),
-        top var(--md-sys-motion-expressive-fast-spatial),
-        width var(--md-sys-motion-expressive-fast-spatial),
-        height var(--md-sys-motion-expressive-fast-spatial),
+        transform var(--md-sys-motion-expressive-fast-spatial),
         background-color var(--md-sys-motion-fast-effects);
     }
 
@@ -90,10 +90,7 @@ export const styles = [
     }
 
     .switch.on i {
-      top: 2px;
-      left: 22px;
-      width: 24px;
-      height: 24px;
+      transform: translateX(20px);
       background: var(--mx-op);
       color: var(--mx-p);
     }
@@ -101,10 +98,20 @@ export const styles = [
     .switch ha-icon {
       --mdc-icon-size: 16px;
       opacity: 0;
+      transition: opacity var(--md-sys-motion-fast-effects);
     }
 
     .switch.on ha-icon {
       opacity: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .linkchip,
+      .switch,
+      .switch i,
+      .switch ha-icon {
+        transition: none;
+      }
     }
   `,
 ];
