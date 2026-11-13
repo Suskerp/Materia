@@ -280,16 +280,16 @@ export const styles = [
 
     /* THE ARRIVAL RECEIPT. One turn of the SHAPE, never the glyph, when the
        panel finishes what the card was already optimistically claiming. Same
-       duration and easing curve as lock's own tap receipt (ml-open-spin), and
+       spring as lock's own tap receipt (ml-open-spin), and
        the same standalone-rotate trick so it composes with the pose rather
        than replacing it. Signed, so finishing a disarm unwinds and finishing
        an arm winds on. */
     .shape.turn:not(.shake) {
-      animation: ma-turn 0.65s cubic-bezier(0.3, 0.1, 0.2, 1);
+      animation: ma-turn var(--md-sys-motion-expressive-slow-spatial-duration) var(--md-sys-motion-expressive-slow-spatial-easing);
     }
 
     .shape.turn:not(.shake) ha-icon {
-      animation: ma-turn-counter 0.65s cubic-bezier(0.3, 0.1, 0.2, 1);
+      animation: ma-turn-counter var(--md-sys-motion-expressive-slow-spatial-duration) var(--md-sys-motion-expressive-slow-spatial-easing);
     }
 
     @keyframes ma-turn {
@@ -318,7 +318,7 @@ export const styles = [
        floods the card and pulses a siren wash; a third mark there would be
        noise on the one state that is already impossible to miss. */
     .shape.shake {
-      animation: ma-shape-shake 0.5s ease-in-out 1;
+      animation: ma-shape-shake var(--md-sys-motion-standard-default-spatial) 1;
     }
 
     @keyframes ma-shape-shake {
@@ -430,7 +430,7 @@ export const styles = [
     /* The refusal, visibly. Reuses the one-shot shake grammar materia-lock
        gives a jam: a mechanism that tried and did not move. */
     button.mode.refused {
-      animation: ma-refuse 0.4s ease-in-out 1;
+      animation: ma-refuse var(--md-sys-motion-standard-default-spatial) 1;
     }
 
     @keyframes ma-refuse {

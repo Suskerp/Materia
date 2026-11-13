@@ -62,15 +62,15 @@ export const styles = [
        it needs an equal, opposite spin of its own to cancel the box's
        rotation and stay upright. */
     .shape.vector.spin-once .silhouette {
-      animation: ml-open-spin 0.6s cubic-bezier(0.3, 0.1, 0.2, 1);
+      animation: ml-open-spin var(--md-sys-motion-expressive-slow-spatial-duration) var(--md-sys-motion-expressive-slow-spatial-easing);
     }
 
     .shape:not(.vector).spin-once {
-      animation: ml-open-spin 0.6s cubic-bezier(0.3, 0.1, 0.2, 1);
+      animation: ml-open-spin var(--md-sys-motion-expressive-slow-spatial-duration) var(--md-sys-motion-expressive-slow-spatial-easing);
     }
 
     .shape:not(.vector).spin-once ha-icon {
-      animation: ml-open-spin-counter 0.6s cubic-bezier(0.3, 0.1, 0.2, 1);
+      animation: ml-open-spin-counter var(--md-sys-motion-expressive-slow-spatial-duration) var(--md-sys-motion-expressive-slow-spatial-easing);
     }
 
     @keyframes ml-open-spin {
@@ -257,7 +257,7 @@ export const styles = [
        breathe. Runs once (not looping): a jam that lingers on screen for
        minutes doesn't need to keep shaking at you. */
     .shape.jammed {
-      animation: ml-jam-shake 0.5s ease-in-out 1;
+      animation: ml-jam-shake var(--md-sys-motion-standard-default-spatial) 1;
     }
 
     @keyframes ml-jam-shake {

@@ -1,4 +1,5 @@
 import { LitElement, html, nothing } from "lit";
+import { MOTION, reducedMotion } from "../../utils/motion.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import { OptimisticMixin } from "../../utils/optimistic.js";
@@ -157,7 +158,7 @@ class MateriaBarSelect extends OptimisticMixin(DisabledMixin(ActionMixin(LitElem
    *  move its own dip below rest, and the Web Animations API restarts cleanly
    *  on every change — which a CSS class toggle does not. */
   _choreograph(prev, idx) {
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+    if (reducedMotion()) return;
     const bars = Array.from(this.shadowRoot?.querySelectorAll(".bar") || []);
     if (!bars.length) return;
 
@@ -174,12 +175,14 @@ class MateriaBarSelect extends OptimisticMixin(DisabledMixin(ActionMixin(LitElem
       ? [{ transform: "scaleY(0.94)" }, { transform: "scaleY(1.07)", offset: 0.5 }, { transform: "scaleY(1)" }]
       : [{ transform: "scaleY(1)" }, { transform: "scaleY(0.84)", offset: 0.5 }, { transform: "scaleY(0.94)" }];
 
+    // The keyframes carry the pop and the dip, so the timing is the
+    // non-overshooting standard spring (an expressive one would compound).
+    const spring = MOTION["standard-fast-spatial"];
     order.forEach((el, n) => {
       el.animate(frames, {
-        duration: 300,
+        duration: spring.ms,
         delay: n * 45,
-        // Springy on the way up, settling on the way down.
-        easing: rising ? "cubic-bezier(.2,1.5,.3,1)" : "cubic-bezier(.3,0,.2,1)",
+        easing: spring.easing,
         // fill:none so CSS owns the resting state once the gesture finishes.
         fill: "none",
       });

@@ -582,7 +582,7 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
       this._turn = true;
       this._turnTimer = setTimeout(() => {
         this._turn = false;
-      }, 650);
+      }, MOTION["expressive-slow-spatial"].ms + 20);
     });
   }
 
@@ -594,7 +594,7 @@ class MateriaAlarm extends DisabledMixin(ActionMixin(LitElement)) {
       this._shake = true;
       this._shakeTimer = setTimeout(() => {
         this._shake = false;
-      }, 500);
+      }, MOTION["standard-default-spatial"].ms + 20);
     });
   }
 

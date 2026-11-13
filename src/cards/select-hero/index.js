@@ -1,4 +1,5 @@
 import { LitElement, html, svg, nothing } from "lit";
+import { MOTION, reducedMotion } from "../../utils/motion.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { DisabledMixin, disabledConditionStyles } from "../../utils/conditions.js";
 import { HeroShellMixin } from "../hero/shell.js";
@@ -111,11 +112,13 @@ class MateriaSelectHero extends OptimisticMixin(DisabledMixin(HeroShellMixin(Act
    *  hacks. `pathLength="100"` in the template makes one duration correct for
    *  every glyph, whether it is a single line or eight crossing strokes. */
   _drawRoute() {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (reducedMotion()) return;
     const path = this.shadowRoot?.querySelector(".route path");
+    // Standard (no overshoot): a stroke drawn past its end would show a gap.
+    const spring = MOTION["standard-slow-spatial"];
     path?.animate?.(
       [{ strokeDashoffset: 100 }, { strokeDashoffset: 0 }],
-      { duration: 620, easing: "cubic-bezier(0.2, 0, 0, 1)" }
+      { duration: spring.ms, easing: spring.easing }
     );
   }
 

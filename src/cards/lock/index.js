@@ -1,4 +1,5 @@
 import { LitElement, html, svg, nothing } from "lit";
+import { MOTION, reducedMotion } from "../../utils/motion.js";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { materialCookiePath, pillPath, gemPath } from "../../utils/shapes.js";
 import { t } from "../../utils/i18n.js";
@@ -289,7 +290,7 @@ class MateriaLock extends ActionMixin(LitElement) {
   get _spins() {
     const st = this._shapeStyle;
     return st.vector && st.rot * 2 <= 45
-      && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      && !reducedMotion();
   }
 
   get _inFlight() {
@@ -400,11 +401,12 @@ class MateriaLock extends ActionMixin(LitElement) {
   _spinOpenShape() {
     clearTimeout(this._openSpinTimer);
     this._openSpin = false;
+    if (reducedMotion()) return;
     requestAnimationFrame(() => {
       this._openSpin = true;
       this._openSpinTimer = setTimeout(() => {
         this._openSpin = false;
-      }, 650);
+      }, MOTION["expressive-slow-spatial"].ms + 20);
     });
   }
 
