@@ -109,7 +109,7 @@ export const styles = [
       font-weight: 600;
       white-space: nowrap;
       opacity: 0;
-      transition: opacity var(--md-sys-motion-default-effects) 100ms;
+      transition: opacity var(--md-sys-motion-default-effects) var(--md-sys-motion-fast-effects-duration);
     }
 
     .badge.has-state .value {

@@ -130,7 +130,7 @@ export const styles = [
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      transition: border-radius var(--md-sys-motion-expressive-fast-spatial, 200ms);
+      transition: border-radius var(--md-sys-motion-expressive-fast-spatial);
     }
     .act:active,
     .act[data-pressed] {
@@ -157,7 +157,7 @@ export const styles = [
       border-radius: 3px;
       background: var(--b);
       opacity: 0.6;
-      transition: width var(--md-sys-motion-expressive-fast-spatial, 200ms);
+      transition: width var(--md-sys-motion-expressive-fast-spatial);
     }
     .pip.on {
       width: 18px;

@@ -4151,7 +4151,7 @@ class extends Le{constructor(t,e,i,s=Le.DEFAULT_SPEC_VERSION,a=Le.DEFAULT_PLATFO
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      transition: border-radius var(--md-sys-motion-expressive-fast-spatial, 200ms);
+      transition: border-radius var(--md-sys-motion-expressive-fast-spatial);
     }
     .act:active,
     .act[data-pressed] {
@@ -4178,7 +4178,7 @@ class extends Le{constructor(t,e,i,s=Le.DEFAULT_SPEC_VERSION,a=Le.DEFAULT_PLATFO
       border-radius: 3px;
       background: var(--b);
       opacity: 0.6;
-      transition: width var(--md-sys-motion-expressive-fast-spatial, 200ms);
+      transition: width var(--md-sys-motion-expressive-fast-spatial);
     }
     .pip.on {
       width: 18px;
@@ -16005,21 +16005,21 @@ const Gr={CHILD:2},Yr=t=>(...e)=>({_$litDirective$:t,values:e});let Xr=class{con
         border-color var(--md-sys-motion-fast-effects);
     }
 
+    /* One 24px thumb, moved and sized by transform: 16px (scale 2/3) with
+       its centre 14px in when off, full size 20px along when on. */
     .switch i {
       position: absolute;
-      top: 6px;
-      left: 6px;
-      width: 16px;
-      height: 16px;
+      top: 2px;
+      left: 2px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       background: var(--md-sys-color-outline, var(--mx-onv));
       display: grid;
       place-items: center;
+      transform: scale(0.6667);
       transition:
-        left var(--md-sys-motion-expressive-fast-spatial),
-        top var(--md-sys-motion-expressive-fast-spatial),
-        width var(--md-sys-motion-expressive-fast-spatial),
-        height var(--md-sys-motion-expressive-fast-spatial),
+        transform var(--md-sys-motion-expressive-fast-spatial),
         background-color var(--md-sys-motion-fast-effects);
     }
 
@@ -16029,10 +16029,7 @@ const Gr={CHILD:2},Yr=t=>(...e)=>({_$litDirective$:t,values:e});let Xr=class{con
     }
 
     .switch.on i {
-      top: 2px;
-      left: 22px;
-      width: 24px;
-      height: 24px;
+      transform: translateX(20px);
       background: var(--mx-op);
       color: var(--mx-p);
     }
@@ -16040,10 +16037,20 @@ const Gr={CHILD:2},Yr=t=>(...e)=>({_$litDirective$:t,values:e});let Xr=class{con
     .switch ha-icon {
       --mdc-icon-size: 16px;
       opacity: 0;
+      transition: opacity var(--md-sys-motion-fast-effects);
     }
 
     .switch.on ha-icon {
       opacity: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .linkchip,
+      .switch,
+      .switch i,
+      .switch ha-icon {
+        transition: none;
+      }
     }
   `];class Hc extends(rs(ct)){static properties={hass:{attribute:!1},config:{state:!0}};static styles=Ic;static async getConfigElement(){return await cs(),document.createElement("materia-toggle-chip-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("input_boolean.")||t.startsWith("switch."))||"";return{entity:e}}setConfig(t){if(!t.entity)throw new Error("Materia Toggle Chip: entity is required");this.config={...t}}willUpdate(t){if(super.willUpdate?.(t),this.config&&this.hass)for(const t of["label_on","label_off","name"])this._resolveTemplateValue(t,this.config[t])}_toggle(){this._handleAction({action:"toggle",entity:this.config.entity})}get _name(){const t=this.config.name;return this._isTemplate(t)?this._tplResults?.name??"":t??this.hass?.states[this.config.entity]?.attributes?.friendly_name??this.config.entity}render(){const t=this.hass?.states[this.config?.entity];if(!t)return W;const e=(i=t,"on"===i?.state);var i;const s=this._name,a=this.config.icon??t.attributes?.icon;return"switch"==(n=this.config,"switch"===n?.variant?"switch":"chip")?U`<button class="linklabel" @click=${this._toggle}>${s}</button>
         <button
@@ -16135,7 +16142,7 @@ const Gr={CHILD:2},Yr=t=>(...e)=>({_$litDirective$:t,values:e});let Xr=class{con
       font-weight: 600;
       white-space: nowrap;
       opacity: 0;
-      transition: opacity var(--md-sys-motion-default-effects) 100ms;
+      transition: opacity var(--md-sys-motion-default-effects) var(--md-sys-motion-fast-effects-duration);
     }
 
     .badge.has-state .value {
