@@ -147,6 +147,20 @@ export const styles = [
       pointer-events: none;
     }
 
+    /* Fade-through: the old pane fades out first and only then hides; the
+       new one shows at once and fades in after it. */
+    .pane.on {
+      transition:
+        opacity var(--md-sys-motion-default-effects) var(--md-sys-motion-fast-effects-duration),
+        visibility 0s;
+    }
+
+    .pane:not(.on) {
+      transition:
+        opacity var(--md-sys-motion-fast-effects),
+        visibility 0s var(--md-sys-motion-fast-effects-duration);
+    }
+
     .pane-card > * {
       display: block;
     }

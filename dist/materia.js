@@ -3909,7 +3909,26 @@ class extends Le{constructor(t,e,i,s=Le.DEFAULT_SPEC_VERSION,a=Le.DEFAULT_PLATFO
       text-align: start;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
-      transition: border-radius var(--md-sys-motion-expressive-fast-spatial, 200ms);
+      transition: border-radius var(--md-sys-motion-expressive-fast-spatial);
+      /* A warning that arrives rises into place and fades in. */
+      animation:
+        al-fade var(--md-sys-motion-default-effects) both,
+        al-rise var(--md-sys-motion-expressive-default-spatial) both;
+    }
+    @keyframes al-fade {
+      from {
+        opacity: 0;
+      }
+    }
+    @keyframes al-rise {
+      from {
+        transform: translateY(12px);
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .alert {
+        animation: none;
+      }
     }
     .alert:active,
     .alert[data-pressed] {
@@ -12261,6 +12280,20 @@ const Gr={CHILD:2},Yr=t=>(...e)=>({_$litDirective$:t,values:e});let Xr=class{con
       pointer-events: none;
     }
 
+    /* Fade-through: the old pane fades out first and only then hides; the
+       new one shows at once and fades in after it. */
+    .pane.on {
+      transition:
+        opacity var(--md-sys-motion-default-effects) var(--md-sys-motion-fast-effects-duration),
+        visibility 0s;
+    }
+
+    .pane:not(.on) {
+      transition:
+        opacity var(--md-sys-motion-fast-effects),
+        visibility 0s var(--md-sys-motion-fast-effects-duration);
+    }
+
     .pane-card > * {
       display: block;
     }
@@ -14543,7 +14576,13 @@ const Gr={CHILD:2},Yr=t=>(...e)=>({_$litDirective$:t,values:e});let Xr=class{con
         border-radius: 20px;
         background: var(--tg-bg, #fff) center / contain no-repeat;
         background-origin: content-box;
-        transition: border-radius var(--md-sys-motion-expressive-fast-spatial);
+        /* The selection ring grows out from the tile's edge. */
+        outline: 3px solid transparent;
+        outline-offset: -3px;
+        transition:
+          border-radius var(--md-sys-motion-expressive-fast-spatial),
+          outline-offset var(--md-sys-motion-expressive-fast-spatial),
+          outline-color var(--md-sys-motion-fast-effects);
       }
       /* An icon-only item: the icon centred on a tonal tile. */
       .logo.icon {
@@ -14561,8 +14600,13 @@ const Gr={CHILD:2},Yr=t=>(...e)=>({_$litDirective$:t,values:e});let Xr=class{con
       }
       .grid button.on .logo {
         border-radius: 32px;
-        outline: 3px solid var(--mx-p);
+        outline-color: var(--mx-p);
         outline-offset: 3px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .logo {
+          transition: none;
+        }
       }
       .grid button.on span {
         color: var(--mx-on);
@@ -16258,7 +16302,7 @@ const Gr={CHILD:2},Yr=t=>(...e)=>({_$litDirective$:t,values:e});let Xr=class{con
               </div>
             `}
       </div>
-    `}_handleTap(){if(this._consumeHold())return;const t=this.config.tap_action,e=this.config.hold_action;if((!t?.action||"none"===t.action)&&e?.action&&"none"!==e.action)return this._holdHint=!0,this.requestUpdate(),clearTimeout(this._hintTimer),void(this._hintTimer=setTimeout(()=>{this._holdHint=!1,this.requestUpdate()},1400));if(this.config.double_tap_action?.action&&"none"!==this.config.double_tap_action.action){if(this._dblClickTimer)return;this._dblClickTimer=setTimeout(()=>{this._dblClickTimer=null,this._handleAction(this.config.tap_action||{action:"toggle"})},250)}else this._handleAction(this.config.tap_action||{action:"toggle"})}_handleDoubleTap(){this.config.double_tap_action?.action&&"none"!==this.config.double_tap_action.action&&(clearTimeout(this._dblClickTimer),this._dblClickTimer=null,this._handleAction(this.config.double_tap_action))}disconnectedCallback(){super.disconnectedCallback(),clearTimeout(this._dblClickTimer),this._dblClickTimer=null,clearTimeout(this._hintTimer),this._holdHint=!1,clearTimeout(this._firedTimer),this._firedFlash=!1,clearInterval(this._timerTick),this._timerTick=null}getCardSize(){return 2}_flashFired(){this._firedFlash=!0,this.requestUpdate(),clearTimeout(this._firedTimer),this._firedTimer=setTimeout(()=>{this._firedFlash=!1,this.requestUpdate()},1600)}_handleAction(t){this._isActionRole&&t?.action&&Vc.has(t.action)&&this._flashFired(),super._handleAction(t)}}customElements.define("materia-badge",Wc),window.customBadges=window.customBadges||[],window.customBadges.push({type:"materia-badge",name:"Materia Badge",description:"Value-typed header badge — navigate squircle or action corners.",preview:!0});const Kc=[Ft,n`
+    `}_handleTap(){if(this._consumeHold())return;const t=this.config.tap_action,e=this.config.hold_action;if((!t?.action||"none"===t.action)&&e?.action&&"none"!==e.action)return this._holdHint=!0,this.requestUpdate(),clearTimeout(this._hintTimer),void(this._hintTimer=setTimeout(()=>{this._holdHint=!1,this.requestUpdate()},1400));if(this.config.double_tap_action?.action&&"none"!==this.config.double_tap_action.action){if(this._dblClickTimer)return;this._dblClickTimer=setTimeout(()=>{this._dblClickTimer=null,this._handleAction(this.config.tap_action||{action:"toggle"})},250)}else this._handleAction(this.config.tap_action||{action:"toggle"})}_handleDoubleTap(){this.config.double_tap_action?.action&&"none"!==this.config.double_tap_action.action&&(clearTimeout(this._dblClickTimer),this._dblClickTimer=null,this._handleAction(this.config.double_tap_action))}disconnectedCallback(){super.disconnectedCallback(),clearTimeout(this._dblClickTimer),this._dblClickTimer=null,clearTimeout(this._hintTimer),this._holdHint=!1,clearTimeout(this._firedTimer),this._firedFlash=!1,clearInterval(this._timerTick),this._timerTick=null}getCardSize(){return 2}_flashFired(){this._firedFlash=!0,this.requestUpdate(),clearTimeout(this._firedTimer),this._firedTimer=setTimeout(()=>{this._firedFlash=!1,this.requestUpdate()},1600)}_handleAction(t){this._isActionRole&&t?.action&&Vc.has(t.action)&&this._flashFired(),super._handleAction(t)}}customElements.define("materia-badge",Wc),window.customBadges=window.customBadges||[],window.customBadges.push({type:"materia-badge",name:"Materia Badge",description:"Value-typed header badge — navigate squircle or action corners.",preview:!0});const Kc=[Ft,mt,n`
     ha-card {
       box-sizing: border-box;
       height: 44px;
@@ -16291,22 +16335,52 @@ const Gr={CHILD:2},Yr=t=>(...e)=>({_$litDirective$:t,values:e});let Xr=class{con
       height: 20px;
       align-self: center;
       justify-self: end;
-      display: flex;
+      display: grid;
       align-items: center;
-      justify-content: center;
+      justify-items: center;
     }
 
     .icon-cell ha-icon {
+      grid-area: 1 / 1;
       --mdc-icon-size: 26px;
       width: 34px;
       height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       color: var(--md-sys-color-primary);
     }
-  `];class Gc extends(rs(ct)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedName:{state:!0}};static async getConfigElement(){return await cs(),document.createElement("materia-checkbox-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("input_boolean."))||"";return{entity:e,name:"Checkbox"}}static styles=[zt,Kc];setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={tap_action:{action:"toggle"},...t}}_isChecked(t){if(this.config.checked_entity){const t=this.hass?.states[this.config.checked_entity];if(!t)return!1;const e=String(t.state??"").split(",").map(t=>t.trim()).filter(Boolean);return this.config.checked_values?this.config.checked_values.every(t=>e.includes(t)):!!this.config.checked_value&&e.includes(this.config.checked_value)}if(!t)return!1;const e=String(t.state??"").toLowerCase(),i=Number(e);return"on"===e||"true"===e||"home"===e||!Number.isNaN(i)&&i>0}updated(t){t.has("hass")&&this.hass&&this._resolveField("name","_resolvedName")}render(){if(!this.hass||!this.config)return U``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=!e&&this._isChecked(t),s=this._isTemplate(this.config.name)?this._resolvedName:this.config.name??t?.attributes?.friendly_name??this.config.entity,a=i?"mdi:checkbox-marked":"mdi:checkbox-blank-outline";return U`
+
+    /* The filled mark grows over the outline: in on the expressive spring,
+       out quicker on the standard one; opacity on the fast effects spring. */
+    .icon-cell .mark {
+      opacity: 0;
+      transform: scale(0.6);
+      transition:
+        opacity var(--md-sys-motion-fast-effects),
+        transform var(--md-sys-motion-standard-fast-spatial);
+    }
+
+    .icon-cell.checked .mark {
+      opacity: 1;
+      transform: none;
+      transition:
+        opacity var(--md-sys-motion-fast-effects),
+        transform var(--md-sys-motion-expressive-fast-spatial);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .icon-cell .mark,
+      .icon-cell.checked .mark {
+        transition: none;
+      }
+    }
+  `];class Gc extends(rs(ct)){static properties={hass:{attribute:!1},config:{state:!0},_resolvedName:{state:!0}};static async getConfigElement(){return await cs(),document.createElement("materia-checkbox-editor")}static getStubConfig(t){const e=Object.keys(t?.states||{}).find(t=>t.startsWith("input_boolean."))||"";return{entity:e,name:"Checkbox"}}static styles=[zt,Kc];setConfig(t){if(!t.entity)throw new Error("entity is required");this.config={tap_action:{action:"toggle"},...t}}_isChecked(t){if(this.config.checked_entity){const t=this.hass?.states[this.config.checked_entity];if(!t)return!1;const e=String(t.state??"").split(",").map(t=>t.trim()).filter(Boolean);return this.config.checked_values?this.config.checked_values.every(t=>e.includes(t)):!!this.config.checked_value&&e.includes(this.config.checked_value)}if(!t)return!1;const e=String(t.state??"").toLowerCase(),i=Number(e);return"on"===e||"true"===e||"home"===e||!Number.isNaN(i)&&i>0}updated(t){t.has("hass")&&this.hass&&this._resolveField("name","_resolvedName")}render(){if(!this.hass||!this.config)return U``;const t=this.hass.states[this.config.entity],e=this._isUnavailable(t),i=!e&&this._isChecked(t),s=this._isTemplate(this.config.name)?this._resolvedName:this.config.name??t?.attributes?.friendly_name??this.config.entity;return U`
       <ha-card class="${e?"unavailable":""}" @click=${this._handleTap}>
         <div class="name">${s}</div>
-        <div class="icon-cell">
-          <ha-icon .icon=${a}></ha-icon>
+        <div class="icon-cell ${i?"checked":""}">
+          <ha-icon class="box" icon="mdi:checkbox-blank-outline"></ha-icon>
+          <ha-icon class="mark" icon="mdi:checkbox-marked"></ha-icon>
         </div>
       </ha-card>
     `}_handleTap(){const t=this.hass?.states[this.config.entity],e=this._isChecked(t);let i;i=e&&this.config.tap_action_checked?this.config.tap_action_checked:!e&&this.config.tap_action_unchecked?this.config.tap_action_unchecked:this.config.tap_action||{action:"toggle"},this._handleAction(i)}getCardSize(){return 1}}customElements.define("materia-checkbox",Gc),window.customCards=window.customCards||[],window.customCards.push({type:"materia-checkbox",name:"Materia Checkbox",description:"Checkbox with custom checked state logic.",preview:!0});const Yc=[Ft,Pt,mt,n`

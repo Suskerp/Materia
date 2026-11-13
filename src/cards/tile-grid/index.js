@@ -80,7 +80,13 @@ export class MateriaTileGrid extends ActionMixin(LitElement) {
         border-radius: 20px;
         background: var(--tg-bg, #fff) center / contain no-repeat;
         background-origin: content-box;
-        transition: border-radius var(--md-sys-motion-expressive-fast-spatial);
+        /* The selection ring grows out from the tile's edge. */
+        outline: 3px solid transparent;
+        outline-offset: -3px;
+        transition:
+          border-radius var(--md-sys-motion-expressive-fast-spatial),
+          outline-offset var(--md-sys-motion-expressive-fast-spatial),
+          outline-color var(--md-sys-motion-fast-effects);
       }
       /* An icon-only item: the icon centred on a tonal tile. */
       .logo.icon {
@@ -98,8 +104,13 @@ export class MateriaTileGrid extends ActionMixin(LitElement) {
       }
       .grid button.on .logo {
         border-radius: 32px;
-        outline: 3px solid var(--mx-p);
+        outline-color: var(--mx-p);
         outline-offset: 3px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .logo {
+          transition: none;
+        }
       }
       .grid button.on span {
         color: var(--mx-on);

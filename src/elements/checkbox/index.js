@@ -70,13 +70,13 @@ class MateriaCheckbox extends ActionMixin(LitElement) {
     const name = this._isTemplate(this.config.name)
       ? this._resolvedName
       : (this.config.name ?? stateObj?.attributes?.friendly_name ?? this.config.entity);
-    const icon = checked ? "mdi:checkbox-marked" : "mdi:checkbox-blank-outline";
 
     return html`
       <ha-card class="${unavailable ? 'unavailable' : ''}" @click=${this._handleTap}>
         <div class="name">${name}</div>
-        <div class="icon-cell">
-          <ha-icon .icon=${icon}></ha-icon>
+        <div class="icon-cell ${checked ? "checked" : ""}">
+          <ha-icon class="box" icon="mdi:checkbox-blank-outline"></ha-icon>
+          <ha-icon class="mark" icon="mdi:checkbox-marked"></ha-icon>
         </div>
       </ha-card>
     `;

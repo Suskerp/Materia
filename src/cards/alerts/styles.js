@@ -39,7 +39,26 @@ export const styles = [
       text-align: start;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
-      transition: border-radius var(--md-sys-motion-expressive-fast-spatial, 200ms);
+      transition: border-radius var(--md-sys-motion-expressive-fast-spatial);
+      /* A warning that arrives rises into place and fades in. */
+      animation:
+        al-fade var(--md-sys-motion-default-effects) both,
+        al-rise var(--md-sys-motion-expressive-default-spatial) both;
+    }
+    @keyframes al-fade {
+      from {
+        opacity: 0;
+      }
+    }
+    @keyframes al-rise {
+      from {
+        transform: translateY(12px);
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .alert {
+        animation: none;
+      }
     }
     .alert:active,
     .alert[data-pressed] {
