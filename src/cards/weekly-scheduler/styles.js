@@ -207,10 +207,12 @@ export const styles = [hostStyles, motionTokens, css`
   .sheet-head, .handle { touch-action: none; }
   .outlined-field { position: relative; flex: 1; min-width: 0; display: block; }
   .outlined-field span { position: absolute; top: -8px; left: 12px; padding: 0 4px; background: var(--s-low); font-size: 12px; line-height: 16px; letter-spacing: .4px; color: var(--on-variant); pointer-events: none; }
-  .outlined-field input { display: block; width: 100%; min-width: 0; height: 56px; padding: 0 12px 0 16px; border: 1px solid var(--outline); border-radius: 4px; background: transparent; color: var(--on-surface); font: 400 16px/24px inherit; font-family: inherit; letter-spacing: .5px; font-variant-numeric: tabular-nums; -webkit-appearance: none; appearance: none; }
-  .outlined-field input:focus { border: 2px solid var(--primary); padding-left: 15px; outline: none; }
+  /* Explicit box and line metrics: iOS draws a time input's value at the top
+     of the box (clipped under the label) unless padding and line height place it. */
+  .outlined-field input { display: block; box-sizing: border-box; width: 100%; min-width: 0; height: 56px; margin: 0; padding: 15px 12px 15px 16px; border: 1px solid var(--outline); border-radius: 4px; background: transparent; color: var(--on-surface); font-family: inherit; font-size: 16px; font-weight: 400; line-height: 24px; letter-spacing: .5px; font-variant-numeric: tabular-nums; -webkit-appearance: none; appearance: none; }
+  .outlined-field input:focus { border: 2px solid var(--primary); padding: 14px 11px 14px 15px; outline: none; }
   .outlined-field:focus-within span { color: var(--primary); }
-  .outlined-field input::-webkit-date-and-time-value { text-align: start; }
+  .outlined-field input::-webkit-date-and-time-value { text-align: start; margin: 0; min-height: 24px; line-height: 24px; }
 
   /* Device settings. */
   .devices { display: grid; gap: 2px; }
