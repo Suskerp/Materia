@@ -477,9 +477,12 @@ class MateriaWeeklyScheduler extends LitElement {
   _animateSheet(dialog, opening, origin) {
     if (!dialog.animate || matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
     const phone = matchMedia("(max-width: 600px)").matches;
-    // Sheets move on the standard springs: no overshoot, a sheet should just arrive.
-    const spring = MOTION[opening ? "standard-default-spatial" : "standard-fast-spatial"];
-    const timing = { duration: spring.ms, easing: spring.easing, fill: "forwards" };
+    // M3's enter/exit pair for sheets: emphasized decelerate in (most of the
+    // distance in the first frames, so it answers the tap at once), emphasized
+    // accelerate out. A spring's long settling tail read as sluggish here.
+    const timing = opening
+      ? { duration: 300, easing: "cubic-bezier(0.05, 0.7, 0.1, 1)", fill: "forwards" }
+      : { duration: 200, easing: "cubic-bezier(0.3, 0, 0.8, 0.15)", fill: "forwards" };
     // Only transform and opacity move, so the compositor runs it: animating
     // clip-path repainted the whole sheet and its shadow every frame and
     // stuttered on phones. A phone's bottom sheet slides up, as M3 has it.
