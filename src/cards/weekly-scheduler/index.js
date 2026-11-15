@@ -477,7 +477,8 @@ class MateriaWeeklyScheduler extends LitElement {
   _animateSheet(dialog, opening, origin) {
     if (!dialog.animate || matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
     const phone = matchMedia("(max-width: 600px)").matches;
-    const spring = MOTION[opening ? "expressive-default-spatial" : "standard-fast-spatial"];
+    // Sheets move on the standard springs: no overshoot, a sheet should just arrive.
+    const spring = MOTION[opening ? "standard-default-spatial" : "standard-fast-spatial"];
     const timing = { duration: spring.ms, easing: spring.easing, fill: "forwards" };
     // Only transform and opacity move, so the compositor runs it: animating
     // clip-path repainted the whole sheet and its shadow every frame and
@@ -526,7 +527,7 @@ class MateriaWeeklyScheduler extends LitElement {
         dialog.animate([{ transform: `translateY(${Math.max(0, dy)}px)` }, { transform: "translateY(100%)" }], { duration: spring.ms, easing: spring.easing, fill: "forwards" })
           .finished.then(() => { this._origin = null; dialog.close(); this._sheet = null; this._opener?.isConnected && this._opener.focus({ preventScroll: true }); }).catch(() => {});
       } else if (dy) {
-        const spring = MOTION["expressive-fast-spatial"];
+        const spring = MOTION["standard-fast-spatial"];
         dialog.animate([{ transform: `translateY(${dy > 0 ? dy : dy * 0.2}px)` }, { transform: "translateY(0)" }], { duration: spring.ms, easing: spring.easing });
       }
     };
@@ -747,14 +748,11 @@ class MateriaWeeklyScheduler extends LitElement {
     return week;
   }
 
+  // The content is read before the sheet opens, so it slides up once at its
+  // final height instead of swapping "Loading" for a taller list mid-motion.
   async _openPresets() {
-    await this._showSheet({ kind: "preset", index: 0, scope: "day", loading: true });
-    try {
-      const weeks = await Promise.all(this._group.presets.map((p) => this._week(p.schedule).catch(() => null)));
-      if (this._sheet?.kind === "preset") this._sheet = { ...this._sheet, weeks, loading: false };
-    } catch (error) {
-      if (this._sheet?.kind === "preset") this._sheet = { ...this._sheet, loading: false, error: error.message || String(error) };
-    }
+    const weeks = await Promise.all(this._group.presets.map((p) => this._week(p.schedule).catch(() => null)));
+    await this._showSheet({ kind: "preset", index: 0, scope: "day", weeks, loading: false });
   }
 
   _renderPresetSheet(s) {
@@ -789,9 +787,9 @@ class MateriaWeeklyScheduler extends LitElement {
 
   /** Every plan's per-group pattern, read once, so the sheet can show them all side by side. */
   async _openPlan(index) {
-    await this._showSheet({ kind: "plan", index, destinations: [this._day], loading: true });
+    let error = null, plans = null;
     try {
-      const plans = await Promise.all(this.config.plans.map((plan) => Promise.all((plan.groups || []).map(async (item) => {
+      plans = await Promise.all(this.config.plans.map((plan) => Promise.all((plan.groups || []).map(async (item) => {
         const group = this.config.rooms.find((g) => g.schedule === item.schedule);
         if (!group || !item.source) return null;
         const source = await this._week(item.source).catch(() => null);
@@ -799,10 +797,10 @@ class MateriaWeeklyScheduler extends LitElement {
         const week = Object.fromEntries(DAYS.map((d) => [d, (source[d] || []).map((b) => ({ ...b, data: actionData(b.data, this._actions(b, group)) }))]));
         return { ...item, week, group, pattern: group.presets?.find((p) => p.schedule === item.source)?.name || "" };
       })).then((list) => (list.some((e) => !e) ? null : list))));
-      if (this._sheet?.kind === "plan") this._sheet = { ...this._sheet, plans, entries: plans[this._sheet.index], loading: false };
-    } catch (error) {
-      if (this._sheet?.kind === "plan") this._sheet = { ...this._sheet, loading: false, error: error.message || String(error) };
+    } catch (e) {
+      error = e.message || String(e);
     }
+    await this._showSheet({ kind: "plan", index, destinations: [this._day], plans, entries: plans?.[index], loading: false, error });
   }
 
   _renderPlanSheet(s) {
