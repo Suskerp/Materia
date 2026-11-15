@@ -8,6 +8,50 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.77.0 — 2026-11-15
+
+A weekly scheduler card, a hold duration for RoomMind rooms, and motion that answers your touch.
+
+### Breaking changes
+None.
+
+### Added
+- **Weekly scheduler card** (`custom:materia-weekly-scheduler`): an M3 card over Home Assistant
+  schedule helpers, with a full visual editor.
+  - An overview of every group, then a day bar per group: switch days with the day buttons,
+    the arrows or a swipe.
+  - Tap a period to edit it in a sheet; ±15 min buttons, "repeat on" for the days that share
+    it, and a line that says what will happen. Every change can be undone.
+  - Hold a period on the day bar to drag its start, its end or the whole period, in
+    15-minute steps. Hold on empty time to draw a new one.
+  - Presets per group and whole-home plans that apply one pattern to every room at once.
+  - A RoomMind thermostat (`climate.roommind_<area>`) is recognised by itself: its periods
+    store a temperature, and outside them RoomMind's eco temperature applies.
+  - Lights, switches and other things you switch on go off again at the end of a period by
+    default.
+- **Climate panel: how long a manual change holds** on a RoomMind room. While a change holds,
+  the panel shows what is held and until when, with "Until <next change>", 1 h, 2 h and 4 h,
+  and **Back to schedule**. The editor sets the default hold and can hide the choices.
+- **Tabs:** a selected tab, a primary preset and a secondary variant; each tab's card has the
+  shared nested card editor.
+- **Button group:** springs back on touch and can give every button the same width.
+- **Weather glance:** shows a warning that starts within 24 hours, with its start time.
+
+### Changed
+- **Pressed states you can see on touch** across list rows, hero, weather, headings, time
+  input, pills and more, held briefly so a quick tap still shows.
+- **Motion follows the M3 tokens everywhere:** menus, expanders, tabs, checkboxes, switches,
+  tile-grid selection and arriving alerts. Sheets enter quickly and leave faster, without
+  overshoot.
+- **Card picker:** every card has an example; the media source card describes itself instead
+  of showing an empty preview, and the carousel alias no longer appears twice.
+
+### Fixed
+- **Button group:** a tapped button no longer keeps its hover tint on a touch screen; the
+  pressed layer is 10 % and the focus ring is M3's (3 dp, outside the shape).
+- **Humidifier:** better contrast on the on-state control.
+- **Reduced motion** is respected in the hero shell and the lock.
+
 ## 0.76.17 — 2026-11-11
 
 A Needs-attention editor that shows what you're editing, and no flash on load.
