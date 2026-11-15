@@ -72,12 +72,19 @@ export const styles = [
       line-height: 16px;
       color: var(--md-sys-color-on-surface-variant);
     }
-    .hold-resume {
+    /* M3 small outlined button: 40dp, 1dp outline, label large, 16dp sides. */
+    .mini.hold-resume {
       flex: none;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      min-height: 40px;
+      gap: 8px;
+      height: 40px;
+      padding: 0 16px;
+      border: 1px solid var(--md-sys-color-outline-variant, rgba(0, 0, 0, 0.2));
+      color: var(--md-sys-color-on-surface-variant, inherit);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.1px;
     }
 
     .seg materia-button-group {

@@ -107,18 +107,34 @@ export const styles = [
       transition: opacity var(--md-sys-motion-fast-effects);
     }
 
-    button:hover .button-surface::before {
-      opacity: 0.08;
+    /* M3 state layers: hover 8 %, pressed 10 %. Hover only where a pointer
+       can hover, or a tapped button keeps its hover tint on a touch screen. */
+    @media (hover: hover) {
+      button:hover .button-surface::before {
+        opacity: 0.08;
+      }
     }
 
     button:active .button-surface::before {
-      opacity: 0.12;
+      opacity: 0.1;
     }
 
+    /* M3 focus indicator: 3dp, secondary, 2dp outside the shape. It follows
+       the button's own corners because the ring sits on the surface. */
     button:focus-visible {
-      outline: 3px solid var(--md-sys-color-primary, currentColor);
-      outline-offset: -3px;
+      outline: none;
       z-index: 1;
+    }
+    button:focus-visible .button-surface {
+      overflow: visible;
+    }
+    button:focus-visible .button-surface::after {
+      content: "";
+      position: absolute;
+      inset: -5px;
+      border: 3px solid var(--md-sys-color-secondary, currentColor);
+      border-radius: inherit;
+      pointer-events: none;
     }
 
     /* M3 toggle buttons share one pressed shape regardless of whether their

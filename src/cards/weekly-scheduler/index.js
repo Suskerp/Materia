@@ -476,19 +476,26 @@ class MateriaWeeklyScheduler extends LitElement {
    */
   _animateSheet(dialog, opening, origin) {
     if (!dialog.animate || matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
-    // The period you tapped grows into the sheet, and the sheet shrinks back into it.
-    if (origin?.isConnected) {
-      const o = origin.getBoundingClientRect(), d = dialog.getBoundingClientRect();
-      const inset = `inset(${Math.max(0, o.top - d.top)}px ${Math.max(0, d.right - o.right)}px ${Math.max(0, d.bottom - o.bottom)}px ${Math.max(0, o.left - d.left)}px round 12px)`;
-      const full = "inset(0px 0px 0px 0px round 28px)";
-      const spring = MOTION[opening ? "expressive-default-spatial" : "standard-fast-spatial"];
-      return dialog.animate(opening ? [{ clipPath: inset }, { clipPath: full }] : [{ clipPath: full }, { clipPath: inset, opacity: 0 }], { duration: spring.ms, easing: spring.easing, fill: "forwards" });
-    }
     const phone = matchMedia("(max-width: 600px)").matches;
     const spring = MOTION[opening ? "expressive-default-spatial" : "standard-fast-spatial"];
-    const hidden = phone ? { transform: "translateY(100%)" } : { transform: "scale(0.9)", opacity: 0 };
-    const shown = phone ? { transform: "translateY(0)" } : { transform: "scale(1)", opacity: 1 };
-    return dialog.animate(opening ? [hidden, shown] : [shown, hidden], { duration: spring.ms, easing: spring.easing, fill: "forwards" });
+    const timing = { duration: spring.ms, easing: spring.easing, fill: "forwards" };
+    // Only transform and opacity move, so the compositor runs it: animating
+    // clip-path repainted the whole sheet and its shadow every frame and
+    // stuttered on phones. A phone's bottom sheet slides up, as M3 has it.
+    if (phone) {
+      const frames = [{ transform: "translateY(100%)" }, { transform: "translateY(0)" }];
+      return dialog.animate(opening ? frames : frames.reverse(), timing);
+    }
+    // Elsewhere the period you tapped grows into the dialog and shrinks back into it.
+    let hidden = { transform: "scale(0.9)", opacity: 0 };
+    if (origin?.isConnected) {
+      const o = origin.getBoundingClientRect(), d = dialog.getBoundingClientRect();
+      const dx = o.left + o.width / 2 - (d.left + d.width / 2), dy = o.top + o.height / 2 - (d.top + d.height / 2);
+      hidden = { transform: `translate(${dx}px, ${dy}px) scale(${Math.max(0.05, o.width / d.width)}, ${Math.max(0.05, o.height / d.height)})`, opacity: 0 };
+    }
+    const shown = { transform: "none", opacity: 1 };
+    // Opacity settles early, on the effects curve's pace, while the shape keeps moving.
+    return dialog.animate(opening ? [hidden, { opacity: 1, offset: 0.35 }, shown] : [shown, { opacity: 1, offset: 0.4 }, hidden], timing);
   }
 
   /**
