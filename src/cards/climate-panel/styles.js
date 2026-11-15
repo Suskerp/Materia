@@ -40,6 +40,46 @@ export const styles = [
       border-radius: 24px;
     }
 
+    /* RoomMind hold: what is held, until when, and how long to hold it. */
+    .stack > .seg.hold {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px 12px 12px 16px;
+    }
+    .hold-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .hold-head > ha-icon {
+      color: var(--ms-track, var(--md-sys-color-primary));
+      --mdc-icon-size: 22px;
+      flex: none;
+    }
+    .hold-text {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .hold-title {
+      font: 500 var(--md-sys-typescale-title-small-size, 14px) / 20px var(--md-sys-typescale-body-font, inherit);
+      color: var(--md-sys-color-on-surface);
+    }
+    .hold-sub {
+      font-size: var(--md-sys-typescale-body-small-size, 12px);
+      line-height: 16px;
+      color: var(--md-sys-color-on-surface-variant);
+    }
+    .hold-resume {
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 40px;
+    }
+
     .seg materia-button-group {
       display: block;
     }

@@ -1,3 +1,4 @@
+import { roommindRoom } from "./roommind.js";
 import { html, nothing } from "lit";
 import { SmartEditorBase } from "../../utils/smart-editor.js";
 import { localize, t, tr } from "../../utils/i18n.js";
@@ -39,7 +40,7 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
   }
 
   _formData() {
-    return { steppers: "side", wave: "auto", show_modes: true, ...this._config };
+    return { steppers: "side", wave: "auto", show_modes: true, hold_default: "next", hold_choices: true, ...this._config };
   }
 
   /* ---- sections plumbing --------------------------------------------------- */
@@ -338,6 +339,20 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
           ] } } },
         ],
       },
+      // A RoomMind room holds a manual change; how long is the user's choice.
+      ...(roommindRoom(this._config?.entity) ? [{
+        title: "ed_cp_hold",
+        icon: "mdi:hand-back-right-outline",
+        fields: [
+          { name: "hold_default", label: "ed_cp_hold_default", helper: "ed_cp_hold_default_help", selector: { select: { mode: "list", options: [
+            { value: "next", label: "ed_cp_hold_next" },
+            { value: "1", label: "ed_cp_hold_1" },
+            { value: "2", label: "ed_cp_hold_2" },
+            { value: "4", label: "ed_cp_hold_4" },
+          ] } } },
+          { name: "hold_choices", label: "ed_cp_hold_choices", helper: "ed_cp_hold_choices_help", selector: { boolean: {} } },
+        ],
+      }] : []),
     ];
   }
 }

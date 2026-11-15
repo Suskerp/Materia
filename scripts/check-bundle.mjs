@@ -30,8 +30,10 @@ const limits = {
   // and +1.5 KB for the fix pack (picker examples, matching days, focus return, motion fixes).
   // and +10 KB for drag-to-edit on the day bar, swipe-to-close, the period growing into its sheet, ±15 min and Undo.
   // and +15 KB / +3 KB gzip for the motion audit fixes (shared press controller, pressed states, tokenised curves).
-  main: { size: 1_173_500, gzipSize: 292_500 },
-  editors: { size: 327_500, gzipSize: 77_500 },
+  // and +7.5 KB / +2.5 KB gzip for how long a manual change holds on a RoomMind room (climate panel).
+  main: { size: 1_181_000, gzipSize: 295_000 },
+  // +1.5 KB / +0.5 KB gzip for the climate panel's hold option.
+  editors: { size: 329_000, gzipSize: 78_000 },
 };
 
 const files = (await readdir(dist)).filter((name) => /^materia(-.+)?\.js$/.test(name)).sort();

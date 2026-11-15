@@ -107,6 +107,16 @@ export const STRINGS = {
 
   /* ---- materia-climate-panel ----------------------------------------- */
   cp_currently: { en: "Currently", nl: "Nu" },
+  cp_hold_title: { en: "Holding {temp}", nl: "{temp} vastgehouden" },
+  cp_hold_until_change: { en: "Until the schedule changes at {time}", nl: "Tot het schema wisselt om {time}" },
+  cp_hold_until: { en: "Until {time}, then back to the schedule", nl: "Tot {time}, daarna terug naar het schema" },
+  cp_hold_forever: { en: "Until you go back to the schedule", nl: "Tot je teruggaat naar het schema" },
+  cp_hold_next_chip: { en: "Until {time}", nl: "Tot {time}" },
+  cp_hold_next_chip_plain: { en: "Next change", nl: "Volgende wissel" },
+  cp_hold_hours: { en: "{n} h", nl: "{n} u" },
+  cp_hold_for: { en: "Hold for", nl: "Vasthouden voor" },
+  cp_hold_resume: { en: "Back to schedule", nl: "Terug naar schema" },
+  cp_hold_failed: { en: "RoomMind didn't take the change", nl: "RoomMind nam de wijziging niet over" },
   cp_section_default: { en: "Section {n}", nl: "Sectie {n}" },
 
   /* ---- materia-schedule ----------------------------------------------- */

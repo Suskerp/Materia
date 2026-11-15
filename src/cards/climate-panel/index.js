@@ -7,6 +7,7 @@ import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
 import { PressController } from "../../utils/press.js";
 import "./dial.js";
+import { roommindRoom, isHeld, nextChange, overrideMessage } from "./roommind.js";
 
 /**
  * Climate surface — its dial as hero with the mode group as a
@@ -53,6 +54,9 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
     hass: { attribute: false },
     config: { state: true },
     _openSection: { state: true },
+    _rmRoom: { state: true },
+    _holdChoice: { state: true },
+    _holdError: { state: true },
   };
 
   static styles = styles;
@@ -87,6 +91,118 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
       this._extraEls[idx]?.forEach((el) => { el.hass = this.hass; });
     }
     this._reserveHeight();
+    if (changedProps.has("hass")) this._watchRoom();
+  }
+
+  /* ---- RoomMind: how long a manual change holds ----------------------------- */
+
+  get _rmArea() {
+    return roommindRoom(this.config?.entity);
+  }
+
+  /** Re-read the RoomMind room whenever its hold or schedule moves. */
+  _watchRoom() {
+    const area = this._rmArea;
+    if (!area || !this.hass) return;
+    const a = this._entity?.attributes || {};
+    const key = `${a.preset_mode}|${a.override_until}|${a.temperature}|${a.target_temp_low}`;
+    if (!isHeld(this._entity)) this._holdChoice = null;
+    if (key === this._rmKey) return;
+    this._rmKey = key;
+    this.hass.callWS({ type: "roommind/rooms/list" })
+      .then((r) => { this._rmRoom = r?.rooms?.[area] ?? null; })
+      .catch(() => { this._rmRoom = null; });
+  }
+
+  get _holdDefault() {
+    const d = this.config.hold_default;
+    return d == null || d === "next" ? "next" : Number(d);
+  }
+
+  /** Hours from now until the schedule's next change, null without one. */
+  _hoursToNext() {
+    const next = nextChange(this.hass, this._rmRoom);
+    return next ? (next - Date.now()) / 3600000 : null;
+  }
+
+  async _hold(choice, target) {
+    const hours = choice === "next" ? this._hoursToNext() : choice;
+    const msg = overrideMessage(this._rmArea, this._rmRoom, this._entity, hours, target);
+    this._holdChoice = choice;
+    this._holdError = null;
+    this._fireHaptic("light");
+    try {
+      await this.hass.callWS(msg);
+    } catch (err) {
+      this._holdChoice = null;
+      this._holdError = t("cp_hold_failed", this.hass);
+      console.warn("Materia: roommind/override/set failed", err);
+    }
+  }
+
+  _resume() {
+    this._holdChoice = null;
+    this._callService("climate", "set_preset_mode", { entity_id: this.config.entity, preset_mode: "none" });
+  }
+
+  _clock(ms) {
+    const lang = this.hass?.locale?.language || this.hass?.language;
+    const d = new Date(ms);
+    const sameDay = d.toDateString() === new Date().toDateString();
+    return d.toLocaleString(lang, sameDay ? { hour: "2-digit", minute: "2-digit" } : { weekday: "short", hour: "2-digit", minute: "2-digit" });
+  }
+
+  _holdSegment() {
+    if (!this._rmArea || this.config.hold_choices === false || !isHeld(this._entity)) return nothing;
+    const st = this._entity;
+    const a = st.attributes;
+    const attr = a.temperature != null ? "temperature" : "target_temp_low";
+    const temp = this.hass.formatEntityAttributeValue?.(st, attr) ?? `${a[attr]} °C`;
+    const until = a.override_until ? Date.parse(a.override_until) : null;
+    const next = nextChange(this.hass, this._rmRoom);
+    const atNext = until && next && Math.abs(until - next) < 90000;
+    const sub = !until ? t("cp_hold_forever", this.hass)
+      : atNext ? t("cp_hold_until_change", this.hass, { time: this._clock(until) })
+      : t("cp_hold_until", this.hass, { time: this._clock(until) });
+    const chosen = this._holdChoice ?? (atNext ? "next" : null);
+    const choices = [
+      { value: "next", label: next ? t("cp_hold_next_chip", this.hass, { time: this._clock(next) }) : t("cp_hold_next_chip_plain", this.hass) },
+      ...[1, 2, 4].map((n) => ({ value: n, label: t("cp_hold_hours", this.hass, { n }) })),
+    ];
+    const [act, on] = MODE_COLORS[this._accentKey] ?? MODE_COLORS.off;
+    return html`
+      <div class="seg hold">
+        <div class="hold-head">
+          <ha-icon icon="mdi:hand-back-right-outline"></ha-icon>
+          <div class="hold-text">
+            <span class="hold-title">${t("cp_hold_title", this.hass, { temp })}</span>
+            <span class="hold-sub">${this._holdError ?? sub}</span>
+          </div>
+          <button class="mini hold-resume" @click=${() => this._resume()}>
+            <ha-icon icon="mdi:calendar-sync-outline" style="--mdc-icon-size:16px;"></ha-icon>${t("cp_hold_resume", this.hass)}
+          </button>
+        </div>
+        <materia-button-group
+          .hass=${this.hass}
+          .config=${{
+            // The entity routes taps to on_select; each option's `active` says what is held.
+            entity: this.config.entity,
+            size: "s",
+            variant: "tonal",
+            equal_width: false,
+            color_active: act,
+            color_on_active: on,
+            aria_label: t("cp_hold_for", this.hass),
+            options: choices.map((c) => ({
+              label: c.label,
+              value: String(c.value),
+              active: chosen === c.value,
+              on_select: () => this._hold(c.value),
+            })),
+          }}
+        ></materia-button-group>
+      </div>
+    `;
   }
 
   /* ---- model --------------------------------------------------------------- */
@@ -363,9 +479,14 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
             ...(this.config.humidity_entity ? { humidity_entity: this.config.humidity_entity } : {}),
             ...(this.config.min_humidity != null ? { min_humidity: this.config.min_humidity } : {}),
             ...(this.config.max_humidity != null ? { max_humidity: this.config.max_humidity } : {}),
+            // A fixed hold on a RoomMind room: send the change with its duration.
+            ...(this._rmArea && this._holdDefault !== "next"
+              ? { on_target: (temp) => this._hold(this._holdDefault, temp) }
+              : {}),
           }}
         ></materia-climate-dial>
         <div class="stack ${this.config.reserve_height ? "reserve" : ""}">
+          ${this._holdSegment()}
           <div class="seg">${this._modeGroup()}</div>
           ${secs.map((s, i) => s.style === "menu"
             ? html`

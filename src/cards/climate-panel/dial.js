@@ -339,6 +339,11 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
     this._optimisticTimer = setTimeout(() => { this._optimisticTemp = null; }, 10000);
     clearTimeout(this._sendTimer);
     this._sendTimer = setTimeout(() => {
+      // A host (the climate panel on a RoomMind room) may send the change itself.
+      if (!this._isHumidifier && typeof this.config.on_target === "function") {
+        this.config.on_target(clamped);
+        return;
+      }
       this._callService(
         this._isHumidifier ? "humidifier" : "climate",
         this._isHumidifier ? "set_humidity" : "set_temperature",
