@@ -8,6 +8,25 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.78.0 — 2026-11-16
+
+No more lights switched by accident when you swipe the app away, and a wave for any fill level.
+
+### Breaking changes
+None.
+
+### Added
+- **Glance tile, percent variant: surface** (Auto, Wave, Still). Auto keeps today's behaviour:
+  a wave for humidity and moisture, a still surface for everything else. Wave gives any
+  level a moving surface, such as a dehumidifier's water tank. Set it in the visual editor.
+
+### Fixed
+- **Tiles with a slider no longer switch when the touch is taken over.** Swiping up to close
+  or switch the app, the back gesture or the page starting to scroll used to count as a
+  tap on the light under your finger, on iOS and on Android. Now only lifting your finger
+  is a tap, nothing fires when the app goes away under it, and a touch that starts on the
+  bottom edge of the screen (the home bar) is ignored.
+
 ## 0.77.0 — 2026-11-15
 
 A weekly scheduler card, a hold duration for RoomMind rooms, and motion that answers your touch.

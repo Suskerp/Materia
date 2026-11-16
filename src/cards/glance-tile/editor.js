@@ -46,6 +46,7 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
     const perVariant =
       v === "percent"
         ? {
+            surface: "auto",
             critical_dry: 10,
             dry_below: 20,
             soggy_above: 60,
@@ -249,6 +250,20 @@ class MateriaGlanceTileEditor extends SmartEditorBase {
     // no-ops for battery/humidity/other percent entities.
     if (v === "percent") {
       extras.fields.push(
+        {
+          name: "surface",
+          label: "e_fill_surface",
+          selector: {
+            select: {
+              mode: "dropdown",
+              options: [
+                { value: "auto", label: "e_surface_auto" },
+                { value: "wave", label: "e_surface_wave" },
+                { value: "still", label: "e_surface_still" },
+              ],
+            },
+          },
+        },
         { name: "critical_dry", label: "e_critic_dry_defaul", selector: { number: { min: 0, max: 100, mode: "box" } } },
         { name: "dry_below", label: "e_water_soon_defaul", selector: { number: { min: 0, max: 100, mode: "box" } } },
         { name: "soggy_above", label: "e_overwa_defaul_60", selector: { number: { min: 0, max: 100, mode: "box" } } },

@@ -528,6 +528,9 @@ export class MateriaCard extends ActionMixin(LitElement) {
 
     // Sidebar edge-swipe protection (HA mobile sidebar)
     if (ev.pointerType === "touch" && ev.clientX <= 30) return;
+    // Home-indicator protection: a touch that starts on the bottom edge is
+    // the iOS/Android swipe that closes or switches the app, not a tap.
+    if (ev.pointerType === "touch" && window.innerHeight - ev.clientY <= 24) return;
 
     this._startX = ev.clientX;
     this._startY = ev.clientY;
@@ -646,7 +649,11 @@ export class MateriaCard extends ActionMixin(LitElement) {
       this._updateFillVisual(pct);
       this._setSliderValue(pct);
       this._fireHaptic("light");
-    } else if (!this._scrollIntent) {
+    } else if (!this._scrollIntent && ev.type === "pointerup" && !document.hidden) {
+      // Only a real lift is a tap. A pointercancel without a drag means the
+      // system took the touch over (the swipe that closes the app), and a
+      // hidden page means the app went away under the finger: neither may
+      // toggle the light.
       this._handleTap();
     }
 

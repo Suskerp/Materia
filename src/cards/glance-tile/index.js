@@ -311,7 +311,10 @@ class MateriaGlanceTile extends ActionMixin(LitElement) {
     // Liquid surface. Water-like values (humidity/moisture) get a gentle wave
     // that drifts almost imperceptibly; everything else (battery…) stays a
     // still soft dome. Deliberately calmer than the weather tile's scallops.
-    const liquid = dc === "humidity" || isMoisture;
+    // surface: wave | still overrides that guess, for a tank or anything else
+    // liquid that carries no humidity/moisture device class.
+    const surfaceOpt = this.config.surface;
+    const liquid = surfaceOpt === "wave" || (surfaceOpt !== "still" && (dc === "humidity" || isMoisture));
     let surface;
     if (liquid) {
       // Low sine-ish wave, period 50 — drifting by one period loops seamlessly.
