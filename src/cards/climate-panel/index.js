@@ -479,6 +479,9 @@ class MateriaClimatePanel extends ActionMixin(LitElement) {
             ...(this.config.humidity_entity ? { humidity_entity: this.config.humidity_entity } : {}),
             ...(this.config.min_humidity != null ? { min_humidity: this.config.min_humidity } : {}),
             ...(this.config.max_humidity != null ? { max_humidity: this.config.max_humidity } : {}),
+            ...(this.config.tank_entity ? { tank_entity: this.config.tank_entity } : {}),
+            ...(this.config.tank_full_entity ? { tank_full_entity: this.config.tank_full_entity } : {}),
+            ...(this.config.tank_emptied_action ? { tank_emptied_action: this.config.tank_emptied_action } : {}),
             // A fixed hold on a RoomMind room: send the change with its duration.
             ...(this._rmArea && this._holdDefault !== "next"
               ? { on_target: (temp) => this._hold(this._holdDefault, temp) }

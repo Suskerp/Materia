@@ -270,6 +270,128 @@ export const styles = [
       border-radius: 999px;
     }
 
+    /* ---- Water tank (humidifier, optional) ------------------------------
+       + / tank / − as separate round controls with 8px between them. Water
+       reads as water whatever the dial is doing: the humidity palette
+       (climate-cool, harmonised by the theme), not the mode accent, which
+       goes dark grey while the device is off. */
+    .tank-pill {
+      --tank-water: var(--md-sys-cust-color-climate-cool-accent, #327ea7);
+      --tank-water-container: var(--md-sys-cust-color-climate-cool-container, #eaf3ff);
+    }
+
+    .nudge.tank-col {
+      flex-direction: column;
+      margin: 0;
+      gap: 8px;
+      width: clamp(56px, 18cqi, 74px);
+      height: clamp(196px, 64cqi, 280px);
+    }
+
+    .nudge.tank-col .seg {
+      flex: none;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1;
+      border-radius: 999px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nudge.tank-col .seg::before,
+    .tank-pill.full::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: currentColor;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--md-sys-motion-fast-effects);
+    }
+
+    .nudge.tank-col .seg:hover::before,
+    .tank-pill.full:hover::before {
+      opacity: 0.08;
+    }
+
+    .nudge.tank-col .seg:active::before,
+    .nudge.tank-col .seg[data-pressed]::before,
+    .tank-pill.full:active::before,
+    .tank-pill.full[data-pressed]::before {
+      opacity: 0.12;
+    }
+
+    @media (hover: none) {
+      .nudge.tank-col .seg:hover::before,
+      .tank-pill.full:hover::before {
+        opacity: 0;
+      }
+    }
+
+    .tank-pill {
+      flex: 1;
+      min-height: 64px;
+      position: relative;
+      overflow: hidden;
+      border: none;
+      border-radius: 999px;
+      background: var(--tank-water-container);
+      color: var(--md-sys-color-on-surface);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      font: inherit;
+      font-size: 12px;
+      line-height: 16px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      font-variant-numeric: tabular-nums;
+      --mdc-icon-size: 20px;
+    }
+
+    .tank-pill > ha-icon,
+    .tank-pill > span {
+      position: relative;
+    }
+
+    .pill-fill {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      /* Lighter than the bar's fill: the icon and value sit on it. */
+      background: color-mix(in srgb, var(--tank-water) 40%, var(--tank-water-container));
+      transition: height var(--md-sys-motion-default-effects);
+    }
+
+    .tank-pill.full {
+      background: var(--md-sys-color-error-container);
+      color: var(--md-sys-color-on-error-container);
+    }
+
+    .tank-pill.full .pill-fill {
+      display: none;
+    }
+
+    button.tank-pill {
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button.tank-pill:focus-visible,
+    .nudge.tank-col .seg:focus-visible {
+      outline: 3px solid var(--md-sys-color-secondary);
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .pill-fill {
+        transition: none;
+      }
+    }
+
     materia-button-group {
       width: 100%;
       margin-top: clamp(4px, 2cqi, 10px);

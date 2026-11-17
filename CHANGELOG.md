@@ -8,6 +8,31 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.79.0 — 2026-11-17
+
+A dehumidifier's water tank on the climate panel, and a dial that no longer jumps when you swipe the app away.
+
+### Breaking changes
+None.
+
+### Added
+- **Climate panel: water tank** for a dehumidifier (a `humidifier` entity). Optional, set in the
+  visual editor under "Water tank":
+  - **Tank level**: a 0–100 % sensor. A pill between + and − fills with water.
+  - **Tank full**: a binary sensor, boolean or switch that is on while the tank is full.
+    Without it, a level of 100 % counts as full.
+  - Full, the pill turns red and becomes the **Emptied** button. By default it turns off a
+    Tank full boolean or presses a Tank full button; **When the tank is emptied** can run any
+    other action instead.
+  - The tank shows when + and − sit beside the dial (the default). Without a tank entity the
+    panel is unchanged.
+
+### Fixed
+- **Climate dial: the target no longer changes when a touch is taken over.** The ring used to set
+  the target the moment a finger touched it, so swiping the app away or starting to scroll on the
+  ring moved the setpoint. A tap now sets it when you lift your finger, a drag starts after 6 px of
+  movement, and a touch that starts on the bottom edge of the screen is ignored.
+
 ## 0.78.0 — 2026-11-16
 
 No more lights switched by accident when you swipe the app away, and a wave for any fill level.

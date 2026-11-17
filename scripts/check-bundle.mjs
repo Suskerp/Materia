@@ -31,9 +31,11 @@ const limits = {
   // and +10 KB for drag-to-edit on the day bar, swipe-to-close, the period growing into its sheet, ±15 min and Undo.
   // and +15 KB / +3 KB gzip for the motion audit fixes (shared press controller, pressed states, tokenised curves).
   // and +7.5 KB / +2.5 KB gzip for how long a manual change holds on a RoomMind room (climate panel).
-  main: { size: 1_181_000, gzipSize: 295_000 },
+  // 0.79.0: +5.5 KB / +1.5 KB gzip for a dehumidifier's water tank between the climate panel's + and − and the dial ring's tap-on-lift (last 1_181_000 / 295_000).
+  main: { size: 1_186_500, gzipSize: 296_500 },
   // +1.5 KB / +0.5 KB gzip for the climate panel's hold option.
-  editors: { size: 329_000, gzipSize: 78_000 },
+  // 0.79.0: +1.5 KB / +0.5 KB gzip for its water tank fields (last 329_000 / 78_000).
+  editors: { size: 330_500, gzipSize: 78_500 },
 };
 
 const files = (await readdir(dist)).filter((name) => /^materia(-.+)?\.js$/.test(name)).sort();

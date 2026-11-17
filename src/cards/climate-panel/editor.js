@@ -339,6 +339,16 @@ class MateriaClimatePanelEditor extends SmartEditorBase {
           ] } } },
         ],
       },
+      // A dehumidifier's water tank: optional, both parts on their own.
+      ...(this._config?.entity?.startsWith("humidifier.") ? [{
+        title: "ed_cp_tank",
+        icon: "mdi:cup-water",
+        fields: [
+          { name: "tank_entity", label: "ed_cp_tank_level", selector: { entity: { domain: ["sensor", "number", "input_number"] } } },
+          { name: "tank_full_entity", label: "ed_cp_tank_full", helper: "ed_cp_tank_full_help", selector: { entity: { domain: ["binary_sensor", "input_boolean", "switch"] } } },
+          { name: "tank_emptied_action", label: "ed_cp_tank_emptied", helper: "ed_cp_tank_emptied_help", selector: { ui_action: {} } },
+        ],
+      }] : []),
       // A RoomMind room holds a manual change; how long is the user's choice.
       ...(roommindRoom(this._config?.entity) ? [{
         title: "ed_cp_hold",

@@ -5,6 +5,7 @@ import { t } from "../../utils/i18n.js";
 import { humidifierAction, humidifierRange, humidifierTarget } from "../humidifier/model.js";
 import { styles } from "./dial-styles.js";
 import { PressController } from "../../utils/press.js";
+import { emptiedAction, hasTank, tankFull, tankLevel } from "./tank.js";
 
 const DIAL_START = -135; // degrees, 0 = 12 o'clock
 const DIAL_SWEEP = 270;
@@ -40,7 +41,7 @@ const MODE_META = {
  */
 class MateriaClimateDial extends ActionMixin(LitElement) {
   /** Holds the pressed shape on touch (see utils/press.js). */
-  _pressController = new PressController(this, ".nudge .seg");
+  _pressController = new PressController(this, ".nudge .seg, .tank-pill.full");
   static properties = {
     hass: { attribute: false },
     config: { state: true },
@@ -361,8 +362,30 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
     this._setTarget(t + delta);
   }
 
+  /**
+   * The ring sets the target on a tap (where you lift) or a drag (once the
+   * finger has moved 6px), never on the touch going down: a touch that the
+   * system then takes over (swiping the app away, the back gesture) or that
+   * starts on the bottom edge (the home bar) must not change the setpoint.
+   */
   _dialPointer(e) {
-    if (!this._dialDragging && e.type !== "pointerdown") return;
+    if (e.type === "pointerdown") {
+      if (e.button > 0 || !e.isPrimary) return;
+      if (e.pointerType === "touch" && window.innerHeight - e.clientY <= 24) return;
+      this._dialDown = { x: e.clientX, y: e.clientY };
+      this._dialDragging = false;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      return;
+    }
+    if (!this._dialDown) return;
+    if (!this._dialDragging) {
+      if (Math.hypot(e.clientX - this._dialDown.x, e.clientY - this._dialDown.y) < 6) return;
+      this._dialDragging = true;
+    }
+    this._applyDial(e);
+  }
+
+  _applyDial(e) {
     const svgEl = this.renderRoot.querySelector(".dial");
     const rect = svgEl.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100 - 50;
@@ -373,16 +396,17 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
     if (deg < DIAL_START - 8 || deg > DIAL_START + DIAL_SWEEP + 8) return;
     const frac = Math.min(1, Math.max(0, (deg - DIAL_START) / DIAL_SWEEP));
     const { min, max } = this._scale;
-    if (e.type === "pointerdown") {
-      this._dialDragging = true;
-      e.currentTarget.setPointerCapture(e.pointerId);
-    }
     this._setTarget(min + frac * (max - min));
   }
 
   _endDialDrag(e) {
+    const down = this._dialDown;
+    const dragged = this._dialDragging;
+    this._dialDown = null;
     this._dialDragging = false;
     e.currentTarget.releasePointerCapture?.(e.pointerId);
+    // A tap: only a real lift on a visible page counts.
+    if (down && !dragged && e.type === "pointerup" && !document.hidden) this._applyDial(e);
   }
 
   /* ---- Render --------------------------------------------------------------- */
@@ -447,12 +471,16 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
       ? { start: waveStart, end: waveEnd, r: R }
       : null;
 
+    const side = this.config.steppers === "side";
+    // The tank lives between + and −, so it needs the side column.
+    const tank = side ? this._tank() : null;
+
     return html`
       <ha-card
         class="${unavailable ? "unavailable" : ""}"
         style="--th-container:${accentMeta.container};--th-on-container:${accentMeta.onContainer};"
       >
-        <div class="dial-row ${this.config.steppers === "side" ? "side" : ""}">
+        <div class="dial-row ${side ? "side" : ""}">
         <div class="dial-wrap">
           <svg class="dial" viewBox="0 0 100 100">
             <!-- Invisible wide stroke along the track: the ONLY interactive
@@ -514,7 +542,9 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
               : ""}
           </div>
         </div>
-        ${this.config.steppers === "side"
+        ${tank
+          ? this._tankColumn(tank)
+          : side
           ? html`<div class="nudge vertical">
               <button class="seg plus" @click=${() => this._nudge(this._step)}>
                 <ha-icon icon="mdi:plus"></ha-icon>
@@ -545,6 +575,53 @@ class MateriaClimateDial extends ActionMixin(LitElement) {
           : ""}
       </ha-card>
     `;
+  }
+
+  /* ---- the water tank (humidifier only, optional) ---------------------- */
+
+  _tank() {
+    if (!hasTank(this.config)) return null;
+    const full = tankFull(this.hass, this.config);
+    const level = tankLevel(this.hass, this.config);
+    return { level: full ? 100 : level, full, action: emptiedAction(this.config) };
+  }
+
+  _tankValue(tank) {
+    if (tank.full) return t("cp_tank_full", this.hass);
+    return tank.level == null ? "—" : `${Math.round(tank.level)} %`;
+  }
+
+  _emptied(e) {
+    e.stopPropagation();
+    const action = emptiedAction(this.config);
+    if (action) this._handleAction(action);
+  }
+
+  /** The tank between + and −. Full with something to do, it becomes the
+   *  "emptied" button itself. */
+  _tankColumn(tank) {
+    const l = tank.level ?? 0;
+    const pill = tank.full && tank.action
+      ? html`<button class="tank-pill full" aria-label=${t("cp_tank_emptied", this.hass)} @click=${(e) => this._emptied(e)}>
+          <ha-icon icon="mdi:cup-water"></ha-icon><span>${t("cp_tank_emptied_short", this.hass)}</span>
+        </button>`
+      : html`<div
+          class="tank-pill ${tank.full ? "full" : ""}"
+          role="progressbar"
+          aria-label=${t("cp_tank", this.hass)}
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow=${Math.round(l)}
+          aria-valuetext=${this._tankValue(tank)}
+        >
+          <div class="pill-fill" style="height:${tank.full ? 100 : l}%"></div>
+          <ha-icon icon="mdi:cup-water"></ha-icon><span>${this._tankValue(tank)}</span>
+        </div>`;
+    return html`<div class="nudge tank-col">
+      <button class="seg plus" aria-label=${t("humidifier_increase", this.hass)} @click=${() => this._nudge(this._step)}><ha-icon icon="mdi:plus"></ha-icon></button>
+      ${pill}
+      <button class="seg minus" aria-label=${t("humidifier_decrease", this.hass)} @click=${() => this._nudge(-this._step)}><ha-icon icon="mdi:minus"></ha-icon></button>
+    </div>`;
   }
 
   getGridOptions() {

@@ -107,6 +107,10 @@ export const STRINGS = {
 
   /* ---- materia-climate-panel ----------------------------------------- */
   cp_currently: { en: "Currently", nl: "Nu" },
+  cp_tank: { en: "Water tank", nl: "Watertank" },
+  cp_tank_full: { en: "Full", nl: "Vol" },
+  cp_tank_emptied: { en: "Tank emptied", nl: "Tank geleegd" },
+  cp_tank_emptied_short: { en: "Emptied", nl: "Geleegd" },
   cp_hold_title: { en: "Holding {temp}", nl: "{temp} vastgehouden" },
   cp_hold_until_change: { en: "Until the schedule changes at {time}", nl: "Tot het schema wisselt om {time}" },
   cp_hold_until: { en: "Until {time}, then back to the schedule", nl: "Tot {time}, daarna terug naar het schema" },
