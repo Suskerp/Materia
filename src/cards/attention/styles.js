@@ -157,11 +157,55 @@ export const styles = [
       border-radius: 3px;
       background: var(--b);
       opacity: 0.6;
-      transition: width var(--md-sys-motion-expressive-fast-spatial);
+      transition:
+        width var(--md-sys-motion-expressive-fast-spatial),
+        height var(--md-sys-motion-expressive-fast-spatial);
     }
     .pip.on {
       width: 18px;
       opacity: 1;
+    }
+    /* layout: vertical, a page in a sideways swipe card: the card fills the
+       page's height, items stack and snap while scrolling up and down, the
+       next one peeking in; the dots run down the right-hand side. */
+    :host([layout="vertical"]),
+    :host(.vertical) {
+      height: 100%;
+    }
+    ha-card.vertical {
+      height: 100%;
+      min-height: 240px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-rows: auto minmax(0, 1fr);
+      column-gap: 8px;
+    }
+    ha-card.vertical .heading {
+      grid-column: 1 / -1;
+    }
+    ha-card.vertical .pages {
+      grid-column: 1;
+      flex-direction: column;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scroll-snap-type: y mandatory;
+      border-radius: 28px;
+      cursor: auto;
+      touch-action: pan-y;
+    }
+    ha-card.vertical .item {
+      width: 100%;
+      min-height: 148px;
+    }
+    ha-card.vertical .dots.side {
+      grid-column: 2;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 0;
+    }
+    ha-card.vertical .dots.side .pip.on {
+      width: 6px;
+      height: 18px;
     }
     .empty {
       display: flex;

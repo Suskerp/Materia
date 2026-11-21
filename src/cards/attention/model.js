@@ -68,3 +68,22 @@ export function heldFor(item, hass, now = Date.now()) {
   const since = Date.parse(hass?.states?.[item.entity]?.last_changed ?? "");
   return Number.isFinite(since) && now - since >= min * 60000;
 }
+
+/**
+ * The rules of the attention card named `id` anywhere in a dashboard config
+ * (views, sections, nested stacks and swipe cards), or null.
+ */
+export function findRules(config, id) {
+  const seen = new Set();
+  const walk = (node) => {
+    if (!node || typeof node !== "object" || seen.has(node)) return null;
+    seen.add(node);
+    if (node.type === "custom:materia-attention" && node.id === id && Array.isArray(node.items)) return node.items;
+    for (const v of Array.isArray(node) ? node : Object.values(node)) {
+      const found = walk(v);
+      if (found) return found;
+    }
+    return null;
+  };
+  return id ? walk(config) : null;
+}

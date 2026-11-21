@@ -2,7 +2,7 @@ import { LitElement, html, nothing } from "lit";
 import { ActionMixin } from "../../utils/action-handler.js";
 import { t } from "../../utils/i18n.js";
 import { vacuumAlerts } from "../../utils/vacuum-status.js";
-import { activeItems } from "./model.js";
+import { activeItems, findRules } from "./model.js";
 import { triggeringEntities } from "../../utils/conditions.js";
 import { styles } from "./styles.js";
 import { loadEditors } from "../../utils/load-editors.js";
@@ -18,6 +18,10 @@ export const RULES = new Map();
 /** The person's put-off list, once loaded on this page: later cards (and a
  *  return to the view) start from it instead of from "nothing put off". */
 let laterCache = null;
+
+/** Rules fetched from the dashboard config, by card name: for a copy on another
+ *  view (a wall tablet opening straight on it) whose main card never loaded. */
+const FETCHED = new Map();
 
 /** The editor's "this rule is open" signal: the card's editor preview shows that rule. */
 export const PREVIEW_EVENT = "materia-attention-preview";
@@ -76,6 +80,7 @@ class MateriaAttention extends ActionMixin(LitElement) {
 
   setConfig(config) {
     this.config = { items: [], ...config };
+    this.classList.toggle("vertical", config.layout === "vertical");
     if (config.id) {
       RULES.set(config.id, this.config.items);
       window.dispatchEvent(new Event(SYNC));
@@ -84,7 +89,34 @@ class MateriaAttention extends ActionMixin(LitElement) {
 
   /** Its own rules, or (the later copy) those of the card it names. */
   get _rules() {
-    return this.config.rules_from ? RULES.get(this.config.rules_from) ?? [] : this.config.items ?? [];
+    const from = this.config.rules_from;
+    if (!from) return this.config.items ?? [];
+    if (!RULES.has(from)) this._fetchRules(from);
+    return RULES.get(from) ?? [];
+  }
+
+  /** The named card is not on this view: read its rules from the dashboard's config, once per page. */
+  _fetchRules(id) {
+    if (FETCHED.has(id) || !this.hass?.connection) return;
+    const dashboard = location.pathname.split("/")[1];
+    const url_path = !dashboard || dashboard === "lovelace" ? null : dashboard;
+    FETCHED.set(
+      id,
+      this.hass.connection
+        .sendMessagePromise({ type: "lovelace/config", url_path })
+        .then((config) => {
+          const rules = findRules(config, id);
+          if (rules && !RULES.has(id)) {
+            RULES.set(id, rules);
+            window.dispatchEvent(new Event(SYNC));
+          }
+        })
+        .catch(() => {}),
+    );
+  }
+
+  get _vertical() {
+    return this.config.layout === "vertical";
   }
 
   get _laterMode() {
@@ -224,6 +256,8 @@ class MateriaAttention extends ActionMixin(LitElement) {
     const hide = !this.preview && count === 0;
     if (hide !== this.hidden) {
       this.hidden = hide;
+      // The class too: a swipe card (simple-swipe-card) drops a slide whose card has it.
+      this.classList.toggle("hidden", hide);
       this.dispatchEvent(new Event("card-visibility-changed", { bubbles: true, composed: true }));
     }
   }
@@ -298,11 +332,14 @@ class MateriaAttention extends ActionMixin(LitElement) {
     const page = Math.min(this._page ?? 0, items.length - 1);
     // An optional heading lives inside the card, so it disappears with it.
     const heading = this.config.heading ? String(this.config.heading).replace("{n}", items.length) : "";
-    return html`<ha-card>
+    const vertical = this._vertical;
+    // Vertical (a page in a sideways swipe card): the items scroll up and down
+    // natively (touch, wheel); a mouse drag is left to the swipe card around it.
+    const drag = vertical ? {} : this._dragger;
+    return html`<ha-card class=${vertical ? "vertical" : ""}>
       ${heading ? html`<div class="heading">${heading}</div>` : nothing}
-      <div class="pages" @pointerdown=${this._dragger.down} @pointermove=${this._dragger.move} @pointerup=${this._dragger.up} @pointercancel=${this._dragger.up} @scroll=${(e) => {
-        const el = e.currentTarget;
-        const p = Math.round(el.scrollLeft / (el.firstElementChild?.offsetWidth + 8 || 1));
+      <div class="pages" @pointerdown=${drag.down} @pointermove=${drag.move} @pointerup=${drag.up} @pointercancel=${drag.up} @scroll=${(e) => {
+        const p = vertical ? this._nearest(e.currentTarget) : Math.round(e.currentTarget.scrollLeft / (e.currentTarget.firstElementChild?.offsetWidth + 8 || 1));
         if (p !== this._page) this._page = p;
       }}>
         ${items.map((i) => {
@@ -316,9 +353,19 @@ class MateriaAttention extends ActionMixin(LitElement) {
         })}
       </div>
       ${items.length > 1
-        ? html`<div class="dots" aria-hidden="true">${items.map((i, n) => html`<span class="pip ${i.off ? "off" : i.level} ${n === page ? "on" : ""}"></span>`)}</div>`
+        ? html`<div class="dots ${vertical ? "side" : ""}" aria-hidden="true">${items.map((i, n) => html`<span class="pip ${i.off ? "off" : i.level} ${n === page ? "on" : ""}"></span>`)}</div>`
         : nothing}
     </ha-card>`;
+  }
+
+  /** The item at the top of a vertical list (items differ in height). */
+  _nearest(el) {
+    const top = el.scrollTop + 1;
+    const pages = [...el.children];
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) return pages.length - 1;
+    let n = 0;
+    pages.forEach((p, i) => p.offsetTop - el.offsetTop <= top && (n = i));
+    return n;
   }
 
   getCardSize() {

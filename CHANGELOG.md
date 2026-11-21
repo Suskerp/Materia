@@ -8,6 +8,26 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.80.0 — 2026-11-21
+
+The attention card as a page in a swipe card, appearing only when something needs attention.
+
+### Breaking changes
+None.
+
+### Added
+- **Attention card: up-and-down layout.** Set **Layout** to "Scroll up and down" in the visual
+  editor to use the card as a page in a swipe card (such as simple-swipe-card):
+  - The card fills the height of the page. Items stack and snap into place as you scroll up and
+    down, so it does not fight the sideways swipe between pages. The dots run down the side.
+  - While nothing needs attention, the swipe card leaves the page out, and it comes back by
+    itself when something comes up.
+- **Attention card: use the rules of another attention card, also on another view.**
+  **Use the rules of** now also works for a normal card. Give the main card a **Card name** and
+  pick it here; this card then shows the same rules, so you keep them in one place. This works
+  even when the main card is on a view that has not been opened, for example on a wall tablet
+  that opens straight on its own view.
+
 ## 0.79.0 — 2026-11-17
 
 A dehumidifier's water tank on the climate panel, and a dial that no longer jumps when you swipe the app away.

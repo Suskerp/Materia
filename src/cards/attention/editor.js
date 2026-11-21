@@ -73,11 +73,12 @@ const fromForm = (item, value) => {
 
 class MateriaAttentionEditor extends SmartEditorBase {
   _formData() {
-    return { mode: "now", ...this._config };
+    return { mode: "now", layout: "horizontal", ...this._config };
   }
 
   get _sections() {
     const later = this._config?.mode === "later";
+    const borrowed = !later && !!this._config?.rules_from;
     return [
       {
         title: "e_content",
@@ -93,10 +94,15 @@ class MateriaAttentionEditor extends SmartEditorBase {
                 { name: "heading", label: "ed_att_heading", helper: "ed_att_heading_help", selector: { text: {} } },
                 { name: "id", label: "ed_att_id", helper: "ed_att_id_help", selector: { text: {} } },
                 { name: "later_hours", label: "ed_att_later_hours", selector: { number: { min: 1, max: 168, step: 1, mode: "box" } } },
+                { name: "layout", label: "ed_att_layout", helper: "ed_att_layout_help", selector: { select: { mode: "dropdown", options: [
+                  { value: "horizontal", label: "ed_att_layout_horizontal" },
+                  { value: "vertical", label: "ed_att_layout_vertical" },
+                ] } } },
+                { name: "rules_from", label: "ed_att_rules_from", helper: "ed_att_rules_from_now_help", selector: { select: { mode: "dropdown", custom_value: true, options: [...RULES.keys()].filter((k) => k !== this._config?.id) } } },
               ]),
         ],
       },
-      ...(later
+      ...(later || borrowed
         ? []
         : [{ title: "ed_att_items", icon: "mdi:format-list-checks", fields: [{ name: "items", render: (value) => this._itemsField(value) }] }]),
     ];
