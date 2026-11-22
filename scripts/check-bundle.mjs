@@ -33,7 +33,8 @@ const limits = {
   // and +7.5 KB / +2.5 KB gzip for how long a manual change holds on a RoomMind room (climate panel).
   // 0.79.0: +5.5 KB / +1.5 KB gzip for a dehumidifier's water tank between the climate panel's + and − and the dial ring's tap-on-lift (last 1_181_000 / 295_000).
   // 0.80.0: +2.5 KB / +1 KB gzip for the attention card's vertical layout (a page in a swipe card) and rules from a card on another view (last 1_186_500 / 296_500).
-  main: { size: 1_189_000, gzipSize: 297_500 },
+  // 0.80.1: +1 KB for the schedule card's Clear turning a Scheduler schedule off and saving turning it on (last 1_189_000 / 297_500).
+  main: { size: 1_190_000, gzipSize: 297_500 },
   // +1.5 KB / +0.5 KB gzip for the climate panel's hold option.
   // 0.79.0: +1.5 KB / +0.5 KB gzip for its water tank fields (last 329_000 / 78_000).
   // 0.80.0: +1.5 KB / +0.5 KB gzip for the attention card's layout and rules source fields (last 330_500 / 78_500).

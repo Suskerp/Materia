@@ -8,6 +8,20 @@ Assistant Marketplace shows as the update's release notes.
 Every release starts with **Breaking changes**: what an existing dashboard has to change,
 or "None" when nothing does.
 
+## 0.80.1 — 2026-11-22
+
+Clear on a schedule card now really clears the schedule.
+
+### Breaking changes
+None.
+
+### Fixed
+- **Schedule card: Clear turns a Scheduler schedule off.** On a card with a fixed schedule entity,
+  Clear only reset what the card showed, so the time slot came back with the next update and the
+  schedule kept running. Clear now asks for a second tap and turns the schedule off; the card
+  shows its "not scheduled" text and the schedule's actions stay as they are. Saving a new time
+  slot turns the schedule on again.
+
 ## 0.80.0 — 2026-11-21
 
 The attention card as a page in a swipe card, appearing only when something needs attention.

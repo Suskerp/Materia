@@ -1280,6 +1280,11 @@ class MateriaSchedule extends ActionMixin(LitElement) {
       } else {
         this._fireHaptic("success");
       }
+      // A schedule cleared here is switched off: saving a window turns it on again.
+      if (!this.config.confirm_action && this._scheduleEntity && !this._isManager && this.hass?.states[this._scheduleEntity]?.state === "off") {
+        const on = await this._callService("switch", "turn_on", { entity_id: this._scheduleEntity });
+        if (!on.ok) throw on.error || new Error(t("sched_save_failed", this.hass));
+      }
       this._armed = { head: this._windowLabel, sub: this._windowDaysSummary, repeating: true, mode: "window" };
       this._open = false;
       this._dirty = false;
@@ -1559,15 +1564,49 @@ class MateriaSchedule extends ActionMixin(LitElement) {
         ${a
           ? html`<button
               class="strip-cancel"
+              ?disabled=${this._commitBusy}
               @click=${(e) => {
                 e.stopPropagation();
-                this._armed = null;
-                this._fireHaptic("light");
+                this._clearWindow();
               }}
-            >${this.config.clear_label ?? t("sched_clear", this.hass)}</button>`
+            >${this._removeArmed
+              ? t("sched_delete_confirm", this.hass)
+              : (this.config.clear_label ?? t("sched_clear", this.hass))}</button>`
           : nothing}
       </div>
+      ${this._commitError ? html`<div class="commit-error" role="alert">${this._commitError}</div>` : nothing}
     `;
+  }
+
+  /** Clear on a window strip. Without an entity it only disarms the strip. With
+   *  a Scheduler entity, a second tap turns that schedule off: the entity (and
+   *  its actions) stays, the strip reads "not scheduled", and saving a new
+   *  window turns it back on. Only disarming the strip would let the live
+   *  entity re-arm it on the next update. */
+  async _clearWindow() {
+    const id = this._scheduleEntity;
+    if (!id || this._isManager) {
+      this._armed = null;
+      this._fireHaptic("light");
+      return;
+    }
+    if (!this._removeArmed) {
+      this._removeArmed = true;
+      this._fireHaptic("warning");
+      return;
+    }
+    this._removeArmed = false;
+    this._commitBusy = true;
+    this._commitError = null;
+    const result = await this._callService("switch", "turn_off", { entity_id: id });
+    this._commitBusy = false;
+    if (result.ok) {
+      this._armed = null;
+      this._fireHaptic("success");
+    } else {
+      this._commitError = result.error?.message || t("sched_delete_failed", this.hass);
+      this._fireHaptic("failure");
+    }
   }
 
   _openNewSchedule() {
